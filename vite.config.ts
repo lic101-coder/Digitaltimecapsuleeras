@@ -3,6 +3,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
 
+// Prevent any attempt to open a browser (xdg-open doesn't exist in sandbox)
+process.env.BROWSER = 'none';
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
