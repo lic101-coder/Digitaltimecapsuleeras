@@ -5585,7 +5585,7 @@ button .flex-shrink-0 {
   }
   
   /* "Delivery Date & Time" text - make it shorter on mobile */
-  .flex.items-center.justify-center.gap-6.p-3.bg-muted\\/50.rounded-lg span.text-xs.font-medium:contains("Delivery Date & Time") {
+  .flex.items-center.justify-center.gap-6.p-3.bg-muted\\/50.rounded-lg span.text-xs.font-medium {
     font-size: 0.65rem !important;
     line-height: 1.1 !important;
   }
@@ -7299,10 +7299,10 @@ div [data-slot="checkbox"] {
 /* Required Field Badge Positioning - iPhone Mobile Fixes */
 @media screen and (max-width: 768px) {
   /* Universal Required badge positioning fixes for all form contexts */
-  [data-slot="badge"][class*="destructive"]:contains("Required"),
-  .bg-destructive.text-xs:contains("Required"),
-  .variant-destructive:contains("Required"),
-  [class*="bg-destructive"]:contains("Required") {
+  [data-slot="badge"][class*="destructive"],
+  .bg-destructive.text-xs,
+  .variant-destructive,
+  [class*="bg-destructive"] {
     margin-left: 0.75rem !important;
     margin-right: 0.5rem !important;
     display: inline-flex !important;
@@ -7456,10 +7456,9 @@ div [data-slot="checkbox"] {
 /* ShadCN Badge Component Required Field Fixes - All Mobile Devices */
 @media screen and (max-width: 768px) {
   /* Direct targeting of ShadCN Badge components with "Required" text */
-  [data-slot="badge"]:has(*):-moz-any-link,
-  [data-slot="badge"]:contains("Required"),
-  .inline-flex.items-center.text-xs:contains("Required"),
-  .inline-flex.items-center[class*="px-2"]:contains("Required") {
+  [data-slot="badge"][class*="destructive"],
+  .inline-flex.items-center.text-xs[class*="destructive"],
+  .inline-flex.items-center[class*="px-2"][class*="destructive"] {
     margin-left: 0.875rem !important;
     margin-right: 0.5rem !important;
     padding: 0.125rem 0.375rem !important;
@@ -7535,13 +7534,13 @@ div [data-slot="checkbox"] {
 
 /* Universal Required Badge Mobile Fix - Comprehensive Solution */
 @media screen and (max-width: 768px) {
-  /* Universal selector for any element containing "Required" text in form contexts */
-  form [class*="destructive"]:contains("Required"),
-  .space-y-4 [class*="destructive"]:contains("Required"),
-  .space-y-3 [class*="destructive"]:contains("Required"),
-  [data-slot="card-content"] [class*="destructive"]:contains("Required"),
-  form *:contains("Required"),
-  label *:contains("Required") {
+  /* Universal selector for destructive badge elements in form contexts */
+  form [class*="destructive"],
+  .space-y-4 [class*="destructive"],
+  .space-y-3 [class*="destructive"],
+  [data-slot="card-content"] [class*="destructive"],
+  form [data-slot="badge"],
+  label [data-slot="badge"] {
     margin-left: 0.875rem !important;
     margin-right: 0.5rem !important;
     padding: 0.125rem 0.375rem !important;
