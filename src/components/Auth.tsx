@@ -1962,14 +1962,43 @@ export function Auth({ onAuthenticated }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4 md:p-6 overflow-y-auto">
-      <Card className="w-full max-w-md my-4 md:my-8">
-        <CardHeader className="text-center">
-          <div className="flex justify-center">
-            <MomentPrismLogo size={120} forceAuthLayout={true} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 overflow-y-auto">
+      <div className="min-h-screen flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 p-4 md:p-8 lg:p-12">
+        
+        {/* Left Side - Brand Section */}
+        <div className="w-full md:w-1/2 max-w-xl text-center md:text-left space-y-6 py-8 md:py-0">
+          {/* Animated Logo */}
+          <div className="flex justify-center md:justify-start mb-8">
+            <div className="relative">
+              <MomentPrismLogo size={160} forceAuthLayout={false} />
+              {/* Cosmic glow effect */}
+              <div 
+                className="absolute inset-0 blur-3xl opacity-30 animate-pulse"
+                style={{
+                  background: 'radial-gradient(circle, rgba(102, 126, 234, 0.4) 0%, rgba(118, 75, 162, 0.3) 50%, transparent 70%)',
+                  zIndex: -1
+                }}
+              />
+            </div>
           </div>
-        </CardHeader>
-        <CardContent className="px-6">
+          
+          {/* Tagline */}
+          <p className="text-xl md:text-2xl lg:text-3xl text-slate-700 dark:text-slate-200 leading-relaxed font-light">
+            Preserve your moments across time. Create digital time capsules for your future self and loved ones.
+          </p>
+          
+          {/* Decorative particles (subtle cosmic theme) */}
+          <div className="hidden md:block relative h-20">
+            <div className="absolute top-0 left-0 w-2 h-2 bg-purple-400 rounded-full animate-ping opacity-40" style={{ animationDelay: '0s', animationDuration: '3s' }}></div>
+            <div className="absolute top-4 left-20 w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping opacity-30" style={{ animationDelay: '1s', animationDuration: '4s' }}></div>
+            <div className="absolute top-10 left-40 w-1 h-1 bg-pink-400 rounded-full animate-ping opacity-40" style={{ animationDelay: '2s', animationDuration: '3.5s' }}></div>
+          </div>
+        </div>
+
+        {/* Right Side - Auth Card */}
+        <div className="w-full md:w-1/2 max-w-md">
+          <Card className="w-full shadow-xl">
+            <CardContent className="px-6 pt-6">
           <Tabs value={currentView} onValueChange={setCurrentView}>
             <TabsList className="!w-full grid grid-cols-2 h-10 md:h-[34px] !flex-none !bg-transparent !p-0 gap-2">
               <TabsTrigger value="signin" className="!rounded-lg data-[state=active]:!bg-black data-[state=active]:!text-white data-[state=inactive]:!bg-muted">Sign In</TabsTrigger>
@@ -2518,6 +2547,8 @@ export function Auth({ onAuthenticated }) {
           </Tabs>
         </CardContent>
       </Card>
+        </div>
+      </div>
     </div>
   );
 }
