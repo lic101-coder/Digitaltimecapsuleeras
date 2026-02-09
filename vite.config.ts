@@ -64,4 +64,10 @@ export default defineConfig({
     host: true,
     allowedHosts: 'all',
   },
+  preview: {
+    port: 3000,
+    open: false,
+    host: true,
+    allowedHosts: 'all',
+  },
 });

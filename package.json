@@ -66,16 +66,15 @@
     "@types/node": "^20.19.30",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.2.1",
     "@vitejs/plugin-react-swc": "^3.10.2",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.3.3"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --no-open",
     "build": "vite build --emptyOutDir",
-    "preview": "vite preview",
-    "start": "vite preview --host",
+    "preview": "vite preview --no-open",
+    "start": "vite preview --host --no-open",
     "vercel-build": "npm install --legacy-peer-deps && npm run build"
   },
   "engines": {
