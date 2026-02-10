@@ -64,16 +64,12 @@ export function useNotifications() {
           
           // Convert backend format to frontend format
           const convertedBackendNotifs = backendNotifications.map((n: any) => {
-            // ✅ CRITICAL: Convert 'received_capsule' based on whether it's self-sent or not
-            // Self-sent = 'received' (yellow), Others = 'delivered' (keep old behavior for backward compat)
+            // ✅ FIX: Handle legacy 'received_capsule' type for backward compatibility
+            // New notifications will use 'received' (yellow) for all received capsules
             let notifType = n.type;
             if (n.type === 'received_capsule') {
-              // Check if this is a self-sent capsule (sender name contains "Past Self")
-              if (n.senderName && (n.senderName.includes('Past Self') || n.senderName.includes('You ('))) {
-                notifType = 'received'; // Yellow/gold color for self-sent
-              } else {
-                notifType = 'delivered'; // Green color for capsules from others (backward compat)
-              }
+              // Legacy notification type - convert to 'received' (yellow) for consistency
+              notifType = 'received';
             }
             
             const converted = {
@@ -121,6 +117,9 @@ export function useNotifications() {
             } else if (notif.type === 'delivered' && notif.metadata?.capsuleId) {
               // Also enhance delivered capsule deduplication
               key = `delivered:${notif.metadata.capsuleId}`;
+            } else if (notif.type === 'received' && notif.metadata?.capsuleId) {
+              // ✅ FIX: Deduplicate received notifications by capsule ID
+              key = `received:${notif.metadata.capsuleId}`;
             }
             
             const existing = seen.get(key);

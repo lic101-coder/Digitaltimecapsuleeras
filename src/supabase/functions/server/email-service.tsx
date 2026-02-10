@@ -83,7 +83,7 @@ async function renderInactivityWarning(vars: any): Promise<string> {
               {{beneficiariesSection}}
               
               <div style="text-align: center; margin: 32px 0;">
-                <a href="https://found-shirt-81691824.figma.site/login" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                <a href="https://www.erastimecapsule.com/login" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600;">
                   Log In to Your Account
                 </a>
               </div>
@@ -455,7 +455,7 @@ async function renderBeneficiaryVerificationConfirmation(vars: any): Promise<str
     .replace(/{{beneficiaryName}}/g, vars.beneficiaryName || vars.beneficiaryEmail.split('@')[0])
     .replace(/{{beneficiaryEmail}}/g, vars.beneficiaryEmail)
     .replace(/{{userName}}/g, vars.userName)
-    .replace(/{{homeUrl}}/g, vars.homeUrl || 'https://found-shirt-81691824.figma.site')
+    .replace(/{{homeUrl}}/g, vars.homeUrl || 'https://www.erastimecapsule.com')
     .replace(/{{verifiedDate}}/g, vars.verifiedDate)
     .replace(/© 2026 Eras/g, '© 2025 Eras');
 }
@@ -1346,7 +1346,7 @@ export class EmailService {
         </p>
         
         <div style="text-align: center; margin: 32px 0;">
-          <a href="https://found-shirt-81691824.figma.site/login" style="display: inline-block; padding: 14px 32px; background: #a855f7; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px;">
+          <a href="https://www.erastimecapsule.com/login" style="display: inline-block; padding: 14px 32px; background: #a855f7; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px;">
             Log In to Your Account →
           </a>
         </div>
@@ -1367,7 +1367,7 @@ export class EmailService {
       await resendRateLimiter.waitForNextSlot();
       
       // ✅ Create plain text version
-      const plainText = `Account Inactivity Warning\n\nHi ${userName},\n\nWe noticed you haven't logged into your Eras account in a while.\n\nYour account will become inactive in 30 days if you don't log in.\n\nLog in now:\nhttps://found-shirt-81691824.figma.site/login\n\n— The Eras Team`;
+      const plainText = `Account Inactivity Warning\n\nHi ${userName},\n\nWe noticed you haven't logged into your Eras account in a while.\n\nYour account will become inactive in 30 days if you don't log in.\n\nLog in now:\nhttps://www.erastimecapsule.com/login\n\n— The Eras Team`;
       
       const result = await resend.emails.send({
         from: FROM_EMAIL,

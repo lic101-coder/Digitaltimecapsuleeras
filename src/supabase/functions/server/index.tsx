@@ -16,6 +16,7 @@ import * as AIService from './ai-service.tsx';
 import { processEmailQueue } from './email-service.tsx';
 import { handleClaimPending } from './claim-pending-optimized.tsx';
 import { handleGetReceivedCapsules } from './received-capsules-optimized.tsx';
+import { handleGetCapsuleById } from './get-capsule-optimized.tsx';
 import forgottenMemoriesApp from './forgotten-memories.tsx';
 import { withFallback, withKVTimeout } from './timeout-helpers.tsx';
 
@@ -2442,7 +2443,7 @@ app.post("/make-server-f9be53a7/api/capsules", async (c) => {
       created_at: now,
       updated_at: now,
       delivery_attempts: 0,
-      frontend_url: frontend_url || 'https://found-shirt-81691824.figma.site' // Store frontend URL for email viewing links
+      frontend_url: frontend_url || 'https://www.erastimecapsule.com' // Store frontend URL for email viewing links
     };
 
     if (isDraft) {
@@ -3550,130 +3551,9 @@ app.get("/make-server-f9be53a7/api/capsules/stats", async (c) => {
   }
 });
 
-// Get single capsule by ID
+// Get single capsule by ID - OPTIMIZED with timeout protection
 app.get("/make-server-f9be53a7/api/capsules/:id", async (c) => {
-  try {
-    // Check authentication
-    const authHeader = c.req.header('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return c.json({ error: "No authorization token provided" }, 401);
-    }
-
-    const token = authHeader.split(' ')[1];
-    const { user, error: authError } = await verifyUserToken(token);
-    if (authError || !user) {
-      return c.json({ error: "Invalid or expired token" }, 401);
-    }
-
-    const capsuleId = c.req.param('id');
-    console.log(`📋 Getting capsule: ${capsuleId}`);
-
-    // Get capsule from KV store
-    const capsule = await getCapsuleReliable(capsuleId);
-    
-    if (!capsule) {
-      return c.json({ error: "Capsule not found" }, 404);
-    }
-
-    // Check if user has permission to view this capsule
-    // User can view if they created it OR if they're a recipient
-    const isCreator = capsule.created_by === user.id;
-    const isRecipient = capsule.recipients?.some(r => {
-      const email = typeof r === 'string' ? r : (r.value || r.email || '');
-      return email === user.email;
-    }) || capsule.self_contact === user.email;
-
-    if (!isCreator && !isRecipient) {
-      return c.json({ error: "Not authorized to view this capsule" }, 403);
-    }
-
-    // CRITICAL FIX: Enrich capsule with current sender name from profile
-    let senderName = 'Someone Special';
-    try {
-      const senderProfile = await kv.get(`profile:${capsule.created_by}`);
-      if (senderProfile) {
-        if (senderProfile.display_name) {
-          senderName = senderProfile.display_name.trim();
-        } else {
-          const fullName = `${senderProfile.first_name || ''} ${senderProfile.last_name || ''}`.trim();
-          senderName = fullName || 'Someone Special';
-        }
-      }
-      
-      // Fallback to auth if no profile name
-      if (!senderName || senderName === 'Someone Special') {
-        const { data: senderUser } = await supabase.auth.admin.getUserById(capsule.created_by);
-        if (senderUser?.user?.email) {
-          senderName = senderUser.user.email.split('@')[0];
-        }
-      }
-    } catch (error) {
-      console.warn('Could not load sender info:', error);
-    }
-
-    console.log(`✅ Capsule ${capsuleId} retrieved with sender: ${senderName}`);
-
-    // CRITICAL FIX: Hydrate media files with full metadata (not just IDs)
-    let hydratedMediaFiles = [];
-    if (capsule.media_files && Array.isArray(capsule.media_files) && capsule.media_files.length > 0) {
-      console.log(`🎬 Hydrating ${capsule.media_files.length} media files for capsule ${capsuleId}...`);
-      
-      try {
-        // Get full media object for each media ID
-        const mediaPromises = capsule.media_files.map(async (mediaId) => {
-          try {
-            const mediaFile = await kv.get(`media:${mediaId}`);
-            if (mediaFile) {
-              // Generate signed URL
-              const storagePath = mediaFile.storage_path || `${mediaFile.user_id}/${mediaFile.capsule_id}/${mediaFile.file_name}`;
-              const { data: signedUrl, error: urlError } = await supabase.storage
-                .from('make-f9be53a7-media')
-                .createSignedUrl(storagePath, 604800); // 7 days
-              
-              if (!urlError && signedUrl?.signedUrl) {
-                return {
-                  id: mediaFile.id,
-                  file_name: mediaFile.file_name,
-                  file_type: mediaFile.file_type,
-                  media_type: mediaFile.file_type, // Alias for compatibility
-                  type: mediaFile.file_type, // Another alias
-                  file_size: mediaFile.file_size,
-                  url: signedUrl.signedUrl,
-                  file_url: signedUrl.signedUrl, // Alias for compatibility
-                  created_at: mediaFile.created_at
-                };
-              }
-            }
-            return null;
-          } catch (err) {
-            console.warn(`Failed to hydrate media ${mediaId}:`, err);
-            return null;
-          }
-        });
-
-        const results = await Promise.all(mediaPromises);
-        hydratedMediaFiles = results.filter(m => m !== null);
-        console.log(`✅ Successfully hydrated ${hydratedMediaFiles.length}/${capsule.media_files.length} media files`);
-      } catch (error) {
-        console.error('Error hydrating media files:', error);
-        // If hydration fails, still return the capsule without media
-      }
-    }
-
-    return c.json({ 
-      success: true, 
-      capsule: {
-        ...capsule,
-        sender_name: senderName,
-        // Replace media_files array of IDs with full media objects
-        media_files: hydratedMediaFiles.length > 0 ? hydratedMediaFiles : capsule.media_files
-      }
-    });
-
-  } catch (error) {
-    console.error("Get capsule error:", error);
-    return c.json({ error: "Failed to get capsule", details: error.message }, 500);
-  }
+  return await handleGetCapsuleById(c, verifyUserToken, supabase, getCapsuleReliable);
 });
 
 // Update capsule delivery time
@@ -3936,7 +3816,7 @@ app.put("/make-server-f9be53a7/api/capsules/:id", async (c) => {
       theme: theme !== undefined ? theme : (capsule.theme || 'standard'), // CRITICAL: Theme for custom opening ceremony
       metadata: metadata !== undefined ? metadata : (capsule.metadata || {}), // CRITICAL: Additional theme-specific metadata
       updated_at: new Date().toISOString(),
-      frontend_url: frontend_url !== undefined ? frontend_url : (capsule.frontend_url || 'https://found-shirt-81691824.figma.site')
+      frontend_url: frontend_url !== undefined ? frontend_url : (capsule.frontend_url || 'https://www.erastimecapsule.com')
     };
 
     // CRITICAL FIX: Synchronize capsule_media KV list with updated media_urls
@@ -11481,7 +11361,7 @@ app.post("/make-server-f9be53a7/api/public/legacy-access/request-verification", 
     const userSettings = await kv.get(`user_settings:${beneficiaryConfig.userId}`);
     const userName = userProfile?.name || userProfile?.displayName || userSettings?.displayName || 'Someone';
     
-    const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://found-shirt-81691824.figma.site';
+    const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://www.erastimecapsule.com';
     const verificationUrl = `${frontendUrl}/verify-beneficiary?token=${newToken}`;
     
     const { sendEmail } = await import('./email-service.tsx');
@@ -12524,7 +12404,7 @@ async function triggerManualUnlock(userId: string): Promise<void> {
     console.log(`📧 [Phase 5] Sending unlock email to ${beneficiary.email}...`);
     
     // Use correct frontend domain
-    const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://found-shirt-81691824.figma.site';
+    const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://www.erastimecapsule.com';
     
     const result = await sendEmail({
       to: beneficiary.email,

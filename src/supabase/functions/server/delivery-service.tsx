@@ -989,10 +989,10 @@ export class DeliveryService {
       expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
     });
     
-    // Get frontend URL - prefer stored URL from capsule, then env var, then default Figma Make URL
+    // Get frontend URL - prefer stored URL from capsule, then env var, then default production URL
     let frontendUrl = (capsule as any).frontend_url || 
                       Deno.env.get('FRONTEND_URL') || 
-                      'https://found-shirt-81691824.figma.site';
+                      'https://www.erastimecapsule.com';
     
     if ((capsule as any).frontend_url) {
       console.log('✅ Using stored frontend_url from capsule:', frontendUrl);
@@ -1139,12 +1139,18 @@ export class DeliveryService {
                 
                 // ✅ User exists! Add directly to their received list
                 const receivedKey = `user_received:${matchingUser.id}`;
+                console.log(`📋 [RECEIVED] Fetching received list for user ${matchingUser.id} (${email})`);
                 const receivedList = await kv.get(receivedKey) || [];
+                console.log(`📋 [RECEIVED] Current received list has ${receivedList.length} capsules`);
                 
                 if (!receivedList.includes(capsule.id)) {
                   receivedList.push(capsule.id);
+                  console.log(`📋 [RECEIVED] Adding capsule ${capsule.id} to list (new length: ${receivedList.length})`);
                   await kv.set(receivedKey, receivedList);
                   console.log(`✅ 🎯 IMMEDIATELY added capsule ${capsule.id} to existing user ${matchingUser.id}'s (${email}) received list - NO CLAIM-PENDING NEEDED!`);
+                  console.log(`📋 [RECEIVED] Verifying write by re-reading...`);
+                  const verifyList = await kv.get(receivedKey) || [];
+                  console.log(`📋 [RECEIVED] Verification: list now has ${verifyList.length} capsules, includes target: ${verifyList.includes(capsule.id)}`);
                   
                   // Get sender name for notification
                   let senderName = 'Someone Special';
@@ -1198,7 +1204,15 @@ export class DeliveryService {
         }
       }
     } catch (error) {
-      console.warn('Failed to add capsule to received list:', error);
+      console.error('❌ CRITICAL ERROR: Failed to add capsule to received list:', error);
+      console.error('❌ Error details:', { 
+        message: error.message, 
+        stack: error.stack,
+        capsuleId: capsule.id,
+        recipientType: capsule.recipient_type 
+      });
+      // Re-throw to ensure delivery is marked as failed
+      throw error;
     }
   }
 
@@ -1208,7 +1222,7 @@ export class DeliveryService {
       const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const notification = {
         id: notificationId,
-        type: (senderName === 'You (Past Self)' || senderName.includes('Past Self')) ? 'received' : 'received_capsule',
+        type: 'received', // ✅ FIX: Always use 'received' for all received capsules (yellow color)
         capsuleId: capsule.id,
         capsuleTitle: capsule.title || 'Untitled Capsule',
         senderName: senderName,
@@ -1230,7 +1244,7 @@ export class DeliveryService {
       }
       
       await kv.set(notificationsKey, notifications);
-      console.log(`🔔 Created "received_capsule" notification for user ${userId}`);
+      console.log(`🔔 Created "received" notification for user ${userId} from ${senderName}`);
     } catch (notifError) {
       console.error(`❌ Failed to create notification:`, notifError);
       // Don't let notification failure block delivery

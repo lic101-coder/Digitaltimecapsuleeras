@@ -176,7 +176,7 @@ export async function addBeneficiary(
         const userName = userProfile?.name || userProfile?.displayName || userSettings?.displayName || 'Someone';
         
         // Build verification URL
-        const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://found-shirt-81691824.figma.site';
+        const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://www.erastimecapsule.com';
         const verificationUrl = `${frontendUrl}/verify-beneficiary?token=${verificationToken}`;
         
         const emailResult = await sendEmail({
@@ -265,7 +265,7 @@ export async function sendBeneficiaryNotification(
       const userName = userProfile?.name || userProfile?.displayName || userSettings?.displayName || 'Someone';
       
       // Build verification URL
-      const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://found-shirt-81691824.figma.site';
+      const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://www.erastimecapsule.com';
       const verificationUrl = `${frontendUrl}/verify-beneficiary?token=${verificationToken}`;
       
       const emailResult = await sendEmail({
@@ -368,7 +368,7 @@ export async function verifyBeneficiary(
               beneficiaryName: beneficiary.name,
               beneficiaryEmail: beneficiary.email,
               userName: userName,
-              homeUrl: 'https://found-shirt-81691824.figma.site',
+              homeUrl: 'https://www.erastimecapsule.com',
               verifiedDate: new Date().toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
@@ -435,7 +435,7 @@ export async function resendVerificationEmail(
       const userProfile = await kv.get(`profile:${userId}`);
       const userName = userProfile?.name || userProfile?.displayName || 'Someone';
       
-      const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://found-shirt-81691824.figma.site';
+      const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://www.erastimecapsule.com';
       const verificationUrl = `${frontendUrl}/verify-beneficiary?token=${verificationToken}`;
       
       const emailResult = await sendEmail({
@@ -753,7 +753,7 @@ async function triggerLegacyUnlock(
       
       console.log(`📧 [Unlock] Sending deferred verification email to ${beneficiary.email}`);
       
-      const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://found-shirt-81691824.figma.site';
+      const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://www.erastimecapsule.com';
       const verificationUrl = `${frontendUrl}/verify-beneficiary?token=${beneficiary.verificationToken}`;
       
       try {
@@ -991,7 +991,7 @@ async function sendUnlockNotificationEmail(params: {
       }
     }
     
-    const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://found-shirt-81691824.figma.site';
+    const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://www.erastimecapsule.com';
     const accessUrl = `${frontendUrl}/legacy-vault/access?token=${unlockToken}`;
     
     const result = await sendEmail({
@@ -1046,7 +1046,7 @@ async function sendInactivityWarningEmail(config: LegacyAccessConfig): Promise<v
     const cancelToken = generateSecureToken();
     await kv.set(`cancel_unlock_${cancelToken}`, { userId: config.userId, createdAt: Date.now() });
     
-    const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://found-shirt-81691824.figma.site';
+    const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://www.erastimecapsule.com';
     
     const result = await sendEmail({
       to: userEmail,

@@ -294,6 +294,13 @@ export class DatabaseService {
 
   static async getUserTimeCapsules(userId: string, limit?: number, offset: number = 0, skipMedia: boolean = false) {
     try {
+      // Check if user is authenticated before making the request
+      const accessToken = await this.getAccessToken();
+      if (!accessToken) {
+        console.log('ℹ️ User not authenticated, returning empty capsules array');
+        return { capsules: [], total: 0, hasMore: false };
+      }
+      
       // Use the proper REST API endpoint to get all user's capsules
       console.log(`📡 Fetching capsules for user ${userId} via REST API...`);
       // Use shorter timeout with 1 retry for faster failure and recovery
@@ -425,6 +432,13 @@ export class DatabaseService {
   // Get basic stats without loading full capsules
   static async getUserCapsulesStats(userId: string) {
     try {
+      // Check if user is authenticated before making the request
+      const accessToken = await this.getAccessToken();
+      if (!accessToken) {
+        console.log('ℹ️ User not authenticated, returning empty stats');
+        return { total: 0, hasCapsules: false };
+      }
+      
       const userCapsulesKey = `user_capsules:${userId}`;
       const response = await this.makeRequest(`/api/kv/get?key=${userCapsulesKey}`);
       const capsuleIds = response?.value || [];
@@ -434,7 +448,7 @@ export class DatabaseService {
         hasCapsules: capsuleIds.length > 0
       };
     } catch (error) {
-      console.error('Error getting capsule stats:', error);
+      console.warn('⚠️ Error getting capsule stats (non-critical):', error.message);
       return { total: 0, hasCapsules: false };
     }
   }
@@ -719,6 +733,20 @@ export class DatabaseService {
   // Get accurate capsule stats from server (not affected by pagination)
   static async getCapsuleStats(userId: string) {
     try {
+      // Check if user is authenticated before making the request
+      const accessToken = await this.getAccessToken();
+      if (!accessToken) {
+        console.log('ℹ️ User not authenticated, returning empty stats');
+        return {
+          scheduled: 0,
+          delivered: 0,
+          selfOnlyDelivered: 0,
+          draft: 0,
+          failed: 0,
+          total: 0
+        };
+      }
+      
       console.log(`📊 Fetching capsule stats from server for user ${userId}...`);
       const response = await this.makeRequest(
         '/api/capsules/stats', 
@@ -757,12 +785,7 @@ export class DatabaseService {
       console.log('✅ Server stats loaded successfully:', response);
       return response;
     } catch (error) {
-      console.error('❌ Exception fetching capsule stats:', error);
-      console.error('❌ Error details:', {
-        message: error.message,
-        name: error.name,
-        stack: error.stack
-      });
+      console.warn('⚠️ Error fetching capsule stats (non-critical):', error.message);
       // Return empty stats instead of null to prevent UI errors
       console.log('⚠️ Returning empty stats due to error');
       return {
@@ -1072,6 +1095,13 @@ export class DatabaseService {
   // Get capsules received by a user (where user is recipient)
   static async getReceivedCapsules(userId: string, userEmail?: string, userPhone?: string) {
     try {
+      // Check if user is authenticated before making the request
+      const accessToken = await this.getAccessToken();
+      if (!accessToken) {
+        console.log('ℹ️ User not authenticated, returning empty received capsules array');
+        return [];
+      }
+      
       console.log('📨 Fetching received capsules from server endpoint...');
       
       // CRITICAL FIX: Use the server endpoint which has proper sender name enrichment

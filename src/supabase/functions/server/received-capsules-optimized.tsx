@@ -1,11 +1,11 @@
 /**
  * OPTIMIZED RECEIVED CAPSULES ENDPOINT
  * 
- * Fixes timeout issues by:
- * - Limiting to 50 most recent capsules
- * - Batch processing (10 at a time)
+ * Returns ALL received capsules (no limits):
+ * - Self-sent capsules (recipient_type = 'self' AND status = 'delivered')
+ * - Capsules from others (in user_received list)
+ * - Batch processing (20 capsules at a time for checking, 10 for loading)
  * - Timeout protection on all KV operations
- * - Skipping media files to reduce load
  */
 
 import * as kv from './kv_store.tsx';
@@ -42,13 +42,62 @@ export async function handleGetReceivedCapsules(c: any, verifyUserToken: any, su
       );
       const receivedCapsuleIds = rawIds || [];
       
-      console.log(`📋 Found ${receivedCapsuleIds.length} received capsule IDs for user`);
-
-      // OPTIMIZATION: Limit to most recent 50 capsules to prevent timeout
-      const limitedIds = receivedCapsuleIds.slice(0, 50);
-      if (receivedCapsuleIds.length > 50) {
-        console.log(`⚠️ Limiting to 50 most recent capsules (out of ${receivedCapsuleIds.length} total)`);
+      console.log(`📋 Found ${receivedCapsuleIds.length} received capsule IDs (from others) for user`);
+      
+      // ✅ CRITICAL FIX: Also fetch self-sent capsules (recipient_type = 'self')
+      // These should appear in the "Received" folder too!
+      let selfSentIds = [];
+      try {
+        // Get user's capsule ID list
+        const userCapsulesKey = `user_capsules:${user.id}`;
+        const userCapsuleIds = await withFallback(
+          kv.get(userCapsulesKey),
+          [],
+          10000 // 10 second timeout
+        );
+        
+        if (userCapsuleIds && userCapsuleIds.length > 0) {
+          console.log(`📋 Found ${userCapsuleIds.length} total capsules created by user, checking for self-sent...`);
+          
+          // Fetch capsules to check recipient_type
+          // Process in batches to avoid timeout
+          const BATCH_SIZE = 20;
+          // ✅ CRITICAL FIX: Check ALL user capsules, not just first 100!
+          for (let i = 0; i < userCapsuleIds.length; i += BATCH_SIZE) {
+            const batch = userCapsuleIds.slice(i, i + BATCH_SIZE);
+            const capsuleKeys = batch.map(id => `capsule:${id}`);
+            
+            const capsules = await withFallback(
+              kv.mget(capsuleKeys),
+              [],
+              5000 // 5 second timeout
+            );
+            
+            // Filter for self-sent delivered capsules
+            capsules.forEach((capsule, idx) => {
+              if (capsule && 
+                  capsule.recipient_type === 'self' && 
+                  capsule.status === 'delivered' &&
+                  new Date(capsule.delivery_date) <= new Date()) {
+                selfSentIds.push(batch[idx]);
+              }
+            });
+          }
+          
+          console.log(`📋 Found ${selfSentIds.length} self-sent delivered capsules for user`);
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to fetch self-sent capsules:', error);
       }
+      
+      // Merge both lists and remove duplicates
+      const allReceivedIds = [...new Set([...receivedCapsuleIds, ...selfSentIds])];
+      console.log(`📋 Total received capsules: ${allReceivedIds.length} (${receivedCapsuleIds.length} from others + ${selfSentIds.length} self-sent)`);
+
+      // ✅ CRITICAL FIX: Return ALL capsules, no artificial limits!
+      // Previous 50-capsule limit was losing user data
+      const limitedIds = allReceivedIds;
+      console.log(`📦 Fetching all ${limitedIds.length} received capsules (no limits)`);
 
       // OPTIMIZATION: Process in batches of 10 to prevent overwhelming KV store
       const BATCH_SIZE = 10;
@@ -202,7 +251,7 @@ export async function handleGetReceivedCapsules(c: any, verifyUserToken: any, su
       return c.json({
         capsules: receivedCapsules,
         total: receivedCapsules.length,
-        has_more: receivedCapsuleIds.length > 50
+        has_more: false // No pagination, all capsules returned
       });
 
     } catch (error) {

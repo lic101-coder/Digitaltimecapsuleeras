@@ -401,6 +401,7 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
   const [receivedCount, setReceivedCount] = useState(0); // Track count of received capsules
   const [receivedCapsules, setReceivedCapsules] = useState([]); // Full received capsules data for "All Capsules" view
   const [receivedLoading, setReceivedLoading] = useState(true); // ✅ NEW: Track loading state for received capsules
+  const [receivedRefreshTrigger, setReceivedRefreshTrigger] = useState(0); // ✅ NEW: Trigger received capsules refresh
   const [expandedMediaCapsules, setExpandedMediaCapsules] = useState(new Set()); // Track which capsules have expanded media on mobile
   const [viewingCapsule, setViewingCapsule] = useState(null); // Track which capsule is being viewed in detail modal
   const [showDeleteDialog, setShowDeleteDialog] = useState(false); // Delete confirmation dialog
@@ -488,7 +489,7 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
     const cacheKey = `dashboard_capsules_${user.id}`;
     const selectionKey = `dashboard_selection_${user.id}`;
     const restoredKey = `dashboard_selection_restored_${user.id}`;
-    const receivedCacheKey = `received_capsules_${user.id}`;
+    const receivedCacheKey = `received_capsules_v3_${user.id}`; // v3 removes 50-capsule limit
     
     try {
       localStorage.removeItem(cacheKey);
@@ -521,12 +522,27 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
       setReceivedLoading(false); // ✅ Done loading
       
       // Update cache
-      const cacheKey = `received_capsules_${user.id}`;
+      const cacheKey = `received_capsules_v3_${user.id}`; // v3 removes 50-capsule limit
       localStorage.setItem(cacheKey, JSON.stringify({
         count,
         capsules: received,
         timestamp: Date.now()
       }));
+      
+      // ✅ CRITICAL: Also invalidate main dashboard cache to force stats recalculation
+      const dashboardCacheKey = `dashboard_capsules_${user.id}`;
+      const dashboardCache = localStorage.getItem(dashboardCacheKey);
+      if (dashboardCache) {
+        try {
+          const parsedCache = JSON.parse(dashboardCache);
+          // Update timestamp to mark as "needs refresh on next load"
+          parsedCache.timestamp = Date.now() - (2 * 60 * 1000); // Make it look 2 minutes old
+          localStorage.setItem(dashboardCacheKey, JSON.stringify(parsedCache));
+          console.log('✅ Invalidated dashboard cache to refresh stats');
+        } catch (e) {
+          console.warn('Failed to invalidate dashboard cache:', e);
+        }
+      }
       
       console.log('✅ Received capsules refreshed:', count);
     } catch (error) {
@@ -1068,7 +1084,7 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
     const fetchReceivedCount = async () => {
       if (!user?.id) return;
       
-      const cacheKey = `received_capsules_${user.id}`;
+      const cacheKey = `received_capsules_v3_${user.id}`; // v3 removes 50-capsule limit
       
       try {
         // ✅ PHASE 3: Cache-First Strategy - Show cached data IMMEDIATELY
@@ -1079,20 +1095,14 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
             const cachedData = JSON.parse(cachedDataStr);
             const cacheAge = Date.now() - cachedData.timestamp;
             
-            // ✅ Show cached data immediately regardless of age (to prevent flash)
+            // ✅ Show cached data immediately for instant UI (but always fetch fresh in background)
             console.log(`⚡ [INSTANT] Using cached received data (age: ${Math.round(cacheAge/1000)}s):`, cachedData.count);
             setReceivedCount(cachedData.count);
             setReceivedCapsules(cachedData.capsules || []);
             setReceivedLoading(false); // ✅ Cache loaded, not loading anymore
             
-            // If cache is fresh (< 1 minute), don't fetch in background
-            if (cacheAge < 60 * 1000) {
-              console.log('✨ Cache is fresh, skipping background fetch');
-              return;
-            }
-            
-            // Cache is stale, fetch fresh data in background (silent update)
-            console.log('🔄 Cache stale, fetching fresh data in background...');
+            // ✅ ALWAYS fetch fresh data in background (cache might be stale from other tabs/auto-claim)
+            console.log('🔄 Fetching fresh data in background to ensure accuracy...');
           } catch (parseError) {
             console.warn('⚠️ Failed to parse cached received data:', parseError);
             // Continue to fetch fresh data
@@ -1102,10 +1112,79 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
           setReceivedLoading(true);
         }
         
-        // ✅ PHASE 1: Fetch fresh data (either no cache, or background update)
-        console.log('📡 Fetching received capsules from server...');
+        // ✅ CRITICAL FIX: Auto-claim pending capsules BEFORE fetching received capsules
+        // This ensures capsules from email links are immediately available
+        console.log('🔄 [AUTO-CLAIM] Starting auto-claim pending capsules...');
+        let claimedCount = 0;
+        try {
+          const session = await supabase.auth.getSession();
+          console.log('🔄 [AUTO-CLAIM] Session check:', session?.data?.session ? 'Has session' : 'No session');
+          
+          if (session?.data?.session?.access_token) {
+            console.log('🔄 [AUTO-CLAIM] Calling claim-pending endpoint...');
+            const claimResponse = await fetch(
+              `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/claim-pending`,
+              {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${session.data.session.access_token}` }
+              }
+            );
+            
+            console.log('🔄 [AUTO-CLAIM] Response status:', claimResponse.status);
+            
+            if (claimResponse.ok) {
+              const claimData = await claimResponse.json();
+              console.log('🔄 [AUTO-CLAIM] Response data:', claimData);
+              claimedCount = claimData.claimed || 0;
+              
+              if (claimedCount > 0) {
+                console.log(`✅ [AUTO-CLAIM] Successfully claimed ${claimedCount} capsule(s):`, claimData.capsuleIds);
+                
+                // ✅ CRITICAL: Invalidate cache after claiming capsules
+                console.log('🔄 [AUTO-CLAIM] Invalidating cache to force fresh data...');
+                localStorage.removeItem(cacheKey);
+                
+                toast.success(`${claimedCount} new capsule${claimedCount > 1 ? 's' : ''} added to your collection!`, {
+                  duration: 4000
+                });
+              } else {
+                console.log('ℹ️ [AUTO-CLAIM] No pending capsules to claim');
+              }
+            } else {
+              const errorText = await claimResponse.text();
+              console.error('❌ [AUTO-CLAIM] Claim-pending failed:', claimResponse.status, errorText);
+            }
+          }
+        } catch (claimError) {
+          console.error('❌ [AUTO-CLAIM] Exception during auto-claim:', claimError);
+        }
+        
+        // ✅ PHASE 1: Fetch fresh data (skip cache if we just claimed capsules)
+        const skipCache = claimedCount > 0;
+        if (skipCache) {
+          console.log('📡 Fetching received capsules from server (bypassing cache after auto-claim)...');
+          setReceivedLoading(true); // Force loading state
+        } else {
+          console.log('📡 Fetching received capsules from server...');
+        }
+        
         const received = await DatabaseService.getReceivedCapsules(user.id, user.email);
         const count = received?.length || 0;
+        
+        // ✅ CRITICAL: Detect cache mismatch and log it
+        if (cachedDataStr && !skipCache) {
+          try {
+            const cachedData = JSON.parse(cachedDataStr);
+            const cachedCount = cachedData.count || 0;
+            if (cachedCount !== count) {
+              console.warn(`🚨 [CACHE MISMATCH] Cached count (${cachedCount}) != Fresh count (${count}). Difference: ${count - cachedCount}`);
+              console.log('📊 [CACHE MISMATCH] Cached IDs:', cachedData.capsules?.map(c => c.id.substring(0, 8)).join(', '));
+              console.log('📊 [CACHE MISMATCH] Fresh IDs:', received?.map(c => c.id.substring(0, 8)).join(', '));
+            }
+          } catch (e) {
+            console.warn('Failed to compare cache:', e);
+          }
+        }
         
         setReceivedCount(count);
         setReceivedCapsules(received || []);
@@ -1119,6 +1198,20 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
         }));
         
         console.log('✅ Received capsules loaded:', count);
+        
+        // ✅ CRITICAL: If we claimed capsules, also refresh stats
+        if (claimedCount > 0) {
+          console.log('🔄 [AUTO-CLAIM] Refreshing stats after claiming capsules...');
+          try {
+            const statsResponse = await DatabaseService.getCapsuleStats(user.id);
+            if (statsResponse && !statsResponse.error) {
+              console.log('✅ Stats refreshed after auto-claim:', statsResponse);
+              setServerStats(statsResponse);
+            }
+          } catch (statsError) {
+            console.warn('⚠️ Failed to refresh stats after auto-claim:', statsError);
+          }
+        }
       } catch (error) {
         console.error('❌ Failed to fetch received count:', error);
         // Don't show error to user, keep cached data if available or use 0
@@ -1130,7 +1223,7 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
     };
     
     fetchReceivedCount();
-  }, [user?.id]);
+  }, [user?.id, receivedRefreshTrigger]); // ✅ Re-fetch when trigger changes
 
   // Real-time WebSocket listener for new received capsules
   useEffect(() => {
@@ -1182,7 +1275,7 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
     console.log('🔔 Notification click detected, finding capsule:', capsuleId, 'notificationType:', notificationType);
     
     // ✅ CRITICAL: If notification type is "received", ALWAYS show as received (yellow)
-    const shouldForceAsReceived = notificationType === 'received';
+    const shouldForceAsReceived = notificationType === 'received' || notificationType === 'received_capsule';
     
     // ✅ CRITICAL: Search in receivedCapsules FIRST (notifications are primarily for received capsules)
     let capsule = receivedCapsules.find(c => c.id === capsuleId);
@@ -1198,6 +1291,27 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
     
     if (capsule) {
       console.log('✅ Found capsule from notification, opening overlay:', capsule.title);
+      
+      // ✅ FIX: If notification type is "received", call mark-received API to ensure it's in received folder
+      if (shouldForceAsReceived) {
+        console.log('📨 Marking capsule as received via API...');
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.access_token) {
+            fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/${capsuleId}/mark-received`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${session.access_token}` }
+            })
+            .then(res => res.json())
+            .then(result => {
+              console.log('✅ Successfully marked capsule as received:', result);
+              // Trigger a refresh of received capsules to show it in the folder
+              setReceivedRefreshTrigger(prev => prev + 1);
+            })
+            .catch(err => console.warn('⚠️ Failed to mark capsule as received (non-critical):', err));
+          }
+        });
+      }
+      
       // Mark it as received if it came from receivedCapsules OR notification type is "received"
       const capsuleToView = (isFromReceived || shouldForceAsReceived) ? {
         ...capsule,
@@ -1244,6 +1358,23 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
           console.log('⚡ [INSTANT FETCH] Capsule loaded (<500ms):', data.capsule?.title || data.title);
           const capsuleData = data.capsule || data; // Handle both response formats
           console.log('⚡ [INSTANT FETCH] Extracted capsule data:', { id: capsuleData?.id, title: capsuleData?.title });
+          
+          // ✅ FIX: If notification type is "received", call mark-received API to ensure it's in received folder
+          if (shouldForceAsReceived) {
+            console.log('📨 Marking instant-fetched capsule as received via API...');
+            fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/${capsuleId}/mark-received`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${accessToken}` }
+            })
+            .then(res => res.json())
+            .then(result => {
+              console.log('✅ Successfully marked instant-fetched capsule as received:', result);
+              // Trigger a refresh of received capsules to show it in the folder
+              setReceivedRefreshTrigger(prev => prev + 1);
+            })
+            .catch(err => console.warn('⚠️ Failed to mark capsule as received (non-critical):', err));
+          }
+          
           const capsuleToView = shouldForceAsReceived ? { ...capsuleData, isReceived: true } : capsuleData;
           setViewingCapsule(capsuleToView);
           
@@ -1506,7 +1637,7 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
           }
           
           // Update cache
-          const cacheKey = `received_capsules_${user.id}`;
+          const cacheKey = `received_capsules_v3_${user.id}`; // v3 removes 50-capsule limit
           localStorage.setItem(cacheKey, JSON.stringify({
             count: newReceivedCount,
             capsules: received,

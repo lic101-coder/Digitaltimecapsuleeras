@@ -198,7 +198,7 @@ export function useEchoNotifications(userId: string | null, accessToken: string 
         if (status === 'SUBSCRIBED') {
           console.log('✅ [Echo Notifications] Real-time updates active');
         } else if (status === 'CHANNEL_ERROR') {
-          console.warn('⚠️ [Echo Notifications] Using polling mode (real-time unavailable)');
+          console.log('ℹ️ [Echo Notifications] Using polling mode (5s interval)');
         }
       });
     
