@@ -3935,20 +3935,21 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
       {/* Animated Background Elements - Different for Mobile vs Desktop */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {isMobile ? (
-          // Mobile: Simple solid dark background with subtle accent (NO gradients)
+          // Mobile: Vibrant cosmic gradient adapted for mobile
           <>
-            <div className="absolute top-0 right-0 w-96 h-96 bg-purple-950/30 rounded-full blur-3xl" />
-            <div className="absolute bottom-1/4 left-0 w-80 h-80 bg-slate-900/40 rounded-full blur-3xl" />
+            <div className="absolute inset-0 bg-gradient-to-b from-purple-900 via-fuchsia-800 to-pink-900" />
+            <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/30 rounded-full blur-3xl" />
+            <div className="absolute bottom-1/4 left-0 w-80 h-80 bg-fuchsia-500/20 rounded-full blur-3xl" />
           </>
         ) : (
-          // Desktop: Toned-down gradient overlay with glassmorphism-friendly background
+          // Desktop: Full cosmic gradient with animated orbs
           <>
-            {/* Base gradient - toned down to 40% opacity */}
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/40 via-fuchsia-500/40 to-pink-600/40" />
+            {/* Base gradient - increased opacity for visibility */}
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-fuchsia-500 to-pink-600" />
             {/* Animated orbs for depth */}
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-fuchsia-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-            <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-pink-400/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-400/30 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-fuchsia-400/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-pink-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
           </>
         )}
       </div>
