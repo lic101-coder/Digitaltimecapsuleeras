@@ -9,7 +9,7 @@ import { Checkbox } from './ui/checkbox';
 import { Clock, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Shield, AlertCircle, Check, Settings, Mail } from 'lucide-react';
 import { MomentPrismLogo } from './MomentPrismLogo';
 import { EmailVerification } from './EmailVerification';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { supabase } from '../utils/supabase/client';
 import { DatabaseService } from '../utils/supabase/database';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
@@ -1158,7 +1158,7 @@ export function Auth({ onAuthenticated }) {
           const { exists } = await checkResponse.json();
           
           if (exists) {
-            console.log('⚠️ Email already registered:', formData.email);
+            console.log('��️ Email already registered:', formData.email);
             toast.error('Account Already Exists', {
               description: 'This email is already registered. Please sign in instead.',
               duration: 8000,

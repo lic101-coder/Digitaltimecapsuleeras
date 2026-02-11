@@ -4,7 +4,7 @@ import { X, Share2, Crown, Sparkles, Star, Zap, Sunrise, Link2, Check } from 'lu
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { TitleDisplay } from './TitleDisplay';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { getTitleIcon, getTitleConfig } from '../utils/titleConfigs';
 
 interface TitleRewardModalEnhancedProps {
