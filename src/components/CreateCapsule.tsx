@@ -35,6 +35,7 @@ import { DatabaseService } from '../utils/supabase/database';
 import { mediaCache } from '../utils/mediaCache';
 import { toast } from 'sonner@2.0.3';
 import { getUserTimeZone, TIME_ZONES, getTimeZoneDisplay, convertToUTCForStorage, fromUTC } from '../utils/timezone';
+import { validateScheduleTime, getMinimumScheduleDate, getMaximumScheduleDate } from '../utils/time-validation';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { compressVideo, compressImage, shouldCompress } from '../utils/video-compression';
 import { uploadLargeFile, isLargeFile, formatFileSize } from '../utils/large-file-upload';
@@ -1353,6 +1354,10 @@ export function CreateCapsule({
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [media, setMedia] = useState<MediaItem[]>([]);
   
+  // ⏰ TIME VALIDATION STATE - Track scheduling validation errors
+  const [timeValidationError, setTimeValidationError] = useState<string | null>(null);
+  const [isTimeValid, setIsTimeValid] = useState<boolean>(true);
+  
   // 🚀 VAULT LOADING MODAL STATE - Track vault media download/conversion progress
   const [vaultLoadingState, setVaultLoadingState] = useState<{
     isOpen: boolean;
@@ -1968,6 +1973,67 @@ export function CreateCapsule({
       setDeliveryDate(initialDeliveryDate);
     }
   }, [initialDeliveryDate, editingCapsule]);
+
+  // ⏰ VALIDATE SCHEDULING TIME - Check if date/time meets minimum (59 min) and maximum (5 years) requirements
+  useEffect(() => {
+    // Only validate if both date and time are selected
+    if (!deliveryDate || !deliveryTime || deliveryTime.trim() === '') {
+      setTimeValidationError(null);
+      setIsTimeValid(true);
+      return;
+    }
+
+    try {
+      // Combine date and time into a single DateTime
+      const [hour, minute] = deliveryTime.split(':').map(Number);
+      
+      // Create the scheduled datetime using the user's selected date and time
+      // This is in their local interpretation, we'll convert to UTC later for storage
+      const scheduledDateTime = new Date(
+        deliveryDate.getFullYear(),
+        deliveryDate.getMonth(),
+        deliveryDate.getDate(),
+        hour,
+        minute,
+        0,
+        0
+      );
+
+      // Validate the scheduled time
+      const validation = validateScheduleTime(scheduledDateTime);
+
+      if (!validation.valid) {
+        setIsTimeValid(false);
+        setTimeValidationError(validation.message || 'Invalid schedule time');
+        
+        // Show toast notification
+        if (validation.error === 'minimum') {
+          toast.error('⏰ Too Soon!', {
+            description: `Capsules must be scheduled at least 1 hour in the future to allow time for media processing.\n\nEarliest allowed: ${validation.earliestAllowed?.toLocaleString()}`,
+            duration: 6000,
+            id: 'time-validation-min' // Prevent duplicate toasts
+          });
+        } else if (validation.error === 'maximum') {
+          toast.error('📅 Too Far Ahead!', {
+            description: `Capsules cannot be scheduled more than 5 years in the future.\n\nLatest allowed: ${validation.latestAllowed?.toLocaleDateString()}`,
+            duration: 6000,
+            id: 'time-validation-max' // Prevent duplicate toasts
+          });
+        }
+      } else {
+        // Valid time
+        setIsTimeValid(true);
+        setTimeValidationError(null);
+        // Dismiss any existing validation error toasts
+        toast.dismiss('time-validation-min');
+        toast.dismiss('time-validation-max');
+      }
+    } catch (error) {
+      console.error('Error validating schedule time:', error);
+      setIsTimeValid(true); // Don't block submission on validation errors
+      setTimeValidationError(null);
+    }
+  }, [deliveryDate, deliveryTime]);
 
   // Apply template
   const applyTemplate = (template: { id: string; title: string; message: string; icon: string; name: string }) => {
@@ -3242,6 +3308,15 @@ export function CreateCapsule({
 
     if (!deliveryTime || deliveryTime.trim() === '') {
       toast.error('Please select a delivery time');
+      return;
+    }
+
+    // ⏰ VALIDATE SCHEDULE TIME - Check minimum (59 min) and maximum (5 years) constraints
+    if (!isTimeValid) {
+      toast.error('⏰ Invalid Schedule Time', {
+        description: timeValidationError || 'Please select a valid delivery date and time',
+        duration: 6000
+      });
       return;
     }
 
@@ -4571,12 +4646,16 @@ export function CreateCapsule({
                       {/* Date & Time */}
                       <div className="grid md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-white/90">Delivery Date</Label>
+                          <Label className={`text-white/90 ${timeValidationError ? 'text-red-400' : ''}`}>Delivery Date</Label>
                           <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
-                                className="w-full h-12 justify-start text-left bg-white/10 border-white/20 text-white hover:bg-white/20"
+                                className={`w-full h-12 justify-start text-left bg-white/10 text-white hover:bg-white/20 ${
+                                  timeValidationError 
+                                    ? 'border-red-500 border-2' 
+                                    : 'border-white/20'
+                                }`}
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
                                 {deliveryDate ? format(deliveryDate, 'PPP') : 'Select date'}
@@ -4590,7 +4669,18 @@ export function CreateCapsule({
                                   setDeliveryDate(date);
                                   setCalendarOpen(false);
                                 }}
-                                disabled={(date) => isBefore(startOfDay(date), startOfDay(new Date()))}
+                                disabled={(date) => {
+                                  // Disable dates before today
+                                  if (isBefore(startOfDay(date), startOfDay(new Date()))) {
+                                    return true;
+                                  }
+                                  // Disable dates more than 5 years in the future
+                                  const maxDate = getMaximumScheduleDate();
+                                  if (date > maxDate) {
+                                    return true;
+                                  }
+                                  return false;
+                                }}
                                 initialFocus
                               />
                             </PopoverContent>
@@ -4598,16 +4688,36 @@ export function CreateCapsule({
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="time" className="text-white/90">Delivery Time</Label>
+                          <Label htmlFor="time" className={`text-white/90 ${timeValidationError ? 'text-red-400' : ''}`}>Delivery Time</Label>
                           <Input
                             id="time"
                             type="time"
                             value={deliveryTime}
                             onChange={(e) => setDeliveryTime(e.target.value)}
-                            className="h-12 bg-white/10 border-white/20 text-white text-center"
+                            className={`h-12 bg-white/10 text-white text-center ${
+                              timeValidationError 
+                                ? 'border-red-500 border-2' 
+                                : 'border-white/20'
+                            }`}
                           />
                         </div>
                       </div>
+
+                      {/* Validation Error Message */}
+                      {timeValidationError && (
+                        <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
+                          <p className="text-sm text-red-200 whitespace-pre-line">{timeValidationError}</p>
+                        </div>
+                      )}
+
+                      {/* Helper Text */}
+                      {!timeValidationError && (
+                        <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                          <p className="text-xs text-blue-200">
+                            💡 <strong>Scheduling Limits:</strong> Capsules must be scheduled between 1 hour and 5 years from now
+                          </p>
+                        </div>
+                      )}
 
                       {/* Timezone */}
                       <div className="space-y-2">
@@ -4723,10 +4833,10 @@ export function CreateCapsule({
                 ) : (
                   <Button
                     size="lg"
-                    onClick={deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType ? handleSubmit : handleSaveDraft}
-                    disabled={isSubmitting || media.some(m => m.uploading)}
+                    onClick={deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType && isTimeValid ? handleSubmit : handleSaveDraft}
+                    disabled={isSubmitting || media.some(m => m.uploading) || (deliveryDate && deliveryTime && deliveryTime.trim() !== '' && !isTimeValid)}
                     className={`flex-1 ${
-                      deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType
+                      deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType && isTimeValid
                         ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400'
                         : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500'
                     } text-white shadow-lg shadow-emerald-500/20 border-0`}
@@ -4739,16 +4849,16 @@ export function CreateCapsule({
                     ) : isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType
+                        {deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType && isTimeValid
                           ? (editingCapsule ? 'Updating...' : 'Sealing Capsule...')
                           : 'Saving Draft...'}
                       </>
                     ) : (
                       <>
-                        {deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType
+                        {deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType && isTimeValid
                           ? (editingCapsule ? 'Update Capsule' : 'Seal & Send')
                           : 'Save Draft'}
-                        {deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType ? (
+                        {deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType && isTimeValid ? (
                           <Rocket className="ml-2 h-4 w-4" />
                         ) : (
                           <Save className="ml-2 h-4 w-4" />

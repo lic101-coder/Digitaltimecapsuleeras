@@ -55,6 +55,7 @@ import {
 import { toast } from 'sonner@2.0.3';
 import { LegacyAccessDisclaimer } from './LegacyAccessDisclaimer';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { validateLegacyAccessDate, getMinimumScheduleDate, getMaximumScheduleDate } from '../utils/time-validation';
 import { useAuth } from '../contexts/AuthContext';
 
 // Types matching backend
@@ -391,6 +392,34 @@ export function LegacyAccessBeneficiaries() {
       return;
     }
 
+    // ⏰ VALIDATE UNLOCK DATE
+    try {
+      // Parse the date string into a Date object (assumes midnight local time)
+      const selectedDate = new Date(dateString + 'T00:00:00');
+      
+      // Validate the date
+      const validation = validateLegacyAccessDate(selectedDate);
+      
+      if (!validation.valid) {
+        if (validation.error === 'minimum') {
+          toast.error('⏰ Too Soon!', {
+            description: `Legacy Access unlock date must be at least 1 hour in the future.\n\nEarliest allowed: ${validation.earliestAllowed?.toLocaleString()}`,
+            duration: 6000
+          });
+        } else if (validation.error === 'maximum') {
+          toast.error('📅 Too Far Ahead!', {
+            description: `Legacy Access unlock date cannot be more than 5 years in the future.\n\nLatest allowed: ${validation.latestAllowed?.toLocaleDateString()}`,
+            duration: 6000
+          });
+        }
+        return; // Don't proceed with the update
+      }
+    } catch (validationError) {
+      console.error('Date validation error:', validationError);
+      toast.error('Invalid date format');
+      return;
+    }
+
     try {
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/legacy-access/trigger/date`,
@@ -405,14 +434,15 @@ export function LegacyAccessBeneficiaries() {
       );
 
       if (!response.ok) {
-        throw new Error('Failed to update trigger');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update trigger');
       }
 
       toast.success('Unlock date updated');
       await loadConfig();
     } catch (error) {
       console.error('Error updating trigger:', error);
-      toast.error('Failed to update trigger');
+      toast.error(error instanceof Error ? error.message : 'Failed to update trigger');
     }
   };
 
@@ -1398,7 +1428,11 @@ export function LegacyAccessBeneficiaries() {
                         }
                       }}
                       min={new Date().toISOString().split('T')[0]}
+                      max={getMaximumScheduleDate().toISOString().split('T')[0]}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      💡 Legacy Access can be scheduled between 1 hour and 5 years from now
+                    </p>
 
                     {/* Date Preview */}
                     {config.trigger.manualUnlockDate && (

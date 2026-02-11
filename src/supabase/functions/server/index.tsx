@@ -973,6 +973,45 @@ app.post("/make-server-f9be53a7/api/auth/reset-password", async (c) => {
 // ============================================
 // These handle email verification without relying on Supabase Auth's email system
 
+// Check if email already exists in Supabase Auth
+app.post("/make-server-f9be53a7/api/auth/check-email", async (c) => {
+  try {
+    console.log('🔍 [Email Check] Request received');
+    
+    const { email } = await c.req.json();
+    
+    if (!email) {
+      return c.json({ error: "Email is required" }, 400);
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    console.log('🔍 [Email Check] Checking if email exists:', normalizedEmail);
+
+    // Use Supabase Admin API to check if user exists
+    const { data: { users }, error } = await supabase.auth.admin.listUsers();
+    
+    if (error) {
+      console.error('❌ [Email Check] Error listing users:', error);
+      // Don't reveal the error to the client for security
+      return c.json({ exists: false });
+    }
+    
+    // Check if any user has this email
+    const userExists = users?.some(user => 
+      user.email?.toLowerCase() === normalizedEmail
+    );
+    
+    console.log(`✅ [Email Check] Result for ${normalizedEmail}:`, userExists ? 'EXISTS' : 'AVAILABLE');
+    
+    return c.json({ exists: userExists });
+
+  } catch (error) {
+    console.error('💥 [Email Check] Exception:', error);
+    // Default to false for security (don't reveal errors)
+    return c.json({ exists: false });
+  }
+});
+
 // Send welcome/verification email after signup
 app.post("/make-server-f9be53a7/api/auth/send-verification-email", async (c) => {
   try {
@@ -2370,10 +2409,30 @@ app.post("/make-server-f9be53a7/api/capsules", async (c) => {
         }, 400);
       }
       
-      // Warn if scheduled less than 1 minute in the future (allow some buffer)
-      const oneMinuteFromNow = new Date(now.getTime() + 60 * 1000);
-      if (deliveryDateTime < oneMinuteFromNow) {
-        console.warn(`⚠️ Capsule scheduled very soon: ${deliveryDateTime.toISOString()}`);
+      // ⏰ CRITICAL VALIDATION: Enforce minimum scheduling time (59 minutes / ~1 hour)
+      // This ensures time for media processing and attachment handling
+      const minimumTime = new Date(now.getTime() + 59 * 60 * 1000); // 59 minutes from now
+      if (deliveryDateTime < minimumTime) {
+        console.error(`❌ Capsule scheduled too soon: ${deliveryDateTime.toISOString()} (minimum: ${minimumTime.toISOString()})`);
+        return c.json({ 
+          error: "Capsules must be scheduled at least 1 hour in the future to allow time for media processing",
+          scheduledTime: deliveryDateTime.toISOString(),
+          minimumTime: minimumTime.toISOString(),
+          currentTime: now.toISOString()
+        }, 400);
+      }
+      
+      // 📅 CRITICAL VALIDATION: Enforce maximum scheduling time (5 years)
+      // This prevents excessively distant scheduling
+      const maximumTime = new Date(now.getTime() + 5 * 365.25 * 24 * 60 * 60 * 1000); // 5 years from now
+      if (deliveryDateTime > maximumTime) {
+        console.error(`❌ Capsule scheduled too far: ${deliveryDateTime.toISOString()} (maximum: ${maximumTime.toISOString()})`);
+        return c.json({ 
+          error: "Capsules cannot be scheduled more than 5 years in the future",
+          scheduledTime: deliveryDateTime.toISOString(),
+          maximumTime: maximumTime.toISOString(),
+          currentTime: now.toISOString()
+        }, 400);
       }
       
       deliveryDateISO = deliveryDateTime.toISOString();
@@ -3788,6 +3847,32 @@ app.put("/make-server-f9be53a7/api/capsules/:id", async (c) => {
         console.error(`❌ Invalid delivery date/time: ${delivery_date}`);
         return c.json({ error: "Invalid delivery date format" }, 400);
       }
+      
+      // ⏰ CRITICAL VALIDATION: Enforce minimum scheduling time (59 minutes / ~1 hour)
+      const now = new Date();
+      const minimumTime = new Date(now.getTime() + 59 * 60 * 1000); // 59 minutes from now
+      if (deliveryDateTime < minimumTime) {
+        console.error(`❌ Capsule scheduled too soon: ${deliveryDateTime.toISOString()} (minimum: ${minimumTime.toISOString()})`);
+        return c.json({ 
+          error: "Capsules must be scheduled at least 1 hour in the future to allow time for media processing",
+          scheduledTime: deliveryDateTime.toISOString(),
+          minimumTime: minimumTime.toISOString(),
+          currentTime: now.toISOString()
+        }, 400);
+      }
+      
+      // 📅 CRITICAL VALIDATION: Enforce maximum scheduling time (5 years)
+      const maximumTime = new Date(now.getTime() + 5 * 365.25 * 24 * 60 * 60 * 1000); // 5 years from now
+      if (deliveryDateTime > maximumTime) {
+        console.error(`❌ Capsule scheduled too far: ${deliveryDateTime.toISOString()} (maximum: ${maximumTime.toISOString()})`);
+        return c.json({ 
+          error: "Capsules cannot be scheduled more than 5 years in the future",
+          scheduledTime: deliveryDateTime.toISOString(),
+          maximumTime: maximumTime.toISOString(),
+          currentTime: now.toISOString()
+        }, 400);
+      }
+      
       deliveryDateISO = deliveryDateTime.toISOString();
       
       // ❌ REMOVED: DO NOT extract UTC hours/minutes - this was overwriting the correct local time
@@ -11638,8 +11723,33 @@ app.post("/make-server-f9be53a7/api/legacy-access/trigger/date", async (c) => {
     }
 
     const unlockTimestamp = new Date(unlockDate).getTime();
-    if (isNaN(unlockTimestamp) || unlockTimestamp <= Date.now()) {
-      return c.json({ error: 'Invalid unlock date (must be in the future)' }, 400);
+    if (isNaN(unlockTimestamp)) {
+      return c.json({ error: 'Invalid unlock date format' }, 400);
+    }
+    
+    // ⏰ CRITICAL VALIDATION: Enforce minimum scheduling time (59 minutes / ~1 hour)
+    const now = Date.now();
+    const minimumTime = now + (59 * 60 * 1000); // 59 minutes from now
+    if (unlockTimestamp < minimumTime) {
+      console.error(`❌ Legacy Access scheduled too soon: ${new Date(unlockTimestamp).toISOString()} (minimum: ${new Date(minimumTime).toISOString()})`);
+      return c.json({ 
+        error: 'Legacy Access unlock date must be at least 1 hour in the future',
+        scheduledTime: new Date(unlockTimestamp).toISOString(),
+        minimumTime: new Date(minimumTime).toISOString(),
+        currentTime: new Date(now).toISOString()
+      }, 400);
+    }
+    
+    // 📅 CRITICAL VALIDATION: Enforce maximum scheduling time (5 years)
+    const maximumTime = now + (5 * 365.25 * 24 * 60 * 60 * 1000); // 5 years from now
+    if (unlockTimestamp > maximumTime) {
+      console.error(`❌ Legacy Access scheduled too far: ${new Date(unlockTimestamp).toISOString()} (maximum: ${new Date(maximumTime).toISOString()})`);
+      return c.json({ 
+        error: 'Legacy Access unlock date cannot be more than 5 years in the future',
+        scheduledTime: new Date(unlockTimestamp).toISOString(),
+        maximumTime: new Date(maximumTime).toISOString(),
+        currentTime: new Date(now).toISOString()
+      }, 400);
     }
 
     console.log(`📅 [Legacy Access] Setting manual date trigger: ${new Date(unlockTimestamp).toISOString()}`);

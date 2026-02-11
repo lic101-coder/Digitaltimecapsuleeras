@@ -729,23 +729,64 @@ export function useAuth() {
 
   // Helper function to get current access token (async)
   const getAccessToken = useCallback(async () => {
+    // Try to use cached token first
     if (accessToken) {
+      console.log('🔑 Using cached access token');
       return accessToken;
     }
     
-    // Fallback: get from current session
+    // Fallback: get from current session with retry and refresh logic
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔄 Fetching fresh session token...');
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('❌ Session fetch error:', error.message);
+        
+        // If refresh token is invalid, try to refresh the session
+        if (error.message?.includes('Invalid Refresh Token') || 
+            error.message?.includes('Refresh Token Not Found') ||
+            error.message?.includes('refresh_token_not_found')) {
+          console.warn('🔄 Refresh token invalid, attempting to refresh session...');
+          
+          try {
+            const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+            
+            if (refreshError) {
+              console.error('❌ Session refresh failed:', refreshError.message);
+              handleAuthError(refreshError);
+              return null;
+            }
+            
+            if (refreshedSession?.access_token) {
+              console.log('✅ Session refreshed successfully');
+              setAccessToken(refreshedSession.access_token);
+              setUserFromSession(refreshedSession);
+              return refreshedSession.access_token;
+            }
+          } catch (refreshErr) {
+            console.error('❌ Session refresh exception:', refreshErr);
+            handleAuthError(refreshErr);
+            return null;
+          }
+        }
+        
+        return null;
+      }
+      
       if (session?.access_token) {
+        console.log('✅ Got fresh access token from session');
         setAccessToken(session.access_token);
         return session.access_token;
       }
+      
+      console.warn('⚠️ No session available');
+      return null;
     } catch (error) {
-      console.error('Error getting access token:', error);
+      console.error('❌ Error getting access token:', error);
+      return null;
     }
-    
-    return null;
-  }, [accessToken]);
+  }, [accessToken, handleAuthError]);
 
   // Memoize the return object to prevent unnecessary re-renders in parent components
   // This ensures that if nothing actually changed, we return the same object reference

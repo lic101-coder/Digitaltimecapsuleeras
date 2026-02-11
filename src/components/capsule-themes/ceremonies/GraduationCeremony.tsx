@@ -229,34 +229,34 @@ export function GraduationCeremony({ onComplete, isVisible }: GraduationCeremony
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-6 left-0 right-0 z-50 px-4"
+            className="absolute top-2 sm:top-6 left-0 right-0 z-50 px-2 sm:px-4"
           >
-            <div className="max-w-2xl mx-auto space-y-3">
+            <div className="max-w-2xl mx-auto space-y-1.5 sm:space-y-3">
               {/* Title */}
               <div className="text-center">
-                <h2 className="text-3xl font-black uppercase text-blue-400 tracking-tighter">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black uppercase text-blue-400 tracking-tighter">
                   Launchpad
                 </h2>
-                <p className="text-blue-300/60 font-mono text-xs mt-1">
+                <p className="text-blue-300/60 font-mono text-[10px] sm:text-xs mt-0.5 sm:mt-1">
                   {launchStage === 'idle' ? 'CLICK TO BEGIN COUNTDOWN' : 'MISSION IN PROGRESS'}
                 </p>
               </div>
 
               {/* System Status Indicators */}
-              <div className="flex gap-3 justify-center">
+              <div className="flex gap-1.5 sm:gap-3 justify-center">
                 {Object.entries(systemStatus).map(([system, status]) => (
                   <motion.div
                     key={system}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center gap-2 bg-slate-800/90 backdrop-blur-sm px-3 py-2 rounded border border-slate-700"
+                    className="flex items-center gap-1 sm:gap-2 bg-slate-800/90 backdrop-blur-sm px-1.5 sm:px-3 py-1 sm:py-2 rounded border border-slate-700"
                   >
                     {status === 'ready' ? (
-                      <CheckCircle2 className="w-4 h-4 text-green-400" />
+                      <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
                     ) : (
-                      <div className="w-4 h-4 rounded-full border-2 border-yellow-500 border-t-transparent animate-spin" />
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-yellow-500 border-t-transparent animate-spin" />
                     )}
-                    <span className="text-xs font-mono uppercase text-slate-300">
+                    <span className="text-[9px] sm:text-xs font-mono uppercase text-slate-300">
                       {system}
                     </span>
                   </motion.div>
@@ -268,32 +268,32 @@ export function GraduationCeremony({ onComplete, isVisible }: GraduationCeremony
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="grid grid-cols-3 gap-3"
+                  className="grid grid-cols-3 gap-1.5 sm:gap-3"
                 >
                   {/* Fuel */}
-                  <div className="bg-slate-800/90 backdrop-blur-sm p-3 rounded border border-slate-700">
-                    <div className="text-xs font-mono text-slate-400 mb-1">FUEL</div>
-                    <div className="flex items-end gap-1">
-                      <span className="text-2xl font-black text-green-400 font-mono">{hud.fuel}</span>
-                      <span className="text-xs text-slate-500 mb-1">%</span>
+                  <div className="bg-slate-800/90 backdrop-blur-sm p-1.5 sm:p-3 rounded border border-slate-700">
+                    <div className="text-[8px] sm:text-xs font-mono text-slate-400 mb-0.5 sm:mb-1">FUEL</div>
+                    <div className="flex items-end gap-0.5 sm:gap-1">
+                      <span className="text-base sm:text-xl md:text-2xl font-black text-green-400 font-mono">{hud.fuel}</span>
+                      <span className="text-[8px] sm:text-xs text-slate-500 mb-0.5 sm:mb-1">%</span>
                     </div>
                   </div>
 
                   {/* Altitude */}
-                  <div className="bg-slate-800/90 backdrop-blur-sm p-3 rounded border border-slate-700">
-                    <div className="text-xs font-mono text-slate-400 mb-1">ALTITUDE</div>
-                    <div className="flex items-end gap-1">
-                      <span className="text-2xl font-black text-blue-400 font-mono">{hud.altitude}</span>
-                      <span className="text-xs text-slate-500 mb-1">km</span>
+                  <div className="bg-slate-800/90 backdrop-blur-sm p-1.5 sm:p-3 rounded border border-slate-700">
+                    <div className="text-[8px] sm:text-xs font-mono text-slate-400 mb-0.5 sm:mb-1">ALTITUDE</div>
+                    <div className="flex items-end gap-0.5 sm:gap-1">
+                      <span className="text-base sm:text-xl md:text-2xl font-black text-blue-400 font-mono">{hud.altitude}</span>
+                      <span className="text-[8px] sm:text-xs text-slate-500 mb-0.5 sm:mb-1">km</span>
                     </div>
                   </div>
 
                   {/* G-Force */}
-                  <div className="bg-slate-800/90 backdrop-blur-sm p-3 rounded border border-slate-700">
-                    <div className="text-xs font-mono text-slate-400 mb-1">G-FORCE</div>
-                    <div className="flex items-end gap-1">
-                      <span className="text-2xl font-black text-orange-400 font-mono">{hud.gForce}</span>
-                      <span className="text-xs text-slate-500 mb-1">G</span>
+                  <div className="bg-slate-800/90 backdrop-blur-sm p-1.5 sm:p-3 rounded border border-slate-700">
+                    <div className="text-[8px] sm:text-xs font-mono text-slate-400 mb-0.5 sm:mb-1">G-FORCE</div>
+                    <div className="flex items-end gap-0.5 sm:gap-1">
+                      <span className="text-base sm:text-xl md:text-2xl font-black text-orange-400 font-mono">{hud.gForce}</span>
+                      <span className="text-[8px] sm:text-xs text-slate-500 mb-0.5 sm:mb-1">G</span>
                     </div>
                   </div>
                 </motion.div>
@@ -304,7 +304,7 @@ export function GraduationCeremony({ onComplete, isVisible }: GraduationCeremony
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="bg-black/80 backdrop-blur-sm p-3 rounded border border-green-900/50 font-mono text-xs"
+                  className="bg-black/80 backdrop-blur-sm p-1.5 sm:p-3 rounded border border-green-900/50 font-mono text-[9px] sm:text-xs"
                 >
                   {terminalMessages.map((msg, i) => (
                     <motion.div
@@ -355,7 +355,7 @@ export function GraduationCeremony({ onComplete, isVisible }: GraduationCeremony
               transition={{ type: 'linear', duration: 0.05 }}
             >
               {/* Rocket body */}
-              <div className="relative flex flex-col items-center">
+              <div className="relative flex flex-col items-center scale-75 sm:scale-90 md:scale-100">
                 {/* Nose cone */}
                 <div
                   className="w-16 h-20 bg-gradient-to-b from-red-500 to-red-600"
@@ -472,9 +472,9 @@ export function GraduationCeremony({ onComplete, isVisible }: GraduationCeremony
       </div>
 
       {/* Ignition Button */}
-      <div className="absolute bottom-16 z-40">
+      <div className="absolute bottom-8 sm:bottom-16 z-40">
         <motion.button
-          className="relative w-48 h-48 rounded-full flex items-center justify-center group touch-none select-none"
+          className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-full flex items-center justify-center group touch-none select-none"
           style={{
             background: buttonHeat > 66 
               ? 'radial-gradient(circle at 30% 30%, #ef4444, #dc2626, #991b1b)'
@@ -613,7 +613,7 @@ export function GraduationCeremony({ onComplete, isVisible }: GraduationCeremony
                 initial={{ scale: 2, opacity: 0, rotate: -180 }}
                 animate={{ scale: 1, opacity: 1, rotate: 0 }}
                 exit={{ scale: 0, opacity: 0, rotate: 180 }}
-                className="text-7xl font-black text-white z-10"
+                className="text-4xl sm:text-6xl md:text-7xl font-black text-white z-10"
                 style={{
                   textShadow: '0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px currentColor',
                   filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5))',
@@ -633,7 +633,7 @@ export function GraduationCeremony({ onComplete, isVisible }: GraduationCeremony
                 transition={{
                   scale: { duration: 0.5, repeat: Infinity },
                 }}
-                className="text-6xl font-black text-green-400 z-10"
+                className="text-3xl sm:text-5xl md:text-6xl font-black text-green-400 z-10"
                 style={{
                   textShadow: '0 0 30px rgba(74, 222, 128, 1), 0 0 60px rgba(74, 222, 128, 0.8)',
                   filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5))',

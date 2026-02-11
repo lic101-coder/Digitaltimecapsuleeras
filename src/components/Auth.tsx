@@ -1142,6 +1142,57 @@ export function Auth({ onAuthenticated }) {
 
       console.log('📧 Creating account for:', formData.email);
       
+      // ✅ CRITICAL CHECK: Verify email doesn't already exist before attempting signup
+      console.log('🔍 Checking if email already exists...');
+      try {
+        const checkResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/auth/check-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${publicAnonKey}`
+          },
+          body: JSON.stringify({ email: formData.email.trim().toLowerCase() })
+        });
+
+        if (checkResponse.ok) {
+          const { exists } = await checkResponse.json();
+          
+          if (exists) {
+            console.log('⚠️ Email already registered:', formData.email);
+            toast.error('Account Already Exists', {
+              description: 'This email is already registered. Please sign in instead.',
+              duration: 8000,
+              action: {
+                label: 'Sign In',
+                onClick: () => {
+                  setCurrentView('signin');
+                  // Pre-fill email for convenience
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    email: formData.email,
+                    password: '',
+                    confirmPassword: '',
+                    firstName: '',
+                    lastName: ''
+                  }));
+                }
+              }
+            });
+            clearTimeout(loadingTimeout);
+            setIsLoading(false);
+            return; // ❌ STOP - Don't proceed with signup
+          }
+          
+          console.log('✅ Email is available, proceeding with signup');
+        } else {
+          console.warn('⚠️ Email check endpoint failed, proceeding with signup anyway');
+          // Continue with signup even if check fails (graceful degradation)
+        }
+      } catch (emailCheckError) {
+        console.error('❌ Email check error:', emailCheckError);
+        // Continue with signup even if check fails (graceful degradation)
+      }
+      
       // Show progress feedback for users
       toast.loading('Creating your account...', {
         id: 'signup-progress',
@@ -1169,13 +1220,43 @@ export function Auth({ onAuthenticated }) {
 
       if (error) {
         console.error('❌ Sign up error:', error);
+        console.error('❌ Error details:', { message: error.message, status: error.status, code: error.code });
+        
+        // Enhanced detection for "user already exists" errors (BACKUP LAYER)
+        const alreadyExistsPatterns = [
+          'already registered',
+          'User already registered',
+          'already been registered',
+          'already exists',
+          'email already',
+          'duplicate',
+          'user_already_exists'
+        ];
+        
+        const isAlreadyRegistered = alreadyExistsPatterns.some(pattern => 
+          error.message?.toLowerCase().includes(pattern.toLowerCase())
+        );
         
         // Handle specific signup errors
-        if (error.message.includes('already registered') || error.message.includes('User already registered')) {
-          toast.error('An account with this email already exists. Please sign in instead.', {
+        if (isAlreadyRegistered) {
+          console.log('⚠️ Backend returned "already exists" error (frontend check was bypassed or failed)');
+          toast.error('Account Already Exists', {
+            description: 'This email is already registered. Please sign in instead.',
+            duration: 8000,
             action: {
               label: 'Sign In',
-              onClick: () => setCurrentView('signin')
+              onClick: () => {
+                setCurrentView('signin');
+                // Pre-fill email for convenience
+                setFormData(prev => ({ 
+                  ...prev, 
+                  email: formData.email,
+                  password: '',
+                  confirmPassword: '',
+                  firstName: '',
+                  lastName: ''
+                }));
+              }
             }
           });
         } else if (error.message.includes('invalid email') || error.message.includes('Invalid email')) {
@@ -1251,9 +1332,9 @@ export function Auth({ onAuthenticated }) {
             
             if (verificationResult.success) {
               console.log('✅ Verification email sent successfully');
-              toast.success('Account created! Please check your email for verification link.', {
-                duration: 8000,
-                description: 'Check your inbox and spam folder for "Welcome to Eras!"'
+              toast.success('✅ Account Created!', {
+                duration: 12000,
+                description: `We've sent a verification email to ${data.user.email}\n\n⚠️ Don't see it? Check your spam/junk folder and mark it as "Not Spam" to ensure future emails arrive in your inbox.`
               });
             } else {
               console.error('❌ Failed to send verification email:', verificationResult.error);
