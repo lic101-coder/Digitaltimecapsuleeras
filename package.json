@@ -78,10 +78,6 @@
     "start": "vite preview --host",
     "vercel-build": "npm install --legacy-peer-deps && npm run build"
   },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
-  },
   "browserslist": {
     "production": [
       ">0.2%",
