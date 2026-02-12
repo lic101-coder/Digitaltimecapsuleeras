@@ -251,6 +251,7 @@
     --color-slate-800: oklch(.279 .041 260.031);
     --color-slate-900: oklch(.208 .042 265.755);
     --color-slate-950: oklch(.129 .042 264.695);
+    --color-gray-50: oklch(.985 .002 247.839);
     --color-gray-100: oklch(.967 .003 264.542);
     --color-gray-200: oklch(.928 .006 264.531);
     --color-gray-300: oklch(.872 .01 258.338);
@@ -15472,6 +15473,12 @@
   }
 
   @media (hover: hover) {
+    .hover\:border-gray-400:hover {
+      border-color: var(--color-gray-400);
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:border-gray-600:hover {
       border-color: var(--color-gray-600);
     }
@@ -15960,6 +15967,12 @@
   @media (hover: hover) {
     .hover\:bg-emerald-600:hover {
       background-color: var(--color-emerald-600);
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-gray-50:hover {
+      background-color: var(--color-gray-50);
     }
   }
 
