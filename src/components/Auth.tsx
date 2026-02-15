@@ -173,6 +173,43 @@ export function Auth({ onAuthenticated }) {
                 
                 // Fetch the newly created profile
                 profile = await DatabaseService.getUserProfile(session.user.id);
+                
+                // 🎁 Track referral signup for OAuth new users
+                const referralCode = sessionStorage.getItem('eras-pending-referral');
+                console.log(`🎯 [Referral] Checking for pending referral code in sessionStorage:`, referralCode || 'none found');
+                if (referralCode) {
+                  console.log(`🎯 [Referral] OAuth new user ${session.user.email} signed up via referral code: ${referralCode}`);
+                  console.log(`🎯 [Referral] Calling track-signup endpoint for new user ID: ${session.user.id}`);
+                  try {
+                    const referralResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/referrals/track-signup`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${publicAnonKey}`
+                      },
+                      body: JSON.stringify({
+                        referralCode: referralCode,
+                        newUserId: session.user.id
+                      })
+                    });
+
+                    console.log(`🎯 [Referral] track-signup response status:`, referralResponse.status);
+                    
+                    if (referralResponse.ok) {
+                      const referralData = await referralResponse.json();
+                      console.log(`✅ [Referral] OAuth signup tracked successfully!`, referralData);
+                      console.log(`📊 [Referral] Referrer now has ${referralData.totalSignups} total signups`);
+                      sessionStorage.removeItem('eras-pending-referral');
+                    } else {
+                      const errorText = await referralResponse.text();
+                      console.error('❌ [Referral] Failed to track OAuth referral signup. Status:', referralResponse.status, 'Response:', errorText);
+                    }
+                  } catch (refError) {
+                    console.error('❌ [Referral] Error tracking OAuth signup:', refError);
+                  }
+                } else {
+                  console.log('ℹ️ [Referral] No pending referral code found - user signed up directly');
+                }
               } catch (createError) {
                 console.error('❌ [AUTH MOUNT] Failed to create profile:', createError);
                 // Continue anyway with metadata
@@ -1310,6 +1347,54 @@ export function Auth({ onAuthenticated }) {
           console.warn('Could not set account creation marker:', e);
         }
         
+        // 🎁 Track referral signup if user came via referral link
+        // Check URL parameter first, then fallback to sessionStorage (for OAuth flows)
+        let referralCode = new URLSearchParams(window.location.search).get('ref');
+        if (!referralCode) {
+          referralCode = sessionStorage.getItem('eras-pending-referral');
+          if (referralCode) {
+            console.log(`🎯 [Referral] Retrieved referral code from sessionStorage: ${referralCode}`);
+          }
+        } else {
+          console.log(`🎯 [Referral] Retrieved referral code from URL parameter: ${referralCode}`);
+        }
+        
+        if (referralCode) {
+          console.log(`🎯 [Referral] User ${email} signed up via referral code: ${referralCode}`);
+          console.log(`🎯 [Referral] Calling track-signup endpoint for new user ID: ${data.user.id}`);
+          try {
+            const referralResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/referrals/track-signup`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${publicAnonKey}`
+              },
+              body: JSON.stringify({
+                referralCode: referralCode,
+                newUserId: data.user.id
+              })
+            });
+
+            console.log(`🎯 [Referral] track-signup response status:`, referralResponse.status);
+
+            if (referralResponse.ok) {
+              const referralData = await referralResponse.json();
+              console.log(`✅ [Referral] Signup tracked successfully!`, referralData);
+              console.log(`📊 [Referral] Referrer now has ${referralData.totalSignups} total signups`);
+              // Clear the pending referral from sessionStorage
+              sessionStorage.removeItem('eras-pending-referral');
+            } else {
+              const errorText = await referralResponse.text();
+              console.error('❌ [Referral] Failed to track referral signup. Status:', referralResponse.status, 'Response:', errorText);
+            }
+          } catch (refError) {
+            console.error('❌ [Referral] Error tracking signup:', refError);
+            // Don't block signup on referral tracking failure
+          }
+        } else {
+          console.log('ℹ️ [Referral] No referral code found - user signed up directly');
+        }
+        
         // Check if email confirmation is required
         if (!data.session) {
           console.log('📨 Email verification required - sending custom verification email via backend...');
@@ -1632,6 +1717,13 @@ export function Auth({ onAuthenticated }) {
         sessionStorage.setItem('eras-oauth-timestamp', Date.now().toString());
         sessionStorage.setItem('eras-oauth-expects-gate', 'true'); // NEW: Explicit gate expectation
         console.log('🚪 [OAUTH START] Set eras-oauth-expects-gate flag');
+        
+        // 🎁 CRITICAL: Preserve referral code through OAuth redirect
+        const referralCode = new URLSearchParams(window.location.search).get('ref');
+        if (referralCode) {
+          sessionStorage.setItem('eras-pending-referral', referralCode);
+          console.log(`🎯 [Referral] Preserved referral code for OAuth: ${referralCode}`);
+        }
       } catch (storageError) {
         console.warn('Could not set OAuth flow marker:', storageError);
       }

@@ -1703,6 +1703,130 @@ export const ACHIEVEMENT_DEFINITIONS: Record<string, Achievement> = {
     shareText: 'Unlocked Grand Broadcast! 📡 Sent a capsule to 10 people at once! #ErasApp',
     hidden: false,
     order: 51
+  },
+
+  // ============================================
+  // REFERRAL ACHIEVEMENTS (Platform Growth) - IDs REF001-REF004
+  // ============================================
+  
+  REF001: {
+    id: 'REF001',
+    title: 'Time Keeper',
+    description: 'Invite 1 friend who creates their first capsule',
+    detailedDescription: 'You\'ve shared the gift of time. Your first invited friend has joined Eras and created their first capsule, beginning their own journey through time.',
+    category: 'referral',
+    rarity: 'rare',
+    icon: 'Users',
+    unlockCriteria: {
+      type: 'custom',
+      validator: 'check_referral_count',
+      threshold: 1
+    },
+    rewards: { 
+      points: 100,
+      title: 'Time Keeper',
+      horizon: 'stardust_drift'
+    },
+    visual: {
+      gradientStart: '#a78bfa',
+      gradientEnd: '#7c3aed',
+      particleColor: '#c4b5fd',
+      glowColor: '#8b5cf6',
+      animation: 'stardust-shimmer'
+    },
+    shareText: 'Unlocked Time Keeper! ✨ My friend joined Eras and created their first capsule. Stardust Drift horizon unlocked! #ErasApp',
+    hidden: false,
+    order: 56
+  },
+
+  REF002: {
+    id: 'REF002',
+    title: 'Legacy Builder',
+    description: 'Invite 5 friends who create capsules',
+    detailedDescription: 'A true ambassador of time. Five friends have joined Eras through your invitation and begun preserving their own memories. You\'re building a legacy that spans generations.',
+    category: 'referral',
+    rarity: 'legendary',
+    icon: 'Landmark',
+    unlockCriteria: {
+      type: 'custom',
+      validator: 'check_referral_count',
+      threshold: 5
+    },
+    rewards: { 
+      points: 500,
+      title: 'Legacy Builder',
+      horizon: 'eternal_aurora'
+    },
+    visual: {
+      gradientStart: '#06b6d4',
+      gradientEnd: '#0284c7',
+      particleColor: '#67e8f9',
+      glowColor: '#06b6d4',
+      animation: 'aurora-wave'
+    },
+    shareText: 'Unlocked Legacy Builder! 🌌 5 friends joined Eras through me. Eternal Aurora horizon rises! #ErasApp',
+    hidden: false,
+    order: 57
+  },
+
+  REF003: {
+    id: 'REF003',
+    title: 'Horizon Architect',
+    description: 'Invite 10 friends who create capsules',
+    detailedDescription: 'A master of community building. Ten friends have discovered Eras through you, each beginning their journey of preserving moments. Your influence ripples through time.',
+    category: 'referral',
+    rarity: 'epic',
+    icon: 'Compass',
+    unlockCriteria: {
+      type: 'custom',
+      validator: 'check_referral_count',
+      threshold: 10
+    },
+    rewards: { 
+      points: 1000,
+      title: 'Horizon Architect',
+      horizon: 'supernova_bloom'
+    },
+    visual: {
+      gradientStart: '#f97316',
+      gradientEnd: '#dc2626',
+      particleColor: '#fdba74',
+      glowColor: '#f97316',
+      animation: 'supernova-burst'
+    },
+    shareText: 'Unlocked Horizon Architect! 💥 10 friends joined Eras through me. Supernova Bloom horizon explodes! #ErasApp',
+    hidden: false,
+    order: 58
+  },
+
+  REF004: {
+    id: 'REF004',
+    title: 'Infinity Architect',
+    description: 'Invite 25 friends who create capsules',
+    detailedDescription: 'A legendary pioneer of temporal connection. Twenty-five friends have joined Eras through your passion, creating an infinite network of preserved memories across time. You are truly a master of the cosmos.',
+    category: 'referral',
+    rarity: 'legendary',
+    icon: 'Infinity',
+    unlockCriteria: {
+      type: 'custom',
+      validator: 'check_referral_count',
+      threshold: 25
+    },
+    rewards: { 
+      points: 2500,
+      title: 'Infinity Architect',
+      horizon: 'infinity_nexus'
+    },
+    visual: {
+      gradientStart: '#ec4899',
+      gradientEnd: '#be185d',
+      particleColor: '#f9a8d4',
+      glowColor: '#ec4899',
+      animation: 'infinity-loop'
+    },
+    shareText: 'Unlocked Infinity Architect! ♾️ 25 friends joined Eras through me. Infinity Nexus horizon manifests! #ErasApp',
+    hidden: false,
+    order: 59
   }
 };
 
@@ -2829,15 +2953,6 @@ export async function checkAndUnlockAchievements(
       // Update global stats & rarity tracking
       await incrementGlobalUnlockCount(achievement.id);
       
-      // Add title to user's collection if achievement has a title
-      if (achievement.rewards.title) {
-        console.log(`👑 [Title Unlock] Achievement ${achievement.id} (${achievement.title}) has title reward: "${achievement.rewards.title}"`);
-        await addTitleToCollection(userId, achievement.id);
-        console.log(`👑 [Title Unlock] ✅ Title added to collection for user ${userId}`);
-      } else {
-        console.log(`[Title Unlock] Achievement ${achievement.id} has no title reward`);
-      }
-      
       // Analytics logging
       await logAchievementEvent(userId, achievement.id, 'unlocked', {
         action,
@@ -2879,6 +2994,18 @@ export async function checkAndUnlockAchievements(
     }
     
     await kv.set(`user_stats:${userId}`, stats);
+    
+    // Add titles to user's collection for achievements with title rewards
+    // This must happen AFTER saving achievements to KV so the safety check passes
+    for (const achievement of newlyUnlocked) {
+      if (achievement.rewards.title) {
+        console.log(`👑 [Title Unlock] Achievement ${achievement.id} (${achievement.title}) has title reward: "${achievement.rewards.title}"`);
+        await addTitleToCollection(userId, achievement.id);
+        console.log(`👑 [Title Unlock] ✅ Title added to collection for user ${userId}`);
+      } else {
+        console.log(`[Title Unlock] Achievement ${achievement.id} has no title reward`);
+      }
+    }
     
     // Queue notifications (with deduplication)
     await queueAchievementNotifications(userId, newlyUnlocked);
@@ -3519,9 +3646,9 @@ export async function equipTitle(userId: string, achievementId: string | null): 
 
 /**
  * Add a title to user's collection when achievement is unlocked
- * CRITICAL: This function is called from checkAndUnlockAchievements AFTER the achievement
- * has been added to user_achievements array. It should only update the title profile.
- * However, we add a safety check to ensure consistency between achievements and titles.
+ * IMPORTANT: This function is called from checkAndUnlockAchievements AFTER the achievement
+ * has been saved to the user_achievements KV store. It only updates the title profile.
+ * A safety check ensures consistency between achievements and titles in case of edge cases.
  */
 export async function addTitleToCollection(userId: string, achievementId: string): Promise<void> {
   console.log(`👑 [Titles] Adding title from achievement ${achievementId} to ${userId}'s collection`);

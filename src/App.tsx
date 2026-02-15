@@ -100,6 +100,7 @@ import { ProfilePictureUploadModal } from "./components/ProfilePictureUploadModa
 import { HelpSupportModal } from "./components/HelpSupportModal";
 import { MetaTags } from "./components/MetaTags";
 import { MediaPreviewModal } from "./components/MediaPreviewModal";
+import { ReferralSystem } from "./components/ReferralSystem";
 import { motion, AnimatePresence } from "motion/react";
 import { LogoConceptsEntry } from "./pages/LogoConceptsEntry";
 
@@ -370,6 +371,25 @@ export default function App() {
       return <CapsuleViewer viewingToken={viewingMatch[1]} />;
     }
 
+    // 🎁 Referral signup route: /join/:code
+    const joinMatch = path.match(/^\/join\/(.+)$/);
+    if (joinMatch) {
+      const referralCode = joinMatch[1];
+      console.log(`🎯 [Referral] Redirecting to signup with code: ${referralCode}`);
+      // Redirect to home with ref parameter
+      React.useEffect(() => {
+        window.location.href = `/?ref=${referralCode}`;
+      }, []);
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-white text-xl mb-2">🎁 Welcome to Eras!</div>
+            <div className="text-slate-400">Redirecting you to create your account...</div>
+          </div>
+        </div>
+      );
+    }
+
     // Logo concepts showcase (hidden route for design review)
     if (path === "/logo-concepts" || path === "/logos") {
       return <LogoConceptsEntry />;
@@ -571,6 +591,27 @@ function MainApp() {
         id: mainAppIdRef.current,
       });
     };
+  }, []);
+
+  // 🎁 CRITICAL: Capture referral code from URL on initial page load
+  React.useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const referralCode = urlParams.get('ref');
+      
+      if (referralCode) {
+        // Store in sessionStorage to persist through OAuth redirects
+        sessionStorage.setItem('eras-pending-referral', referralCode);
+        console.log(`🎯 [Referral] Captured referral code from URL: ${referralCode}`);
+        
+        // Clean up URL to remove ref parameter (optional, for cleaner URLs)
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('ref');
+        window.history.replaceState({}, '', newUrl.toString());
+      }
+    } catch (error) {
+      console.warn('⚠️ [Referral] Failed to capture referral code:', error);
+    }
   }, []);
 
   // ErasGate state - universal authentication interceptor
@@ -1593,6 +1634,7 @@ const MainAppContent = React.memo(
     const [showArchiveModal, setShowArchiveModal] =
       useState(false); // For Archive modal in gear menu
     const [showHelpModal, setShowHelpModal] = useState(false); // For Help & Support modal
+    const [showReferralModal, setShowReferralModal] = useState(false); // For Referral System modal
     const [previewMedia, setPreviewMedia] = useState<any>(null); // For media preview from received capsules
 
     // Track when user is actively working on Create tab to prevent unexpected resets
@@ -1781,6 +1823,17 @@ const MainAppContent = React.memo(
             console.log(
               "📚 [ONBOARDING] Checking if user needs onboarding",
             );
+            
+            // CRITICAL: First check localStorage for faster response (helps with OAuth re-logins)
+            const localStorageCompleted = localStorage.getItem('eras_onboarding_first_capsule_completed');
+            if (localStorageCompleted === 'true') {
+              console.log(
+                "📚 [ONBOARDING] User has completed onboarding (localStorage check)",
+              );
+              return; // Skip backend check, user has completed
+            }
+            
+            // Backend check (for cross-device consistency)
             const response = await fetch(
               `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/onboarding/state`,
               {
@@ -1809,8 +1862,10 @@ const MainAppContent = React.memo(
                 setOnboardingModule(undefined); // undefined = auto-select first needed module
               } else {
                 console.log(
-                  "📚 [ONBOARDING] User has completed core onboarding",
+                  "📚 [ONBOARDING] User has completed core onboarding (backend check)",
                 );
+                // Sync to localStorage for future fast checks
+                localStorage.setItem('eras_onboarding_first_capsule_completed', 'true');
               }
             }
           } catch (error) {
@@ -3224,8 +3279,56 @@ const MainAppContent = React.memo(
       setEditingCapsule(null);
       setQuickAddDate(null); // Clear Quick Add date after capsule is created
       handleTabChange("home");
+
+      // 🎁 Check if user was referred and trigger referral achievement
+      console.log('🎯 [Referral] handleCapsuleCreated called - checking referral status');
+      console.log('🎯 [Referral] auth.user?.id:', auth.user?.id);
+      
+      // Get fresh access token asynchronously
+      auth.getAccessToken().then((accessToken) => {
+        console.log('🎯 [Referral] Retrieved access token:', accessToken ? 'exists' : 'missing');
+        
+        if (accessToken) {
+          console.log('🎯 [Referral] Calling check-achievement after capsule creation for user:', auth.user?.id);
+          fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/referrals/check-achievement`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          )
+            .then((res) => {
+              console.log('🎯 [Referral] check-achievement response status:', res.status);
+              return res.json();
+            })
+            .then((data) => {
+              console.log('🎯 [Referral] check-achievement response data:', data);
+              if (data.referred && data.unlockedAchievements?.length > 0) {
+                console.log(
+                  `🎉 [Referral] Unlocked achievements for referrer:`,
+                  data.unlockedAchievements,
+                );
+              } else if (data.referred) {
+                console.log('🎯 [Referral] User was referred but no achievements unlocked yet');
+              } else {
+                console.log('🎯 [Referral] User was not referred by anyone');
+              }
+            })
+            .catch((err) => {
+              console.error('❌ [Referral] Failed to check referral achievement:', err);
+            });
+        } else {
+          console.warn('⚠️ [Referral] No access token available to check achievement');
+        }
+      }).catch((err) => {
+        console.error('❌ [Referral] Failed to retrieve access token:', err);
+      });
     }, [
       auth.user?.id,
+      auth.getAccessToken,
       workflow.resetWorkflow,
       handleTabChange,
     ]);
@@ -4451,6 +4554,17 @@ const MainAppContent = React.memo(
                                 Achievements
                               </DropdownMenuItem>
                               <DropdownMenuSeparator className="bg-slate-700" />
+                              {/* 🎁 NEW: Invite & Earn Referral System */}
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setShowReferralModal(true)
+                                }
+                                className="text-white focus:bg-slate-800 focus:text-white cursor-pointer"
+                              >
+                                <Users className="w-4 h-4 mr-2 text-pink-400" />
+                                🎁 Invite & Earn
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-slate-700" />
                               {/* ✅ NEW: Nested Tutorials Submenu */}
                               <DropdownMenuSub>
                                 <DropdownMenuSubTrigger className="text-white focus:bg-slate-800 focus:text-white cursor-pointer">
@@ -4918,6 +5032,51 @@ const MainAppContent = React.memo(
                           "🏠 Navigating to Home from draft save",
                         );
                         handleTabChange("home");
+                        
+                        // 🎁 Check if user was referred and trigger referral achievement (for draft capsules)
+                        console.log('🎯 [Referral] onNavigateToHome called - checking referral status (draft/scheduled)');
+                        
+                        auth.getAccessToken().then((accessToken) => {
+                          console.log('🎯 [Referral] Retrieved access token (draft):', accessToken ? 'exists' : 'missing');
+                          
+                          if (accessToken) {
+                            console.log('🎯 [Referral] Calling check-achievement after draft/scheduled capsule save for user:', auth.user?.id);
+                            fetch(
+                              `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/referrals/check-achievement`,
+                              {
+                                method: 'POST',
+                                headers: {
+                                  'Authorization': `Bearer ${accessToken}`,
+                                  'Content-Type': 'application/json',
+                                },
+                              }
+                            )
+                              .then((res) => {
+                                console.log('🎯 [Referral] check-achievement response status (draft):', res.status);
+                                return res.json();
+                              })
+                              .then((data) => {
+                                console.log('🎯 [Referral] check-achievement response data (draft):', data);
+                                if (data.referred && data.unlockedAchievements?.length > 0) {
+                                  console.log(
+                                    `🎉 [Referral] Unlocked achievements for referrer (draft):`,
+                                    data.unlockedAchievements,
+                                  );
+                                } else if (data.referred) {
+                                  console.log('🎯 [Referral] User was referred but no achievements unlocked yet (draft)');
+                                } else {
+                                  console.log('🎯 [Referral] User was not referred by anyone (draft)');
+                                }
+                              })
+                              .catch((err) => {
+                                console.error('❌ [Referral] Failed to check referral achievement (draft):', err);
+                              });
+                          } else {
+                            console.warn('⚠️ [Referral] No access token available to check achievement (draft)');
+                          }
+                        }).catch((err) => {
+                          console.error('❌ [Referral] Failed to retrieve access token (draft):', err);
+                        });
                       }}
                       editingCapsule={editingCapsule}
                       onCancelEdit={() => {
@@ -5293,6 +5452,24 @@ const MainAppContent = React.memo(
                 setVaultRefreshKey((prev) => prev + 1);
               }}
             />
+          )}
+
+          {/* 🎁 Referral System Modal - Accessible from gear menu */}
+          {showReferralModal && auth.session?.access_token && (
+            <Dialog open={showReferralModal} onOpenChange={setShowReferralModal}>
+              <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700">
+                <DialogHeader className="sr-only">
+                  <DialogTitle>Invite Friends & Earn Rewards</DialogTitle>
+                  <DialogDescription>
+                    Share Eras with your friends and unlock exclusive horizon effects when they join and create their first capsule.
+                  </DialogDescription>
+                </DialogHeader>
+                <ReferralSystem 
+                  onClose={() => setShowReferralModal(false)}
+                  accessToken={auth.session.access_token}
+                />
+              </DialogContent>
+            </Dialog>
           )}
         </div>
 

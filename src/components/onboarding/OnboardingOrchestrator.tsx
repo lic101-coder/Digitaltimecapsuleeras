@@ -171,6 +171,7 @@ export function OnboardingOrchestrator({
 
   const markModuleComplete = async (moduleId: string) => {
     try {
+      // Save to backend KV store
       await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/onboarding/complete`,
         {
@@ -182,6 +183,12 @@ export function OnboardingOrchestrator({
           body: JSON.stringify({ userId, moduleId })
         }
       );
+      
+      // CRITICAL: Also save to localStorage for OAuth re-login checks
+      if (moduleId === 'first_capsule') {
+        localStorage.setItem('eras_onboarding_first_capsule_completed', 'true');
+        logger.info('Onboarding: Saved first_capsule completion to localStorage');
+      }
     } catch (error) {
       logger.error('Failed to mark module complete:', error);
     }

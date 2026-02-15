@@ -13757,6 +13757,550 @@ app.post("/make-server-f9be53a7/api/support-request", async (c) => {
 
 console.log('🆘 Support request endpoint initialized');
 
+// ============================================================================
+// 🎁 REFERRAL SYSTEM ENDPOINTS
+// ============================================================================
+
+// Generate unique referral link for user
+app.post("/make-server-f9be53a7/api/referrals/generate-link", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    
+    if (authError || !user) {
+      console.error('❌ [Referral] Unauthorized');
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    console.log(`🎁 [Referral] Generating link for user ${user.id}`);
+
+    // Check if user already has a referral code
+    const existingCode = await kv.get(`referral_code:${user.id}`);
+    
+    if (existingCode) {
+      console.log(`✅ [Referral] Existing code found: ${existingCode}`);
+      return c.json({ 
+        referralCode: existingCode,
+        referralLink: `https://www.erastimecapsule.com/join/${existingCode}`
+      });
+    }
+
+    // Generate new unique code (8 characters: user's first name or email + random)
+    const userEmail = user.email || '';
+    const username = userEmail.split('@')[0].substring(0, 4).toLowerCase();
+    const randomSuffix = randomBytes(2).toString('hex'); // 4 chars
+    const referralCode = `${username}${randomSuffix}`;
+
+    // Store referral code
+    await kv.set(`referral_code:${user.id}`, referralCode);
+    await kv.set(`referral_user:${referralCode}`, user.id); // Reverse lookup
+
+    console.log(`✅ [Referral] Created new code: ${referralCode}`);
+
+    return c.json({
+      referralCode,
+      referralLink: `https://www.erastimecapsule.com/join/${referralCode}`
+    });
+
+  } catch (error) {
+    console.error('💥 [Referral] Generate link error:', error);
+    return c.json({ error: 'Failed to generate referral link' }, 500);
+  }
+});
+
+// Send referral invitation email
+app.post("/make-server-f9be53a7/api/referrals/send-invite", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    
+    if (authError || !user) {
+      console.error('❌ [Referral] Unauthorized');
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const { email: recipientEmail } = await c.req.json();
+
+    if (!recipientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
+      return c.json({ error: 'Invalid email address' }, 400);
+    }
+
+    console.log(`📧 [Referral] Sending invite from ${user.email} to ${recipientEmail}`);
+
+    // Rate limiting: Check how many invites sent today
+    const today = new Date().toISOString().split('T')[0];
+    const rateLimitKey = `referral_rate:${user.id}:${today}`;
+    const inviteCountToday = await kv.get(rateLimitKey) || 0;
+
+    if (inviteCountToday >= 10) {
+      console.warn(`⚠️ [Referral] Rate limit exceeded for user ${user.id}`);
+      return c.json({ error: 'Daily invite limit reached (10 per day)' }, 429);
+    }
+
+    // Check if email already has an account
+    const { data: existingUser } = await supabase.auth.admin.listUsers();
+    const emailExists = existingUser?.users?.some(u => u.email === recipientEmail);
+    
+    if (emailExists) {
+      console.warn(`⚠️ [Referral] Email ${recipientEmail} already has an account`);
+      return c.json({ error: 'This email already has an Eras account' }, 400);
+    }
+
+    // Get referral code
+    const referralCode = await kv.get(`referral_code:${user.id}`);
+    if (!referralCode) {
+      return c.json({ error: 'Referral code not found' }, 404);
+    }
+
+    const referralLink = `https://www.erastimecapsule.com/join/${referralCode}`;
+
+    // Get sender's name from user metadata
+    const senderName = user.user_metadata?.name || user.email?.split('@')[0] || 'A friend';
+
+    // Send email via Resend
+    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+    if (!RESEND_API_KEY) {
+      console.error('❌ [Referral] RESEND_API_KEY not configured');
+      return c.json({ error: 'Email service not configured' }, 500);
+    }
+
+    const emailResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: `${senderName} via Eras <invites@erastimecapsule.com>`,
+        to: recipientEmail,
+        reply_to: 'hello@erastimecapsule.com',
+        subject: `${senderName} invited you to try Eras`,
+        text: `Hi,
+
+${senderName} invited you to join them on Eras.
+
+Eras is a time capsule app where you preserve memories for your future self. ${senderName} thought you'd like it.
+
+Join here: ${referralLink}
+
+What is Eras?
+- Send messages to your future self
+- Create photo and video time capsules
+- Set when your memories unlock
+
+Your capsules are private and secure.
+
+Questions? Reply to this email.
+
+Thanks,
+The Eras Team
+www.erastimecapsule.com
+
+---
+This invitation was sent by ${senderName} (${user.email}).
+Not interested? No problem: https://www.erastimecapsule.com/opt-out?email=${encodeURIComponent(recipientEmail)}`,
+        html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <tr>
+      <td>
+        
+        <p style="margin: 0 0 16px; font-size: 16px; color: #1f2937; line-height: 1.5;">
+          Hi,
+        </p>
+        
+        <p style="margin: 0 0 16px; font-size: 16px; color: #1f2937; line-height: 1.5;">
+          <strong>${senderName}</strong> invited you to join them on Eras.
+        </p>
+        
+        <p style="margin: 0 0 20px; font-size: 16px; color: #1f2937; line-height: 1.5;">
+          Eras is a time capsule app where you preserve memories for your future self. ${senderName} thought you'd like it.
+        </p>
+        
+        <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 24px 0;">
+          <tr>
+            <td style="background-color: #000000; border-radius: 4px;">
+              <a href="${referralLink}" style="display: inline-block; color: #ffffff; text-decoration: none; padding: 12px 24px; font-size: 15px; font-weight: 500;">Join Eras</a>
+            </td>
+          </tr>
+        </table>
+        
+        <p style="margin: 20px 0 8px; font-size: 15px; color: #4b5563; line-height: 1.5; font-weight: 600;">
+          What is Eras?
+        </p>
+        
+        <p style="margin: 0 0 6px; font-size: 15px; color: #4b5563; line-height: 1.5;">
+          • Send messages to your future self
+        </p>
+        <p style="margin: 0 0 6px; font-size: 15px; color: #4b5563; line-height: 1.5;">
+          • Create photo and video time capsules
+        </p>
+        <p style="margin: 0 0 20px; font-size: 15px; color: #4b5563; line-height: 1.5;">
+          • Set when your memories unlock
+        </p>
+        
+        <p style="margin: 20px 0 16px; font-size: 14px; color: #6b7280; line-height: 1.5;">
+          Your capsules are private and secure.
+        </p>
+        
+        <p style="margin: 24px 0 16px; font-size: 14px; color: #6b7280; line-height: 1.5;">
+          Questions? Reply to this email.
+        </p>
+        
+        <p style="margin: 24px 0 4px; font-size: 14px; color: #6b7280; line-height: 1.5;">
+          Thanks,<br>
+          The Eras Team
+        </p>
+        
+        <p style="margin: 0 0 32px; font-size: 13px; color: #9ca3af;">
+          <a href="https://www.erastimecapsule.com" style="color: #6b7280; text-decoration: none;">www.erastimecapsule.com</a>
+        </p>
+        
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top: 1px solid #e5e7eb; padding-top: 20px;">
+          <tr>
+            <td>
+              <p style="margin: 0 0 8px; font-size: 12px; color: #9ca3af; line-height: 1.4;">
+                This invitation was sent by ${senderName} (${user.email}).
+              </p>
+              <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.4;">
+                Not interested? <a href="https://www.erastimecapsule.com/opt-out?email=${encodeURIComponent(recipientEmail)}" style="color: #9ca3af; text-decoration: underline;">Opt out</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+        
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+        `,
+      }),
+    });
+
+    if (!emailResponse.ok) {
+      const errorText = await emailResponse.text();
+      console.error('❌ [Referral] Email send failed:', errorText);
+      return c.json({ error: 'Failed to send invitation email' }, 500);
+    }
+
+    // Track the invite
+    const inviteId = randomBytes(16).toString('hex');
+    await kv.set(`referral_invite:${inviteId}`, {
+      referrer_id: user.id,
+      recipient_email: recipientEmail,
+      sent_at: new Date().toISOString(),
+      status: 'sent'
+    });
+
+    // Add to user's sent invites list
+    const sentInvitesKey = `referral_invites:${user.id}`;
+    const userInvites = await kv.get(sentInvitesKey) || [];
+    userInvites.push({
+      email: recipientEmail,
+      sent_at: new Date().toISOString(),
+      invite_id: inviteId
+    });
+    await kv.set(sentInvitesKey, userInvites);
+
+    // Update rate limit
+    await kv.set(rateLimitKey, inviteCountToday + 1);
+
+    console.log(`✅ [Referral] Invite sent successfully to ${recipientEmail}`);
+
+    return c.json({ 
+      success: true,
+      message: 'Invitation sent successfully'
+    });
+
+  } catch (error) {
+    console.error('💥 [Referral] Send invite error:', error);
+    return c.json({ error: 'Failed to send invitation' }, 500);
+  }
+});
+
+// Get referral statistics for user
+app.get("/make-server-f9be53a7/api/referrals/stats", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    
+    if (authError || !user) {
+      console.error('❌ [Referral] Unauthorized');
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    console.log(`📊 [Referral] Getting stats for user ${user.id}`);
+
+    // Get referral code
+    const referralCode = await kv.get(`referral_code:${user.id}`) || null;
+
+    // Get sent invites
+    const sentInvitesKey = `referral_invites:${user.id}`;
+    const sentInvites = await kv.get(sentInvitesKey) || [];
+
+    // Get successful signups (referrals that converted)
+    const signupsKey = `referral_signups:${user.id}`;
+    const successfulSignups = await kv.get(signupsKey) || [];
+
+    // Count only active referrals (those who created at least 1 capsule)
+    let activeReferrals = 0;
+    for (const signup of successfulSignups) {
+      const signupInfo = await kv.get(`referral_signup:${signup.signup_id}`);
+      if (signupInfo?.milestone_reached) {
+        activeReferrals++;
+      }
+    }
+
+    // Calculate UNIQUE invites sent (deduplicate by email address)
+    const uniqueEmails = new Set(sentInvites.map((inv: any) => inv.email.toLowerCase()));
+    const invitesSent = uniqueEmails.size; // Count unique emails only
+    const friendsJoined = activeReferrals; // Only count those who created first capsule
+    const conversionRate = invitesSent > 0 ? (friendsJoined / invitesSent) * 100 : 0;
+    
+    // Enhanced logging to debug count discrepancies
+    console.log(`📊 [Referral Debug] User ${user.id}:`, {
+      totalInviteRecords: sentInvites.length,
+      uniqueInvitesSent: invitesSent,
+      totalSignups: successfulSignups.length,
+      activeFriends: activeReferrals,
+      uniqueEmails: Array.from(uniqueEmails),
+      signupIds: successfulSignups.map((s: any) => s.signup_id)
+    });
+
+    // Get first invite date
+    const firstInvite = sentInvites.length > 0 
+      ? sentInvites[0].sent_at 
+      : null;
+
+    // Get referral achievements unlocked
+    const userAchievements = await kv.get(`user_achievements:${user.id}`) || [];
+    const referralAchievements = userAchievements.filter((a: any) => 
+      ['REF001', 'REF002', 'REF003', 'REF004'].includes(a.achievementId)
+    );
+
+    const stats = {
+      referralCode,
+      referralLink: referralCode ? `https://www.erastimecapsule.com/join/${referralCode}` : null,
+      invitesSent,
+      friendsJoined,
+      conversionRate: conversionRate.toFixed(1),
+      firstInvite,
+      achievementsUnlocked: referralAchievements.length,
+      recentInvites: sentInvites.slice(-5).reverse(), // Last 5 invites
+      milestones: {
+        next: friendsJoined < 1 ? 1 : friendsJoined < 5 ? 5 : friendsJoined < 10 ? 10 : 25,
+        progress: friendsJoined < 1 ? friendsJoined : 
+                  friendsJoined < 5 ? friendsJoined : 
+                  friendsJoined < 10 ? friendsJoined : 
+                  friendsJoined,
+        total: friendsJoined < 1 ? 1 : 
+               friendsJoined < 5 ? 5 : 
+               friendsJoined < 10 ? 10 : 25
+      }
+    };
+
+    console.log(`✅ [Referral] Stats retrieved: ${friendsJoined} friends joined`);
+
+    return c.json(stats);
+
+  } catch (error) {
+    console.error('💥 [Referral] Get stats error:', error);
+    return c.json({ error: 'Failed to retrieve referral statistics' }, 500);
+  }
+});
+
+// Track referral signup (called when someone signs up via referral link)
+app.post("/make-server-f9be53a7/api/referrals/track-signup", async (c) => {
+  try {
+    const { referralCode, newUserId } = await c.req.json();
+
+    if (!referralCode || !newUserId) {
+      return c.json({ error: 'Missing referral code or user ID' }, 400);
+    }
+
+    console.log(`🎯 [Referral] Tracking signup: ${newUserId} via code ${referralCode}`);
+
+    // Get referrer user ID from code
+    const referrerId = await kv.get(`referral_user:${referralCode}`);
+    
+    if (!referrerId) {
+      console.warn(`⚠️ [Referral] Invalid referral code: ${referralCode}`);
+      return c.json({ error: 'Invalid referral code' }, 404);
+    }
+
+    // Record the signup
+    const signupId = randomBytes(16).toString('hex');
+    await kv.set(`referral_signup:${signupId}`, {
+      referrer_id: referrerId,
+      referee_id: newUserId,
+      referral_code: referralCode,
+      signed_up_at: new Date().toISOString(),
+      milestone_reached: false // Track if first capsule created
+    });
+
+    // Add to referrer's successful signups list
+    const signupsKey = `referral_signups:${referrerId}`;
+    const signups = await kv.get(signupsKey) || [];
+    signups.push({
+      referee_id: newUserId,
+      signed_up_at: new Date().toISOString(),
+      signup_id: signupId
+    });
+    await kv.set(signupsKey, signups);
+
+    // Store referral info on new user for later achievement tracking
+    await kv.set(`user_referral_info:${newUserId}`, {
+      referred_by: referrerId,
+      referral_code: referralCode,
+      signup_id: signupId,
+      signed_up_at: new Date().toISOString()
+    });
+
+    console.log(`✅ [Referral] Signup tracked successfully`);
+
+    // Check if referrer unlocked achievements (will be triggered when referee creates first capsule)
+    const totalSignups = signups.length;
+    console.log(`📊 [Referral] Referrer ${referrerId} now has ${totalSignups} signups`);
+
+    return c.json({ 
+      success: true,
+      totalSignups
+    });
+
+  } catch (error) {
+    console.error('💥 [Referral] Track signup error:', error);
+    return c.json({ error: 'Failed to track referral signup' }, 500);
+  }
+});
+
+// Check referral achievement progress (called when referee creates first capsule)
+app.post("/make-server-f9be53a7/api/referrals/check-achievement", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    
+    if (authError || !user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    console.log(`🏆 [Referral] Checking achievements for referee ${user.id}`);
+
+    // Check if this user was referred
+    const referralInfo = await kv.get(`user_referral_info:${user.id}`);
+    
+    if (!referralInfo) {
+      console.log(`ℹ️ [Referral] User ${user.id} was not referred`);
+      return c.json({ referred: false });
+    }
+
+    const referrerId = referralInfo.referred_by;
+    const signupId = referralInfo.signup_id;
+
+    // Check if milestone already marked
+    const signupData = await kv.get(`referral_signup:${signupId}`);
+    if (signupData?.milestone_reached) {
+      console.log(`ℹ️ [Referral] Milestone already processed for signup ${signupId}`);
+      return c.json({ referred: true, alreadyProcessed: true });
+    }
+
+    // Mark milestone reached (referee created first capsule)
+    await kv.set(`referral_signup:${signupId}`, {
+      ...signupData,
+      milestone_reached: true,
+      milestone_reached_at: new Date().toISOString()
+    });
+
+    // Count active referrals (those who created at least 1 capsule)
+    const signupsKey = `referral_signups:${referrerId}`;
+    const allSignups = await kv.get(signupsKey) || [];
+    
+    let activeReferrals = 0;
+    for (const signup of allSignups) {
+      const signupInfo = await kv.get(`referral_signup:${signup.signup_id}`);
+      if (signupInfo?.milestone_reached) {
+        activeReferrals++;
+      }
+    }
+
+    console.log(`📊 [Referral] Referrer ${referrerId} has ${activeReferrals} active referrals`);
+
+    // Unlock achievements based on active referral count
+    const unlockedAchievements = [];
+
+    if (activeReferrals === 1) {
+      // Unlock "Time Keeper" achievement
+      const achievementResult = await AchievementService.unlockAchievementForUser(
+        referrerId,
+        'REF001',
+        { referral_count: 1 }
+      );
+      if (achievementResult.unlocked) {
+        unlockedAchievements.push('REF001');
+        console.log(`🎉 [Referral] Unlocked Time Keeper for ${referrerId}`);
+      }
+    }
+
+    if (activeReferrals === 5) {
+      // Unlock "Legacy Builder" achievement
+      const achievementResult = await AchievementService.unlockAchievementForUser(
+        referrerId,
+        'REF002',
+        { referral_count: 5 }
+      );
+      if (achievementResult.unlocked) {
+        unlockedAchievements.push('REF002');
+        console.log(`🎉 [Referral] Unlocked Legacy Builder for ${referrerId}`);
+      }
+    }
+
+    if (activeReferrals === 10) {
+      // Unlock "Horizon Architect" achievement
+      const achievementResult = await AchievementService.unlockAchievementForUser(
+        referrerId,
+        'REF003',
+        { referral_count: 10 }
+      );
+      if (achievementResult.unlocked) {
+        unlockedAchievements.push('REF003');
+        console.log(`🎉 [Referral] Unlocked Horizon Architect for ${referrerId}`);
+      }
+    }
+
+    if (activeReferrals === 25) {
+      // Unlock "Infinity Architect" achievement
+      const achievementResult = await AchievementService.unlockAchievementForUser(
+        referrerId,
+        'REF004',
+        { referral_count: 25 }
+      );
+      if (achievementResult.unlocked) {
+        unlockedAchievements.push('REF004');
+        console.log(`🎉 [Referral] Unlocked Infinity Architect for ${referrerId}`);
+      }
+    }
+
+    return c.json({
+      referred: true,
+      referrerId,
+      activeReferrals,
+      unlockedAchievements
+    });
+
+  } catch (error) {
+    console.error('💥 [Referral] Check achievement error:', error);
+    return c.json({ error: 'Failed to check referral achievements' }, 500);
+  }
+});
+
+console.log('🎁 Referral system endpoints initialized');
+
 // REMOVED: Duplicate scheduler call (already started at line ~3278)
 // startDeliveryScheduler();
 
