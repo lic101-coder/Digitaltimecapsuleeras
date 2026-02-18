@@ -1,7 +1,7 @@
 const { readdir, readFile, writeFile } = require('fs').promises;
 const { join, extname } = require('path');
 
-const srcDir = join(process.cwd(), 'src');
+const srcDir = '/vercel/share/v0-project/src';
 
 async function getAllFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -41,7 +41,7 @@ async function main() {
   
   let fixedCount = 0;
   for (const file of files) {
-    const relPath = file.replace(process.cwd() + '/', '');
+    const relPath = file.replace('/vercel/share/v0-project/', '');
     const content = await readFile(file, 'utf-8');
     // Reset regex state before test
     versionRegex.lastIndex = 0;
