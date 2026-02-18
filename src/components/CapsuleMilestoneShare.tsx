@@ -18,7 +18,7 @@ import {
   X, Share2, Facebook, Twitter, Linkedin, MessageCircle, Send, Copy, 
   PartyPopper, Camera, Video, FileText, Calendar, Mail
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 
 interface MilestoneData {
