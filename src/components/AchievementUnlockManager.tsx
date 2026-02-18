@@ -106,6 +106,35 @@ export function AchievementUnlockManager({ onNavigateToAchievements, onNavigateT
     };
   }, [session, definitions, checkPendingNotifications]);
 
+  // 🎁 Listen for custom achievementUnlocked events (e.g., from referral system)
+  useEffect(() => {
+    const handleAchievementUnlocked = (event: CustomEvent) => {
+      console.log('🎉 [Achievement Manager] achievementUnlocked event received:', event.detail);
+      
+      const { achievementId, source } = event.detail;
+      
+      if (!achievementId) {
+        console.warn('⚠️ [Achievement Manager] No achievementId in event, ignoring');
+        return;
+      }
+      
+      console.log(`🔔 [Achievement Manager] Triggering check for achievement ${achievementId} (source: ${source})`);
+      
+      // Trigger a check for pending notifications to show the modal
+      if (session?.access_token && Object.keys(definitions).length > 0) {
+        checkPendingNotifications(session.access_token);
+      }
+    };
+    
+    window.addEventListener('achievementUnlocked', handleAchievementUnlocked as EventListener);
+    console.log('👂 [Achievement Manager] Event listener registered for achievementUnlocked');
+    
+    return () => {
+      window.removeEventListener('achievementUnlocked', handleAchievementUnlocked as EventListener);
+      console.log('🧹 [Achievement Manager] achievementUnlocked listener cleaned up');
+    };
+  }, [session, definitions, checkPendingNotifications]);
+
   // 🎯 EVENT-DRIVEN TITLE UNLOCK SEQUENCE
   // Listen for Achievement Modal close event, then trigger Title Unlock after 2s delay
   useEffect(() => {

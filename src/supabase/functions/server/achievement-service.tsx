@@ -1711,7 +1711,7 @@ export const ACHIEVEMENT_DEFINITIONS: Record<string, Achievement> = {
   
   REF001: {
     id: 'REF001',
-    title: 'Time Keeper',
+    title: 'Community Builder',
     description: 'Invite 1 friend who creates their first capsule',
     detailedDescription: 'You\'ve shared the gift of time. Your first invited friend has joined Eras and created their first capsule, beginning their own journey through time.',
     category: 'referral',
@@ -1724,7 +1724,7 @@ export const ACHIEVEMENT_DEFINITIONS: Record<string, Achievement> = {
     },
     rewards: { 
       points: 100,
-      title: 'Time Keeper',
+      title: 'Community Builder',
       horizon: 'stardust_drift'
     },
     visual: {
@@ -1734,7 +1734,7 @@ export const ACHIEVEMENT_DEFINITIONS: Record<string, Achievement> = {
       glowColor: '#8b5cf6',
       animation: 'stardust-shimmer'
     },
-    shareText: 'Unlocked Time Keeper! ✨ My friend joined Eras and created their first capsule. Stardust Drift horizon unlocked! #ErasApp',
+    shareText: 'Unlocked Community Builder! ✨ My friend joined Eras and created their first capsule. Stardust Drift horizon unlocked! #ErasApp',
     hidden: false,
     order: 56
   },

@@ -41,7 +41,7 @@ export function MetaTags() {
 
     // Open Graph / Facebook
     setMetaTag('meta[property="og:type"]', 'property', 'website');
-    setMetaTag('meta[property="og:url"]', 'property', 'https://erastimecapsule.com/');
+    setMetaTag('meta[property="og:url"]', 'property', `https://erastimecapsule.com${window.location.pathname}`);
     setMetaTag('meta[property="og:title"]', 'property', 'Eras - Digital Time Capsule');
     setMetaTag('meta[property="og:description"]', 'property', 'Capture today, unlock tomorrow. Create time capsules for your future self and loved ones.');
     setMetaTag('meta[property="og:image"]', 'property', 'https://images.unsplash.com/photo-1704310957636-be5d273c8f0a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1200&h=630');
@@ -51,7 +51,7 @@ export function MetaTags() {
 
     // Twitter Card
     setMetaTag('meta[property="twitter:card"]', 'property', 'summary_large_image');
-    setMetaTag('meta[property="twitter:url"]', 'property', 'https://erastimecapsule.com/');
+    setMetaTag('meta[property="twitter:url"]', 'property', `https://erastimecapsule.com${window.location.pathname}`);
     setMetaTag('meta[property="twitter:title"]', 'property', 'Eras - Digital Time Capsule');
     setMetaTag('meta[property="twitter:description"]', 'property', 'Capture today, unlock tomorrow. Create time capsules for your future self.');
     setMetaTag('meta[property="twitter:image"]', 'property', 'https://images.unsplash.com/photo-1704310957636-be5d273c8f0a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1200&h=630');

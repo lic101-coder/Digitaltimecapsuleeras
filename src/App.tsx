@@ -101,6 +101,7 @@ import { HelpSupportModal } from "./components/HelpSupportModal";
 import { MetaTags } from "./components/MetaTags";
 import { MediaPreviewModal } from "./components/MediaPreviewModal";
 import { ReferralSystem } from "./components/ReferralSystem";
+import { UnsubscribePage } from "./components/UnsubscribePage";
 import { motion, AnimatePresence } from "motion/react";
 import { LogoConceptsEntry } from "./pages/LogoConceptsEntry";
 
@@ -388,6 +389,11 @@ export default function App() {
           </div>
         </div>
       );
+    }
+
+    // 🔥 NEW: Unsubscribe from referral invites route: /unsubscribe
+    if (path === "/unsubscribe") {
+      return <UnsubscribePage />;
     }
 
     // Logo concepts showcase (hidden route for design review)
@@ -1966,6 +1972,92 @@ const MainAppContent = React.memo(
             }
           }, 3000); // 3 second delay after login
         }
+      }
+    }, [
+      auth.isAuthenticated,
+      auth.session?.access_token,
+      auth.user?.id,
+    ]);
+
+    // 🎁 Check for pending referral achievements on login
+    const hasCheckedReferralRef = React.useRef(false);
+    React.useEffect(() => {
+      const isAuthenticated = auth.isAuthenticated;
+      const accessToken = auth.session?.access_token;
+      const userId = auth.user?.id;
+
+      if (
+        isAuthenticated &&
+        accessToken &&
+        userId &&
+        !hasCheckedReferralRef.current
+      ) {
+        hasCheckedReferralRef.current = true;
+
+        console.log(
+          "🔔 [Referral] Checking for pending referral achievements...",
+        );
+
+        // Check after a delay to let the app load
+        setTimeout(async () => {
+          try {
+            const response = await fetch(
+              `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/referrals/pending-achievements`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+              },
+            );
+
+            if (response.ok) {
+              const result = await response.json();
+
+              if (result.unseenAchievements?.length > 0) {
+                console.log(
+                  `🎉 [Referral] Found ${result.unseenAchievements.length} unseen referral achievements!`,
+                  result.unseenAchievements,
+                );
+
+                // Show celebration for each unseen achievement
+                for (const achievement of result.unseenAchievements) {
+                  // Dispatch achievement unlock event to trigger celebration modal
+                  const event = new CustomEvent("achievementUnlocked", {
+                    detail: {
+                      achievementId: achievement.achievementId,
+                      source: "referral_pending",
+                    },
+                  });
+                  window.dispatchEvent(event);
+                }
+
+                // Mark as seen
+                await fetch(
+                  `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/referrals/mark-seen`,
+                  {
+                    method: "POST",
+                    headers: {
+                      Authorization: `Bearer ${accessToken}`,
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      achievementIds: result.unseenAchievements.map(
+                        (a: any) => a.achievementId,
+                      ),
+                    }),
+                  },
+                );
+              }
+            }
+          } catch (error) {
+            console.error(
+              "[Referral] Failed to check pending achievements:",
+              error,
+            );
+          }
+        }, 4000); // 4 second delay after login (after retroactive check)
       }
     }, [
       auth.isAuthenticated,

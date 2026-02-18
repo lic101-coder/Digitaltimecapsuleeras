@@ -652,6 +652,10 @@ export class DeliveryService {
             if (userAuth?.email) {
               console.log(`📧 Using fallback email from auth: ${userAuth.email}`);
               deliverySuccess = await this.sendEmailDelivery(userAuth.email, capsule, mediaFiles, senderName, viewingUrl);
+            } else {
+              console.error(`❌ [Delivery] Cannot deliver capsule ${capsule.id} - no self_contact and user account not found (may be deleted)`);
+              await this.markDeliveryFailed(capsule, 'User account not found - cannot determine delivery address');
+              deliverySuccess = false;
             }
           }
         } else {
@@ -660,6 +664,10 @@ export class DeliveryService {
           if (userAuth?.email) {
             console.log(`📧 Using user auth email: ${userAuth.email}`);
             deliverySuccess = await this.sendEmailDelivery(userAuth.email, capsule, mediaFiles, senderName, viewingUrl);
+          } else {
+            console.error(`❌ [Delivery] Cannot deliver capsule ${capsule.id} - user account not found (may be deleted)`);
+            await this.markDeliveryFailed(capsule, 'User account not found - cannot determine delivery address');
+            deliverySuccess = false;
           }
         }
       } else if (capsule.recipient_type === 'others') {
@@ -1012,8 +1020,15 @@ export class DeliveryService {
     try {
       const { data } = await this.supabase.auth.admin.getUserById(userId);
       return data.user;
-    } catch (error) {
-      console.error('Error getting user auth:', error);
+    } catch (error: any) {
+      // Handle specific error cases
+      if (error?.status === 404 || error?.code === 'user_not_found') {
+        console.warn(`⚠️ [Delivery] User ${userId} not found (account may have been deleted) - delivery will fail gracefully`);
+        return null;
+      }
+      
+      // Log other errors as actual errors
+      console.error(`❌ [Delivery] Error getting user auth for ${userId}:`, error);
       return null;
     }
   }

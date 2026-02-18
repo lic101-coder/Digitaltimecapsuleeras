@@ -1,5 +1,6 @@
 import { Resend } from 'npm:resend@4.0.0';
 import { resendRateLimiter } from './rate-limiter.tsx';
+import * as kv from './kv_store.tsx';
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
@@ -930,6 +931,19 @@ export async function sendEmail(params: {
   variables: any;
 }) {
   try {
+    // ✅ CHECK UNSUBSCRIBE LIST: Before sending, check if user has opted out
+    const unsubscribeKey = `email_unsubscribe:${params.to.toLowerCase()}`;
+    const isUnsubscribed = await kv.get(unsubscribeKey);
+    
+    if (isUnsubscribed) {
+      console.log(`📧 [Email Service] User ${params.to} has unsubscribed from system emails. Skipping send.`);
+      return {
+        success: false,
+        error: 'User has unsubscribed',
+        skipped: true,
+      };
+    }
+    
     let html = '';
 
     // Render the appropriate template
@@ -973,6 +987,9 @@ export async function sendEmail(params: {
       .replace(/\n\s*\n\s*\n/g, '\n\n')
       .trim();
     
+    // ✅ FIXED: Proper RFC 8058 compliant headers for inbox placement
+    const unsubscribeUrl = `https://www.erastimecapsule.com/unsubscribe?email=${encodeURIComponent(params.to)}&type=system`;
+    
     // Send email via Resend
     const result = await resend.emails.send({
       from: FROM_EMAIL,
@@ -981,7 +998,10 @@ export async function sendEmail(params: {
       html: html,
       text: plainText, // ✅ Plain text version added
       headers: {
-        'List-Unsubscribe': '<mailto:unsubscribe@yourdomain.com>' // ✅ Required for inbox placement
+        'List-Unsubscribe': `<${unsubscribeUrl}>`, // ✅ FIXED: Proper unsubscribe URL
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click', // ✅ RFC 8058 one-click unsubscribe
+        'Precedence': 'bulk', // ✅ Proper email classification
+        'X-Entity-Ref-ID': `${params.template}-${Date.now()}`, // ✅ Tracking ID
       }
     });
 

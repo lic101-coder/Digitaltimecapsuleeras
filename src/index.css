@@ -1013,6 +1013,10 @@
     right: calc(var(--spacing) * 8);
   }
 
+  .right-10 {
+    right: calc(var(--spacing) * 10);
+  }
+
   .right-11 {
     right: calc(var(--spacing) * 11);
   }
@@ -1255,6 +1259,10 @@
 
   .left-8 {
     left: calc(var(--spacing) * 8);
+  }
+
+  .left-10 {
+    left: calc(var(--spacing) * 10);
   }
 
   .left-14 {
@@ -1675,6 +1683,10 @@
 
   .ml-2 {
     margin-left: calc(var(--spacing) * 2);
+  }
+
+  .ml-3 {
+    margin-left: calc(var(--spacing) * 3);
   }
 
   .ml-4 {
@@ -7179,6 +7191,16 @@
   @supports (color: color-mix(in lab, red, red)) {
     .bg-slate-950\/20 {
       background-color: color-mix(in oklab, var(--color-slate-950) 20%, transparent);
+    }
+  }
+
+  .bg-slate-950\/50 {
+    background-color: color-mix(in srgb, oklch(.129 .042 264.695) 50%, transparent);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-slate-950\/50 {
+      background-color: color-mix(in oklab, var(--color-slate-950) 50%, transparent);
     }
   }
 
@@ -15629,6 +15651,12 @@
   }
 
   @media (hover: hover) {
+    .hover\:border-purple-500:hover {
+      border-color: var(--color-purple-500);
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:border-purple-500\/30:hover {
       border-color: color-mix(in srgb, oklch(.627 .265 303.9) 30%, transparent);
     }
@@ -17068,6 +17096,12 @@
   @media (hover: hover) {
     .hover\:text-purple-200:hover {
       color: var(--color-purple-200);
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:text-purple-300:hover {
+      color: var(--color-purple-300);
     }
   }
 

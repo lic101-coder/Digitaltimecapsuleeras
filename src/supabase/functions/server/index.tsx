@@ -13846,6 +13846,13 @@ app.post("/make-server-f9be53a7/api/referrals/send-invite", async (c) => {
       return c.json({ error: 'This email already has an Eras account' }, 400);
     }
 
+    // 🔥 NEW: Check if email has unsubscribed from referral invites
+    const unsubscribeList = await kv.get('referral_unsubscribe_list') || [];
+    if (unsubscribeList.includes(recipientEmail.toLowerCase())) {
+      console.warn(`⚠️ [Referral] Email ${recipientEmail} has unsubscribed from invites`);
+      return c.json({ error: 'This email has opted out of referral invitations' }, 400);
+    }
+
     // Get referral code
     const referralCode = await kv.get(`referral_code:${user.id}`);
     if (!referralCode) {
@@ -13871,22 +13878,27 @@ app.post("/make-server-f9be53a7/api/referrals/send-invite", async (c) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: `${senderName} via Eras <invites@erastimecapsule.com>`,
+        from: 'Eras <invites@erastimecapsule.com>',  // ✅ Removed "via" - cleaner sender name
         to: recipientEmail,
         reply_to: 'hello@erastimecapsule.com',
-        subject: `${senderName} invited you to try Eras`,
+        subject: `${senderName} invited you to Eras`,  // ✅ More personal, removed "try"
+        // 🔥 CRITICAL: RFC 8058 compliant headers for deliverability
+        headers: {
+          'List-Unsubscribe': `<https://www.erastimecapsule.com/unsubscribe?email=${encodeURIComponent(recipientEmail)}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          'X-Entity-Ref-ID': referralCode,
+          'Precedence': 'bulk',
+        },
         text: `Hi,
 
-${senderName} invited you to join them on Eras.
-
-Eras is a time capsule app where you preserve memories for your future self. ${senderName} thought you'd like it.
+${senderName} invited you to join Eras, a time capsule app.
 
 Join here: ${referralLink}
 
 What is Eras?
-- Send messages to your future self
-- Create photo and video time capsules
-- Set when your memories unlock
+• Send messages to your future self
+• Create photo and video time capsules
+• Set when your memories unlock
 
 Your capsules are private and secure.
 
@@ -13897,87 +13909,103 @@ The Eras Team
 www.erastimecapsule.com
 
 ---
-This invitation was sent by ${senderName} (${user.email}).
-Not interested? No problem: https://www.erastimecapsule.com/opt-out?email=${encodeURIComponent(recipientEmail)}`,
+This invitation was sent by ${senderName}.
+Unsubscribe: https://www.erastimecapsule.com/unsubscribe?email=${encodeURIComponent(recipientEmail)}`,
         html: `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #f9fafb;">
+  
+  <!-- 🔥 Preheader text (hidden, shows in inbox preview) -->
+  <div style="display: none; max-height: 0; overflow: hidden; opacity: 0; mso-hide: all;">
+    ${senderName} invited you to preserve memories on Eras
+  </div>
+  
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; padding: 40px 20px;">
     <tr>
-      <td>
-        
-        <p style="margin: 0 0 16px; font-size: 16px; color: #1f2937; line-height: 1.5;">
-          Hi,
-        </p>
-        
-        <p style="margin: 0 0 16px; font-size: 16px; color: #1f2937; line-height: 1.5;">
-          <strong>${senderName}</strong> invited you to join them on Eras.
-        </p>
-        
-        <p style="margin: 0 0 20px; font-size: 16px; color: #1f2937; line-height: 1.5;">
-          Eras is a time capsule app where you preserve memories for your future self. ${senderName} thought you'd like it.
-        </p>
-        
-        <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 24px 0;">
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
           <tr>
-            <td style="background-color: #000000; border-radius: 4px;">
-              <a href="${referralLink}" style="display: inline-block; color: #ffffff; text-decoration: none; padding: 12px 24px; font-size: 15px; font-weight: 500;">Join Eras</a>
+            <td style="padding: 40px 30px;">
+              
+              <p style="margin: 0 0 20px; font-size: 16px; color: #111827; line-height: 1.6;">
+                Hi there,
+              </p>
+              
+              <p style="margin: 0 0 20px; font-size: 16px; color: #111827; line-height: 1.6;">
+                <strong>${senderName}</strong> invited you to join Eras, a time capsule app where you preserve memories for your future self.
+              </p>
+              
+              <!-- CTA Button -->
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                <tr>
+                  <td align="center" style="background-color: #7c3aed; border-radius: 6px; padding: 14px 32px;">
+                    <a href="${referralLink}" style="display: inline-block; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; letter-spacing: 0.3px;">Join ${senderName} on Eras</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="margin: 30px 0 12px; font-size: 15px; color: #374151; line-height: 1.5; font-weight: 600;">
+                What is Eras?
+              </p>
+              
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 0 24px;">
+                <tr>
+                  <td style="padding: 4px 0;">
+                    <span style="color: #7c3aed; font-size: 15px;">✓</span>
+                    <span style="margin-left: 8px; font-size: 15px; color: #4b5563; line-height: 1.5;">Send messages to your future self</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0;">
+                    <span style="color: #7c3aed; font-size: 15px;">✓</span>
+                    <span style="margin-left: 8px; font-size: 15px; color: #4b5563; line-height: 1.5;">Create photo and video time capsules</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0;">
+                    <span style="color: #7c3aed; font-size: 15px;">✓</span>
+                    <span style="margin-left: 8px; font-size: 15px; color: #4b5563; line-height: 1.5;">Set when your memories unlock</span>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="margin: 24px 0 16px; font-size: 14px; color: #6b7280; line-height: 1.5;">
+                Questions? Just reply to this email.
+              </p>
+              
+              <p style="margin: 24px 0 4px; font-size: 14px; color: #6b7280; line-height: 1.5;">
+                Thanks,<br>
+                The Eras Team
+              </p>
+              
             </td>
           </tr>
-        </table>
-        
-        <p style="margin: 20px 0 8px; font-size: 15px; color: #4b5563; line-height: 1.5; font-weight: 600;">
-          What is Eras?
-        </p>
-        
-        <p style="margin: 0 0 6px; font-size: 15px; color: #4b5563; line-height: 1.5;">
-          • Send messages to your future self
-        </p>
-        <p style="margin: 0 0 6px; font-size: 15px; color: #4b5563; line-height: 1.5;">
-          • Create photo and video time capsules
-        </p>
-        <p style="margin: 0 0 20px; font-size: 15px; color: #4b5563; line-height: 1.5;">
-          • Set when your memories unlock
-        </p>
-        
-        <p style="margin: 20px 0 16px; font-size: 14px; color: #6b7280; line-height: 1.5;">
-          Your capsules are private and secure.
-        </p>
-        
-        <p style="margin: 24px 0 16px; font-size: 14px; color: #6b7280; line-height: 1.5;">
-          Questions? Reply to this email.
-        </p>
-        
-        <p style="margin: 24px 0 4px; font-size: 14px; color: #6b7280; line-height: 1.5;">
-          Thanks,<br>
-          The Eras Team
-        </p>
-        
-        <p style="margin: 0 0 32px; font-size: 13px; color: #9ca3af;">
-          <a href="https://www.erastimecapsule.com" style="color: #6b7280; text-decoration: none;">www.erastimecapsule.com</a>
-        </p>
-        
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top: 1px solid #e5e7eb; padding-top: 20px;">
+          
+          <!-- Footer -->
           <tr>
-            <td>
+            <td style="background-color: #f9fafb; padding: 24px 30px; border-top: 1px solid #e5e7eb;">
               <p style="margin: 0 0 8px; font-size: 12px; color: #9ca3af; line-height: 1.4;">
-                This invitation was sent by ${senderName} (${user.email}).
+                This invitation was sent by ${senderName}
               </p>
               <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.4;">
-                Not interested? <a href="https://www.erastimecapsule.com/opt-out?email=${encodeURIComponent(recipientEmail)}" style="color: #9ca3af; text-decoration: underline;">Opt out</a>
+                <a href="https://www.erastimecapsule.com/unsubscribe?email=${encodeURIComponent(recipientEmail)}" style="color: #7c3aed; text-decoration: underline;">Unsubscribe</a> • 
+                <a href="https://www.erastimecapsule.com" style="color: #7c3aed; text-decoration: none;">www.erastimecapsule.com</a>
               </p>
             </td>
           </tr>
+          
         </table>
-        
       </td>
     </tr>
   </table>
+  
 </body>
 </html>
         `,
@@ -14022,6 +14050,84 @@ Not interested? No problem: https://www.erastimecapsule.com/opt-out?email=${enco
   } catch (error) {
     console.error('💥 [Referral] Send invite error:', error);
     return c.json({ error: 'Failed to send invitation' }, 500);
+  }
+});
+
+// 🔥 NEW: Handle unsubscribe requests (both referral and system emails)
+app.post('/make-server-f9be53a7/api/referrals/unsubscribe', async (c) => {
+  try {
+    const { email, type = 'referral' } = await c.req.json(); // Default to 'referral' for backwards compatibility
+    
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return c.json({ error: 'Invalid email address' }, 400);
+    }
+    
+    const emailLower = email.toLowerCase();
+    console.log(`📧 [Unsubscribe] Request for: ${email}, type: ${type}`);
+    
+    // Handle different unsubscribe types
+    if (type === 'all') {
+      // Unsubscribe from BOTH referral and system emails
+      console.log(`📧 [Unsubscribe] Processing 'all' - unsubscribing from both lists`);
+      
+      // Add to referral unsubscribe list
+      const referralList = await kv.get('referral_unsubscribe_list') || [];
+      if (!referralList.includes(emailLower)) {
+        referralList.push(emailLower);
+        await kv.set('referral_unsubscribe_list', referralList);
+      }
+      
+      // Add to system email unsubscribe list using KV key pattern
+      await kv.set(`email_unsubscribe:${emailLower}`, {
+        email: emailLower,
+        unsubscribed_at: new Date().toISOString(),
+        type: 'all',
+      });
+      
+      console.log(`✅ [Unsubscribe] ${email} unsubscribed from ALL emails`);
+      return c.json({ 
+        success: true,
+        message: 'Successfully unsubscribed from all Eras emails'
+      });
+      
+    } else if (type === 'referral') {
+      // Unsubscribe from referral invites only
+      const referralList = await kv.get('referral_unsubscribe_list') || [];
+      
+      if (!referralList.includes(emailLower)) {
+        referralList.push(emailLower);
+        await kv.set('referral_unsubscribe_list', referralList);
+        console.log(`✅ [Unsubscribe] ${email} added to referral unsubscribe list (total: ${referralList.length})`);
+      } else {
+        console.log(`ℹ️ [Unsubscribe] ${email} already in referral unsubscribe list`);
+      }
+      
+      return c.json({ 
+        success: true,
+        message: 'Successfully unsubscribed from referral invitations'
+      });
+      
+    } else if (type === 'system') {
+      // Unsubscribe from system emails only (folder shares, beneficiary notifications, etc.)
+      await kv.set(`email_unsubscribe:${emailLower}`, {
+        email: emailLower,
+        unsubscribed_at: new Date().toISOString(),
+        type: 'system',
+      });
+      
+      console.log(`✅ [Unsubscribe] ${email} unsubscribed from system emails`);
+      return c.json({ 
+        success: true,
+        message: 'Successfully unsubscribed from system emails'
+      });
+      
+    } else {
+      return c.json({ error: 'Invalid unsubscribe type' }, 400);
+    }
+    
+  } catch (error) {
+    console.error('❌ [Unsubscribe] Error:', error);
+    return c.json({ error: 'Failed to process unsubscribe request' }, 500);
   }
 });
 
@@ -14235,7 +14341,7 @@ app.post("/make-server-f9be53a7/api/referrals/check-achievement", async (c) => {
     const unlockedAchievements = [];
 
     if (activeReferrals === 1) {
-      // Unlock "Time Keeper" achievement
+      // Unlock "Community Builder" achievement
       const achievementResult = await AchievementService.unlockAchievementForUser(
         referrerId,
         'REF001',
@@ -14243,7 +14349,7 @@ app.post("/make-server-f9be53a7/api/referrals/check-achievement", async (c) => {
       );
       if (achievementResult.unlocked) {
         unlockedAchievements.push('REF001');
-        console.log(`🎉 [Referral] Unlocked Time Keeper for ${referrerId}`);
+        console.log(`🎉 [Referral] Unlocked Community Builder for ${referrerId}`);
       }
     }
 
@@ -14296,6 +14402,86 @@ app.post("/make-server-f9be53a7/api/referrals/check-achievement", async (c) => {
   } catch (error) {
     console.error('💥 [Referral] Check achievement error:', error);
     return c.json({ error: 'Failed to check referral achievements' }, 500);
+  }
+});
+
+// Get pending unseen referral achievements for user (for login check)
+app.post('/make-server-f9be53a7/api/referrals/pending-achievements', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    console.log(`🔔 [Referral] Checking pending achievements for user ${user.id}`);
+
+    // Get user's achievements
+    const userAchievements = await kv.get(`user_achievements:${user.id}`) || [];
+    const referralAchievements = userAchievements.filter((a: any) => 
+      ['REF001', 'REF002', 'REF003', 'REF004'].includes(a.achievementId)
+    );
+
+    // Check which achievements have been seen
+    const seenAchievements = await kv.get(`referral_achievements_seen:${user.id}`) || [];
+    
+    // Find unseen achievements
+    const unseenAchievements = referralAchievements.filter((a: any) => 
+      !seenAchievements.includes(a.achievementId)
+    );
+
+    console.log(`🔔 [Referral] Found ${unseenAchievements.length} unseen achievements for ${user.id}`);
+
+    return c.json({
+      unseenAchievements: unseenAchievements.map((a: any) => ({
+        achievementId: a.achievementId,
+        unlockedAt: a.unlockedAt
+      }))
+    });
+
+  } catch (error) {
+    console.error('💥 [Referral] Pending achievements error:', error);
+    return c.json({ error: 'Failed to check pending achievements' }, 500);
+  }
+});
+
+// Mark referral achievements as seen
+app.post('/make-server-f9be53a7/api/referrals/mark-seen', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const { achievementIds } = await c.req.json();
+    
+    if (!achievementIds || !Array.isArray(achievementIds)) {
+      return c.json({ error: 'Missing achievementIds array' }, 400);
+    }
+
+    console.log(`✅ [Referral] Marking achievements as seen for user ${user.id}:`, achievementIds);
+
+    // Get current seen list
+    const seenAchievements = await kv.get(`referral_achievements_seen:${user.id}`) || [];
+    
+    // Add new IDs (avoid duplicates)
+    const updatedSeen = [...new Set([...seenAchievements, ...achievementIds])];
+    
+    // Save updated list
+    await kv.set(`referral_achievements_seen:${user.id}`, updatedSeen);
+
+    return c.json({ success: true });
+
+  } catch (error) {
+    console.error('💥 [Referral] Mark seen error:', error);
+    return c.json({ error: 'Failed to mark achievements as seen' }, 500);
   }
 });
 
