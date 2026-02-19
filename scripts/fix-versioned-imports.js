@@ -1,7 +1,9 @@
 const { readdir, readFile, writeFile } = require('fs/promises');
 const { join, extname } = require('path');
 
-const SRC_DIR = join(process.cwd(), 'src');
+const { resolve, dirname } = require('path');
+const SRC_DIR = resolve(dirname(__dirname), 'src');
+console.log('Looking for src at:', SRC_DIR);
 
 // Pattern matches: from "package@version" or from 'package@version'
 // Captures the package name (before @version) and replaces the whole import specifier
