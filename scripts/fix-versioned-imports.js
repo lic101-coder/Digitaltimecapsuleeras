@@ -1,10 +1,10 @@
-import { readdir, readFile, writeFile } from 'fs/promises';
-import { join, extname } from 'path';
+const { readdir, readFile, writeFile } = require('fs/promises');
+const { join, extname } = require('path');
 
 const SRC_DIR = join(process.cwd(), 'src');
 
 // Pattern matches: from "package@version" or from 'package@version'
-// It captures the package name (before @version) and replaces the whole import specifier
+// Captures the package name (before @version) and replaces the whole import specifier
 const VERSIONED_IMPORT_RE = /from\s+(['"])((?:@[\w-]+\/)?[\w-]+)@\d+\.\d+\.\d+\1/g;
 
 async function getAllFiles(dir) {
