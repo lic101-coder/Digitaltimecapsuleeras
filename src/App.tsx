@@ -4646,7 +4646,7 @@ const MainAppContent = React.memo(
                                 Achievements
                               </DropdownMenuItem>
                               <DropdownMenuSeparator className="bg-slate-700" />
-                              {/* 🎁 NEW: Invite & Earn Referral System */}
+                              {/* 🎁 Invite Friends - Referral System */}
                               <DropdownMenuItem
                                 onClick={() =>
                                   setShowReferralModal(true)
@@ -4654,7 +4654,7 @@ const MainAppContent = React.memo(
                                 className="text-white focus:bg-slate-800 focus:text-white cursor-pointer"
                               >
                                 <Users className="w-4 h-4 mr-2 text-pink-400" />
-                                🎁 Invite & Earn
+                                Invite Friends
                               </DropdownMenuItem>
                               <DropdownMenuSeparator className="bg-slate-700" />
                               {/* ✅ NEW: Nested Tutorials Submenu */}

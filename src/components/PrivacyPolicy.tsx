@@ -33,7 +33,7 @@ export function PrivacyPolicy() {
             </div>
             <div>
               <CardTitle className="text-2xl">Privacy Policy</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">Last Updated: January 8, 2026</p>
+              <p className="text-sm text-muted-foreground mt-1">Last Updated: February 19, 2026</p>
             </div>
           </div>
         </CardHeader>
@@ -76,6 +76,7 @@ export function PrivacyPolicy() {
                       <li><strong className="text-foreground">Communications:</strong> Messages you send us through support channels</li>
                       <li><strong className="text-foreground">Notification Preferences:</strong> Your choices about how and when to receive notifications</li>
                       <li><strong className="text-foreground">Security Settings:</strong> Two-factor authentication (2FA) settings and preferences</li>
+                      <li><strong className="text-foreground">Referral Activity:</strong> Unique referral links, referral tracking codes, invitation email addresses, referral milestone progress, and rewards earned (Horizon Gallery unlocks)</li>
                     </ul>
                   </div>
 
@@ -394,6 +395,10 @@ export function PrivacyPolicy() {
                 </h2>
                 <div className="space-y-2 text-muted-foreground">
                   <div className="p-3 bg-green-500/10 rounded-md border border-green-500/20">
+                    <p className="font-medium text-foreground">Version 5.0 - February 19, 2026</p>
+                    <p className="text-xs mt-1">Referral program and notification system data disclosure: Added information about referral link tracking, invitation email addresses collected for referral program, milestone progress monitoring (1, 5, 10, and 25 referral tiers), Horizon Gallery reward unlocks, email invitation delivery tracking, and notification system enhancements with 6-color coding (tracking of notification types: received from others, self-delivered, echoes, achievements, urgent alerts, and system messages)</p>
+                  </div>
+                  <div className="p-3 bg-muted/30 rounded-md">
                     <p className="font-medium text-foreground">Version 4.0 - January 8, 2026</p>
                     <p className="text-xs mt-1">Enhanced media and interaction data disclosure: Added information about media preview system usage tracking (video, photo, and audio viewing patterns), draft management data collection (draft folder access and loading behavior), media attachment caching (persistent storage of uploaded media for improved performance), click-based interaction analytics across all devices, tutorial system engagement metrics, and expanded browser storage disclosure (sessionStorage for ceremony state persistence)</p>
                   </div>

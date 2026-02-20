@@ -73,8 +73,7 @@ import {
   Calendar,
   Download,
   Layers,
-  Archive,
-  RefreshCw
+  Archive
 } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { supabase } from '../utils/supabase/client';
@@ -3528,18 +3527,18 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
               <img 
                 src={item.thumbnail}
                 alt={item.type}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             ) : item.type === 'photo' ? (
               <img 
                 src={item.base64Data}
                 alt="Photo"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             ) : item.type === 'video' ? (
               <video 
                 src={item.base64Data}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 muted
               />
             ) : item.type === 'document' ? (
@@ -4057,18 +4056,6 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
                       <span className="hidden sm:inline">{selectedFolderId ? 'Upload to Folder' : 'Upload'}</span>
                     </>
                   )}
-                </Button>
-                {/* 🔄 Sync Button - Manual sync from backend */}
-                <Button
-                  onClick={manualSync}
-                  disabled={isSyncing || isLoading}
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 border-2 border-blue-400/40 bg-blue-500/10 hover:bg-blue-500/20 hover:border-blue-400/60 text-blue-200 transition-all shadow-lg backdrop-blur-sm"
-                  title="Sync vault from backend"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                  <span className="hidden sm:inline">{isSyncing ? 'Syncing...' : 'Sync'}</span>
                 </Button>
                 {onClose && (
                   <Button
@@ -5056,7 +5043,7 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
             >
               Close
             </Button>
-            {previewItem && onEdit && previewItem.type !== 'document' && (
+            {previewItem && onEdit && previewItem.type !== 'document' && previewItem.type !== 'video' && (
               <Button
                 onClick={async () => {
                   try {

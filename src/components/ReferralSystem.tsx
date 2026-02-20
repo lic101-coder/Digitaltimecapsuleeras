@@ -168,7 +168,7 @@ export function ReferralSystem({ onClose, accessToken }: ReferralSystemProps) {
         <div>
           <h2 className="text-3xl font-bold text-white flex items-center gap-3">
             <Users className="w-8 h-8 text-purple-400" />
-            Invite & Earn
+            Invite Friends
           </h2>
           <p className="text-slate-400 mt-2">
             Share Eras with friends and unlock exclusive horizon effects
@@ -357,73 +357,6 @@ export function ReferralSystem({ onClose, accessToken }: ReferralSystemProps) {
             </motion.p>
           )}
         </AnimatePresence>
-      </motion.div>
-
-      {/* Recent Activity */}
-      {stats && stats.recentInvites.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-slate-800/50 border border-slate-700 rounded-xl p-6"
-        >
-          <h3 className="text-lg font-bold text-white mb-4">Recent Activity</h3>
-          <div className="space-y-3">
-            {stats.recentInvites.map((invite, index) => (
-              <div
-                key={invite.invite_id}
-                className="flex items-center justify-between py-2 border-b border-slate-700 last:border-b-0"
-              >
-                <div className="flex items-center gap-3">
-                  <Send className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-300">{invite.email}</span>
-                </div>
-                <span className="text-sm text-slate-500">
-                  {new Date(invite.sent_at).toLocaleDateString()}
-                </span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Rewards Preview */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
-        className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-500/30 rounded-xl p-6"
-      >
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-yellow-400" />
-          Unlock Exclusive Horizons
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-            <div className="text-2xl mb-2">✨</div>
-            <div className="font-semibold text-white">Stardust Drift</div>
-            <div className="text-sm text-slate-400 mt-1">1 friend joined</div>
-            <div className="text-xs text-purple-400 mt-2">⭐⭐ Rare</div>
-          </div>
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-            <div className="text-2xl mb-2">🌌</div>
-            <div className="font-semibold text-white">Eternal Aurora</div>
-            <div className="text-sm text-slate-400 mt-1">5 friends joined</div>
-            <div className="text-xs text-yellow-400 mt-2">⭐⭐⭐⭐ Legendary</div>
-          </div>
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-            <div className="text-2xl mb-2">💥</div>
-            <div className="font-semibold text-white">Supernova Bloom</div>
-            <div className="text-sm text-slate-400 mt-1">10 friends joined</div>
-            <div className="text-xs text-purple-400 mt-2">⭐⭐⭐⭐ Epic</div>
-          </div>
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-            <div className="text-2xl mb-2">♾️</div>
-            <div className="font-semibold text-white">Infinity Nexus</div>
-            <div className="text-sm text-slate-400 mt-1">25 friends joined</div>
-            <div className="text-xs text-pink-400 mt-2">⭐⭐⭐⭐⭐ Legendary+</div>
-          </div>
-        </div>
       </motion.div>
     </div>
   );

@@ -255,8 +255,16 @@ function NotificationItem({
   isMobile: boolean;
   onNotificationClick?: (capsuleId: string, notificationType?: 'received' | 'delivered' | 'echo') => void;
 }) {
+  // 🔍 DEBUG: Log notification metadata to see what we're working with
+  console.log('🔔 [NOTIFICATION DEBUG]', {
+    type: notification.type,
+    title: notification.title,
+    senderName: notification.metadata?.senderName,
+    metadata: notification.metadata
+  });
+  
   const icon = getNotificationIcon(notification.type, notification.metadata);
-  const accentColor = getAccentColor(notification.type);
+  const accentColor = getAccentColor(notification.type, notification.metadata);
 
   const handleClick = () => {
     if (!notification.isRead) {
@@ -728,7 +736,7 @@ function getNotificationIcon(type: Notification['type'], metadata?: Notification
 }
 
 // Helper: Get accent color
-function getAccentColor(type: Notification['type']): string {
+function getAccentColor(type: Notification['type'], metadata?: Notification['metadata']): string {
   switch (type) {
     case 'echo':
       return '#a855f7'; // purple-500

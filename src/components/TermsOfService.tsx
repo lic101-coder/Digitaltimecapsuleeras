@@ -33,7 +33,7 @@ export function TermsOfService() {
             </div>
             <div>
               <CardTitle className="text-2xl">Terms of Service</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">Last Updated: January 8, 2026</p>
+              <p className="text-sm text-muted-foreground mt-1">Last Updated: February 19, 2026</p>
             </div>
           </div>
         </CardHeader>
@@ -150,21 +150,41 @@ export function TermsOfService() {
 
               <Separator />
 
+              {/* Referral Program and Rewards */}
+              <section>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">7. Referral Program and Horizon Gallery Rewards</h2>
+                <div className="space-y-3 text-muted-foreground">
+                  <p><strong className="text-foreground">7.1 Referral System:</strong> The Service includes a referral program that allows you to invite others to join Eras. You will receive a unique referral link and tracking code. Referral rewards are provided at our sole discretion and have no monetary value.</p>
+                  
+                  <p><strong className="text-foreground">7.2 Horizon Gallery Rewards:</strong> Successful referrals unlock exclusive visual horizons at milestone tiers (1, 5, 10, and 25 successful referrals). These are cosmetic visual enhancements for your account and are non-transferable.</p>
+                  
+                  <p><strong className="text-foreground">7.3 Referral Requirements:</strong> A successful referral occurs when someone creates an account using your referral link, verifies their email, and creates at least one time capsule. We reserve the right to determine referral validity and may reject referrals that appear fraudulent or created through automated means.</p>
+                  
+                  <p><strong className="text-foreground">7.4 Anti-Fraud Protection:</strong> Creating fake accounts, using automated bots, incentivizing referrals with unauthorized offers, or attempting to manipulate the referral system is strictly prohibited and will result in immediate account suspension and forfeiture of all referral rewards.</p>
+                  
+                  <p><strong className="text-foreground">7.5 Program Changes:</strong> We reserve the right to modify, suspend, or terminate the referral program at any time without notice. Earned rewards may be revoked if we determine program abuse or Terms violations.</p>
+                  
+                  <p><strong className="text-foreground">7.6 Email Invitations:</strong> When sending referral invitations, you agree to comply with anti-spam laws (CAN-SPAM Act, GDPR) and only contact individuals who have consented to receive communications from you. You are solely responsible for your referral invitation practices.</p>
+                </div>
+              </section>
+
+              <Separator />
+
               {/* Themed Capsules and Visual Features */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">7. Themed Capsules and Visual Features</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">8. Themed Capsules and Visual Features</h2>
                 <div className="space-y-3 text-muted-foreground">
-                  <p><strong className="text-foreground">7.1 Theme System:</strong> The Service offers 15+ themed capsule experiences (including Birthday, Wedding, Graduation, Travel, and others) with custom visual ceremonies for sealing and opening capsules. Themes are provided for creative expression and user experience enhancement.</p>
+                  <p><strong className="text-foreground">8.1 Theme System:</strong> The Service offers 15+ themed capsule experiences (including Birthday, Wedding, Graduation, Travel, and others) with custom visual ceremonies for sealing and opening capsules. Themes are provided for creative expression and user experience enhancement.</p>
                   
-                  <p><strong className="text-foreground">7.2 Opening and Closing Ceremonies:</strong> Themed capsules include interactive animations and visual effects during creation and viewing. These ceremonies may use device resources (CPU, GPU) and are optimized for performance but may vary based on your device capabilities.</p>
+                  <p><strong className="text-foreground">8.2 Opening and Closing Ceremonies:</strong> Themed capsules include interactive animations and visual effects during creation and viewing. These ceremonies may use device resources (CPU, GPU) and are optimized for performance but may vary based on your device capabilities.</p>
                   
-                  <p><strong className="text-foreground">7.3 Mobile Optimization:</strong> Visual effects are automatically optimized for mobile devices using solid colors instead of gradients to ensure performance and battery efficiency.</p>
+                  <p><strong className="text-foreground">8.3 Mobile Optimization:</strong> Visual effects are automatically optimized for mobile devices using solid colors instead of gradients to ensure performance and battery efficiency.</p>
                   
-                  <p><strong className="text-foreground">7.4 Session Persistence:</strong> Opening ceremonies are shown once per browser session per capsule. Ceremony state is stored locally in your browser's sessionStorage and clears when you close your browser.</p>
+                  <p><strong className="text-foreground">8.4 Session Persistence:</strong> Opening ceremonies are shown once per browser session per capsule. Ceremony state is stored locally in your browser's sessionStorage and clears when you close your browser.</p>
                   
-                  <p><strong className="text-foreground">7.5 Performance Considerations:</strong> Complex visual effects (such as particle systems, canvas animations, and special ceremonies) may impact device performance. You can skip ceremonies or use reduced motion settings in your device preferences.</p>
+                  <p><strong className="text-foreground">8.5 Performance Considerations:</strong> Complex visual effects (such as particle systems, canvas animations, and special ceremonies) may impact device performance. You can skip ceremonies or use reduced motion settings in your device preferences.</p>
                   
-                  <p><strong className="text-foreground">7.6 Browser Compatibility:</strong> Some visual features require modern browser capabilities (Canvas API, CSS animations, WebGL). We make reasonable efforts to provide fallback experiences, but full functionality may not be available on all devices or browsers.</p>
+                  <p><strong className="text-foreground">8.6 Browser Compatibility:</strong> Some visual features require modern browser capabilities (Canvas API, CSS animations, WebGL). We make reasonable efforts to provide fallback experiences, but full functionality may not be available on all devices or browsers.</p>
                 </div>
               </section>
 
@@ -172,13 +192,13 @@ export function TermsOfService() {
 
               {/* Notifications */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">8. Notifications and Communications</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">9. Notifications and Communications</h2>
                 <div className="space-y-3 text-muted-foreground">
-                  <p><strong className="text-foreground">8.1 Service Notifications:</strong> We may send you notifications about your capsules, deliveries, achievements, and other Service activities. You can control notification preferences in your account settings.</p>
+                  <p><strong className="text-foreground">9.1 Service Notifications:</strong> We may send you notifications about your capsules, deliveries, achievements, and other Service activities. You can control notification preferences in your account settings.</p>
                   
-                  <p><strong className="text-foreground">8.2 Email Communications:</strong> By creating an account, you agree to receive transactional emails necessary for the Service, including delivery confirmations and security alerts. You cannot opt out of critical service emails.</p>
+                  <p><strong className="text-foreground">9.2 Email Communications:</strong> By creating an account, you agree to receive transactional emails necessary for the Service, including delivery confirmations and security alerts. You cannot opt out of critical service emails.</p>
                   
-                  <p><strong className="text-foreground">8.3 Real-Time Features:</strong> The Service uses WebSocket connections for real-time notifications and updates. Your use of the Service constitutes consent to these connections.</p>
+                  <p><strong className="text-foreground">9.3 Real-Time Features:</strong> The Service uses WebSocket connections for real-time notifications and updates. Your use of the Service constitutes consent to these connections.</p>
                 </div>
               </section>
 
@@ -186,15 +206,15 @@ export function TermsOfService() {
 
               {/* Service Availability */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">9. Service Availability and Changes</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">10. Service Availability and Changes</h2>
                 <div className="space-y-3 text-muted-foreground">
-                  <p><strong className="text-foreground">9.1 "As Is" Service:</strong> The Service is provided "as is" without warranties of any kind. We do not guarantee uninterrupted, error-free, or secure operation.</p>
+                  <p><strong className="text-foreground">10.1 "As Is" Service:</strong> The Service is provided "as is" without warranties of any kind. We do not guarantee uninterrupted, error-free, or secure operation.</p>
                   
-                  <p><strong className="text-foreground">9.2 Modifications:</strong> We reserve the right to modify, suspend, or discontinue any part of the Service at any time, with or without notice, including features like AI enhancements, social features, or delivery methods.</p>
+                  <p><strong className="text-foreground">10.2 Modifications:</strong> We reserve the right to modify, suspend, or discontinue any part of the Service at any time, with or without notice, including features like AI enhancements, social features, or delivery methods.</p>
                   
-                  <p><strong className="text-foreground">9.3 Maintenance:</strong> We may perform scheduled or emergency maintenance that temporarily interrupts access to the Service.</p>
+                  <p><strong className="text-foreground">10.3 Maintenance:</strong> We may perform scheduled or emergency maintenance that temporarily interrupts access to the Service.</p>
                   
-                  <p><strong className="text-foreground">9.4 Beta Features:</strong> We may offer beta or experimental features that may not work as intended. Use of such features is at your own risk.</p>
+                  <p><strong className="text-foreground">10.4 Beta Features:</strong> We may offer beta or experimental features that may not work as intended. Use of such features is at your own risk.</p>
                 </div>
               </section>
 
@@ -202,15 +222,15 @@ export function TermsOfService() {
 
               {/* Data and Privacy */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">10. Data and Privacy</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">11. Data and Privacy</h2>
                 <div className="space-y-3 text-muted-foreground">
-                  <p><strong className="text-foreground">10.1 Privacy Policy:</strong> Our collection and use of personal information is governed by our Privacy Policy, which is incorporated into these Terms by reference.</p>
+                  <p><strong className="text-foreground">11.1 Privacy Policy:</strong> Our collection and use of personal information is governed by our Privacy Policy, which is incorporated into these Terms by reference.</p>
                   
-                  <p><strong className="text-foreground">10.2 Data Backup:</strong> While we implement backup procedures, you are solely responsible for maintaining backup copies of your content.</p>
+                  <p><strong className="text-foreground">11.2 Data Backup:</strong> While we implement backup procedures, you are solely responsible for maintaining backup copies of your content.</p>
                   
-                  <p><strong className="text-foreground">10.3 Data Retention:</strong> We will retain your content for as long as your account is active or as needed to provide the Service. You may request deletion of your data at any time.</p>
+                  <p><strong className="text-foreground">11.3 Data Retention:</strong> We will retain your content for as long as your account is active or as needed to provide the Service. You may request deletion of your data at any time.</p>
                   
-                  <p><strong className="text-foreground">10.4 Third-Party Services:</strong> The Service uses third-party providers (Supabase for storage, Resend for email delivery) who process your data in accordance with their own privacy policies and our data processing agreements.</p>
+                  <p><strong className="text-foreground">11.4 Third-Party Services:</strong> The Service uses third-party providers (Supabase for storage, Resend for email delivery) who process your data in accordance with their own privacy policies and our data processing agreements.</p>
                 </div>
               </section>
 
@@ -218,9 +238,9 @@ export function TermsOfService() {
 
               {/* Limitation of Liability */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">11. Limitation of Liability</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">12. Limitation of Liability</h2>
                 <div className="space-y-3 text-muted-foreground">
-                  <p><strong className="text-foreground">11.1 No Liability:</strong> TO THE MAXIMUM EXTENT PERMITTED BY LAW, ERAS AND ITS AFFILIATES, OFFICERS, EMPLOYEES, AGENTS, AND LICENSORS WILL NOT BE LIABLE FOR:</p>
+                  <p><strong className="text-foreground">12.1 No Liability:</strong> TO THE MAXIMUM EXTENT PERMITTED BY LAW, ERAS AND ITS AFFILIATES, OFFICERS, EMPLOYEES, AGENTS, AND LICENSORS WILL NOT BE LIABLE FOR:</p>
                   <ul className="list-disc list-inside ml-4 space-y-2">
                     <li>Any indirect, incidental, special, consequential, or punitive damages</li>
                     <li>Loss of profits, data, use, goodwill, or other intangible losses</li>
@@ -232,7 +252,7 @@ export function TermsOfService() {
                     <li>Errors in AI-generated content or suggestions</li>
                   </ul>
                   
-                  <p><strong className="text-foreground">11.2 Maximum Liability:</strong> Our total liability for any claims arising from or related to the Service is limited to the amount you paid us in the 12 months prior to the claim, or $100, whichever is greater.</p>
+                  <p><strong className="text-foreground">12.2 Maximum Liability:</strong> Our total liability for any claims arising from or related to the Service is limited to the amount you paid us in the 12 months prior to the claim, or $100, whichever is greater.</p>
                 </div>
               </section>
 
@@ -240,11 +260,11 @@ export function TermsOfService() {
 
               {/* Termination */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">12. Termination</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">13. Termination</h2>
                 <div className="space-y-3 text-muted-foreground">
-                  <p><strong className="text-foreground">12.1 Termination by You:</strong> You may terminate your account at any time through the Settings page. Upon termination, your scheduled capsules will still be delivered unless you cancel them first.</p>
+                  <p><strong className="text-foreground">13.1 Termination by You:</strong> You may terminate your account at any time through the Settings page. Upon termination, your scheduled capsules will still be delivered unless you cancel them first.</p>
                   
-                  <p><strong className="text-foreground">12.2 Termination by Us:</strong> We may suspend or terminate your account at any time if:</p>
+                  <p><strong className="text-foreground">13.2 Termination by Us:</strong> We may suspend or terminate your account at any time if:</p>
                   <ul className="list-disc list-inside ml-4 space-y-2">
                     <li>You violate these Terms</li>
                     <li>Your use of the Service poses a security or legal risk</li>
@@ -253,7 +273,7 @@ export function TermsOfService() {
                     <li>You abuse Service features or engage in fraudulent activity</li>
                   </ul>
                   
-                  <p><strong className="text-foreground">12.3 Effect of Termination:</strong> Upon termination, your right to use the Service immediately ceases. We may delete your content, though some information may remain in backups for a limited time. Notifications, achievements, and social interactions will be removed.</p>
+                  <p><strong className="text-foreground">13.3 Effect of Termination:</strong> Upon termination, your right to use the Service immediately ceases. We may delete your content, though some information may remain in backups for a limited time. Notifications, achievements, and social interactions will be removed.</p>
                 </div>
               </section>
 
@@ -261,13 +281,13 @@ export function TermsOfService() {
 
               {/* Dispute Resolution */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">13. Dispute Resolution</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">14. Dispute Resolution</h2>
                 <div className="space-y-3 text-muted-foreground">
-                  <p><strong className="text-foreground">13.1 Informal Resolution:</strong> If you have a dispute with us, please contact us first to attempt to resolve it informally.</p>
+                  <p><strong className="text-foreground">14.1 Informal Resolution:</strong> If you have a dispute with us, please contact us first to attempt to resolve it informally.</p>
                   
-                  <p><strong className="text-foreground">13.2 Governing Law:</strong> These Terms are governed by the laws of the jurisdiction in which Eras is incorporated, without regard to conflict of law principles.</p>
+                  <p><strong className="text-foreground">14.2 Governing Law:</strong> These Terms are governed by the laws of the jurisdiction in which Eras is incorporated, without regard to conflict of law principles.</p>
                   
-                  <p><strong className="text-foreground">13.3 Arbitration:</strong> Any disputes that cannot be resolved informally will be resolved through binding arbitration, rather than in court, except that you may assert claims in small claims court if they qualify.</p>
+                  <p><strong className="text-foreground">14.3 Arbitration:</strong> Any disputes that cannot be resolved informally will be resolved through binding arbitration, rather than in court, except that you may assert claims in small claims court if they qualify.</p>
                 </div>
               </section>
 
@@ -275,19 +295,19 @@ export function TermsOfService() {
 
               {/* Miscellaneous */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">14. Miscellaneous</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">15. Miscellaneous</h2>
                 <div className="space-y-3 text-muted-foreground">
-                  <p><strong className="text-foreground">14.1 Entire Agreement:</strong> These Terms constitute the entire agreement between you and Eras regarding the Service.</p>
+                  <p><strong className="text-foreground">15.1 Entire Agreement:</strong> These Terms constitute the entire agreement between you and Eras regarding the Service.</p>
                   
-                  <p><strong className="text-foreground">14.2 Severability:</strong> If any provision of these Terms is found to be unenforceable, the remaining provisions will remain in full effect.</p>
+                  <p><strong className="text-foreground">15.2 Severability:</strong> If any provision of these Terms is found to be unenforceable, the remaining provisions will remain in full effect.</p>
                   
-                  <p><strong className="text-foreground">14.3 No Waiver:</strong> Our failure to enforce any right or provision of these Terms will not be considered a waiver of those rights.</p>
+                  <p><strong className="text-foreground">15.3 No Waiver:</strong> Our failure to enforce any right or provision of these Terms will not be considered a waiver of those rights.</p>
                   
-                  <p><strong className="text-foreground">14.4 Assignment:</strong> You may not assign or transfer these Terms without our prior written consent. We may assign these Terms without restriction.</p>
+                  <p><strong className="text-foreground">15.4 Assignment:</strong> You may not assign or transfer these Terms without our prior written consent. We may assign these Terms without restriction.</p>
                   
-                  <p><strong className="text-foreground">14.5 Third-Party Services:</strong> The Service may contain links to third-party websites or services. We are not responsible for the content, terms, or privacy practices of any third-party services.</p>
+                  <p><strong className="text-foreground">15.5 Third-Party Services:</strong> The Service may contain links to third-party websites or services. We are not responsible for the content, terms, or privacy practices of any third-party services.</p>
                   
-                  <p><strong className="text-foreground">14.6 Force Majeure:</strong> We are not liable for any failure to perform our obligations due to circumstances beyond our reasonable control, including network outages, natural disasters, or third-party service disruptions.</p>
+                  <p><strong className="text-foreground">15.6 Force Majeure:</strong> We are not liable for any failure to perform our obligations due to circumstances beyond our reasonable control, including network outages, natural disasters, or third-party service disruptions.</p>
                 </div>
               </section>
 
@@ -295,7 +315,7 @@ export function TermsOfService() {
 
               {/* Contact */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">15. Contact Information</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">16. Contact Information</h2>
                 <div className="space-y-3 text-muted-foreground">
                   <p>If you have any questions about these Terms, please contact us through the Settings page or by email.</p>
                   
@@ -316,6 +336,10 @@ export function TermsOfService() {
                   Version History
                 </h2>
                 <div className="space-y-2 text-muted-foreground">
+                  <div className="p-3 bg-blue-500/10 rounded-md border border-blue-500/20">
+                    <p className="font-medium text-foreground">Version 6.0 - February 19, 2026</p>
+                    <p className="text-xs mt-1">Major referral program and notification enhancements: Added comprehensive referral program with tiered Horizon Gallery rewards (milestones at 1, 5, 10, and 25 referrals); implemented anti-fraud protection measures; added CAN-SPAM and GDPR compliance requirements for referral invitations; enhanced notification system with 6-color coding scheme (purple for received from others, blue for self-delivered, green for echoes, gold for achievements, red for urgent alerts, slate for system messages); improved dashboard performance with 83% faster capsule loading; and updated email invitation tracking with reward mechanics</p>
+                  </div>
                   <div className="p-3 bg-blue-500/10 rounded-md border border-blue-500/20">
                     <p className="font-medium text-foreground">Version 5.0 - January 8, 2026</p>
                     <p className="text-xs mt-1">Enhanced media features and user experience improvements: Added comprehensive media preview system for videos, photos, and audio with full-screen viewing capabilities; improved draft management with dedicated Draft folder for easy access and loading; expanded media attachment support in capsule creation with persistent caching; optimized click-based interactions across all devices replacing touch-only controls; improved tutorial system integration; and refined notification display system with better mobile z-index handling</p>

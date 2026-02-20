@@ -10820,17 +10820,6 @@
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
 
-  .to-pink-900\/20 {
-    --tw-gradient-to: color-mix(in srgb, oklch(.408 .153 2.432) 20%, transparent);
-    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .to-pink-900\/20 {
-      --tw-gradient-to: color-mix(in oklab, var(--color-pink-900) 20%, transparent);
-    }
-  }
-
   .to-pink-900\/90 {
     --tw-gradient-to: color-mix(in srgb, oklch(.408 .153 2.432) 90%, transparent);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
@@ -15467,18 +15456,6 @@
   @media (hover: hover) {
     .hover\:border-blue-400:hover {
       border-color: var(--color-blue-400);
-    }
-  }
-
-  @media (hover: hover) {
-    .hover\:border-blue-400\/60:hover {
-      border-color: color-mix(in srgb, oklch(.707 .165 254.624) 60%, transparent);
-    }
-
-    @supports (color: color-mix(in lab, red, red)) {
-      .hover\:border-blue-400\/60:hover {
-        border-color: color-mix(in oklab, var(--color-blue-400) 60%, transparent);
-      }
     }
   }
 

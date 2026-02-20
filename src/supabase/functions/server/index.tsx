@@ -2846,10 +2846,12 @@ app.get("/make-server-f9be53a7/api/capsules", async (c) => {
     let userCapsules = [];
     
     try {
-      console.log('⏱️ Fetching user capsule list...');
-      const startTime = Date.now();
+      const operationStartTime = Date.now(); // Track total operation time
+      console.log('⏱️ [PERF] Starting capsule fetch operation...');
       
       // Step 1: Get the list of capsule IDs for this user (with timeout protection)
+      console.log('⏱️ [PERF] Step 1: Fetching user capsule list...');
+      const step1Start = Date.now();
       const userCapsulesKey = `user_capsules:${user.id}`;
       userCapsuleIds = await withKVTimeout(
         kv.get(userCapsulesKey),
@@ -2857,8 +2859,11 @@ app.get("/make-server-f9be53a7/api/capsules", async (c) => {
         `Get user capsules list for ${user.id}`
       ) || [];
       
-      const listQueryTime = Date.now() - startTime;
-      console.log(`✅ Got ${userCapsuleIds.length} capsule IDs in ${listQueryTime}ms`);
+      const step1Time = Date.now() - step1Start;
+      console.log(`✅ [PERF] Step 1 complete: Got ${userCapsuleIds.length} capsule IDs in ${step1Time}ms`);
+      
+      const startTime = Date.now();
+      const listQueryTime = step1Time;
       
       // If no capsules, return early
       if (!Array.isArray(userCapsuleIds) || userCapsuleIds.length === 0) {
@@ -2867,7 +2872,7 @@ app.get("/make-server-f9be53a7/api/capsules", async (c) => {
       }
       
       // Step 2: Fetch all capsules in ONE batch using mget (much faster!)
-      console.log('⏱️ Batch fetching capsules with mget...');
+      console.log('⏱️ [PERF] Step 2: Batch fetching capsules with mget...');
       const capsuleFetchStart = Date.now();
       
       // 🚀 PERFORMANCE OPTIMIZATION: Use single mget call instead of multiple getCapsuleReliable calls
@@ -2883,9 +2888,11 @@ app.get("/make-server-f9be53a7/api/capsules", async (c) => {
         );
         
         allCapsulesData = values || [];
-        console.log(`✅ Batch fetched ${allCapsulesData.filter(c => c).length}/${userCapsuleIds.length} capsules`);
+        const step2Time = Date.now() - capsuleFetchStart;
+        console.log(`✅ [PERF] Step 2 complete: Batch fetched ${allCapsulesData.filter(c => c).length}/${userCapsuleIds.length} capsules in ${step2Time}ms (avg: ${(step2Time / allCapsulesData.length).toFixed(0)}ms/capsule)`);
       } catch (error) {
-        console.error('❌ Batch fetch failed, falling back to individual fetches:', error);
+        const step2Time = Date.now() - capsuleFetchStart;
+        console.error(`❌ [PERF] Step 2 failed after ${step2Time}ms, falling back to individual fetches:`, error);
         
         // Fallback to individual fetches if batch fails
         const capsulePromises = userCapsuleIds.map(id => 
@@ -2907,9 +2914,11 @@ app.get("/make-server-f9be53a7/api/capsules", async (c) => {
       }
       
       const fetchTime = Date.now() - capsuleFetchStart;
-      console.log(`✅ Fetched ${allCapsulesData.filter(c => c).length} capsules in ${fetchTime}ms (avg: ${(fetchTime / allCapsulesData.length).toFixed(0)}ms/capsule)`);
+      console.log(`✅ [PERF] Fetched ${allCapsulesData.filter(c => c).length} capsules in ${fetchTime}ms (avg: ${(fetchTime / allCapsulesData.length).toFixed(0)}ms/capsule)`);
       
       // CRITICAL FIX: Get user's current profile name for sender_name field
+      console.log('⏱️ [PERF] Step 3: Fetching user profile...');
+      const step3Start = Date.now();
       let userSenderName = 'You';
       try {
         const userProfile = await kv.get(`profile:${user.id}`);
@@ -2924,8 +2933,12 @@ app.get("/make-server-f9be53a7/api/capsules", async (c) => {
       } catch (error) {
         console.warn('Could not load user profile for sender name:', error);
       }
+      const step3Time = Date.now() - step3Start;
+      console.log(`✅ [PERF] Step 3 complete: ${step3Time}ms`);
       
       // PERFORMANCE OPTIMIZATION: Only fetch user directory if enrichment is requested
+      console.log('⏱️ [PERF] Step 4: User directory setup...');
+      const step4Start = Date.now();
       let userDirectory = new Map(); // email -> { id, name }
       let userLookupStart = Date.now();
       
@@ -2951,16 +2964,24 @@ app.get("/make-server-f9be53a7/api/capsules", async (c) => {
       } else {
         console.log('⚡ Skipping user directory fetch (fast mode enabled)');
       }
+      const step4Time = Date.now() - step4Start;
+      console.log(`✅ [PERF] Step 4 complete: ${step4Time}ms`);
       
       // Filter out null/undefined results and deleted capsules (Archive)
+      console.log('⏱️ [PERF] Step 5: Filtering capsules...');
+      const step5Start = Date.now();
       const filteredCapsules = allCapsulesData.filter(capsule => 
         capsule !== null && 
         capsule !== undefined && 
         capsule?.id &&
         !capsule.deletedAt // Exclude capsules in Archive
       );
+      const step5Time = Date.now() - step5Start;
+      console.log(`✅ [PERF] Step 5 complete: Filtered to ${filteredCapsules.length} capsules in ${step5Time}ms`);
       
       // PERFORMANCE OPTIMIZATION: Only batch fetch recipient profiles if enrichment is requested
+      console.log('⏱️ [PERF] Step 6: Profile batch fetch...');
+      const step6Start = Date.now();
       const profileCache = new Map(); // userId -> profile
       let profileBatchStart = Date.now();
       
@@ -2998,25 +3019,17 @@ app.get("/make-server-f9be53a7/api/capsules", async (c) => {
       } else {
         console.log('⚡ Skipping recipient profile batch fetch (fast mode enabled)');
       }
+      const step6Time = Date.now() - step6Start;
+      console.log(`✅ [PERF] Step 6 complete: ${step6Time}ms`);
       
       // Map capsules with recipient name lookup (now using cached data)
+      console.log('⏱️ [PERF] Step 7: Enriching capsules...');
+      const step7Start = Date.now();
       const enrichedCapsulePromises = filteredCapsules.map(async (capsule) => {
-        // Backfill delivery_time from delivery_date if missing
-        let deliveryTime = capsule.delivery_time;
-        if (!deliveryTime && capsule.delivery_date) {
-          const deliveryDateTime = new Date(capsule.delivery_date);
-          if (!isNaN(deliveryDateTime.getTime())) {
-            const hours = String(deliveryDateTime.getUTCHours()).padStart(2, '0');
-            const minutes = String(deliveryDateTime.getUTCMinutes()).padStart(2, '0');
-            deliveryTime = `${hours}:${minutes}`;
-            
-            // Update the capsule in the background (don't await to avoid slowing down response)
-            kv.set(`capsule:${capsule.id}`, {
-              ...capsule,
-              delivery_time: deliveryTime
-            }).catch(err => console.warn('Failed to backfill delivery_time:', err));
-          }
-        }
+        // PERFORMANCE FIX: Don't backfill delivery_time to database (frontend handles it)
+        // Just use whatever value is already in the capsule (may be undefined - that's OK!)
+        // Frontend gracefully extracts time from delivery_date if delivery_time is missing
+        const deliveryTime = capsule.delivery_time; // Use existing value, don't backfill
         
         // OPTIMIZED: Look up recipient names only if enrichment is requested
         let recipientNames = [];
@@ -3093,8 +3106,12 @@ app.get("/make-server-f9be53a7/api/capsules", async (c) => {
       
       // Wait for all lookups to complete
       const enrichedCapsules = await Promise.all(enrichedCapsulePromises);
+      const step7Time = Date.now() - step7Start;
+      console.log(`✅ [PERF] Step 7 complete: Enriched ${enrichedCapsules.length} capsules in ${step7Time}ms`);
       
       // Sort capsules
+      console.log('⏱️ [PERF] Step 8: Sorting capsules...');
+      const step8Start = Date.now();
       userCapsules = enrichedCapsules.sort((a, b) => {
         // CRITICAL FIX: Sort delivered capsules by delivery date (most recently delivered first)
         // Sort scheduled/draft capsules by creation date
@@ -3115,12 +3132,15 @@ app.get("/make-server-f9be53a7/api/capsules", async (c) => {
         }
       });
 
-      const totalQueryTime = Date.now() - startTime;
-      console.log(`📦 Found ${userCapsules.length} capsules for user in ${totalQueryTime}ms`);
+      const step8Time = Date.now() - step8Start;
+      console.log(`✅ [PERF] Step 8 complete: Sorted in ${step8Time}ms`);
+      
+      const totalQueryTime = Date.now() - operationStartTime;
+      console.log(`📦 [PERF] TOTAL: Found ${userCapsules.length} capsules in ${totalQueryTime}ms`);
       if (enrichRecipients) {
-        console.log(`⚡ Performance breakdown: List=${listQueryTime}ms | Fetch=${fetchTime}ms | UserDir=${Date.now() - userLookupStart}ms | Profiles=${Date.now() - profileBatchStart}ms | Total=${totalQueryTime}ms`);
+        console.log(`⚡ [PERF] Performance breakdown: List=${step1Time}ms | Batch=${fetchTime}ms | Profile=${step3Time}ms | UserDir=${step4Time}ms | Profiles=${step6Time}ms | Enrich=${step7Time}ms | Sort=${step8Time}ms | TOTAL=${totalQueryTime}ms`);
       } else {
-        console.log(`⚡ Performance breakdown (FAST MODE): List=${listQueryTime}ms | Fetch=${fetchTime}ms | Total=${totalQueryTime}ms`);
+        console.log(`⚡ [PERF] Performance breakdown (FAST MODE): List=${step1Time}ms | Batch=${fetchTime}ms | Profile=${step3Time}ms | Filter=${step5Time}ms | Enrich=${step7Time}ms | Sort=${step8Time}ms | TOTAL=${totalQueryTime}ms`);
         console.log(`💡 Tip: Add ?enrich=true to include recipient names (slower)`);
       }
       
