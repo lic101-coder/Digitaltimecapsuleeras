@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, Lock, Check, Share2, Crown, Sparkles, X, Facebook, Twitter, Linkedin, MessageCircle, Send, Copy } from 'lucide-react';
 import { TitleData } from '../hooks/useTitles';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { getTitleConfig } from '../utils/titleConfigs';
 
 interface TitleCarouselProps {
