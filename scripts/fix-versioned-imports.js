@@ -2,6 +2,10 @@ import { readdir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 
 const SRC_DIR = join(process.cwd(), 'src');
+// Debug: print what we see
+console.log('CWD:', process.cwd());
+const { readdirSync } = await import('fs');
+console.log('CWD contents:', readdirSync(process.cwd()).join(', '));
 
 async function getAllFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -46,7 +50,7 @@ async function main() {
   let fixedCount = 0;
 
   for (const file of files) {
-    const relativePath = file.replace(process.cwd() + '/', '');
+    const relativePath = file.replace(join(__dirname, '..') + '/', '');
     const content = await readFile(file, 'utf-8');
     if (versionedImportRegex.test(content)) {
       // Reset regex lastIndex since it's global
