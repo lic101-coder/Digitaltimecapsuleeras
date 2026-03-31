@@ -9,7 +9,7 @@ import { Checkbox } from './ui/checkbox';
 import { Clock, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Shield, AlertCircle, Check, Settings, Mail } from 'lucide-react';
 import { MomentPrismLogo } from './MomentPrismLogo';
 import { EmailVerification } from './EmailVerification';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { supabase } from '../utils/supabase/client';
 import { DatabaseService } from '../utils/supabase/database';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
@@ -21,6 +21,7 @@ export function Auth({ onAuthenticated }) {
   const [isLoading, setIsLoading] = useState(false);
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const [rememberMe, setRememberMe] = useState(false);
+  const [pendingVerificationUserId, setPendingVerificationUserId] = useState<string | null>(null); // Store userId for verification resend
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -768,11 +769,36 @@ export function Auth({ onAuthenticated }) {
             console.log('📦 📦 📦 FETCH COMPLETED! Response status:', checkResponse.status);
             
             if (checkResponse.ok) {
-              const { exists } = await checkResponse.json();
-              console.log('✅ ✅ ✅ User exists check result:', exists);
+              const { exists, emailVerified } = await checkResponse.json();
+              console.log('✅ ✅ ✅ User exists check result:', { exists, emailVerified });
               
-              if (exists) {
-                // Email exists, so password is wrong
+              if (exists && !emailVerified) {
+                // Email exists but not verified - this is the actual problem!
+                console.log('🟡 🟡 🟡 SHOWING EMAIL NOT VERIFIED TOAST NOW!');
+                toast.error('📧 Email Not Verified', {
+                  description: 'Please check your inbox and click the verification link we sent you. Check your spam folder if you don\'t see it.',
+                  duration: 12000,
+                  action: {
+                    label: 'Resend Email',
+                    onClick: async () => {
+                      try {
+                        await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/auth/resend-verification`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${publicAnonKey}`
+                          },
+                          body: JSON.stringify({ email: formData.email.trim().toLowerCase() })
+                        });
+                        toast.success('✅ Verification email sent! Check your inbox.');
+                      } catch (err) {
+                        toast.error('Failed to resend email. Please try again.');
+                      }
+                    }
+                  }
+                });
+              } else if (exists) {
+                // Email exists and is verified, so password is wrong
                 console.log('🔴 🔴 🔴 SHOWING WRONG PASSWORD TOAST NOW!');
                 toast.error('❌ Incorrect Password', {
                   description: 'The password you entered is incorrect. Please try again or reset your password.',
@@ -1153,6 +1179,7 @@ export function Auth({ onAuthenticated }) {
       });
     }, 40000); // 40 second timeout for sign-up (increased from 20s for slower connections)
 
+    // Begin signup attempt  
     try {
       // Validation
       if (!formData.email || !formData.password || !formData.firstName) {
@@ -1236,28 +1263,30 @@ export function Auth({ onAuthenticated }) {
         duration: 15000
       });
 
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email.trim().toLowerCase(),
-        password: formData.password,
-        options: {
-          data: {
-            first_name: formData.firstName.trim(),
-            last_name: formData.lastName?.trim() || '',
-            agreed_to_terms: true,
-            terms_agreed_at: new Date().toISOString()
-          },
-          // IMPORTANT: Disable Supabase's built-in confirmation email
-          // We'll send our own custom verification email via our backend
-          emailRedirectTo: undefined
-        }
+      // ✅ Use custom signup endpoint to bypass Supabase's email rate limits
+      const signupResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${publicAnonKey}`
+        },
+        body: JSON.stringify({
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password,
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName?.trim() || ''
+        })
       });
 
       // Dismiss loading toast
       toast.dismiss('signup-progress');
 
-      if (error) {
+      const result = await signupResponse.json();
+
+      if (!signupResponse.ok || result.error) {
+        const error = result;
         console.error('❌ Sign up error:', error);
-        console.error('❌ Error details:', { message: error.message, status: error.status, code: error.code });
+        console.error('❌ Error details:', { message: error.error, code: error.code });
         
         // Enhanced detection for "user already exists" errors (BACKUP LAYER)
         const alreadyExistsPatterns = [
@@ -1271,7 +1300,8 @@ export function Auth({ onAuthenticated }) {
         ];
         
         const isAlreadyRegistered = alreadyExistsPatterns.some(pattern => 
-          error.message?.toLowerCase().includes(pattern.toLowerCase())
+          error.error?.toLowerCase().includes(pattern.toLowerCase()) ||
+          error.code === 'user_already_exists'
         );
         
         // Handle specific signup errors
@@ -1296,37 +1326,19 @@ export function Auth({ onAuthenticated }) {
               }
             }
           });
-        } else if (error.message.includes('invalid email') || error.message.includes('Invalid email')) {
+        } else if (error.error?.includes('invalid email') || error.error?.includes('Invalid email')) {
           toast.error('Please enter a valid email address.');
-        } else if (error.message.includes('weak password') || error.message.includes('Password') || error.message.includes('AuthWeakPasswordError')) {
+        } else if (error.error?.includes('weak password') || error.error?.includes('Password')) {
           toast.error('Password is too weak or commonly used', {
             description: 'Please choose a unique password with 8+ characters, letters, numbers, and special characters (!@#$)',
             duration: 8000
           });
-        } else if (error.message.toLowerCase().includes('email rate limit') || error.message.includes('once every 60 seconds')) {
-          toast.error('⏱️ Email Rate Limit Exceeded', {
-            description: 'For security, we can only send one verification email every 60 seconds. This prevents spam and protects your account. Please wait a moment and try again.',
-            duration: 12000,
-            action: {
-              label: 'Why?',
-              onClick: () => {
-                toast.info('Security Feature', {
-                  description: 'Rate limits prevent automated bots from spamming accounts and help keep Eras secure for everyone. Thank you for your patience!',
-                  duration: 8000
-                });
-              }
-            }
-          });
-        } else if (error.message.includes('rate_limit') || error.message.includes('too many')) {
-          toast.error('Too many sign-up attempts. Please wait a moment and try again.', {
-            duration: 6000
-          });
-        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        } else if (error.error?.includes('network') || error.error?.includes('fetch')) {
           toast.error('Network error. Please check your connection and try again.', {
             duration: 6000
           });
         } else {
-          toast.error(error.message || 'Failed to create account. Please try again.', {
+          toast.error(error.error || 'Failed to create account. Please try again.', {
             duration: 6000
           });
         }
@@ -1336,12 +1348,14 @@ export function Auth({ onAuthenticated }) {
         return;
       }
 
-      if (data.user) {
-        console.log('✅ Account created successfully for:', data.user.email);
+      // Success! result.user contains the new user data
+      if (result.user) {
+        const email = formData.email.trim().toLowerCase();
+        console.log('✅ Account created successfully for:', result.user.email);
         
         // Mark account creation time for welcome notification
         try {
-          localStorage.setItem(`eras_account_created_${data.user.id}`, Date.now().toString());
+          localStorage.setItem(`eras_account_created_${result.user.id}`, Date.now().toString());
           console.log('📝 Account creation marker set for welcome notification');
         } catch (e) {
           console.warn('Could not set account creation marker:', e);
@@ -1361,7 +1375,7 @@ export function Auth({ onAuthenticated }) {
         
         if (referralCode) {
           console.log(`🎯 [Referral] User ${email} signed up via referral code: ${referralCode}`);
-          console.log(`🎯 [Referral] Calling track-signup endpoint for new user ID: ${data.user.id}`);
+          console.log(`🎯 [Referral] Calling track-signup endpoint for new user ID: ${result.user.id}`);
           try {
             const referralResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/referrals/track-signup`, {
               method: 'POST',
@@ -1371,7 +1385,7 @@ export function Auth({ onAuthenticated }) {
               },
               body: JSON.stringify({
                 referralCode: referralCode,
-                newUserId: data.user.id
+                newUserId: result.user.id
               })
             });
 
@@ -1395,132 +1409,18 @@ export function Auth({ onAuthenticated }) {
           console.log('ℹ️ [Referral] No referral code found - user signed up directly');
         }
         
-        // Check if email confirmation is required
-        if (!data.session) {
-          console.log('📨 Email verification required - sending custom verification email via backend...');
-          
-          try {
-            const verificationResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/auth/send-verification-email`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${publicAnonKey}`
-              },
-              body: JSON.stringify({
-                email: data.user.email,
-                firstName: formData.firstName.trim(),
-                userId: data.user.id
-              })
-            });
-
-            const verificationResult = await verificationResponse.json();
-            
-            if (verificationResult.success) {
-              console.log('✅ Verification email sent successfully');
-              toast.success('✅ Account Created!', {
-                duration: 12000,
-                description: `We've sent a verification email to ${data.user.email}\n\n⚠️ Don't see it? Check your spam/junk folder and mark it as "Not Spam" to ensure future emails arrive in your inbox.`
-              });
-            } else {
-              console.error('❌ Failed to send verification email:', verificationResult.error);
-              toast.warning('Account created, but verification email may be delayed.', {
-                duration: 8000,
-                description: 'If you don\'t receive it, contact support.'
-              });
-            }
-          } catch (emailError) {
-            console.error('❌ Exception sending verification email:', emailError);
-            toast.warning('Account created, but verification email may be delayed.', {
-              duration: 8000
-            });
-          }
-          
-          clearTimeout(loadingTimeout);
-          setIsLoading(false);
-          setCurrentView('verify-email');
-        } else {
-          console.log('✅ Auto-signed in, creating profile...');
-          
-          // Auto-signed in, create profile
-          try {
-            const displayName = `${formData.firstName.trim()} ${formData.lastName?.trim() || ''}`.trim();
-            await DatabaseService.updateUserProfile(data.user.id, {
-              first_name: formData.firstName.trim(),
-              last_name: formData.lastName?.trim() || '',
-              display_name: displayName,
-              email: data.user.email
-            });
-            console.log('✅ Profile created successfully with display_name:', displayName);
-            
-            // Initialize user with Time Novice title as a freebie
-            try {
-              const initResponse = await fetch(
-                `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/titles/initialize`,
-                {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${data.session.access_token}`,
-                    'Content-Type': 'application/json'
-                  }
-                }
-              );
-              
-              if (initResponse.ok) {
-                console.log('✅ Time Novice title initialized for new user');
-              } else {
-                console.warn('⚠️ Failed to initialize Time Novice title, but continuing');
-              }
-            } catch (titleError) {
-              console.error('⚠️ Title initialization error:', titleError);
-              // Non-critical error - continue with authentication
-            }
-          } catch (profileError) {
-            console.error('⚠️ Profile creation error:', profileError);
-            // Non-critical error - continue with authentication
-          }
-
-          clearTimeout(loadingTimeout);
-          setIsLoading(false);
-          
-          // Check for capsule redirect before calling onAuthenticated
-          const capsuleRedirect = sessionStorage.getItem('capsule_redirect');
-          const viewToken = sessionStorage.getItem('capsule_view_token');
-          
-          // IMPORTANT: Pass the access token so pending capsules can be claimed
-          console.log('🌙 [SIGN-UP → ANIMATION] Calling onAuthenticated after successful sign-up');
-          console.log('🌙 [SIGN-UP → ANIMATION] NEW USER should see lunar eclipse animation');
-          onAuthenticated({
-            id: data.user.id,
-            email: data.user.email,
-            firstName: formData.firstName.trim(),
-            lastName: formData.lastName?.trim() || ''
-          }, data.session.access_token, { isFreshLogin: true });
-          console.log('🌙 [SIGN-UP → ANIMATION] onAuthenticated called');
-          
-          // Handle capsule redirect after successful auth
-          // Only redirect if we're NOT already on a view route
-          if (capsuleRedirect && viewToken && !window.location.pathname.startsWith('/view/')) {
-            console.log('📬 Redirecting to received capsule after sign-up');
-            sessionStorage.removeItem('capsule_redirect');
-            sessionStorage.removeItem('capsule_view_token');
-            sessionStorage.removeItem('capsule_redirect_timestamp');
-            
-            // Add a small delay to ensure auth is fully set up
-            setTimeout(() => {
-              window.location.href = `/view/${viewToken}`;
-            }, 500);
-          } else if (window.location.pathname.startsWith('/view/')) {
-            // Clear stale tokens if already on view route
-            sessionStorage.removeItem('capsule_redirect');
-            sessionStorage.removeItem('capsule_view_token');
-            sessionStorage.removeItem('capsule_redirect_timestamp');
-          }
-          
-          toast.success('Welcome to Eras! 🎉', {
-            duration: 5000,
-            description: 'Your account has been created successfully'
-          });
-        }
+        // Custom signup always requires email verification
+        console.log('📨 Verification email was sent automatically by backend');
+        
+        toast.success('✅ Account Created!', {
+          duration: 12000,
+          description: `We've sent a verification email to ${result.user.email}\n\n⚠️ Don't see it? Check your spam/junk folder and mark it as "Not Spam" to ensure future emails arrive in your inbox.`
+        });
+        
+        clearTimeout(loadingTimeout);
+        setIsLoading(false);
+        setPendingVerificationUserId(result.user.id); // Save userId for resending verification
+        setCurrentView('verify-email');
       } else {
         console.error('❌ Sign-up succeeded but no user data returned');
         toast.error('Account creation failed - no user data received. Please try again.');
@@ -1633,6 +1533,7 @@ export function Auth({ onAuthenticated }) {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     
+    // Password reset handler
     if (!formData.password) {
       toast.error('Please enter a new password');
       return;
@@ -2061,6 +1962,8 @@ export function Auth({ onAuthenticated }) {
     return (
       <EmailVerification 
         email={formData.email}
+        userId={pendingVerificationUserId}
+        firstName={formData.firstName}
         onBack={() => switchView('signin')}
       />
     );

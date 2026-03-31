@@ -3,14 +3,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Mail, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
-import { toast } from 'sonner@2.0.3';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { toast } from 'sonner';
 
 interface EmailVerificationProps {
   email: string;
+  userId: string | null;
+  firstName: string;
   onBack: () => void;
 }
 
-export function EmailVerification({ email, onBack }: EmailVerificationProps) {
+export function EmailVerification({ email, userId, firstName, onBack }: EmailVerificationProps) {
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'checking' | 'verified' | 'error'>('pending');
@@ -63,14 +66,29 @@ export function EmailVerification({ email, onBack }: EmailVerificationProps) {
 
     setIsResending(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
+      // Use custom email endpoint instead of Supabase Auth's resend
+      console.log('📧 [Email Verification] Resending verification email via custom endpoint...');
+      
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/auth/send-verification-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${publicAnonKey}`
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          firstName: firstName || 'there',
+          userId: userId || null // Send null instead of 'unknown' - server will look up the user
+        })
       });
 
-      if (error) {
-        // Handle specific resend errors
-        if (error.message.toLowerCase().includes('email rate limit') || error.message.includes('once every 60 seconds')) {
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('❌ [Email Verification] Failed to resend:', result);
+        
+        // Handle specific errors
+        if (result.error?.includes('rate limit') || result.error?.includes('60 seconds')) {
           toast.error('⏱️ Email Rate Limit Exceeded', {
             description: 'For security, we can only send one verification email every 60 seconds. Please wait a moment and try again.',
             duration: 12000,
@@ -84,22 +102,14 @@ export function EmailVerification({ email, onBack }: EmailVerificationProps) {
               }
             }
           });
-          setResendCooldown(60); // Set cooldown to prevent immediate retry
-        } else if (error.message.includes('rate_limit') || error.message.includes('too many')) {
-          toast.error('Too many resend attempts. Please wait a moment and try again.', {
-            duration: 6000
-          });
           setResendCooldown(60);
-        } else if (error.message.includes('already confirmed')) {
-          toast.success('Your email is already verified! Please try signing in.', {
-            duration: 6000
-          });
         } else {
-          throw error;
+          throw new Error(result.error || 'Failed to resend verification email');
         }
         return;
       }
 
+      console.log('✅ [Email Verification] Email resent successfully');
       toast.success('Verification email sent! Check your inbox.');
       setResendCooldown(60); // 60 second cooldown
     } catch (error: any) {

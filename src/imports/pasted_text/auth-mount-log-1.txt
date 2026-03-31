@@ -1,0 +1,1057 @@
+🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Current URL: https://found-shirt-81691824.figma.site/#home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] URL Hash: #home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Current URL: https://found-shirt-81691824.figma.site/#home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] URL Hash: #home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Current URL: https://found-shirt-81691824.figma.site/#home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] URL Hash: #home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Current URL: https://found-shirt-81691824.figma.site/#home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] URL Hash: #home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Current URL: https://found-shirt-81691824.figma.site/#home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] URL Hash: #home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Current URL: https://found-shirt-81691824.figma.site/#home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] URL Hash: #home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Current URL: https://found-shirt-81691824.figma.site/#home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] URL Hash: #home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Current URL: https://found-shirt-81691824.figma.site/#home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] URL Hash: #home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Current URL: https://found-shirt-81691824.figma.site/#home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] URL Hash: #home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Current URL: https://found-shirt-81691824.figma.site/#home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] URL Hash: #home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Current URL: https://found-shirt-81691824.figma.site/#home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] URL Hash: #home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Current URL: https://found-shirt-81691824.figma.site/#home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] URL Hash: #home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Current URL: https://found-shirt-81691824.figma.site/#home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] URL Hash: #home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] Current URL: https://found-shirt-81691824.figma.site/#home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] URL Hash: #home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24179 🔍 [AUTH MOUNT] ========================================
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24181 🔍 [AUTH MOUNT] Callback detection: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24189 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24373 🔐 Starting sign-in process... Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24409 💾 Remember Me enabled: false
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:21662 📡 Supabase request: API 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84499 🔐 Auth state change: SIGNED_IN Session exists: true
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84517 ✅ User signed in
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84267 ✅ User authenticated via email
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84269 🔓 Cleared logout flag - auto-login now enabled
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84286 🔑 Using access token from active session
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22859 🔍 Checking for pending capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22860 ✅ Using provided access token
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/claim-pending
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22460 🔓 Using public request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84499 🔐 Auth state change: SIGNED_IN Session exists: true
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84517 ✅ User signed in
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84267 ✅ User authenticated via email
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84269 🔓 Cleared logout flag - auto-login now enabled
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84286 🔑 Using access token from active session
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22859 🔍 Checking for pending capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22860 ✅ Using provided access token
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/claim-pending
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22460 🔓 Using public request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24411 🔍 Sign-in response: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24525 ✅ Sign-in successful for user: erastimecapsule@gmail.com
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24537 🔒 Standard session configured - you will be signed out when you close the browser
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24543 👤 Fetching user profile...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/kv/get?key=profile:32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22460 🔓 Using public request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84600 🔐 AuthProvider rendering (ID: fvo6sp, Render #7)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135549 🔄 TitlesProvider rendering (ID: kss4ll, Render #10)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79241 ⏳ Waiting for server stats to load (using cached/previous values)...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:139897 ✅ Meta tags set dynamically
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78817 🔄 Dashboard initialization attempt 1/3
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78849 📡 Fetching capsules from database...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78948 🔄 [AUTO-CLAIM] Starting auto-claim pending capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79011 📡 [Dashboard] Setting up real-time listener for received capsules: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:32439 📰 [Memory Feed] Loading activity stream...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144795 🎬 Home motion.div animation STARTED, shouldAnimate: false
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:83595 🏆 Fetching achievement definitions...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84002 🏆 Loading state: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137023 👂 [Achievement Manager] Event listener registered for achievementUnlocked
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137040 👂 [Title Sequence] Event listener registered for achievementClosed
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:139695 👤 [Welcome] Existing user without creation marker, skipping welcome notification
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84301 🔍 Checking for existing session...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84324 📦 Found cached auth state (age: 0 minutes)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142113 🔄 [Echo Notifications] Setting up real-time updates for user: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142115 📡 [Echo Notifications] Subscribing to channel: echo_notifications:32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142928 🔔 [Echo Notifications] Setting up broadcast listener for user: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143131 📊 [AUTH EFFECT] State check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143206 🧹 [AUTH EFFECT] pendingAuthData cleared, resetting ref
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143399 📋 Tab validation check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143420 ✅ Tab validation passed on initial load: home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135380 🔑 [useTitles] accessToken changed: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135522 🔄 [useTitles] Effect triggered - session: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135526 ✅ [useTitles] Token available, fetching titles immediately...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135549 🔄 TitlesProvider rendering (ID: kss4ll, Render #11)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135582 📊 TitlesProvider value updated: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144799 🎬 Home motion.div animation COMPLETED
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22571 📡 Fetching capsules for user 32e6debc-0669-4908-ad38-7ca81cf50935 via REST API...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78952 🔄 [AUTO-CLAIM] Session check: Has session
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78953 🔄 [AUTO-CLAIM] Calling claim-pending endpoint...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22571 📡 Fetching capsules for user 32e6debc-0669-4908-ad38-7ca81cf50935 via REST API...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23039 📨 Fetching received capsules from server endpoint...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80322 📅 CalendarView: Component mounting with user: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80325 📅 CalendarView: useEffect triggered with userId: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80328 📅 CalendarView: Starting to load capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80338 📅 CalendarView: Fetching capsules via DatabaseService...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84367 ✅ Found existing session from Supabase
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84267 ✅ User authenticated via email
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84269 🔓 Cleared logout flag - auto-login now enabled
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84286 🔑 Using access token from active session
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22859 🔍 Checking for pending capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22860 ✅ Using provided access token
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/claim-pending
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22460 🔓 Using public request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84499 🔐 Auth state change: INITIAL_SESSION Session exists: true
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22571 📡 Fetching capsules for user 32e6debc-0669-4908-ad38-7ca81cf50935 via REST API...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23039 📨 Fetching received capsules from server endpoint...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22798 📊 Fetching capsule stats from server for user 32e6debc-0669-4908-ad38-7ca81cf50935...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/stats
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79022 📡 [Dashboard] Channel subscription status: SUBSCRIBED
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142123 ✅ [Echo Notifications] Real-time updates active
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 294ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:83609 ✅ Achievement definitions loaded: 57
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137024 🧹 [Achievement Manager] achievementUnlocked listener cleaned up
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84002 🏆 Loading state: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137004 ▶️ [Achievement Polling] Active (checks every 5s)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137023 👂 [Achievement Manager] Event listener registered for achievementUnlocked
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142258 🔔 [NOTIFICATION] Loaded 0 notifications from backend
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142291 🔍 [DEDUP] Starting deduplication with 0 backend + 0 local = 0 total
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142301 🔔 [NOTIFICATION] Total notifications after merge: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142301 📊 [NOTIFICATION] Unread count: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142995 🔔 [Echo Notifications] Cleaning up broadcast listener
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142928 🔔 [Echo Notifications] Setting up broadcast listener for user: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143614 🔔 [Notifications] Using unified Notification Center for all echo notifications
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143616 📊 [Notifications] Current notification count: 0, Unread: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143618 📊 [Notifications] UNIFIED unreadCount: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143620 📊 [Notifications] UNIFIED notifications: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143622 🔔 [BADGE CHECK] Should show badge: NO
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142991 🔔 [Echo Notifications] Channel status: SUBSCRIBED
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78966 🔄 [AUTO-CLAIM] Response status: 200
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78968 🔄 [AUTO-CLAIM] Response data: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78970 ℹ️ [AUTO-CLAIM] No pending capsules to claim
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78983 📡 Fetching received capsules from server...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23039 📨 Fetching received capsules from server endpoint...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 543ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135420 [Titles] Profile fetched: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135420 [Titles] Setting titleProfile state...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135420 [Titles] State setter called
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135549 🔄 TitlesProvider rendering (ID: kss4ll, Render #12)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135386 📊 [useTitles] titleProfile state changed: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135582 📊 TitlesProvider value updated: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 544ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22590 ✅ Fetched 0 capsules from API
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78516 ⏱️ Dashboard: Load Capsules: 571.00ms | {"capsulesLoaded":0,"totalInDB":0}
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78854 ✅ Successfully fetched all capsules (metadata): 0 of 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78854 📊 Fetch result details: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78868 🎬 Hydrating media for initial visible capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78868 ✅ Initial media hydration complete
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78868 📝 Dashboard state updated - capsules in state: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78870 📊 Fetching accurate stats from server...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79241 ⏳ Waiting for server stats to load (using cached/previous values)...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143614 🔔 [Notifications] Using unified Notification Center for all echo notifications
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143616 📊 [Notifications] Current notification count: 0, Unread: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143618 📊 [Notifications] UNIFIED unreadCount: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143620 📊 [Notifications] UNIFIED notifications: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143622 🔔 [BADGE CHECK] Should show badge: NO
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22798 📊 Fetching capsule stats from server for user 32e6debc-0669-4908-ad38-7ca81cf50935...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/stats
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 546ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23056 ✅ Fetched 0 received capsules with sender names from server
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 550ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135443 [Titles] Available titles fetched: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135549 🔄 TitlesProvider rendering (ID: kss4ll, Render #13)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135388 📊 [useTitles] availableTitles state changed: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135582 📊 TitlesProvider value updated: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 578ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22809 📊 Raw stats response: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22816 ✅ Server stats loaded successfully: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 682ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23056 ✅ Fetched 0 received capsules with sender names from server
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 987ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24554 ⚠️ No profile found, using user metadata
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24575 🎉 Calling onAuthenticated with: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24582 🎬 Calling onAuthenticated, keeping loading screen visible
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24582 📊 User data being passed: {
+  "id": "32e6debc-0669-4908-ad38-7ca81cf50935",
+  "email": "erastimecapsule@gmail.com",
+  "firstName": "Eras",
+  "lastName": "Capsule",
+  "provider": "email"
+}
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24582 🔑 Access token exists: true
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24582 🌙 [SIGN-IN → ANIMATION] Calling onAuthenticated after successful sign-in
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24582 🌙 [SIGN-IN → ANIMATION] User should see lunar eclipse animation
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144120 ✅ [AUTH] onAuthenticated callback fired from Auth component
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144122 📊 [AUTH] User data: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142699 🚪 [ERAS GATE] onAuthenticationSuccess called
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142701 🚪 [ERAS GATE] userData: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142701 🚪 [ERAS GATE] isFreshLogin: true
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142704 🚪 [ERAS GATE] Current state: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142728 🚪 [ERAS GATE] ✅ Activating ErasGate
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142728 🚪 [ERAS GATE] → User will be routed through universal authentication interceptor
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142730 🚪 [ERAS GATE] → Eclipse animation decision handled by gate
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142736 🚪 [ERAS GATE] ✅ Gate activated - waiting for gate completion
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24582 ✅ onAuthenticated callback completed successfully
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24582 🌙 [SIGN-IN → ANIMATION] Check console for "LUNAR ECLIPSE ANIMATION WILL SHOW" message
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24582 ⏳ Waiting for auth state to update UI...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:24633 🔄 Sign-in attempt completed (cleanup handled by individual branches)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142744 🚪 [ERAS GATE] RENDERING ErasGate component
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142744 🚪 [ERAS GATE] Gate will handle Eclipse animation decision
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133659 🚪 [ERAS GATE] Component mounted
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133659 🚪 [ERAS GATE] Props: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142129 🧹 [Echo Notifications] Cleaning up real-time connection
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142995 🔔 [Echo Notifications] Cleaning up broadcast listener
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142991 🔔 [Echo Notifications] Channel status: CLOSED
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143064 🎬 MainAppContent unmounting (ID: vvjsa)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79024 📡 [Dashboard] Cleaning up real-time listener
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79022 📡 [Dashboard] Channel subscription status: CLOSED
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137011 ⏹️ [Achievement Polling] Stopped
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137024 🧹 [Achievement Manager] achievementUnlocked listener cleaned up
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137041 🧹 [Title Sequence] Event listener cleaned up
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133669 🚪 [ERAS GATE] Processing authentication...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133669 🚪 [ERAS GATE] isFreshLogin: true
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133669 🌙 [ERAS GATE] ✅ FRESH LOGIN DETECTED
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133669 🌙 [ERAS GATE] → Lunar Eclipse animation WILL PLAY
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133669 🌙 [ERAS GATE] → User will see Eclipse before Dashboard
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142639 🚪 ErasGate activated
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142641 🔄 Transition started
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133659 🚪 [ERAS GATE] Component mounted
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133659 🚪 [ERAS GATE] Props: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112209 🎬🎬🎬 LoadingAnimation component RENDERING (MOMENT PRISM GATE)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112209 🎬 Current stage: split
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112212 📱 LoadingAnimation: isMobile = false
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112234 ⏱️ LoadingAnimation: Setting up Prism Gate animation timers
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112213 ✅ LoadingAnimation: Ready to render
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112209 🎬🎬🎬 LoadingAnimation component RENDERING (MOMENT PRISM GATE)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112209 🎬 Current stage: split
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 546ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22809 📊 Raw stats response: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22816 ✅ Server stats loaded successfully: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78872 ✅ Server stats loaded: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 1129ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22590 ✅ Fetched 0 capsules from API
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22603 📎 Loading media files for capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22638 ✅ Media files loaded for all capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:32444 📰 [Memory Feed] Loaded capsules: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:32394 📊 [Feed Processing] Processing 0 created + 0 received capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 779ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23056 ✅ Fetched 0 received capsules with sender names from server
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78996 ✅ Received capsules loaded: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112238 🎬 Stage: orbit (facets spiraling inward)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112209 🎬🎬🎬 LoadingAnimation component RENDERING (MOMENT PRISM GATE)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112209 🎬 Current stage: orbit
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143215 📚 [ONBOARDING CHECK] Checking onboarding state for authenticated user: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143221 📚 [ONBOARDING CHECK] User has completed onboarding (localStorage)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 1541ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22590 ✅ Fetched 0 capsules from API
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22603 📎 Loading media files for capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22638 ✅ Media files loaded for all capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80344 📅 CalendarView: Received sent capsules: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80344 📅 CalendarView: Received received capsules: Array(0)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80347 📅 Using Server Stats: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112241 🎬 Stage: merge (facets snapping together)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112209 🎬🎬🎬 LoadingAnimation component RENDERING (MOMENT PRISM GATE)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112209 🎬 Current stage: merge
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112244 🎬 Stage: reveal (core light pulsing)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112209 🎬🎬🎬 LoadingAnimation component RENDERING (MOMENT PRISM GATE)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112209 🎬 Current stage: reveal
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112247 🎬 Stage: settle (final glow)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112209 🎬🎬🎬 LoadingAnimation component RENDERING (MOMENT PRISM GATE)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112209 🎬 Current stage: settle
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112250 🎬 Stage: complete
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112209 🎬🎬🎬 LoadingAnimation component RENDERING (MOMENT PRISM GATE)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112209 🎬 Current stage: complete
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112253 ✅ LoadingAnimation: Prism Gate complete, calling onComplete
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133674 🌙 [ERAS GATE] ✅ Lunar Eclipse animation completed
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133674 🚪 [ERAS GATE] → Opening gate to Dashboard
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133659 🚪 [ERAS GATE] Component mounted
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133659 🚪 [ERAS GATE] Props: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133675 🚪 [ERAS GATE] ✅ Gate opened - transitioning to Dashboard
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142670 🚪 [ERAS GATE] Gate completion received
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142670 🚪 [ERAS GATE] ⚠️ CRITICAL - This will set pendingAuthData and navigate to home!
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142672 🚪 [ERAS GATE] User: erastimecapsule@gmail.com
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142672 🚪 [ERAS GATE] Timestamp: 2026-03-30T19:56:14.761Z
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142675 🚪 [ERAS GATE] Stack trace: Error
+    at https://found-shirt-81691824.figma.site/_components/v2/b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142677:9
+    at https://found-shirt-81691824.figma.site/_components/v2/b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:133675:81
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142678 🚪 [ERAS GATE] Transitioning to Dashboard with user data
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142680 🚪 [ERAS GATE] ✅ Reset processing flags
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142680 🚪 [ERAS GATE] ✨ Ready for next sign-in
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142754 🚪 [ERAS GATE] Not showing - showErasGate: false hasGateData: false
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:141927 ✅ [TAB INIT] Restoring active tab from URL hash: "home"
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: true (ref: true state: true )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79241 ⏳ Waiting for server stats to load (using cached/previous values)...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:112257 🧹 LoadingAnimation: Cleaning up timers
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:139897 ✅ Meta tags set dynamically
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78817 🔄 Dashboard initialization attempt 1/3
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78849 📡 Fetching capsules from database...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78942 ⚡ [INSTANT] Using cached received data (age: 5s): 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78942 🔄 Fetching fresh data in background to ensure accuracy...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78948 🔄 [AUTO-CLAIM] Starting auto-claim pending capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79011 📡 [Dashboard] Setting up real-time listener for received capsules: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:32439 📰 [Memory Feed] Loading activity stream...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144795 🎬 Home motion.div animation STARTED, shouldAnimate: true
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:83595 🏆 Fetching achievement definitions...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84002 🏆 Loading state: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137023 👂 [Achievement Manager] Event listener registered for achievementUnlocked
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137040 👂 [Title Sequence] Event listener registered for achievementClosed
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84301 🔍 Checking for existing session...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84324 📦 Found cached auth state (age: 0 minutes)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:141927 ✅ [TAB INIT] Restoring active tab from URL hash: "home"
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:141943 🔗 Initialized browser history with tab: home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:141946 💾 Persisted active tab to sessionStorage: home
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84301 🔍 Checking for existing session...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84324 📦 Found cached auth state (age: 0 minutes)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142113 🔄 [Echo Notifications] Setting up real-time updates for user: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142115 📡 [Echo Notifications] Subscribing to channel: echo_notifications:32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142928 🔔 [Echo Notifications] Setting up broadcast listener for user: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143069 ✅ Component transition complete (visible)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143131 📊 [AUTH EFFECT] State check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143268 🔄 [Retroactive] First login detected, checking for retroactive unlocks...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143304 🔔 [Referral] Checking for pending referral achievements...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143372 📊 Active tab changed: null → home Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143399 📋 Tab validation check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143614 🔔 [Notifications] Using unified Notification Center for all echo notifications
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143616 📊 [Notifications] Current notification count: 0, Unread: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143618 📊 [Notifications] UNIFIED unreadCount: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143620 📊 [Notifications] UNIFIED notifications: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143622 🔔 [BADGE CHECK] Should show badge: NO
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143635 🧹 Running redirect cleanup logic (one-time only)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142635 🎬 [STATE CHANGE] triggerSlideAnimation: true
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142641 ✅ Transition complete
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: true (ref: true state: true )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79241 ⏳ Waiting for server stats to load (using cached/previous values)...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22571 📡 Fetching capsules for user 32e6debc-0669-4908-ad38-7ca81cf50935 via REST API...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78952 🔄 [AUTO-CLAIM] Session check: Has session
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78953 🔄 [AUTO-CLAIM] Calling claim-pending endpoint...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22571 📡 Fetching capsules for user 32e6debc-0669-4908-ad38-7ca81cf50935 via REST API...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23039 📨 Fetching received capsules from server endpoint...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80322 📅 CalendarView: Component mounting with user: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80325 📅 CalendarView: useEffect triggered with userId: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80328 📅 CalendarView: Starting to load capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80338 📅 CalendarView: Fetching capsules via DatabaseService...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84367 ✅ Found existing session from Supabase
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84267 ✅ User authenticated via email
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84269 🔓 Cleared logout flag - auto-login now enabled
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84286 🔑 Using access token from active session
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22859 🔍 Checking for pending capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22860 ✅ Using provided access token
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/claim-pending
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22460 🔓 Using public request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84499 🔐 Auth state change: INITIAL_SESSION Session exists: true
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84367 ✅ Found existing session from Supabase
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84267 ✅ User authenticated via email
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84269 🔓 Cleared logout flag - auto-login now enabled
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84286 🔑 Using access token from active session
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22859 🔍 Checking for pending capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22860 ✅ Using provided access token
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/claim-pending
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22460 🔓 Using public request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: true (ref: true state: true )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: true (ref: true state: true )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84499 🔐 Auth state change: INITIAL_SESSION Session exists: true
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22571 📡 Fetching capsules for user 32e6debc-0669-4908-ad38-7ca81cf50935 via REST API...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23039 📨 Fetching received capsules from server endpoint...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22798 📊 Fetching capsule stats from server for user 32e6debc-0669-4908-ad38-7ca81cf50935...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/stats
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79022 📡 [Dashboard] Channel subscription status: SUBSCRIBED
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142123 ✅ [Echo Notifications] Real-time updates active
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:83609 ✅ Achievement definitions loaded: 57
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137024 🧹 [Achievement Manager] achievementUnlocked listener cleaned up
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84002 🏆 Loading state: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137004 ▶️ [Achievement Polling] Active (checks every 5s)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137023 👂 [Achievement Manager] Event listener registered for achievementUnlocked
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 203ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 369ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22590 ✅ Fetched 0 capsules from API
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78516 ⚡ Dashboard: Load Capsules: 403.90ms | {"capsulesLoaded":0,"totalInDB":0}
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78854 ✅ Successfully fetched all capsules (metadata): 0 of 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78854 📊 Fetch result details: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78868 🎬 Hydrating media for initial visible capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78868 ✅ Initial media hydration complete
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78868 📝 Dashboard state updated - capsules in state: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78870 📊 Fetching accurate stats from server...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79241 ⏳ Waiting for server stats to load (using cached/previous values)...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22798 📊 Fetching capsule stats from server for user 32e6debc-0669-4908-ad38-7ca81cf50935...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/stats
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 357ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23056 ✅ Fetched 0 received capsules with sender names from server
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: true (ref: true state: true )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143614 🔔 [Notifications] Using unified Notification Center for all echo notifications
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143616 📊 [Notifications] Current notification count: 0, Unread: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143618 📊 [Notifications] UNIFIED unreadCount: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143620 📊 [Notifications] UNIFIED notifications: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143622 🔔 [BADGE CHECK] Should show badge: NO
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 484ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22809 📊 Raw stats response: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22816 ✅ Server stats loaded successfully: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142258 🔔 [NOTIFICATION] Loaded 0 notifications from backend
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142291 🔍 [DEDUP] Starting deduplication with 0 backend + 0 local = 0 total
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142301 🔔 [NOTIFICATION] Total notifications after merge: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142301 📊 [NOTIFICATION] Unread count: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: true (ref: true state: true )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142995 🔔 [Echo Notifications] Cleaning up broadcast listener
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142928 🔔 [Echo Notifications] Setting up broadcast listener for user: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143614 🔔 [Notifications] Using unified Notification Center for all echo notifications
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143616 📊 [Notifications] Current notification count: 0, Unread: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143618 📊 [Notifications] UNIFIED unreadCount: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143620 📊 [Notifications] UNIFIED notifications: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143622 🔔 [BADGE CHECK] Should show badge: NO
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78966 🔄 [AUTO-CLAIM] Response status: 200
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78968 🔄 [AUTO-CLAIM] Response data: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78970 ℹ️ [AUTO-CLAIM] No pending capsules to claim
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78983 📡 Fetching received capsules from server...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23039 📨 Fetching received capsules from server endpoint...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142991 🔔 [Echo Notifications] Channel status: SUBSCRIBED
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 685ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144799 🎬 Home motion.div animation COMPLETED
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 474ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22809 📊 Raw stats response: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22816 ✅ Server stats loaded successfully: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78872 ✅ Server stats loaded: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79224 📊 Using accurate server stats (not affected by pagination)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238 📊 Server-based Dashboard Stats:
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ⏰ Scheduled: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ✅ Delivered: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    📨 Received: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    💭 Drafts: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ❌ Failed: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    🌌 All Capsules (total): 0 = 0 + 0 + 0 + 0 + 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79115 ⏭️ Skipping initial poll - data was just loaded 0 seconds ago
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79168 ⏭️ Starting regular polling without initial poll
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 863ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22590 ✅ Fetched 0 capsules from API
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22603 📎 Loading media files for capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22638 ✅ Media files loaded for all capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:32444 📰 [Memory Feed] Loaded capsules: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:32394 📊 [Feed Processing] Processing 0 created + 0 received capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 888ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23056 ✅ Fetched 0 received capsules with sender names from server
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: true (ref: true state: true )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142681 🎬 Resetting slide animation trigger
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142754 🚪 [ERAS GATE] Not showing - showErasGate: false hasGateData: false
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:145292 📊 MainAppContent props changed (re-rendering):
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:145299   - triggerSlideAnimation: true → false
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79241 ⏳ Waiting for server stats to load (using cached/previous values)...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79024 📡 [Dashboard] Cleaning up real-time listener
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79022 📡 [Dashboard] Channel subscription status: CLOSED
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78817 🔄 Dashboard initialization attempt 1/3
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78830 ✨ Loading cached capsules for instant display (cache age: 0 seconds)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78834 🔄 Fetching fresh data in background...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78849 📡 Fetching capsules from database...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78942 ⚡ [INSTANT] Using cached received data (age: 6s): 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78942 🔄 Fetching fresh data in background to ensure accuracy...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78948 🔄 [AUTO-CLAIM] Starting auto-claim pending capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79011 📡 [Dashboard] Setting up real-time listener for received capsules: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:32439 📰 [Memory Feed] Loading activity stream...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144795 🎬 Home motion.div animation STARTED, shouldAnimate: false
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142635 🎬 [STATE CHANGE] triggerSlideAnimation: false
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79241 ⏳ Waiting for server stats to load (using cached/previous values)...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22571 📡 Fetching capsules for user 32e6debc-0669-4908-ad38-7ca81cf50935 via REST API...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78952 🔄 [AUTO-CLAIM] Session check: Has session
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78953 🔄 [AUTO-CLAIM] Calling claim-pending endpoint...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22571 📡 Fetching capsules for user 32e6debc-0669-4908-ad38-7ca81cf50935 via REST API...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23039 📨 Fetching received capsules from server endpoint...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80322 📅 CalendarView: Component mounting with user: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80325 📅 CalendarView: useEffect triggered with userId: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80328 📅 CalendarView: Starting to load capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80338 📅 CalendarView: Fetching capsules via DatabaseService...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22571 📡 Fetching capsules for user 32e6debc-0669-4908-ad38-7ca81cf50935 via REST API...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23039 📨 Fetching received capsules from server endpoint...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22798 📊 Fetching capsule stats from server for user 32e6debc-0669-4908-ad38-7ca81cf50935...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/stats
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144799 🎬 Home motion.div animation COMPLETED
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79022 📡 [Dashboard] Channel subscription status: SUBSCRIBED
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 1346ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22590 ✅ Fetched 0 capsules from API
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22603 📎 Loading media files for capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22638 ✅ Media files loaded for all capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80344 📅 CalendarView: Received sent capsules: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80344 📅 CalendarView: Received received capsules: Array(0)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80347 📅 Using Server Stats: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143215 📚 [ONBOARDING CHECK] Checking onboarding state for authenticated user: 32e6debc-0669-4908-ad38-7ca81cf50935
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143221 📚 [ONBOARDING CHECK] User has completed onboarding (localStorage)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 911ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23056 ✅ Fetched 0 received capsules with sender names from server
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78996 ✅ Received capsules loaded: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 473ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22809 📊 Raw stats response: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22816 ✅ Server stats loaded successfully: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78966 🔄 [AUTO-CLAIM] Response status: 200
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78968 🔄 [AUTO-CLAIM] Response data: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78970 ℹ️ [AUTO-CLAIM] No pending capsules to claim
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78983 📡 Fetching received capsules from server...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23039 📨 Fetching received capsules from server endpoint...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 675ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23056 ✅ Fetched 0 received capsules with sender names from server
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:138374 🎉 [Welcome Manager] Checking welcome celebration status
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 842ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22590 ✅ Fetched 0 capsules from API
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78516 ⏱️ Dashboard: Load Capsules: 854.10ms | {"capsulesLoaded":0,"totalInDB":0}
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78854 ✅ Successfully fetched all capsules (metadata): 0 of 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78854 📊 Fetch result details: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78868 🎬 Hydrating media for initial visible capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78868 ✅ Initial media hydration complete
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78868 📝 Dashboard state updated - capsules in state: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78870 📊 Fetching accurate stats from server...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79241 ⏳ Waiting for server stats to load (using cached/previous values)...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22798 📊 Fetching capsule stats from server for user 32e6debc-0669-4908-ad38-7ca81cf50935...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/stats
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 977ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23056 ✅ Fetched 0 received capsules with sender names from server
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:138390 🎉 [Welcome Manager] Response: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:138390 🎉 [Welcome Manager] Showing welcome celebration!
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 511ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22809 📊 Raw stats response: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22816 ✅ Server stats loaded successfully: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78872 ✅ Server stats loaded: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79224 📊 Using accurate server stats (not affected by pagination)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238 📊 Server-based Dashboard Stats:
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ⏰ Scheduled: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ✅ Delivered: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    📨 Received: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    💭 Drafts: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ❌ Failed: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    🌌 All Capsules (total): 0 = 0 + 0 + 0 + 0 + 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 1385ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22590 ✅ Fetched 0 capsules from API
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22603 📎 Loading media files for capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22638 ✅ Media files loaded for all capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:32444 📰 [Memory Feed] Loaded capsules: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:32394 📊 [Feed Processing] Processing 0 created + 0 received capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 938ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23056 ✅ Fetched 0 received capsules with sender names from server
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:78996 ✅ Received capsules loaded: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79224 📊 Using accurate server stats (not affected by pagination)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238 📊 Server-based Dashboard Stats:
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ⏰ Scheduled: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ✅ Delivered: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    📨 Received: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    💭 Drafts: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ❌ Failed: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    🌌 All Capsules (total): 0 = 0 + 0 + 0 + 0 + 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+2b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:84484 ⏱️ Initial auth check completed - ready for login
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 1919ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22590 ✅ Fetched 0 capsules from API
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22603 📎 Loading media files for capsules...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22638 ✅ Media files loaded for all capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80344 📅 CalendarView: Received sent capsules: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80344 📅 CalendarView: Received received capsules: Array(0)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80347 📅 Using Server Stats: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:134530 🔓 [AU Modal] Modal opened, reset close guard
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79120 🔄 Polling for real-time updates...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79120 📊 Polling for ALL capsules to maintain consistency...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22571 📡 Fetching capsules for user 32e6debc-0669-4908-ad38-7ca81cf50935 via REST API...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 490ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22590 ✅ Fetched 0 capsules from API
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23039 📨 Fetching received capsules from server endpoint...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 557ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23056 ✅ Fetched 0 received capsules with sender names from server
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22798 📊 Fetching capsule stats from server for user 32e6debc-0669-4908-ad38-7ca81cf50935...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/stats
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 282ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22809 📊 Raw stats response: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22816 ✅ Server stats loaded successfully: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79145 📊 Real-time stats update: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79224 📊 Using accurate server stats (not affected by pagination)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238 📊 Server-based Dashboard Stats:
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ⏰ Scheduled: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ✅ Delivered: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    📨 Received: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    💭 Drafts: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ❌ Failed: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    🌌 All Capsules (total): 0 = 0 + 0 + 0 + 0 + 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:134721 🔒 [AU Modal] User initiated close for: A001
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:138404 🎉 [Welcome Manager] Marking welcome celebration as seen
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:134734 📡 [AU Modal] Dispatching achievementClosed event: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137028 🎯 [Title Sequence] achievementClosed event received: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137038 ✅ [Title Sequence] Title reward detected: Time Novice
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137038 ⏳ [Title Sequence] Waiting 2s for visual breathing space...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:138413 🎉 [Welcome Manager] ✅ Welcome celebration marked as seen
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137038 🎬 [Title Sequence] Triggering Title Unlock Modal for: Time Novice
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137045 👑 [Title Queue] Processing queue, titles remaining: 1
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137047 👑 [Title Queue] Showing title: Time Novice
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:136240 🌅 [Horizon Chromatic Fusion v4.0] Celebration: Time Novice common
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:136240 🎨 [Title Colors]: Array(2)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:136240 ✨ [Flavor Text]: Just Beginning the Journey
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:136053 👑 [Title Modal] Closing - emitting titleModalClosed event Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142830 👑 [Title Modal Event] Received titleModalClosed event Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142834 👑 [Title Modal Event] Time Novice modal closed
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:142839 👑 [Title Modal Event] First Capsule already completed, skipping trigger
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137051 👑 [Title Reward Manager] Closing title modal
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:137051 🔄 [Title Reward Manager] Refreshing titles for immediate horizon availability
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135529 🔄 [useTitles] refresh() called
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135531 🔄 [useTitles] refresh() - token available: true
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135535 [Titles] ✅ Refresh complete
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135549 🔄 TitlesProvider rendering (ID: kss4ll, Render #14)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:138261 🔄 [Horizon Gallery] Modal opened - refreshing titles
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:138261 📊 [Horizon Gallery] Current state: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135529 🔄 [useTitles] refresh() called
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135531 🔄 [useTitles] refresh() - token available: true
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135535 [Titles] ✅ Refresh complete
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135582 📊 TitlesProvider value updated: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135549 🔄 TitlesProvider rendering (ID: kss4ll, Render #15)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135420 [Titles] Profile fetched: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135420 [Titles] Setting titleProfile state...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135420 [Titles] State setter called
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135549 🔄 TitlesProvider rendering (ID: kss4ll, Render #16)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135386 📊 [useTitles] titleProfile state changed: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135582 📊 TitlesProvider value updated: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135443 [Titles] Available titles fetched: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135549 🔄 TitlesProvider rendering (ID: kss4ll, Render #17)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135388 📊 [useTitles] availableTitles state changed: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135582 📊 TitlesProvider value updated: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135420 [Titles] Profile fetched: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135420 [Titles] Setting titleProfile state...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135420 [Titles] State setter called
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135549 🔄 TitlesProvider rendering (ID: kss4ll, Render #18)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135386 📊 [useTitles] titleProfile state changed: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135582 📊 TitlesProvider value updated: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135443 [Titles] Available titles fetched: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135549 🔄 TitlesProvider rendering (ID: kss4ll, Render #19)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135388 📊 [useTitles] availableTitles state changed: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:135582 📊 TitlesProvider value updated: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: Object
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: true, hasGateAuthData: false, isOAuthCallback: false, …}
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: {hasViewingCapsule: false, viewingCapsuleId: undefined, viewingCapsuleTitle: undefined}
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143614 🔔 [Notifications] Using unified Notification Center for all echo notifications
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143616 📊 [Notifications] Current notification count: 0, Unread: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143618 📊 [Notifications] UNIFIED unreadCount: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143620 📊 [Notifications] UNIFIED notifications: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:143622 🔔 [BADGE CHECK] Should show badge: NO
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144106 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: true, hasGateAuthData: false, isOAuthCallback: false, …}
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:144776 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79120 🔄 Polling for real-time updates...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79120 📊 Polling for ALL capsules to maintain consistency...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22571 📡 Fetching capsules for user 32e6debc-0669-4908-ad38-7ca81cf50935 via REST API...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: {method: 'GET', hasBody: false, timeout: '25s', maxRetries: 1}
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 505ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22590 ✅ Fetched 0 capsules from API
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23039 📨 Fetching received capsules from server endpoint...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: {method: 'GET', hasBody: false, timeout: '30s', maxRetries: 2}
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/2 (took 349ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:23056 ✅ Fetched 0 received capsules with sender names from server
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22798 📊 Fetching capsule stats from server for user 32e6debc-0669-4908-ad38-7ca81cf50935...
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/stats
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22447 🌐 Request options: {method: 'GET', hasBody: false, timeout: '15s', maxRetries: 1}
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22440 ✅ Access token retrieved
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22458 ✅ Using authenticated request
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22473 🌐 Response status (attempt 1): 200 
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22494 ✅ Database request successful on attempt 1/1 (took 270ms)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22809 📊 Raw stats response: {scheduled: 0, delivered: 0, selfOnlyDelivered: 0, draft: 0, failed: 0, …}
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:22816 ✅ Server stats loaded successfully: {scheduled: 0, delivered: 0, selfOnlyDelivered: 0, draft: 0, failed: 0, …}
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79145 📊 Real-time stats update: {scheduled: 0, delivered: 0, selfOnlyDelivered: 0, draft: 0, failed: 0, …}
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79224 📊 Using accurate server stats (not affected by pagination)
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238 📊 Server-based Dashboard Stats:
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ⏰ Scheduled: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ✅ Delivered: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    📨 Received: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    💭 Drafts: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    ❌ Failed: 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:79238    🌌 All Capsules (total): 0 = 0 + 0 + 0 + 0 + 0
+b7a598d7ffa65b6abf6fae4015f25269d528a12f.js:80132 🔍 Modal render check: {hasViewingCapsule: false, viewingCapsuleId: undefined, viewingCapsuleTitle: undefined}

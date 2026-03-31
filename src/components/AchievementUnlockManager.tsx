@@ -42,6 +42,13 @@ export function AchievementUnlockManager({ onNavigateToAchievements, onNavigateT
 
   // Check for pending notifications on mount and when definitions load
   useEffect(() => {
+    // Don't check for achievements during onboarding (First Capsule tutorial)
+    const isOnboarding = localStorage.getItem('eras_onboarding_in_progress') === 'true';
+    if (isOnboarding) {
+      console.log('📚 [Achievement] Skipping notification check - onboarding in progress');
+      return;
+    }
+    
     if (session?.access_token && Object.keys(definitions).length > 0) {
       checkPendingNotifications(session.access_token);
     }
@@ -85,6 +92,13 @@ export function AchievementUnlockManager({ onNavigateToAchievements, onNavigateT
       return;
     }
 
+    // Don't poll during onboarding (First Capsule tutorial)
+    const isOnboarding = localStorage.getItem('eras_onboarding_in_progress') === 'true';
+    if (isOnboarding) {
+      console.log('📚 [Achievement Polling] Paused - onboarding in progress');
+      return;
+    }
+
     console.log('▶️ [Achievement Polling] Active (checks every 5s)');
     
     // Wait 2 seconds before first check to allow server cold start
@@ -94,7 +108,9 @@ export function AchievementUnlockManager({ onNavigateToAchievements, onNavigateT
 
     // Then poll every 5 seconds
     const pollInterval = setInterval(() => {
-      if (session?.access_token && Object.keys(definitions).length > 0) {
+      // Double-check onboarding status before each poll
+      const stillOnboarding = localStorage.getItem('eras_onboarding_in_progress') === 'true';
+      if (!stillOnboarding && session?.access_token && Object.keys(definitions).length > 0) {
         checkPendingNotifications(session.access_token);
       }
     }, 5000);

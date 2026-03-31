@@ -9,7 +9,7 @@ import { CeremonyOverlay } from './capsule-themes/CeremonyOverlay';
 import { EchoPanel } from './EchoPanel';
 import { EchoSocialTimeline } from './EchoSocialTimeline';
 import { MediaThumbnail } from './MediaThumbnail';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { DatabaseService } from '../utils/supabase/database';
 import { mediaCache } from '../utils/mediaCache';
 
@@ -53,6 +53,27 @@ const parseCapsuleTheme = (capsule: any): string => {
   }
 };
 
+// ⚡ PERFORMANCE: Memoized ceremony parser - parse once per capsule
+const parseCapsuleCeremony = (capsule: any): string | null => {
+  try {
+    if (!capsule) return null;
+    
+    // Handle both object and string metadata
+    const metadata = typeof capsule.metadata === 'string' 
+      ? JSON.parse(capsule.metadata) 
+      : capsule.metadata;
+    
+    if (metadata?.ceremonyStyle) {
+      return metadata.ceremonyStyle;
+    }
+    
+    return null;
+  } catch (e) {
+    console.warn('🎬 Error parsing ceremony:', e);
+    return null;
+  }
+};
+
 export function CapsuleDetailModal({
   capsule,
   isOpen,
@@ -84,6 +105,12 @@ export function CapsuleDetailModal({
     return parseCapsuleTheme(capsule);
   }, [capsule?.id, capsule?.theme, capsule?.metadata]);
   
+  // ⚡ PERFORMANCE: Memoize ceremony parsing - only recompute when capsule.id changes
+  const ceremonyId = useMemo(() => {
+    if (!capsule) return null;
+    return parseCapsuleCeremony(capsule);
+  }, [capsule?.id, capsule?.metadata]);
+
   // 🔥 CRITICAL FIX: Enrich media with thumbnails when modal opens
   // This ensures we use pre-generated thumbnails (instant <200ms loading)
   // instead of client-side generation (slow 30-60s with full video download)
@@ -150,14 +177,19 @@ export function CapsuleDetailModal({
     const isNewReceived = capsule.isReceived && !capsule.viewed_at;
     const hasAlreadyShown = ceremoniesShownCache.has(capsule.id);
     // ✅ Only show ceremony for non-standard themes (per user request)
-    const shouldShowCeremony = !hasAlreadyShown && themeId !== 'standard';
+    // 🎬 CRITICAL FIX: Also check if ceremonyId exists - old capsules without ceremony selection should skip animation
+    const shouldShowCeremony = !hasAlreadyShown && themeId !== 'standard' && ceremonyId !== null;
     
-    console.log('🎬 [CapsuleDetail] Mobile Optimization:', {
+    console.log('🎬 [CapsuleDetail] Ceremony Decision:', {
       isMobile,
       shouldShowCeremony,
       capsuleId: capsule.id,
       themeId,
-      hasAlreadyShown
+      ceremonyId,
+      hasAlreadyShown,
+      reason: !shouldShowCeremony 
+        ? (hasAlreadyShown ? 'Already shown' : ceremonyId === null ? 'No ceremony selected (old capsule)' : 'Standard theme')
+        : 'Will show ceremony'
     });
     
     // MOBILE: Progressive Enhancement - Show content immediately!
@@ -591,7 +623,7 @@ export function CapsuleDetailModal({
       }}
     >
       <DialogContent 
-        className="max-w-4xl border-0 [&>button:nth-child(2)]:hidden"
+        className={`max-w-4xl border-0 [&>button:nth-child(2)]:hidden ${themeId === 'future' ? 'font-mono tracking-wide' : ''}`}
         onOpenAutoFocus={(e) => e.preventDefault()}
         style={{
           padding: 0,
@@ -611,7 +643,9 @@ export function CapsuleDetailModal({
           // ⚡ FIX 1: MOBILE PERFORMANCE - Simple background on mobile (no complex gradients)
           background: isMobile 
             ? `linear-gradient(135deg, rgba(15, 20, 40, 0.98) 0%, rgba(5, 5, 15, 0.99) 100%)`
-            : `
+            : themeId === 'future' 
+              ? `linear-gradient(135deg, #020617 0%, #0f172a 100%)` // Darker for future theme
+              : `
               radial-gradient(circle at 30% 30%, ${statusDisplay.glowColor.replace('0.6', '0.15')} 0%, transparent 50%),
               radial-gradient(circle at 70% 70%, ${statusDisplay.glowColor.replace('0.6', '0.1')} 0%, transparent 50%),
               radial-gradient(circle at center, rgba(15, 20, 40, 0.98) 0%, rgba(5, 5, 15, 0.99) 100%)
@@ -623,13 +657,25 @@ export function CapsuleDetailModal({
           // ⚡ FIX 1: MOBILE PERFORMANCE - Simplified shadow on mobile
           boxShadow: isMobile
             ? `0 8px 32px rgba(0, 0, 0, 0.6)`
-            : `0 0 80px ${statusDisplay.glowColor.replace('0.6', '0.25')}, 0 0 40px ${statusDisplay.glowColor.replace('0.6', '0.15')}`
+            : themeId === 'future'
+              ? `0 0 40px rgba(0, 242, 96, 0.2), inset 0 0 20px rgba(0, 242, 96, 0.1)` // Green glow for future
+              : `0 0 80px ${statusDisplay.glowColor.replace('0.6', '0.25')}, 0 0 40px ${statusDisplay.glowColor.replace('0.6', '0.15')}`,
+          // Border for future theme
+          border: themeId === 'future' ? '1px solid rgba(0, 242, 96, 0.3)' : 'none'
         }}
         aria-describedby="capsule-detail-description"
       >
         <DialogDescription id="capsule-detail-description" className="sr-only">
           View and interact with your time capsule content, including messages, media, and social echoes.
         </DialogDescription>
+
+        {/* 🎨 THEME OVERLAY: Time Traveler (Scanlines) */}
+        {themeId === 'future' && !isMobile && (
+          <div className="absolute inset-0 pointer-events-none z-[5] animate-pulse-slow" style={{
+            background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 242, 96, 0.03) 2px, rgba(0, 242, 96, 0.03) 4px)',
+            mixBlendMode: 'screen'
+          }} />
+        )}
 
         {/* ⚡ FIX 1: MOBILE PERFORMANCE - Disable particle system on mobile */}
         {!isMobile && (
@@ -690,6 +736,9 @@ export function CapsuleDetailModal({
         {/* ⚡ FIX 2: On mobile, ceremony plays as overlay while content is visible */}
         <CeremonyOverlay 
           themeId={themeId}
+          ceremonyId={ceremonyId}
+          capsuleTitle={capsule.title}
+          media={enrichedMedia}
           isVisible={showCeremony}
           isNewReceived={capsule.isReceived && !capsule.viewed_at}
           onComplete={() => {

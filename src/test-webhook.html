@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ERAS Webhook Diagnostics</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #0a0a0a;
+      color: #00ff00;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    button {
+      background: #00ff00;
+      color: #0a0a0a;
+      border: none;
+      padding: 10px 20px;
+      margin: 10px 5px;
+      cursor: pointer;
+      font-family: monospace;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #00cc00;
+    }
+    .output {
+      background: #1a1a1a;
+      border: 1px solid #00ff00;
+      padding: 15px;
+      margin: 20px 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    .error { color: #ff0000; }
+    .success { color: #00ff00; }
+    .info { color: #00aaff; }
+    h1, h2 { color: #00ff00; text-shadow: 0 0 10px #00ff00; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚨 ERAS WEBHOOK DIAGNOSTICS 🚨</h1>
+    
+    <h2>Step 1: Test Server Health</h2>
+    <button onclick="testHealth()">Test Health Endpoint</button>
+    <button onclick="testWebhookHealth()">Test Webhook Health</button>
+    
+    <h2>Step 2: Test Webhook Endpoint</h2>
+    <button onclick="testWebhookDirect()">Send Test Webhook Event</button>
+    
+    <h2>Step 3: Check KV Store</h2>
+    <button onclick="checkPurchases()">Check My Purchases</button>
+    
+    <div id="output" class="output">
+      Waiting for test...
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://apdfvpgaznpqlordkipw.supabase.co';
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwZGZ2cGdhem5wcWxvcmRraXB3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwMTcyOTksImV4cCI6MjA1MzU5MzI5OX0.AhqN7Ew_ZO8jd4hjl_-RFI7UShEtJMWQQiPNmj1V-gE';
+    
+    // Prompt for user ID on page load
+    let USER_ID = prompt('Enter your Supabase User ID (from Supabase Auth Users table):', '');
+    
+    function log(message, type = 'info') {
+      const output = document.getElementById('output');
+      const timestamp = new Date().toLocaleTimeString();
+      const colorClass = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+      output.innerHTML += `<span class="${colorClass}">[${timestamp}] ${message}</span>\n`;
+      output.scrollTop = output.scrollHeight;
+    }
+    
+    function clearLog() {
+      document.getElementById('output').innerHTML = '';
+    }
+
+    async function testHealth() {
+      clearLog();
+      log('🏥 Testing basic health endpoint...', 'info');
+      
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/make-server-f9be53a7/health-basic`, {
+          headers: { 'Authorization': `Bearer ${ANON_KEY}` }
+        });
+        
+        log(`Status: ${response.status}`, response.ok ? 'success' : 'error');
+        const data = await response.json();
+        log(`Response: ${JSON.stringify(data, null, 2)}`, response.ok ? 'success' : 'error');
+      } catch (err) {
+        log(`ERROR: ${err.message}`, 'error');
+      }
+    }
+
+    async function testWebhookHealth() {
+      clearLog();
+      log('🔍 Testing webhook health endpoint...', 'info');
+      
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/make-server-f9be53a7/webhook-health`, {
+          headers: { 'Authorization': `Bearer ${ANON_KEY}` }
+        });
+        
+        log(`Status: ${response.status}`, response.ok ? 'success' : 'error');
+        const data = await response.json();
+        log(`Response: ${JSON.stringify(data, null, 2)}`, response.ok ? 'success' : 'error');
+        
+        if (data.secrets) {
+          log('\n📊 SECRETS STATUS:', 'info');
+          log(`  STRIPE_WEBHOOK_SECRET: ${data.secrets.STRIPE_WEBHOOK_SECRET}`, 'info');
+          log(`  STRIPE_SECRET_KEY: ${data.secrets.STRIPE_SECRET_KEY}`, 'info');
+          log(`  Stripe Mode: ${data.stripe_mode}`, 'info');
+          log(`  Webhook Secret Format: ${data.webhook_secret_mode}`, data.webhook_secret_mode === 'VALID FORMAT' ? 'success' : 'error');
+        }
+      } catch (err) {
+        log(`ERROR: ${err.message}`, 'error');
+      }
+    }
+
+    async function testWebhookDirect() {
+      clearLog();
+      log('📨 Sending test webhook event (this will FAIL signature verification, which is expected)...', 'info');
+      
+      const testEvent = {
+        id: 'evt_test_123',
+        type: 'checkout.session.completed',
+        data: {
+          object: {
+            id: 'cs_test_123',
+            metadata: {
+              userId: USER_ID || 'test-user-id',
+              purchaseType: 'theme',
+              themeId: 'new_life'
+            },
+            amount_total: 299,
+            payment_intent: 'pi_test_123'
+          }
+        }
+      };
+      
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/make-server-f9be53a7/stripe-webhook`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${ANON_KEY}`,
+            'Content-Type': 'application/json',
+            'stripe-signature': 't=123456789,v1=fake_signature'
+          },
+          body: JSON.stringify(testEvent)
+        });
+        
+        log(`Status: ${response.status}`, response.ok ? 'success' : 'error');
+        const data = await response.json();
+        log(`Response: ${JSON.stringify(data, null, 2)}`, 'info');
+        
+        if (data.error && data.error.includes('Signature')) {
+          log('\n✅ GOOD! Webhook endpoint exists and is checking signatures!', 'success');
+          log('⚠️  The signature verification failed (expected for test), but the endpoint is working!', 'info');
+        }
+      } catch (err) {
+        log(`ERROR: ${err.message}`, 'error');
+      }
+    }
+
+    async function checkPurchases() {
+      clearLog();
+      
+      if (!USER_ID) {
+        log('ERROR: No user ID provided! Refresh and enter your user ID.', 'error');
+        return;
+      }
+      
+      log(`🔍 Checking purchases for user: ${USER_ID}`, 'info');
+      
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/make-server-f9be53a7/purchases/${USER_ID}`, {
+          headers: { 
+            'Authorization': `Bearer ${ANON_KEY}`
+          }
+        });
+        
+        log(`Status: ${response.status}`, response.ok ? 'success' : 'error');
+        const data = await response.json();
+        log(`Response: ${JSON.stringify(data, null, 2)}`, response.ok ? 'success' : 'error');
+        
+        if (data.themes && data.themes.length > 0) {
+          log(`\n🎉 FOUND ${data.themes.length} THEME(S)!`, 'success');
+          data.themes.forEach(theme => log(`  - ${theme.theme_id} (${theme.source})`, 'success'));
+        } else {
+          log('\n❌ NO THEMES FOUND in Postgres!', 'error');
+        }
+        
+        if (data.beneficiaryLimit) {
+          const limitText = data.beneficiaryLimit === -1 ? 'UNLIMITED' : data.beneficiaryLimit;
+          log(`\n🎉 BENEFICIARY LIMIT: ${limitText}`, 'success');
+        } else {
+          log(`\n📝 BENEFICIARY LIMIT: 1 (default)`, 'info');
+        }
+        
+        // Also check debug endpoint
+        log('\n\n🔍 Checking DEBUG endpoint...', 'info');
+        const debugResponse = await fetch(`${SUPABASE_URL}/functions/v1/make-server-f9be53a7/debug/purchases/${USER_ID}`, {
+          headers: { 'Authorization': `Bearer ${ANON_KEY}` }
+        });
+        
+        const debugData = await debugResponse.json();
+        log(`\n📊 DEBUG DATA:`, 'info');
+        log(`  Themes in DB: ${debugData.summary?.themeCount || 0}`, 'info');
+        log(`  Bundles in DB: ${debugData.summary?.bundleCount || 0}`, 'info');
+        log(`  Beneficiary purchases in DB: ${debugData.summary?.beneficiaryPurchaseCount || 0}`, 'info');
+        
+        if (debugData.themes && debugData.themes.length > 0) {
+          log(`\n📝 Raw Theme Purchases:`, 'info');
+          debugData.themes.forEach(t => {
+            log(`  - ${t.theme_id} | $${t.price_paid} | ${new Date(t.purchase_date).toLocaleString()}`, 'info');
+          });
+        }
+        
+        if (debugData.bundles && debugData.bundles.length > 0) {
+          log(`\n📝 Raw Bundle Purchases:`, 'info');
+          debugData.bundles.forEach(b => {
+            log(`  - ${b.bundle_id} | $${b.price_paid} | ${new Date(b.purchase_date).toLocaleString()}`, 'info');
+          });
+        }
+        
+        if (debugData.beneficiaryPurchases && debugData.beneficiaryPurchases.length > 0) {
+          log(`\n📝 Raw Beneficiary Purchases:`, 'info');
+          debugData.beneficiaryPurchases.forEach(b => {
+            log(`  - ${b.product_id} | ${b.slots_purchased} slots | $${b.price_paid}`, 'info');
+          });
+        }
+      } catch (err) {
+        log(`ERROR: ${err.message}`, 'error');
+      }
+    }
+    
+    log('🚀 Diagnostics page loaded. Click buttons above to test!', 'success');
+    if (USER_ID) {
+      log(`📝 User ID set to: ${USER_ID}`, 'info');
+    } else {
+      log('⚠️  No user ID provided. Purchase check will fail.', 'error');
+    }
+  </script>
+</body>
+</html>

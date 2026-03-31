@@ -24,7 +24,7 @@ export const checkWelcomeCelebration = async (c: any) => {
     const userAchievements = await kv.get(`user_achievements:${user.id}`) || [];
     const hasFirstStep = userAchievements.some((a: any) => a.achievementId === 'A001');
     
-    const { ACHIEVEMENT_DEFINITIONS, addTitleToCollection } = await import("./achievement-service.tsx");
+    const { ACHIEVEMENT_DEFINITIONS } = await import("./achievement-service.tsx");
     const firstStepAchievement = ACHIEVEMENT_DEFINITIONS['A001'];
     
     if (!firstStepAchievement) {
@@ -43,9 +43,44 @@ export const checkWelcomeCelebration = async (c: any) => {
       };
       userAchievements.push(unlockRecord);
       await kv.set(`user_achievements:${user.id}`, userAchievements);
+      
+      // Add title to user's title profile if the achievement has a title reward
       if (firstStepAchievement.rewards.title) {
-        await addTitleToCollection(user.id, 'A001');
+        console.log(`🎉 [Welcome] Adding title "${firstStepAchievement.rewards.title}" to user profile`);
+        
+        // Get or create title profile
+        let titleProfile = await kv.get(`user_title_profile:${user.id}`);
+        if (!titleProfile) {
+          titleProfile = {
+            userId: user.id,
+            equipped_title: null,
+            equipped_achievement_id: null,
+            unlocked_titles: []
+          };
+        }
+        
+        // Add title if not already present
+        const titleExists = titleProfile.unlocked_titles?.some(
+          (t: any) => t.achievementId === 'A001'
+        );
+        
+        if (!titleExists) {
+          if (!titleProfile.unlocked_titles) {
+            titleProfile.unlocked_titles = [];
+          }
+          
+          titleProfile.unlocked_titles.push({
+            title: firstStepAchievement.rewards.title,
+            achievementId: 'A001',
+            rarity: firstStepAchievement.rarity,
+            unlockedAt: new Date().toISOString()
+          });
+          
+          await kv.set(`user_title_profile:${user.id}`, titleProfile);
+          console.log(`✅ [Welcome] Title added to profile`);
+        }
       }
+      
       console.log(`🎉 [Welcome] ✅ First Step granted`);
     }
     

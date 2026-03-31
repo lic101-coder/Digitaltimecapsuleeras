@@ -39,6 +39,7 @@ interface MediaFile {
   filename?: string; // Support both field names
   file_type?: string;
   type?: string;
+  mimeType?: string; // ADDED: Support mimeType from MediaItem
   file_size?: number;
   url?: string;
   thumbnail?: string; // Pre-generated thumbnail URL for videos
@@ -103,8 +104,8 @@ export function MediaThumbnail({
       type: mediaFile.type
     });
     
-    // Support both 'type' and 'file_type' field names
-    let fileType = mediaFile.file_type || mediaFile.type;
+    // Support both 'type' and 'file_type' field names, plus 'mimeType' from MediaItem
+    let fileType = mediaFile.file_type || mediaFile.type || mediaFile.mimeType;
     
     // Detect media type from file extension if type is unknown or generic
     const detectTypeFromExtension = (filename: string, url: string) => {
@@ -440,8 +441,8 @@ export function MediaThumbnail({
     const fileName = mediaFile?.file_name || mediaFile?.filename || '';
     const fileUrl = mediaFile?.url || '';
     
-    // Support both 'type' and 'file_type' field names
-    let fileType = mediaFile?.file_type || mediaFile?.type;
+    // Support both 'type' and 'file_type' field names, plus 'mimeType' from MediaItem
+    let fileType = mediaFile?.file_type || mediaFile?.type || mediaFile?.mimeType;
     
     // Detect media type from file extension if type is unknown or generic
     const detectTypeFromExtension = (filename: string, url: string) => {

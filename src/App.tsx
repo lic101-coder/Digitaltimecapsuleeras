@@ -51,14 +51,12 @@ import { MomentPrismLogo } from "./components/MomentPrismLogo";
 import { CapsuleViewer } from "./components/CapsuleViewer";
 import { Auth } from "./components/Auth";
 import { Dashboard } from "./components/Dashboard";
-import { MemoryFeed } from "./components/MemoryFeed";
 import { UnifiedHome } from "./components/UnifiedHome";
 import { CreateCapsule } from "./components/CreateCapsule";
 import { CapsuleDetailModal } from "./components/CapsuleDetailModal";
 import { MobileRecorder } from "./components/MobileRecorder";
 import { RecordInterface } from "./components/RecordInterface";
 import { LegacyVault } from "./components/LegacyVault";
-import { MediaEnhancementOverlay } from "./components/MediaEnhancementOverlay";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ErasOdyssey } from "./components/onboarding/ErasOdyssey";
 import { OnboardingOrchestrator } from "./components/onboarding/OnboardingOrchestrator";
@@ -90,11 +88,6 @@ import { EchoNotificationToast } from "./components/EchoNotificationToast";
 import { EchoNotificationCenter } from "./components/EchoNotificationCenter";
 import { NotificationCenter } from "./components/NotificationCenter";
 import { WelcomeNotification } from "./components/WelcomeNotification";
-import { TheatricalStage } from "./components/icons/TheatricalStage";
-import {
-  RefinedSparkles,
-  RefinedVideoCamera,
-} from "./components/icons/RefinedLuminescence";
 import { Avatar } from "./components/Avatar";
 import { ProfilePictureUploadModal } from "./components/ProfilePictureUploadModal";
 import { HelpSupportModal } from "./components/HelpSupportModal";
@@ -102,8 +95,8 @@ import { MetaTags } from "./components/MetaTags";
 import { MediaPreviewModal } from "./components/MediaPreviewModal";
 import { ReferralSystem } from "./components/ReferralSystem";
 import { UnsubscribePage } from "./components/UnsubscribePage";
+import { Store } from "./components/Store";
 import { motion, AnimatePresence } from "motion/react";
-import { LogoConceptsEntry } from "./pages/LogoConceptsEntry";
 
 // Custom Hooks
 import { useAuth } from "./contexts/AuthContext";
@@ -129,11 +122,10 @@ import {
   projectId,
   publicAnonKey,
 } from "./utils/supabase/info";
-import { toast, Toaster } from "sonner@2.0.3";
+import { toast, Toaster } from "sonner";
 
 // PHASE 1 PERFORMANCE OPTIMIZATION
 import { CacheService } from "./utils/cache";
-import { performanceMonitor } from "./utils/performance-monitor";
 
 // Production logging system (use logger.debug() for dev-only logs, logger.info() for production)
 import { logger } from "./utils/logger";
@@ -149,106 +141,13 @@ declare global {
 // Top-level error catching
 logger.info("App.tsx loaded successfully");
 
-// DIAGNOSTIC: Track if App function itself is being recreated
-const appFunctionId = Math.random().toString(36).substring(7);
-logger.debug(
-  `App function created/loaded (Function ID: ${appFunctionId})`,
-);
-
-// Store to check if it changes
-if (typeof window !== "undefined") {
-  const lastFunctionId = (window as any).__erasAppFunctionId;
-  if (lastFunctionId && lastFunctionId !== appFunctionId) {
-    logger.debug(
-      `[HMR] Hot module reload detected (ID: ${lastFunctionId} → ${appFunctionId})`,
-    );
-  }
-  (window as any).__erasAppFunctionId = appFunctionId;
-
-  // Check if we're in Strict Mode (double-mounting in development)
-  (window as any).__erasStrictModeCounter =
-    ((window as any).__erasStrictModeCounter || 0) + 1;
-  logger.debug(
-    `React execution count: ${(window as any).__erasStrictModeCounter} (StrictMode doubles this)`,
-  );
-}
-
-// Drag-and-drop removed - using batch move dropdown for folder organization
-
 export default function App() {
-  // Track App component lifecycle and renders (dev-only)
-  const appIdRef = React.useRef(
-    Math.random().toString(36).substring(7),
-  );
-  const renderCountRef = React.useRef(0);
-  renderCountRef.current++;
-
-  logger.debug("App component rendering", {
-    id: appIdRef.current,
-    renderCount: renderCountRef.current,
-  });
-
   // Add path state for client-side routing without page reloads
   const [currentPath, setCurrentPath] = React.useState(
     window.location.pathname,
   );
 
   React.useEffect(() => {
-    // Track last mount to detect unexpected remounts
-    let lastMountTime = 0;
-    let lastMountId = "";
-    try {
-      const stored = sessionStorage.getItem(
-        "eras-app-last-mount-time",
-      );
-      const storedId = sessionStorage.getItem(
-        "eras-app-last-mount-id",
-      );
-      if (stored) lastMountTime = parseInt(stored);
-      if (storedId) lastMountId = storedId;
-    } catch (e) {
-      // Ignore
-    }
-
-    const now = Date.now();
-    const currentId = appIdRef.current;
-    const timeSinceLastMount =
-      lastMountTime > 0 ? now - lastMountTime : 0;
-
-    // Detect remounts (expected in Figma Make dev mode due to HMR)
-    // Silently handle - no need to log expected behavior
-    if (
-      timeSinceLastMount > 0 &&
-      timeSinceLastMount < 5000 &&
-      timeSinceLastMount > 100 &&
-      lastMountId !== currentId
-    ) {
-      // HMR remount detected - scroll restoration will happen automatically
-      // No need to log this expected development behavior
-    }
-
-    // Store current mount info and URL
-    try {
-      sessionStorage.setItem(
-        "eras-app-last-mount-time",
-        now.toString(),
-      );
-      sessionStorage.setItem(
-        "eras-app-last-mount-id",
-        currentId,
-      );
-      sessionStorage.setItem(
-        "eras-last-url",
-        window.location.href,
-      );
-    } catch (e) {
-      // Ignore
-    }
-
-    logger.debug("App component mounted", {
-      id: appIdRef.current,
-    });
-
     // Service Worker Registration
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
@@ -350,9 +249,6 @@ export default function App() {
     window.addEventListener("navigate", handleNavigation);
 
     return () => {
-      logger.debug("App component unmounting", {
-        id: appIdRef.current,
-      });
       window.removeEventListener("popstate", handlePopState);
       window.removeEventListener(
         "hashchange",
@@ -376,7 +272,6 @@ export default function App() {
     const joinMatch = path.match(/^\/join\/(.+)$/);
     if (joinMatch) {
       const referralCode = joinMatch[1];
-      console.log(`🎯 [Referral] Redirecting to signup with code: ${referralCode}`);
       // Redirect to home with ref parameter
       React.useEffect(() => {
         window.location.href = `/?ref=${referralCode}`;
@@ -394,11 +289,6 @@ export default function App() {
     // 🔥 NEW: Unsubscribe from referral invites route: /unsubscribe
     if (path === "/unsubscribe") {
       return <UnsubscribePage />;
-    }
-
-    // Logo concepts showcase (hidden route for design review)
-    if (path === "/logo-concepts" || path === "/logos") {
-      return <LogoConceptsEntry />;
     }
 
     if (path === "/terms") {
@@ -1020,6 +910,18 @@ const MainAppContent = React.memo(
       return `${titleProfile?.equipped_achievement_id || "none"}-${Date.now()}`;
     }, [titleProfile?.equipped_achievement_id]);
 
+    // Memoize bell color calculations to prevent re-computing on every render
+    const bellStyles = React.useMemo(() => {
+      const shouldUseBlackBell =
+        !titleProfile?.equipped_title ||
+        titleProfile?.equipped_title === "Sevenfold Sage";
+      return {
+        bellColor: shouldUseBlackBell ? "text-black" : "text-white",
+        bellBorderColor: shouldUseBlackBell ? "border-black/40" : "border-white/40",
+        bellBgColor: shouldUseBlackBell ? "bg-black/10" : "bg-white/10",
+      };
+    }, [titleProfile?.equipped_title]);
+
     // Check if this is an OAuth callback (for auth screen logic)
     const isOAuthCallback = React.useMemo(() => {
       try {
@@ -1102,6 +1004,10 @@ const MainAppContent = React.memo(
       capsuleId: string;
       notificationType?: "received" | "delivered" | "echo";
     } | null>(null);
+
+    // Settings dropdown state
+    const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
+    const [showTutorialsSubmenu, setShowTutorialsSubmenu] = useState(false);
 
     // 📚 Onboarding Orchestrator state
     const [showOnboarding, setShowOnboarding] = useState(false);
@@ -1617,12 +1523,6 @@ const MainAppContent = React.memo(
       useState(false);
     const [sessionWarningCallback, setSessionWarningCallback] =
       useState(null);
-    const [showEnhancementOverlay, setShowEnhancementOverlay] =
-      useState(false);
-    const [enhancementMedia, setEnhancementMedia] =
-      useState(null);
-    const [pendingRecordMedia, setPendingRecordMedia] =
-      useState(null); // Store media while in enhancement from Record tab
     const [vaultRefreshKey, setVaultRefreshKey] = useState(0);
     const [recordResetKey, setRecordResetKey] = useState(0); // Force RecordInterface remount for clean state
     const [settingsSection, setSettingsSection] = useState<
@@ -1904,6 +1804,87 @@ const MainAppContent = React.memo(
       }
     }, [pendingAuthData, auth.isAuthenticated]);
 
+    // 🎁 NEW: Separate effect to check onboarding for newly authenticated users
+    // This runs independently of pendingAuthData to catch all authentication scenarios
+    const hasCheckedOnboardingRef = React.useRef(false);
+    React.useEffect(() => {
+      const isAuthenticated = auth.isAuthenticated;
+      const userId = auth.user?.id;
+
+      // Only check once per session, when user first becomes authenticated
+      if (isAuthenticated && userId && !hasCheckedOnboardingRef.current) {
+        hasCheckedOnboardingRef.current = true;
+
+        const checkOnboardingForNewUser = async () => {
+          try {
+            console.log(
+              "📚 [ONBOARDING CHECK] Checking onboarding state for authenticated user:",
+              userId,
+            );
+
+            // Backend check is source of truth - do NOT check localStorage first
+            // (localStorage can be stale from previous accounts with same email)
+            const response = await fetch(
+              `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/onboarding/state`,
+              {
+                headers: {
+                  Authorization: `Bearer ${publicAnonKey}`,
+                  "Content-Type": "application/json",
+                },
+                method: "POST",
+                body: JSON.stringify({ userId }),
+              },
+            );
+
+            if (response.ok) {
+              const data = await response.json();
+              const completionState = data.completionState || {};
+
+              // Check if core onboarding is needed
+              if (!completionState.first_capsule) {
+                console.log(
+                  "📚 [ONBOARDING CHECK] ✅ New user detected - showing First Capsule Tutorial",
+                );
+                // Small delay to ensure UI is ready
+                setTimeout(() => {
+                  setShowOnboarding(true);
+                  setOnboardingModule("first_capsule");
+                }, 1000);
+              } else {
+                console.log(
+                  "📚 [ONBOARDING CHECK] User has completed onboarding",
+                );
+                // Sync to localStorage for faster subsequent checks
+                localStorage.setItem(
+                  "eras_onboarding_first_capsule_completed",
+                  "true",
+                );
+              }
+            } else {
+              console.error(
+                "❌ [ONBOARDING CHECK] Failed to fetch onboarding state:",
+                response.status,
+              );
+            }
+          } catch (error) {
+            console.error(
+              "❌ [ONBOARDING CHECK] Error checking onboarding:",
+              error,
+            );
+          }
+        };
+
+        // Delay check to ensure Eras Gate animation has completed
+        // and user is fully settled on the home screen
+        setTimeout(checkOnboardingForNewUser, 1500);
+      }
+
+      // Reset when user logs out
+      if (!isAuthenticated && hasCheckedOnboardingRef.current) {
+        hasCheckedOnboardingRef.current = false;
+      }
+    }, [auth.isAuthenticated, auth.user?.id]);
+
     // 🔧 MOBILE FIX: Force close notification center when capsule modal opens
     React.useEffect(() => {
       if (viewingCapsule && showNotificationCenter) {
@@ -1938,9 +1919,46 @@ const MainAppContent = React.memo(
             "🔄 [Retroactive] First login detected, checking for retroactive unlocks...",
           );
 
-          // Run retroactive check after a brief delay to let the app load
+          // CRITICAL: Check if user has completed onboarding first
+          // Don't run retroactive for brand new users - they should see tutorial first
           setTimeout(async () => {
             try {
+              // Check onboarding state before running retroactive
+              console.log("📚 [Retroactive] Checking if user has completed onboarding...");
+              const onboardingCheck = await fetch(
+                `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/onboarding/state`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${publicAnonKey}`,
+                    "Content-Type": "application/json",
+                  },
+                  method: "POST",
+                  body: JSON.stringify({ userId }),
+                },
+              );
+
+              if (onboardingCheck.ok) {
+                const onboardingData = await onboardingCheck.json();
+                const completionState = onboardingData.completionState || {};
+
+                // If user hasn't completed first capsule tutorial, skip retroactive
+                if (!completionState.first_capsule) {
+                  console.log(
+                    "📚 [Retroactive] ⏭️ SKIPPING - user hasn't completed onboarding yet",
+                  );
+                  console.log(
+                    "📚 [Retroactive] Tutorial will show first, then achievements after completion",
+                  );
+                  // Don't mark as checked - let it run after onboarding
+                  hasCheckedRetroactiveRef.current = false;
+                  return;
+                }
+              }
+
+              console.log(
+                "🔄 [Retroactive] ✅ User has completed onboarding, running migration...",
+              );
+
               const response = await fetch(
                 `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/achievements/retroactive-migration`,
                 {
@@ -1970,7 +1988,7 @@ const MainAppContent = React.memo(
                 error,
               );
             }
-          }, 3000); // 3 second delay after login
+          }, 5000); // 5 second delay - AFTER onboarding check (1.5s) completes
         }
       }
     }, [
@@ -2199,6 +2217,9 @@ const MainAppContent = React.memo(
       workflowResetRef.current = workflow.resetWorkflow;
     }, [workflow.resetWorkflow]);
 
+    // NEW: Ref for returning to theme selection (Step 1) when clicking Compose while on Compose
+    const returnToThemeSelectionRef = React.useRef<(() => void) | null>(null);
+
     React.useEffect(() => {
       const isLeavingCreate =
         lastActiveTab === "create" && activeTab !== "create";
@@ -2239,7 +2260,8 @@ const MainAppContent = React.memo(
     }, [originalHandleTabChange]);
 
     const handleTabChange = React.useCallback(
-      async (newTab) => {
+      async (newTab, options = {}) => {
+        const { editingCapsuleOverride = null } = options;
         // CRITICAL FIX: Reset RecordInterface when navigating TO Record tab for clean state
         if (newTab === "record" && activeTab !== "record") {
           console.log(
@@ -2318,8 +2340,9 @@ const MainAppContent = React.memo(
         });
 
         if (isActuallyNavigatingToCreate) {
+          const effectiveEditingCapsule = editingCapsuleOverride || editingCapsule;
           if (
-            !editingCapsule &&
+            !effectiveEditingCapsule &&
             !shouldPreserveWorkflow &&
             !hasDraftWorkInProgress
           ) {
@@ -2341,7 +2364,7 @@ const MainAppContent = React.memo(
               activeTab,
               "(component will NOT remount, state preserved)",
             );
-          } else if (editingCapsule) {
+          } else if (effectiveEditingCapsule) {
             console.log(
               "✅ Preserving state - editing existing capsule",
             );
@@ -2355,12 +2378,11 @@ const MainAppContent = React.memo(
           activeTab === "create"
         ) {
           console.log(
-            "⏭️ Already on Create tab, skipping reset to preserve user work",
+            "⏭️ Clicking Compose while already on Create tab - returning to Step 1 (theme selection)",
           );
-          if (userHasBeenWorking) {
-            console.warn(
-              "🛡️ PROTECTION: User has been actively working - preventing any state changes",
-            );
+          // User wants to restart - trigger callback to return to Step 1
+          if (returnToThemeSelectionRef.current) {
+            returnToThemeSelectionRef.current();
           }
         }
 
@@ -2630,705 +2652,10 @@ const MainAppContent = React.memo(
       }
     }, [auth.isAuthenticated, setActiveTab]);
 
-    // Event Handlers
-    const handleEditCapsule = React.useCallback((capsule) => {
-      console.log(
-        "🎨 handleEditCapsule called with capsule:",
-        capsule,
-      );
-
-      // Open enhancement overlay with capsule media
-      // Support both mediaFiles (from CreateCapsule) and attachments (from Dashboard)
-      const media = capsule.mediaFiles || capsule.attachments;
-
-      if (media && media.length > 0) {
-        const firstMedia = media[0];
-        console.log("📸 First media item:", firstMedia);
-
-        // Support both property naming conventions
-        const mediaType =
-          firstMedia.file_type || firstMedia.type;
-        const mediaFilename =
-          firstMedia.file_name || firstMedia.filename;
-
-        setEnhancementMedia({
-          url: firstMedia.url,
-          type: mediaType?.startsWith("image")
-            ? "photo"
-            : mediaType?.startsWith("video")
-              ? "video"
-              : "audio",
-          filename: mediaFilename,
-        });
-        setShowEnhancementOverlay(true);
-      } else {
-        console.warn("⚠️ No media found in capsule to enhance");
-        toast.error("No media found to enhance");
-      }
-    }, []);
-
-    const handleEditCapsuleDetails = React.useCallback(
-      (capsule) => {
-        console.log(
-          "✏️ handleEditCapsuleDetails called with capsule:",
-          capsule?.id,
-          "isReceived:",
-          capsule?.isReceived,
-          "is_received:",
-          capsule?.is_received,
-          "status:",
-          capsule?.status,
-          "media:",
-          capsule?.attachments?.length || 0,
-        );
-
-        // ANY delivered or received capsule should be viewed, NOT edited
-        const isReceivedCapsule =
-          capsule?.isReceived || capsule?.is_received;
-        const isDelivered =
-          capsule?.status?.toLowerCase() === "delivered";
-        const isReceived =
-          capsule?.status?.toLowerCase() === "received";
-
-        if (isReceivedCapsule || isDelivered || isReceived) {
-          console.log(
-            "📬 Opening RECEIVED/DELIVERED capsule in Portal overlay",
-          );
-          setViewingCapsule(capsule);
-        } else {
-          // For created/draft/scheduled capsules, open in edit mode in Create tab
-          console.log(
-            "✏️ Opening created/draft/scheduled capsule in edit mode",
-          );
-          setEditingCapsule(capsule);
-          // Use setActiveTab directly to avoid the reset logic in handleTabChange
-          setActiveTab("create");
-        }
-      },
-      [setActiveTab],
-    );
-
-    const handleQuickRecordedMedia = React.useCallback(
-      async (recordedMedia) => {
-        // Open enhancement overlay with recorded media
-        setEnhancementMedia({
-          blob: recordedMedia.blob,
-          type: recordedMedia.type?.startsWith("image")
-            ? "photo"
-            : recordedMedia.type?.startsWith("video")
-              ? "video"
-              : "audio",
-          filename:
-            recordedMedia.filename || `media-${Date.now()}`,
-        });
-        setShowEnhancementOverlay(true);
-        setShowQuickRecorder(false);
-      },
-      [],
-    );
-
-    // Quick Add handler for Calendar View
-    const handleQuickAddCapsule = React.useCallback(
-      (date: Date) => {
-        console.log("📅 Quick Add triggered for date:", date);
-        // Set the pre-filled date
-        setQuickAddDate(date);
-        // Clear editing capsule (we're creating new)
-        setEditingCapsule(null);
-        // Navigate to Create tab
-        handleTabChange("create");
-      },
-      [handleTabChange],
-    );
-
-    const handleEnhancementSave = React.useCallback(
-      async (enhancedMedia) => {
-        // Save to Vault
-
-        try {
-          // Get the media type
-          const getMediaType = (type) => {
-            if (type === "photo" || type?.startsWith("image"))
-              return "photo";
-            if (type === "video" || type?.startsWith("video"))
-              return "video";
-            if (type === "audio" || type?.startsWith("audio"))
-              return "audio";
-            return type;
-          };
-
-          const mediaType = getMediaType(enhancedMedia.type);
-
-          // Validate file size - Supabase Storage limit is 50MB
-          const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
-          if (enhancedMedia.blob.size > MAX_FILE_SIZE) {
-            const sizeMB = (
-              enhancedMedia.blob.size /
-              (1024 * 1024)
-            ).toFixed(1);
-            toast.error(
-              `File too large (${sizeMB}MB). Maximum size is 50MB.`,
-              { duration: 5000 },
-            );
-            return;
-          }
-
-          // Upload to backend
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          if (!session) {
-            toast.error("Please sign in to save to Vault");
-            return;
-          }
-
-          const formData = new FormData();
-          formData.append(
-            "file",
-            enhancedMedia.blob,
-            enhancedMedia.filename,
-          );
-          formData.append("type", mediaType);
-
-          const response = await fetch(
-            `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/legacy-vault/upload`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${session.access_token}`,
-              },
-              body: formData,
-            },
-          );
-
-          if (!response.ok) {
-            const errorData = await response
-              .json()
-              .catch(() => ({}));
-
-            // Enhanced error message for file size issues
-            if (
-              response.status === 413 ||
-              errorData.statusCode === "413"
-            ) {
-              throw new Error(
-                "File too large. Maximum file size is 50MB.",
-              );
-            }
-
-            throw new Error(errorData.error || "Upload failed");
-          }
-
-          toast.success("Enhanced media saved to Vault!");
-
-          // DON'T close overlay if in carousel mode (array of media)
-          if (
-            !Array.isArray(enhancementMedia) ||
-            enhancementMedia.length <= 1
-          ) {
-            setShowEnhancementOverlay(false);
-            setEnhancementMedia(null);
-            setPendingRecordMedia(null); // Clear pending media since it was saved
-          }
-
-          // Refresh the vault to show the new media immediately
-          setVaultRefreshKey((prev) => prev + 1);
-        } catch (error) {
-          console.error("Failed to save to Vault:", error);
-          toast.error("Failed to save to Vault");
-        }
-      },
-      [],
-    );
-
-    const handleEnhancementReplaceSave = React.useCallback(
-      async (enhancedMedia, originalMediaId) => {
-        // Replace existing vault item instead of creating a new one
-
-        try {
-          // Get the media type
-          const getMediaType = (type) => {
-            if (type === "photo" || type?.startsWith("image"))
-              return "photo";
-            if (type === "video" || type?.startsWith("video"))
-              return "video";
-            if (type === "audio" || type?.startsWith("audio"))
-              return "audio";
-            return type;
-          };
-
-          const mediaType = getMediaType(enhancedMedia.type);
-
-          // Upload to backend with replace flag
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          if (!session) {
-            toast.error(
-              "Please sign in to replace media in Vault",
-            );
-            return;
-          }
-
-          const formData = new FormData();
-          formData.append(
-            "file",
-            enhancedMedia.blob,
-            enhancedMedia.filename,
-          );
-          formData.append("type", mediaType);
-          formData.append("replaceId", originalMediaId); // Tell backend to replace this ID
-
-          const response = await fetch(
-            `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/legacy-vault/replace`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${session.access_token}`,
-              },
-              body: formData,
-            },
-          );
-
-          if (!response.ok) {
-            const errorData = await response
-              .json()
-              .catch(() => ({}));
-            const errorMessage =
-              errorData.error ||
-              errorData.details ||
-              "Replace failed";
-            console.error(
-              "Replace failed with status:",
-              response.status,
-              errorData,
-            );
-            throw new Error(errorMessage);
-          }
-
-          toast.success("Media replaced in Vault!");
-
-          // DON'T close overlay if in carousel mode (array of media)
-          if (
-            !Array.isArray(enhancementMedia) ||
-            enhancementMedia.length <= 1
-          ) {
-            setShowEnhancementOverlay(false);
-            setEnhancementMedia(null);
-            setPendingRecordMedia(null); // Clear pending media since it was replaced
-          }
-
-          // Refresh the vault to show the updated media immediately
-          setVaultRefreshKey((prev) => prev + 1);
-        } catch (error) {
-          console.error(
-            "Failed to replace media in Vault:",
-            error,
-          );
-          toast.error(
-            `Failed to replace media: ${error.message || "Unknown error"}`,
-          );
-        }
-      },
-      [],
-    );
-
-    const handleEnhancementUseInCapsule = React.useCallback(
-      async (enhancedMedia) => {
-        // 🔥 CRITICAL FIX: Handle both single media and array of media
-        const mediaArray = Array.isArray(enhancedMedia)
-          ? enhancedMedia
-          : [enhancedMedia];
-        const loadingToast = toast.loading(
-          `Preparing ${mediaArray.length} media file${mediaArray.length > 1 ? "s" : ""} for capsule...`,
-        );
-
-        try {
-          console.log(
-            "🎨 handleEnhancementUseInCapsule called with:",
-            {
-              count: mediaArray.length,
-              isArray: Array.isArray(enhancedMedia),
-              items: mediaArray.map((m) => ({
-                hasBlob: !!m.blob,
-                blobSize: m.blob?.size,
-                type: m.type,
-                filename: m.filename,
-                originalId: m.originalId,
-                vaultId: m.vaultId,
-                fromVault: m.fromVault,
-              })),
-            },
-          );
-
-          // 🔥 BATCH PROCESS: Build replacement map and vault removals in one pass
-          const replacementIds = [];
-          const vaultIdsToRemove = [];
-          const processedMedia = [];
-
-          for (const media of mediaArray) {
-            // Phase 2: Comprehensive blob validation
-            if (!media?.blob) {
-              console.error("❌ No blob for media:", media);
-              throw new Error("No media blob provided");
-            }
-
-            if (media.blob.size === 0) {
-              console.error("❌ Blob size is 0:", {
-                blob: media.blob,
-                type: media.blob.type,
-                constructorName: media.blob.constructor.name,
-              });
-              throw new Error("Media file is empty");
-            }
-
-            if (media.blob.size > 500 * 1024 * 1024) {
-              // 500MB limit
-              throw new Error(
-                "Media file is too large (max 500MB)",
-              );
-            }
-
-            // Validate blob type
-            const validTypes = ["image/", "video/", "audio/"];
-            const hasValidType = validTypes.some((type) =>
-              media.blob.type.startsWith(type),
-            );
-            if (!hasValidType) {
-              throw new Error(
-                `Invalid media type: ${media.blob.type}`,
-              );
-            }
-
-            console.log("✅ Blob validation passed:", {
-              size: `${(media.blob.size / 1024 / 1024).toFixed(2)} MB`,
-              type: media.blob.type,
-              filename: media.filename,
-            });
-
-            // CRITICAL FIX: Convert blob to File for better lifecycle management
-            const file = new File(
-              [media.blob],
-              media.filename ||
-                `enhanced-${Date.now()}.${media.type?.includes("video") ? "mp4" : media.type?.includes("audio") ? "mp3" : "jpg"}`,
-              {
-                type: media.blob.type,
-                lastModified: Date.now(),
-              },
-            );
-
-            // Validate File object creation
-            if (!file || file.size === 0) {
-              throw new Error(
-                "Failed to create file from blob",
-              );
-            }
-
-            console.log("✅ Converted to File object:", {
-              fileName: file.name,
-              fileSize: file.size,
-              fileType: file.type,
-            });
-
-            // Create media object with File instead of Blob
-            const persistentMedia = {
-              file: file,
-              blob: media.blob, // Keep blob for immediate preview
-              type: media.type,
-              filename: file.name,
-              metadata: media.metadata,
-              originalId: media.originalId, // 🔄 CRITICAL: Preserve originalId for replacement tracking
-              vaultId: media.vaultId, // 🏛️ CRITICAL: Preserve vaultId for vault item tracking
-              fromVault: media.fromVault, // 🏛️ CRITICAL: Preserve fromVault flag
-            };
-
-            processedMedia.push(persistentMedia);
-
-            // 🔄 CRITICAL: Track if this is replacing existing media
-            if (media.originalId) {
-              replacementIds.push(media.originalId);
-              console.log(
-                "🔄 Enhanced media is replacing original:",
-                media.originalId,
-              );
-            }
-
-            // 🆕 CRITICAL: Track vault IDs to remove from selection
-            if (
-              media.vaultId ||
-              (media.fromVault && media.originalId)
-            ) {
-              const vaultIdToRemove =
-                media.vaultId || media.originalId;
-              vaultIdsToRemove.push(vaultIdToRemove);
-              console.log(
-                "🏛️ Enhanced vault media - will remove from selection:",
-                vaultIdToRemove,
-              );
-            }
-          }
-
-          // 🔥 BATCH UPDATE: Update all workflow state ONCE
-          if (replacementIds.length > 0) {
-            console.log(
-              "🔄 Setting replacement map for",
-              replacementIds.length,
-              "items:",
-              replacementIds,
-            );
-            workflow.setMediaReplacementMap((prev) => {
-              // Merge with existing, avoiding duplicates
-              const combined = [...prev, ...replacementIds];
-              const unique = [...new Set(combined)];
-              console.log(
-                "🔄 Updated replacement map:",
-                unique,
-              );
-              return unique;
-            });
-          }
-
-          // 🆕 BATCH UPDATE: Remove enhanced vault items from selection
-          if (vaultIdsToRemove.length > 0) {
-            console.log(
-              "🏛️ Removing",
-              vaultIdsToRemove.length,
-              "vault items from selection:",
-              vaultIdsToRemove,
-            );
-            workflow.setImportedVaultMediaIds((prev) => {
-              const newSet = new Set(prev);
-              vaultIdsToRemove.forEach((id) =>
-                newSet.delete(id),
-              );
-              console.log(
-                "🏛️ Updated vault selection. Removed:",
-                vaultIdsToRemove,
-                "Remaining:",
-                Array.from(newSet),
-              );
-              return newSet;
-            });
-          }
-
-          // 🔥 CRITICAL FIX: When enhancing existing capsule media, ONLY send the enhanced items
-          // The replacement map will tell CreateCapsule which originals to remove
-          // The unenhanced items are already in the capsule - don't send them again!
-          const hasReplacements = replacementIds.length > 0;
-          if (hasReplacements) {
-            console.log(
-              "✅ Setting",
-              processedMedia.length,
-              "enhanced media items in workflow (will REPLACE originals via replacement map)",
-            );
-          } else {
-            console.log(
-              "✅ Setting",
-              processedMedia.length,
-              "NEW media items in workflow",
-            );
-          }
-          workflow.setWorkflowMedia(processedMedia);
-          workflow.setWorkflowStep("create");
-
-          // Clear enhancement overlay and navigate
-          setShowEnhancementOverlay(false);
-          setEnhancementMedia(null);
-          setPendingRecordMedia(null);
-          // 🔥 CRITICAL: DON'T clear editingCapsule here!
-          // If user is editing an existing capsule and enhancing vault media, we must preserve editingCapsule state
-          // setEditingCapsule(null);  // REMOVED - causes original media to be lost when editing
-
-          // Navigate to create tab if needed
-          if (activeTab !== "create") {
-            console.log(
-              "✅ Navigating to Create tab from",
-              activeTab,
-            );
-            handleTabChange("create");
-          } else {
-            console.log(
-              "✅ Already on Create tab, staying here",
-            );
-          }
-
-          // Dismiss loading toast and show success
-          toast.dismiss(loadingToast);
-          toast.success(
-            `${processedMedia.length} media file${processedMedia.length > 1 ? "s" : ""} ready for capsule!`,
-          );
-        } catch (error) {
-          console.error(
-            "❌ Failed to prepare media for capsule:",
-            error,
-          );
-          toast.dismiss(loadingToast);
-          toast.error(
-            error.message ||
-              "Failed to prepare media. Please try again.",
-          );
-        }
-      },
-      [workflow, handleTabChange, activeTab],
-    );
 
     const recordRestoreMediaRef = React.useRef<
       ((media: any) => void) | null
     >(null); // Callback to restore media in RecordInterface
-
-    const handleEnhancementDiscard = React.useCallback(() => {
-      console.log("❌ Enhancement canceled");
-      setShowEnhancementOverlay(false);
-      setEnhancementMedia(null);
-
-      // If there's pending record media, restore it to the RecordingModal
-      if (pendingRecordMedia && activeTab === "record") {
-        console.log(
-          "🔄 Restoring media to Record tab after enhancement cancel",
-        );
-        // Trigger a restore in RecordInterface by setting a flag
-        // We'll use a small delay to ensure enhancement overlay closes first
-        setTimeout(() => {
-          // The RecordInterface should show the modal again with the stored media
-          if (recordRestoreMediaRef.current) {
-            recordRestoreMediaRef.current(pendingRecordMedia);
-          }
-          setPendingRecordMedia(null);
-        }, 100);
-      } else {
-        setPendingRecordMedia(null);
-      }
-    }, [pendingRecordMedia, activeTab]);
-
-    // Handler for enhancing media from CreateCapsule
-    const handleEnhanceFromCapsule = React.useCallback(
-      (mediaData, mediaIndex) => {
-        console.log("🎨 Enhancing media from capsule:", {
-          mediaData,
-          mediaIndex,
-          isArray: Array.isArray(mediaData),
-          count: Array.isArray(mediaData)
-            ? mediaData.length
-            : 1,
-        });
-
-        // Helper to convert media item to enhancement format
-        const convertToEnhancementFormat = async (item) => {
-          const enhancementType =
-            item.type === "image" ? "photo" : item.type;
-          console.log(
-            "🔄 Converting item to enhancement format:",
-            {
-              hasFile: !!item.file,
-              fileSize: item.file?.size,
-              hasUrl: !!item.url,
-              type: item.type,
-              mimeType: item.mimeType,
-            },
-          );
-
-          // 🔧 CRITICAL FIX: If file is missing or empty, fetch from URL
-          let blob = item.file;
-          if (!blob || blob.size === 0) {
-            if (item.url) {
-              console.log(
-                "📥 File missing or empty, fetching from URL...",
-              );
-              try {
-                const response = await fetch(item.url);
-                if (!response.ok) {
-                  throw new Error(
-                    `HTTP error! status: ${response.status}`,
-                  );
-                }
-                blob = await response.blob();
-                console.log("✅ Fetched blob from URL:", {
-                  size: blob.size,
-                  type: blob.type,
-                });
-              } catch (fetchError) {
-                console.error(
-                  "❌ Failed to fetch blob from URL:",
-                  fetchError,
-                );
-                toast.error(
-                  "Failed to load media. Please try re-adding it.",
-                );
-                blob = null;
-              }
-            } else {
-              console.error("❌ No file and no URL available");
-              toast.error("Media data is missing");
-              blob = null;
-            }
-          }
-
-          return {
-            url: item.url,
-            blob: blob, // File object or fetched Blob
-            type: enhancementType, // CRITICAL: Convert 'image' to 'photo'
-            filename: item.file?.name || `media-${Date.now()}`,
-            file_type:
-              item.mimeType || item.file?.type || blob?.type,
-            originalId: item.originalId || item.id, // Track original ID for replacement
-          };
-        };
-
-        // Handle both single media and array of media
-        if (Array.isArray(mediaData)) {
-          // Multiple media selected - convert all asynchronously
-          const enhancementMediaPromises = mediaData.map(
-            convertToEnhancementFormat,
-          );
-          Promise.all(enhancementMediaPromises)
-            .then((enhancementMediaArray) => {
-              console.log(
-                "✅ Setting enhancement media (multiple):",
-                enhancementMediaArray.length,
-                "items",
-              );
-              setEnhancementMedia(enhancementMediaArray);
-              setShowEnhancementOverlay(true);
-            })
-            .catch((error) => {
-              console.error(
-                "❌ Failed to convert media for enhancement:",
-                error,
-              );
-              toast.error(
-                "Failed to prepare media for enhancement",
-              );
-            });
-        } else {
-          // Single media selected
-          convertToEnhancementFormat(mediaData)
-            .then((enhancementMedia) => {
-              console.log(
-                "✅ Setting enhancement media (single):",
-                {
-                  hasUrl: !!enhancementMedia.url,
-                  hasBlob: !!enhancementMedia.blob,
-                  type: enhancementMedia.type,
-                  filename: enhancementMedia.filename,
-                  originalId: enhancementMedia.originalId,
-                },
-              );
-              setEnhancementMedia(enhancementMedia);
-              setShowEnhancementOverlay(true);
-            })
-            .catch((error) => {
-              console.error(
-                "❌ Failed to convert media for enhancement:",
-                error,
-              );
-              toast.error(
-                "Failed to prepare media for enhancement",
-              );
-            });
-        }
-      },
-      [],
-    );
 
     const handleCapsuleCreated = React.useCallback(() => {
       // CRITICAL: Clear ALL dashboard cache when a capsule is created/updated
@@ -3700,98 +3027,43 @@ const MainAppContent = React.memo(
       [],
     );
 
-    const handleVaultEdit = React.useCallback(async (media) => {
-      console.log("✏️ Editing media from Vault:", media);
-      console.log("✏️ Is array?", Array.isArray(media));
-      console.log(
-        "✏️ Media count:",
-        Array.isArray(media) ? media.length : 1,
-      );
+    // Handle editing capsule details (title, message, date, theme, etc.)
+    const handleEditCapsuleDetails = React.useCallback(
+      (capsule) => {
+        setEditingCapsule(capsule);
+        handleTabChange("create", { editingCapsuleOverride: capsule });
+      },
+      [handleTabChange, setEditingCapsule],
+    );
 
-      // 🎬 BLOCK VIDEO ENHANCEMENT: Videos cannot be enhanced (they would become single photo frames)
-      if (Array.isArray(media)) {
-        // Multiple items - filter out videos
-        const nonVideoItems = media.filter(
-          (item) => item.type !== "video",
-        );
-        const videoCount = media.length - nonVideoItems.length;
-
-        console.log(
-          `🎬 Filtered ${videoCount} video(s) from ${media.length} total items`,
-        );
-
-        // If ONLY videos were selected, show error and return
-        if (nonVideoItems.length === 0) {
-          toast.error("Videos cannot be enhanced", {
-            description:
-              "Please select photos or audio files to enhance.",
-          });
-          return;
-        }
-
-        // If some videos were filtered out, show toast notification
-        if (videoCount > 0) {
-          toast.warning(
-            `${videoCount} video${videoCount > 1 ? "s" : ""} skipped`,
-            {
-              description:
-                "Videos cannot be enhanced. Only photos and audio files are supported.",
-            },
-          );
-        }
-
-        // Process remaining non-video items
-        console.log(
-          "✏️ Processing multiple items for enhancement...",
-        );
-        const mediaArray = nonVideoItems.map((item, index) => ({
-          blob: item.blob,
-          url: item.url,
-          type: item.type,
-          id: item.id, // Include original ID for replace functionality
-          filename: `${item.type}-${Date.now()}-${index}.${item.type === "photo" ? "jpg" : "webm"}`,
-        }));
-        console.log(
-          "✏️ Media array prepared:",
-          mediaArray.length,
-          "items",
-        );
-        console.log("✏️ Sample item:", mediaArray[0]);
-        setEnhancementMedia(mediaArray);
-        setShowEnhancementOverlay(true);
-        console.log(
-          "✏️ Enhancement overlay should now be visible",
-        );
-      } else {
-        // Single item - check if it's a video
-        if (media.type === "video") {
-          console.log(
-            "🎬 Single video selected - enhancement blocked",
-          );
-          toast.error("Videos cannot be enhanced", {
-            description:
-              "Video enhancement would convert your video to a single photo frame.",
-          });
-          return;
-        }
-
-        // Single non-video item - pass as single object with ID
-        console.log(
-          "✏️ Processing single item for enhancement...",
-        );
-        setEnhancementMedia({
-          blob: media.blob,
-          url: media.url,
-          type: media.type,
-          id: media.id, // Include original ID for replace functionality
-          filename: `${media.type}-${Date.now()}.${media.type === "photo" ? "jpg" : "webm"}`,
+    // 🔥 SMART CAPSULE VIEW HANDLER
+    // Used by Timeline & Calendar views to intelligently route capsule clicks:
+    // - Drafts → Edit mode (Create tab)
+    // - Scheduled/Delivered/Received → Detail modal with ceremony
+    // Note: Classic/Folder view (Dashboard) manages its own modal independently
+    const handleViewCapsule = React.useCallback(
+      (capsule) => {
+        console.log('🎯 handleViewCapsule called:', {
+          id: capsule.id,
+          title: capsule.title,
+          status: capsule.status,
+          isReceived: capsule.isReceived
         });
-        setShowEnhancementOverlay(true);
-        console.log(
-          "✏️ Enhancement overlay should now be visible",
-        );
-      }
-    }, []);
+
+        // Drafts go to edit/create mode
+        if (capsule.status === 'draft') {
+          console.log('📝 Draft detected - routing to create tab for editing');
+          setEditingCapsule(capsule);
+          handleTabChange("create", { editingCapsuleOverride: capsule });
+        } 
+        // All other capsules (scheduled, delivered, received) open in detail modal
+        else {
+          console.log('👁️ Non-draft capsule - opening CapsuleDetailModal');
+          setViewingCapsule(capsule);
+        }
+      },
+      [handleTabChange, setEditingCapsule, setViewingCapsule],
+    );
 
     const handleVaultClose = React.useCallback(() => {
       // Navigate back to the tab the user came from, or Home if unknown
@@ -3864,28 +3136,6 @@ const MainAppContent = React.memo(
       console.log("🏛️ Opening Vault from RecordInterface");
       handleTabChange("vault");
     }, [handleTabChange]);
-
-    const handleRecordEnhance = React.useCallback((media) => {
-      if (!media) {
-        toast.error("No media to enhance");
-        return;
-      }
-
-      const enhanceData = {
-        blob: media.blob,
-        url: media.url,
-        type: media.type,
-        filename:
-          media.filename ||
-          `${media.type}-${Date.now()}.${media.type === "photo" ? "jpg" : media.type === "video" ? "webm" : "webm"}`,
-        thumbnail: media.thumbnail, // Pass video thumbnail for poster
-      };
-
-      // Store the original media so we can restore it if user cancels
-      setPendingRecordMedia(media);
-      setEnhancementMedia(enhanceData);
-      setShowEnhancementOverlay(true);
-    }, []);
 
     const handleRecordClose = React.useCallback(() => {
       // Smart navigation: go back to where we came from
@@ -4001,7 +3251,32 @@ const MainAppContent = React.memo(
             const achievementsToAward = [];
 
             if (firstCapsuleCompleted) {
-              achievementsToAward.push("A001"); // First Step → Time Novice
+              // Initialize A001 "First Step" achievement + Time Novice title
+              console.log(
+                "🎁 [ONBOARDING] Initializing A001 First Step and Time Novice title...",
+              );
+              try {
+                await fetch(
+                  `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/achievements/initialize-titles`,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${auth.session?.access_token}`,
+                      "Content-Type": "application/json",
+                    },
+                    method: "POST",
+                  },
+                );
+                console.log(
+                  "✅ [ONBOARDING] A001 and Time Novice initialized successfully",
+                );
+              } catch (err) {
+                console.error(
+                  "❌ Failed to initialize A001 and Time Novice:",
+                  err,
+                );
+              }
+
+              // Award Time Keeper for completing the tutorial
               achievementsToAward.push("time_keeper"); // Time Keeper → Chrono Apprentice
 
               if (vaultMasteryCompleted) {
@@ -4019,7 +3294,6 @@ const MainAppContent = React.memo(
                 try {
                   // Award achievement based on ID
                   const actionMap: Record<string, string> = {
-                    A001: "signup", // First Step is awarded on signup
                     time_keeper:
                       "onboarding_first_capsule_complete",
                     vault_guardian:
@@ -4066,27 +3340,26 @@ const MainAppContent = React.memo(
 
             if (moduleId === "first_capsule") {
               console.log(
-                "🏆 [ONBOARDING] Awarding partial achievements (First Step only)",
+                "🏆 [ONBOARDING] First Capsule dismissed - initializing A001 First Step and Time Novice",
               );
-
+              // Initialize A001 "First Step" achievement + Time Novice title even if user exits early
               try {
                 await fetch(
-                  `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/achievements/track`,
+                  `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/achievements/initialize-titles`,
                   {
                     headers: {
                       Authorization: `Bearer ${auth.session?.access_token}`,
                       "Content-Type": "application/json",
                     },
                     method: "POST",
-                    body: JSON.stringify({
-                      action: "signup", // First Step is awarded via signup action
-                      metadata: {},
-                    }),
                   },
+                );
+                console.log(
+                  "✅ [ONBOARDING] A001 and Time Novice initialized successfully",
                 );
               } catch (err) {
                 console.error(
-                  "❌ Failed to award First Step achievement:",
+                  "❌ Failed to initialize A001 and Time Novice:",
                   err,
                 );
               }
@@ -4192,15 +3465,27 @@ const MainAppContent = React.memo(
           {/* Header Background - Customizable gradient based on equipped title with transition animations */}
           {activeTab !== "record" && (
             <AnimatePresence mode="wait">
-              {titleProfile?.equipped_title && (
-                <HeaderBackground
-                  key={titleProfile.equipped_title}
-                  titleName={titleProfile.equipped_title}
-                  titleRarity={
-                    titleProfile.equipped_rarity || "common"
-                  }
-                />
-              )}
+              {titleProfile?.equipped_title && (() => {
+                // Look up rarity from unlocked_titles or availableTitles
+                const equippedTitleData = 
+                  availableTitles?.titles?.find(t => t.title === titleProfile.equipped_title) ||
+                  titleProfile.unlocked_titles?.find(t => t.title === titleProfile.equipped_title);
+                const rarity = (equippedTitleData?.rarity || "common") as "common" | "uncommon" | "rare" | "epic" | "legendary";
+                
+                console.log('[HeaderBackground] Rendering with:', {
+                  titleName: titleProfile.equipped_title,
+                  rarity,
+                  equippedTitleData
+                });
+                
+                return (
+                  <HeaderBackground
+                    key={titleProfile.equipped_title}
+                    titleName={titleProfile.equipped_title}
+                    titleRarity={rarity}
+                  />
+                );
+              })()}
             </AnimatePresence>
           )}
 
@@ -4339,7 +3624,7 @@ const MainAppContent = React.memo(
               <div className="mb-3 sm:mb-4">
                 <div className="relative flex items-start justify-start min-h-[80px] sm:min-h-[100px] pl-0 sm:pl-6">
                   {/* Logo - Left aligned - Clickable to open title selector */}
-                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 z-[100] -ml-9 sm:ml-0 relative">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 z-[100] -ml-6 sm:ml-0 relative">
                     <MomentPrismLogo
                       size={isMobile ? 80 : 120}
                       showSubtitle={true}
@@ -4450,31 +3735,13 @@ const MainAppContent = React.memo(
             )}
 
             {/* Fixed Controls Overlay - Bell and Settings follow user down the page */}
-            {activeTab !== "record" &&
-              (() => {
-                // Determine bell color based on equipped title
-                // Use black for Sevenfold Sage or when no title is equipped (default)
-                const shouldUseBlackBell =
-                  !titleProfile?.equipped_title ||
-                  titleProfile?.equipped_title ===
-                    "Sevenfold Sage";
-                const bellColor = shouldUseBlackBell
-                  ? "text-black"
-                  : "text-white";
-                const bellBorderColor = shouldUseBlackBell
-                  ? "border-black/40"
-                  : "border-white/40";
-                const bellBgColor = shouldUseBlackBell
-                  ? "bg-black/10"
-                  : "bg-white/10";
-
-                return (
+            {activeTab !== "record" && (
                   <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
                     <div className="relative flex items-start justify-end h-0 px-2 container mx-auto">
                       {/* Bell & Settings - Right */}
                       <div className="pointer-events-auto mt-1 sm:mt-3 flex flex-row items-center gap-3">
                         {/* Bell Icon & Settings Gear - Stacked Vertically */}
-                        <div className="flex flex-col items-center gap-0 sm:gap-4">
+                        <div className="flex flex-col items-center gap-3 sm:gap-4">
                           {/* Bell Icon */}
                           <button
                             onClick={() => {
@@ -4495,10 +3762,10 @@ const MainAppContent = React.memo(
                               <div className="relative">
                                 {/* Glow background for prominence */}
                                 <div
-                                  className={`relative ${bellBgColor} p-2 rounded-full border-2 ${bellBorderColor}`}
+                                  className={`relative ${bellStyles.bellBgColor} p-2 rounded-full border-2 ${bellStyles.bellBorderColor}`}
                                 >
                                   <Bell
-                                    className={`w-6 h-6 ${bellColor}`}
+                                    className={`w-6 h-6 ${bellStyles.bellColor}`}
                                   />
                                 </div>
                                 {unifiedUnreadCount > 0 && (
@@ -4537,10 +3804,10 @@ const MainAppContent = React.memo(
                               <div className="relative">
                                 {/* Glow background for prominence */}
                                 <div
-                                  className={`relative ${bellBgColor} p-2 rounded-full border-2 ${bellBorderColor}`}
+                                  className={`relative ${bellStyles.bellBgColor} p-2 rounded-full border-2 ${bellStyles.bellBorderColor}`}
                                 >
                                   <Bell
-                                    className={`w-6 h-6 ${bellColor}`}
+                                    className={`w-6 h-6 ${bellStyles.bellColor}`}
                                   />
                                 </div>
                                 {unifiedUnreadCount > 0 && (
@@ -4579,178 +3846,220 @@ const MainAppContent = React.memo(
                           </button>
 
                           {/* Settings Gear */}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="cursor-pointer relative group -mt-3 sm:mt-0">
-                                {/* Added -mt-3 on mobile to lift gear */}
-                                {/* Glowing halo background */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full blur-md opacity-60 group-hover:opacity-80 animate-pulse"></div>
-
-                                {/* Solid background with gear icon */}
-                                <div className="relative bg-slate-900 p-3 rounded-full border-2 border-yellow-400 transition-transform group-hover:scale-110">
-                                  <SettingsIcon
-                                    className="w-6 h-6 text-yellow-400"
-                                    style={{
-                                      strokeWidth: "2.5px",
-                                    }}
-                                  />
-                                </div>
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                              align="end"
-                              className="w-56 bg-slate-900 border-slate-700 z-[9999]"
-                              sideOffset={8}
+                          <div className="relative">
+                            <button 
+                              onClick={() => {
+                                console.log("⚙️ [GEAR CLICK] Toggling dropdown");
+                                setShowSettingsDropdown(!showSettingsDropdown);
+                              }}
+                              className="cursor-pointer relative group"
+                              aria-label="Settings"
                             >
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleTabChange("settings")
-                                }
-                                className="text-white focus:bg-slate-800 focus:text-white cursor-pointer"
-                              >
-                                <SettingsIcon className="w-4 h-4 mr-2 text-slate-400" />
-                                Settings
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator className="bg-slate-700" />
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleTabChange(
-                                    "legacy-access",
-                                  )
-                                }
-                                className="text-white focus:bg-slate-800 focus:text-white cursor-pointer"
-                              >
-                                <Users className="w-4 h-4 mr-2 text-cyan-400" />
-                                Legacy Access
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator className="bg-slate-700" />
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setShowArchiveModal(true)
-                                }
-                                className="text-white focus:bg-slate-800 focus:text-white cursor-pointer"
-                              >
-                                <PackageOpen className="w-4 h-4 mr-2 text-violet-400" />
-                                Archive
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator className="bg-slate-700" />
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleTabChange(
-                                    "achievements",
-                                  )
-                                }
-                                className="text-white focus:bg-slate-800 focus:text-white cursor-pointer"
-                              >
-                                <Trophy className="w-4 h-4 mr-2 text-yellow-400" />
-                                Achievements
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator className="bg-slate-700" />
-                              {/* 🎁 Invite Friends - Referral System */}
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setShowReferralModal(true)
-                                }
-                                className="text-white focus:bg-slate-800 focus:text-white cursor-pointer"
-                              >
-                                <Users className="w-4 h-4 mr-2 text-pink-400" />
-                                Invite Friends
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator className="bg-slate-700" />
-                              {/* ✅ NEW: Nested Tutorials Submenu */}
-                              <DropdownMenuSub>
-                                <DropdownMenuSubTrigger className="text-white focus:bg-slate-800 focus:text-white cursor-pointer">
-                                  <GraduationCap className="w-4 h-4 mr-2 text-amber-400" />
-                                  Tutorials
-                                </DropdownMenuSubTrigger>
-                                {/* ✅ FIX: Increase z-index for mobile layering & ensure proper positioning */}
-                                <DropdownMenuSubContent
-                                  className="bg-slate-900 border-slate-700 z-[10000]"
-                                  sideOffset={8}
-                                  alignOffset={0}
-                                >
-                                  <DropdownMenuItem
+                              {/* Glowing halo background */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full blur-md opacity-60 group-hover:opacity-80 animate-pulse"></div>
+
+                              {/* Solid background with gear icon */}
+                              <div className="relative bg-slate-900 p-3 rounded-full border-2 border-yellow-400 transition-transform group-hover:scale-110">
+                                <SettingsIcon
+                                  className="w-6 h-6 text-yellow-400"
+                                  style={{
+                                    strokeWidth: "2.5px",
+                                  }}
+                                />
+                              </div>
+                            </button>
+
+                            {/* Custom Dropdown Menu */}
+                            {showSettingsDropdown && (
+                              <>
+                                {/* Backdrop to close dropdown */}
+                                <div 
+                                  className="fixed inset-0 z-40"
+                                  onClick={() => setShowSettingsDropdown(false)}
+                                />
+                                
+                                {/* Dropdown content */}
+                                <div className="absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-visible">
+                                  {/* ✨ PREMIUM STORE - Moved to top for maximum visibility */}
+                                  <button
                                     onClick={() => {
-                                      console.log(
-                                        "🌌 [TUTORIALS] Starting Eras Odyssey",
-                                      );
-                                      auth.setShowOnboarding(
-                                        true,
-                                      ); // Show original ErasOdyssey tutorial
+                                      console.log("⚙️ [DROPDOWN] Store clicked");
+                                      setShowSettingsDropdown(false);
+                                      handleTabChange("store");
                                     }}
-                                    className="text-white focus:bg-slate-800 focus:text-white cursor-pointer"
+                                    className="w-full py-4 pl-4 pr-4 text-white hover:bg-gradient-to-r hover:from-purple-900/50 hover:to-pink-900/50 transition-all duration-300 flex items-center gap-3 group relative overflow-hidden border-b-2 border-purple-500/30"
                                   >
-                                    <Compass className="w-4 h-4 mr-2 text-purple-400" />
-                                    Eras Odyssey
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
+                                    {/* Epic background glow */}
+                                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600/30 to-pink-600/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                    
+                                    {/* Animated sparkle icon - ENHANCED */}
+                                    <span className="text-3xl w-8 flex-shrink-0 relative z-10 group-hover:scale-125 transition-transform duration-300 filter drop-shadow-[0_0_12px_rgba(147,51,234,0.8)]">
+                                      ✨
+                                    </span>
+                                    
+                                    {/* Text with ENHANCED gradient */}
+                                    <div className="flex flex-col items-start relative z-10">
+                                      <span className="text-lg font-black bg-gradient-to-r from-purple-200 via-pink-200 to-purple-200 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(147,51,234,0.5)]">
+                                        Premium Store
+                                      </span>
+                                      <span className="text-xs text-slate-300 group-hover:text-white font-medium transition-colors">
+                                        Unlock Epic Themes & Added Beneficiaries
+                                      </span>
+                                    </div>
+                                    
+                                    {/* Enhanced shine effect */}
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                                  </button>
+                                  
+                                  <button
                                     onClick={() => {
-                                      console.log(
-                                        "📦 [TUTORIALS] Starting First Capsule",
-                                      );
-                                      setOnboardingModule(
-                                        "first_capsule",
-                                      );
-                                      setShowOnboarding(true);
+                                      console.log("⚙️ [DROPDOWN] Legacy Access clicked");
+                                      setShowSettingsDropdown(false);
+                                      handleTabChange("legacy-access");
                                     }}
-                                    className="text-white focus:bg-slate-800 focus:text-white cursor-pointer"
+                                    className="w-full py-3 pl-4 pr-4 text-slate-200 hover:bg-slate-700 transition-colors flex items-center"
                                   >
-                                    <Package className="w-4 h-4 mr-2 text-blue-400" />
-                                    First Capsule
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
+                                    <span className="text-lg w-8 flex-shrink-0">🔑</span>
+                                    <span className="text-base">Legacy Access</span>
+                                  </button>
+
+                                  <button
                                     onClick={() => {
-                                      console.log(
-                                        "🏛️ [TUTORIALS] Starting Vault Mastery",
-                                      );
-                                      setOnboardingModule(
-                                        "vault_mastery",
-                                      );
-                                      setShowOnboarding(true);
+                                      console.log("⚙️ [DROPDOWN] Archive clicked");
+                                      setShowSettingsDropdown(false);
+                                      setShowArchiveModal(true);
                                     }}
-                                    className="text-white focus:bg-slate-800 focus:text-white cursor-pointer"
+                                    className="w-full py-3 pl-4 pr-4 text-slate-200 hover:bg-slate-700 transition-colors flex items-center"
                                   >
-                                    <FolderOpen className="w-4 h-4 mr-2 text-emerald-400" />
-                                    Vault Mastery
-                                  </DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                              </DropdownMenuSub>
-                              <DropdownMenuSeparator className="bg-slate-700" />
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleTabChange("terms")
-                                }
-                                className="text-white focus:bg-slate-800 focus:text-white cursor-pointer"
-                              >
-                                <FileText className="w-4 h-4 mr-2 text-slate-400" />
-                                Terms & Privacy
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator className="bg-slate-700" />
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setShowHelpModal(true)
-                                }
-                                className="text-white focus:bg-slate-800 focus:text-white cursor-pointer"
-                              >
-                                <HelpCircle className="w-4 h-4 mr-2 text-blue-400" />
-                                Help & Support
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator className="bg-slate-700" />
-                              <DropdownMenuItem
-                                onClick={auth.handleLogout}
-                                className="text-red-400 focus:bg-red-900/30 focus:text-red-400 cursor-pointer"
-                              >
-                                <LogOut className="w-4 h-4 mr-2" />
-                                Sign Out
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                    <span className="text-lg w-8 flex-shrink-0">📦</span>
+                                    <span className="text-base">Archive</span>
+                                  </button>
+
+                                  <button
+                                    onClick={() => {
+                                      console.log("⚙️ [DROPDOWN] Achievements clicked");
+                                      setShowSettingsDropdown(false);
+                                      handleTabChange("achievements");
+                                    }}
+                                    className="w-full py-3 pl-4 pr-4 text-slate-200 hover:bg-slate-700 transition-colors flex items-center"
+                                  >
+                                    <span className="text-lg w-8 flex-shrink-0">🏆</span>
+                                    <span className="text-base">Achievements</span>
+                                  </button>
+
+                                  <div className="relative">
+                                    <button
+                                      onClick={() => {
+                                        console.log("⚙️ [DROPDOWN] Tutorials clicked");
+                                        setShowTutorialsSubmenu(!showTutorialsSubmenu);
+                                      }}
+                                      className="w-full py-3 pl-4 pr-4 text-slate-200 hover:bg-slate-700 transition-colors flex items-center"
+                                    >
+                                      <span className="text-lg w-8 flex-shrink-0">🎓</span>
+                                      <span className="text-base flex-1">Tutorials</span>
+                                      <ChevronRight className={`w-4 h-4 transition-transform ${showTutorialsSubmenu ? 'rotate-90' : ''}`} />
+                                    </button>
+                                    {showTutorialsSubmenu && (
+                                      <div className="bg-slate-750">
+                                        <button
+                                          onClick={() => {
+                                            console.log("⚙️ [SUBMENU] Eras Odyssey tutorial clicked");
+                                            setShowSettingsDropdown(false);
+                                            setShowTutorialsSubmenu(false);
+                                            auth.setShowOnboarding(true);
+                                          }}
+                                          className="w-full py-2.5 pl-12 pr-4 text-sm text-slate-300 hover:bg-slate-700 transition-colors text-left"
+                                        >
+                                          Eras Odyssey
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            console.log("⚙️ [SUBMENU] First Capsule tutorial clicked");
+                                            setShowSettingsDropdown(false);
+                                            setShowTutorialsSubmenu(false);
+                                            setShowOnboarding(true);
+                                            setOnboardingModule("first_capsule");
+                                          }}
+                                          className="w-full py-2.5 pl-12 pr-4 text-sm text-slate-300 hover:bg-slate-700 transition-colors text-left"
+                                        >
+                                          First Capsule
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            console.log("⚙️ [SUBMENU] Vault Mastery tutorial clicked");
+                                            setShowSettingsDropdown(false);
+                                            setShowTutorialsSubmenu(false);
+                                            setShowOnboarding(true);
+                                            setOnboardingModule("vault_mastery");
+                                          }}
+                                          className="w-full py-2.5 pl-12 pr-4 text-sm text-slate-300 hover:bg-slate-700 transition-colors text-left"
+                                        >
+                                          Vault Mastery
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <button
+                                    onClick={() => {
+                                      console.log("⚙️ [DROPDOWN] Help & Support clicked");
+                                      setShowSettingsDropdown(false);
+                                      setShowHelpModal(true);
+                                    }}
+                                    className="w-full py-3 pl-4 pr-4 text-slate-200 hover:bg-slate-700 transition-colors flex items-center"
+                                  >
+                                    <span className="text-lg w-8 flex-shrink-0">💡</span>
+                                    <span className="text-base">Help & Support</span>
+                                  </button>
+
+                                  <button
+                                    onClick={() => {
+                                      console.log("⚙️ [DROPDOWN] Refer a Friend clicked");
+                                      setShowSettingsDropdown(false);
+                                      setShowReferralModal(true);
+                                    }}
+                                    className="w-full py-3 pl-4 pr-4 text-slate-200 hover:bg-slate-700 transition-colors flex items-center"
+                                  >
+                                    <span className="text-lg w-8 flex-shrink-0">🤝</span>
+                                    <span className="text-base">Refer a Friend</span>
+                                  </button>
+                                  
+                                  <div className="h-px bg-slate-700" />
+                                  
+                                  <button
+                                    onClick={() => {
+                                      console.log("⚙️ [DROPDOWN] Settings clicked");
+                                      setShowSettingsDropdown(false);
+                                      handleTabChange("settings");
+                                    }}
+                                    className="w-full py-3 pl-4 pr-4 text-slate-200 hover:bg-slate-700 transition-colors flex items-center"
+                                  >
+                                    <span className="text-lg w-8 flex-shrink-0">⚙️</span>
+                                    <span className="text-base">Settings</span>
+                                  </button>
+                                  
+                                  <div className="h-px bg-slate-700" />
+                                  
+                                  <button
+                                    onClick={async () => {
+                                      console.log("⚙️ [DROPDOWN] Sign Out clicked");
+                                      setShowSettingsDropdown(false);
+                                      await auth.handleLogout();
+                                    }}
+                                    className="w-full py-3 pl-4 pr-4 text-red-400 hover:bg-slate-700 transition-colors flex items-center"
+                                  >
+                                    <span className="text-lg w-8 flex-shrink-0">🚪</span>
+                                    <span className="text-base">Sign Out</span>
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                );
-              })()}
+            )}
 
             {/* Navigation - Clean Eras Style - Hidden when Record tab is active */}
             {activeTab !== "record" && (
@@ -4829,18 +4138,24 @@ const MainAppContent = React.memo(
                       <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/60 to-teal-100/60 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-2xl blur-xl -z-10"></div>
                     )}
 
-                    {/* Refined Sparkles Icon */}
-                    <div
+                    {/* Emoji - Responsive sizing for 4 icons */}
+                    <span
                       className={`transition-all duration-300 ${
                         activeTab === "create"
                           ? "scale-110"
                           : "group-hover:scale-105"
                       }`}
+                      style={{
+                        fontSize: isMobile ? "44px" : "58px",
+                        lineHeight: 1,
+                        filter:
+                          "drop-shadow(0 0 4px rgba(255, 255, 255, 0.8))",
+                        textShadow:
+                          "0 0 8px rgba(255, 255, 255, 0.9), 0 0 12px rgba(255, 255, 255, 0.7), 0 0 16px rgba(255, 255, 255, 0.5)",
+                      }}
                     >
-                      <RefinedSparkles
-                        size={isMobile ? 44 : 58}
-                      />
-                    </div>
+                      ✨
+                    </span>
 
                     <span
                       className={`font-bold transition-all duration-300 block text-xs sm:text-base ${
@@ -4878,18 +4193,24 @@ const MainAppContent = React.memo(
                       <div className="absolute inset-0 bg-gradient-to-br from-amber-100/60 to-orange-100/60 dark:from-amber-900/30 dark:to-orange-900/30 rounded-2xl blur-xl -z-10"></div>
                     )}
 
-                    {/* Refined Video Camera Icon */}
-                    <div
+                    {/* Emoji - Responsive sizing for 4 icons */}
+                    <span
                       className={`transition-all duration-300 ${
                         activeTab === "record"
                           ? "scale-110"
                           : "group-hover:scale-105"
                       }`}
+                      style={{
+                        fontSize: isMobile ? "44px" : "58px",
+                        lineHeight: 1,
+                        filter:
+                          "drop-shadow(0 0 4px rgba(255, 255, 255, 0.8))",
+                        textShadow:
+                          "0 0 8px rgba(255, 255, 255, 0.9), 0 0 12px rgba(255, 255, 255, 0.7), 0 0 16px rgba(255, 255, 255, 0.5)",
+                      }}
                     >
-                      <RefinedVideoCamera
-                        size={isMobile ? 44 : 58}
-                      />
-                    </div>
+                      📹
+                    </span>
 
                     <span
                       className={`font-bold transition-all duration-300 block text-xs sm:text-base ${
@@ -4898,7 +4219,7 @@ const MainAppContent = React.memo(
                           : "text-amber-500 dark:text-amber-400 group-hover:text-amber-600 dark:group-hover:text-amber-500"
                       }`}
                     >
-                      Capture
+                      Record
                     </span>
 
                     {/* Active indicator bar */}
@@ -5022,7 +4343,7 @@ const MainAppContent = React.memo(
                     <UnifiedHome
                       key={dashboardRefreshKey}
                       user={auth.user}
-                      onViewCapsule={handleEditCapsuleDetails}
+                      onViewCapsule={handleViewCapsule}
                       onCreateCapsule={() => {
                         // Simple navigation to create tab
                         handleTabChange("create");
@@ -5119,6 +4440,9 @@ const MainAppContent = React.memo(
                     <CreateCapsule
                       key={createCapsuleKey}
                       onCapsuleCreated={handleCapsuleCreated}
+                      onRegisterReturnToTheme={(callback) => {
+                        returnToThemeSelectionRef.current = callback;
+                      }}
                       onNavigateToHome={() => {
                         console.log(
                           "🏠 Navigating to Home from draft save",
@@ -5185,13 +4509,18 @@ const MainAppContent = React.memo(
                       }
                       onWorkInProgressChange={setHasUnsavedWork}
                       user={auth.user}
-                      onEnhance={handleEnhanceFromCapsule}
                       onOpenVault={handleOpenVault}
                       onOpenRecord={() => {
                         console.log(
                           "🎥 Opening Record tab from Create tab",
                         );
                         handleTabChange("record");
+                      }}
+                      onNavigateToStore={() => {
+                        console.log(
+                          "✨ Opening Store tab from Create tab (locked theme)",
+                        );
+                        handleTabChange("store");
                       }}
                       initialDeliveryDate={quickAddDate}
                       workflow={workflow}
@@ -5247,7 +4576,7 @@ const MainAppContent = React.memo(
               {activeTab === "legacy-access" && (
                 <ErrorBoundary>
                   <div className="animate-fade-in-up">
-                    <LegacyAccessBeneficiaries />
+                    <LegacyAccessBeneficiaries onOpenStore={() => handleTabChange("store")} />
                   </div>
                 </ErrorBoundary>
               )}
@@ -5271,8 +4600,7 @@ const MainAppContent = React.memo(
                 </ErrorBoundary>
               )}
 
-              {activeTab === "record" &&
-                !showEnhancementOverlay && (
+              {activeTab === "record" && (
                   <ErrorBoundary>
                     {(() => {
                       const shouldAnimate =
@@ -5328,7 +4656,6 @@ const MainAppContent = React.memo(
                           handleRecordMediaCaptured
                         }
                         onOpenVault={handleRecordOpenVault}
-                        onEnhance={handleRecordEnhance}
                         onClose={handleRecordClose}
                         onRegisterRestoreCallback={(
                           callback,
@@ -5348,7 +4675,6 @@ const MainAppContent = React.memo(
                       <LegacyVault
                         key={vaultRefreshKey}
                         onUseMedia={handleVaultUseMedia}
-                        onEdit={handleVaultEdit}
                         onClose={handleVaultClose}
                         onNavigateToGlobalSettings={
                           handleVaultNavigateToSettings
@@ -5369,6 +4695,18 @@ const MainAppContent = React.memo(
                 <ErrorBoundary>
                   <div className="animate-fade-in-up">
                     <AchievementsDashboard />
+                  </div>
+                </ErrorBoundary>
+              )}
+
+              {activeTab === "store" && (
+                <ErrorBoundary>
+                  <div className="animate-fade-in-up">
+                    <Store 
+                      onClose={() => handleTabChange("home")} 
+                      userId={auth.user?.id || ''}
+                      onOpenLegacyAccess={() => handleTabChange("legacy-access")}
+                    />
                   </div>
                 </ErrorBoundary>
               )}
@@ -5483,6 +4821,7 @@ const MainAppContent = React.memo(
           </Dialog>
 
           {/* Media Enhancement Overlay - Shows on top of any tab */}
+          {/* TODO: Implement MediaEnhancementOverlay if needed
           {showEnhancementOverlay && enhancementMedia && (
             <MediaEnhancementOverlay
               mediaFile={
@@ -5506,6 +4845,7 @@ const MainAppContent = React.memo(
               onCancel={handleEnhancementDiscard}
             />
           )}
+          */}
 
           {/* Achievement Unlock Manager - Global achievement notifications */}
           <AchievementUnlockManager
@@ -5653,24 +4993,19 @@ const MainAppContent = React.memo(
           />
         )}
 
-        {/* Capsule Detail Portal Overlay - For viewing received capsules directly */}
+        {/* Capsule Detail Portal Overlay - For viewing scheduled/delivered/received capsules from Timeline/Calendar */}
         {viewingCapsule && (
           <CapsuleDetailModal
             capsule={viewingCapsule}
             isOpen={true}
             onClose={() => {
               setViewingCapsule(null);
-              handleTabChange("home"); // Navigate back to Home when closing capsule view
+              // Stay on current view, don't force navigate
             }}
             onEditDetails={(capsule) => {
-              // Received capsules shouldn't be editable, but just in case
+              // Allow editing if needed (drafts are handled separately)
               setViewingCapsule(null);
               handleEditCapsuleDetails(capsule);
-            }}
-            onEditCapsule={(capsule) => {
-              // For editing media/enhancements
-              setViewingCapsule(null);
-              handleEditCapsule(capsule);
             }}
             onMediaClick={(media) => {
               // Open media preview modal

@@ -1,7 +1,7 @@
 import { projectId, publicAnonKey } from './info';
 import { TimeCapsule, MediaFile } from './client';
 import { supabase } from './client';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 // KV Store based database service - no separate tables needed
 export class DatabaseService {
@@ -168,7 +168,8 @@ export class DatabaseService {
         
         if (isNetworkError && !isTimeoutError) {
           console.error(`🌐 Network error detected. Possible causes:`);
-          console.error(`   - Supabase Edge Function server may be unreachable`);
+          console.error(`   - Supabase Edge Function server may be starting up (cold start)`);
+          console.error(`   - Temporary network connectivity issue`);
           console.error(`   - CORS configuration issue`);
           console.error(`   - No internet connection`);
           console.error(`   - Supabase project ID: ${projectId ? 'Set' : 'Missing'}`);
@@ -390,27 +391,26 @@ export class DatabaseService {
             }
           }
           
-          // Fetch media with increased timeout to prevent hanging
-          const mediaFetchPromise = this.getCapsuleMediaFiles(capsule.id);
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Media fetch timeout')), 60000) // 60 seconds for slow connections
-          );
-          
-          const mediaFiles = await Promise.race([mediaFetchPromise, timeoutPromise]);
-          
-          // Add attachments property to capsule with basic info
-          capsule.attachments = mediaFiles.map(file => ({
-            id: file.id,
-            url: file.url,
-            thumbnail: file.thumbnail, // ✅ Pass through pre-generated thumbnail for instant loading
-            type: file.file_type,
-            filename: file.file_name,
-            size: file.file_size
-          }));
+          // Fetch media files (has internal 45s timeout)
+          try {
+            const mediaFiles = await this.getCapsuleMediaFiles(capsule.id);
+            
+            // Add attachments property to capsule with basic info
+            capsule.attachments = mediaFiles.map(file => ({
+              id: file.id,
+              url: file.url,
+              thumbnail: file.thumbnail, // ✅ Pass through pre-generated thumbnail for instant loading
+              type: file.file_type,
+              filename: file.file_name,
+              size: file.file_size
+            }));
+          } catch (error) {
+            const timeoutMsg = error.message?.includes('timeout') ? 'Media fetch timeout' : error.message;
+            console.warn(`⚠️ Could not fetch media files for ${capsule.status === 'received' ? 'received capsule' : 'capsule'} ${capsule.id}: ${timeoutMsg}`);
+            capsule.attachments = [];
+          }
         } catch (error) {
-          const timeoutMsg = error.message?.includes('timeout') ? 'Media fetch timeout' : error.message;
-          console.warn(`⚠️ Could not fetch media files for ${capsule.status === 'received' ? 'received capsule' : 'capsule'} ${capsule.id}: ${timeoutMsg}`);
-          capsule.attachments = [];
+          console.warn(`⚠️ Error processing capsule ${capsule.id}:`, error);
         }
       });
       
@@ -940,7 +940,14 @@ export class DatabaseService {
     // Create the request promise and cache it
     const requestPromise = (async () => {
       try {
-        const response = await this.makeRequest(`/api/media/capsule/${capsuleId}`);
+        // Use custom 45-second timeout (less than backend's 50s) to fail gracefully
+        const response = await this.makeRequest(
+          `/api/media/capsule/${capsuleId}`,
+          {},
+          2, // 2 retries
+          true, // use auth
+          45000 // 45 second timeout
+        );
         return response.mediaFiles || [];
       } finally {
         // Remove from cache after a short TTL to allow fresh fetches later
@@ -1235,10 +1242,7 @@ export class DatabaseService {
               if (typeof firstItem === 'string') {
                 // These are media IDs, need to fetch full objects
                 try {
-                  mediaFiles = await Promise.race([
-                    this.getCapsuleMediaFiles(capsuleId),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Media fetch timeout')), 60000))
-                  ]) as any[];
+                  mediaFiles = await this.getCapsuleMediaFiles(capsuleId);
                 } catch (error) {
                   console.warn(`⚠️ Could not fetch media files for received capsule ${capsuleId}:`, error?.message || error);
                   mediaFiles = [];
@@ -1248,12 +1252,9 @@ export class DatabaseService {
                 mediaFiles = capsule.media_files;
               }
             } else {
-              // Otherwise try to fetch from storage with timeout
+              // Otherwise try to fetch from storage
               try {
-                mediaFiles = await Promise.race([
-                  this.getCapsuleMediaFiles(capsuleId),
-                  new Promise((_, reject) => setTimeout(() => reject(new Error('Media fetch timeout')), 60000))
-                ]) as any[];
+                mediaFiles = await this.getCapsuleMediaFiles(capsuleId);
               } catch (error) {
                 console.warn(`⚠️ Could not fetch media files for received capsule ${capsuleId}:`, error?.message || error);
                 mediaFiles = [];
@@ -1384,10 +1385,7 @@ export class DatabaseService {
                 if (typeof firstItem === 'string') {
                   // These are media IDs, need to fetch full objects
                   try {
-                    mediaFiles = await Promise.race([
-                      this.getCapsuleMediaFiles(capsule.id),
-                      new Promise((_, reject) => setTimeout(() => reject(new Error('Media fetch timeout')), 60000))
-                    ]) as any[];
+                    mediaFiles = await this.getCapsuleMediaFiles(capsule.id);
                   } catch (error) {
                     console.warn(`⚠️ Could not fetch media files:`, error?.message || error);
                     mediaFiles = [];
@@ -1398,10 +1396,7 @@ export class DatabaseService {
               } else {
                 try {
                   console.log(`📡 Fetching media files for received capsule ${capsule.id} (fallback path)...`);
-                  mediaFiles = await Promise.race([
-                    this.getCapsuleMediaFiles(capsule.id),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Media fetch timeout')), 60000))
-                  ]) as any[];
+                  mediaFiles = await this.getCapsuleMediaFiles(capsule.id);
                   console.log(`✅ Fetched ${mediaFiles.length} media files`);
                 } catch (error) {
                   console.warn(`⚠️ Could not fetch media files for received capsule ${capsule.id}:`, error?.message || error);

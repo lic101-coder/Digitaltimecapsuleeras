@@ -1,0 +1,73 @@
+Delivery attempt checkout.session.completed Resend Delivery status Failed Next retry in 16 hours Attempt date Mar 21, 2026, 6:51:01 PM Resent automatically Event ID evt_1TDWWPHUyotQ1kngNodVkgWh Origin date Mar 21, 2026, 1:53:25 PM PDT Source Automatic API version 2026-02-25.clover Description A Checkout Session was completed Response HTTP status code 500 "Purchase processing error: Invalid beneficiary quantity: 0" { "id": "evt_1TDWWPHUyotQ1kngNodVkgWh", "object": "event", "api_version": "2026-02-25.clover", "created": 1774126404, "data": { "object": { "id": "cs_live_a1A58aOSCtOfarPo0iCvAbzgQ5jjRBfCmMpewKMUXPSxXvEoYcpIsxXzi1", "object": "checkout.session", "adaptive_pricing": { "enabled": true }, "after_expiration": null, "allow_promotion_codes": null, "amount_subtotal": 99, "amount_total": 99, "automatic_tax": { "enabled": false, "liability": null, "provider": null, "status": null }, "billing_address_collection": null, "branding_settings": { "background_color": "#ffffff", "border_style": "rounded", "button_color": "#0074d4", "display_name": "ERAS Digital Time Capsule", "font_family": "default", "icon": null, "logo": null }, "cancel_url": "https://found-shirt-81691824.figma.site/?beneficiary_purchase=canceled", "client_reference_id": null, "client_secret": null, "collected_information": null, "consent": null, "consent_collection": null, "created": 1774126397, "currency": "usd", "currency_conversion": null, "custom_fields": [], "custom_text": { "after_submit": null, "shipping_address": null, "submit": null, "terms_of_service_acceptance": null }, "customer": null, "customer_account": null, "customer_creation": "if_required", "customer_details": { "address": { "city": null, "country": "US", "line1": null, "line2": null, "postal_code": "91307", "state": null }, "business_name": null, "email": "lenny.cohen1@gmail.com [blocked]", "individual_name": null, "name": "LC's projects", "phone": null, "tax_exempt": "none", "tax_ids": [] }, "customer_email": null, "discounts": [], "expires_at": 1774212797, "integration_identifier": null, "invoice": null, "invoice_creation": { "enabled": false, "invoice_data": { "account_tax_ids": null, "custom_fields": null, "description": null, "footer": null, "issuer": null, "metadata": {}, "rendering_options": null } }, "livemode": true, "locale": null, "metadata": { "beneficiaryType": "slot-1", "quantity": "0", "userId": "d70db3e0-6fd8-484a-856c-dead04599ed5", "purchaseType": "beneficiary" }, "mode": "payment", "origin_context": null, "payment_intent": "pi_3TDWWMHUyotQ1kng1uoPm2c6", "payment_link": null, "payment_method_collection": "if_required", "payment_method_configuration_details": null, "payment_method_options": { "card": { "request_three_d_secure": "automatic" } }, "payment_method_types": [ "card" ], "payment_status": "paid", "permissions": null, "phone_number_collection": { "enabled": false }, "recovered_from": null, "saved_payment_method_options": null, "setup_intent": null, "shipping_address_collection": null, "shipping_cost": null, "shipping_options": [], "status": "complete", "submit_type": null, "subscription": null, "success_url": "https://found-shirt-81691824.figma.site/?beneficiary_purchase=success", "total_details": { "amount_discount": 0, "amount_shipping": 0, "amount_tax": 0 }, "ui_mode": "hosted", "url": null, "wallet_options": null } }, "livemode": true, "pending_webhooks": 1, "request": { "id": null, "idempotency_key": null }, "type": "checkout.session.completed" }
+
+
+
+
+Reasoned
+Root cause from the event payload
+Your Checkout Session metadata shows:
+
+purchaseType: beneficiary
+beneficiaryType: slot-1
+quantity: "0" ← this is the problem
+userId: d70db3e0-6fd8-484a-856c-dead04599ed5
+Your Edge Function (or DB function) is correctly rejecting this with HTTP 500:
+
+“Purchase processing error: Invalid beneficiary quantity: 0”
+Because quantity is 0, your purchase handler likely falls back or misroutes, which explains why a theme was unlocked in earlier attempts. Two issues to fix:
+
+Ensure the Checkout flow sets a valid quantity (≥ 1) for beneficiary purchases.
+Harden your webhook handler to never unlock themes if purchaseType = beneficiary or if quantity <= 0.
+What to change in Stripe and your handler
+Stripe Checkout settings
+If you are using a Payment Link or dynamic Checkout Session:
+Pass quantity in one of these reliable ways:
+As line_items[n].quantity when creating the session.
+Or store it in product/price metadata and read via expanded line_items.
+Avoid using metadata.quantity unless your app sets it explicitly and validates it.
+If you must use session.metadata, set quantity to "1" for single-slot purchases: session.metadata = { purchaseType: 'beneficiary', beneficiaryType: 'slot-1', quantity: '1', userId: '' }
+Webhook handler guardrails (pseudocode/logic)
+Validate early and bail out if invalid:
+If purchaseType === 'beneficiary' and quantity <= 0 → do NOT unlock anything, return 400/422.
+If purchaseType === 'beneficiary' → write to beneficiary_purchases only; never touch theme unlocks.
+If purchaseType === 'theme' → write to theme_purchases and then unlock a theme via trigger.
+Suggested logic outline:
+
+Parse event type checkout.session.completed
+Read:
+session.metadata.purchaseType
+session.metadata.userId
+session.metadata.quantity (parseInt)
+Optionally expand line_items and confirm a single beneficiary SKU
+Branch:
+beneficiary:
+quantity = max(parseInt(metadata.quantity || line_items[0].quantity), 0)
+if quantity < 1 → return 400 with a clear error, do not proceed
+insert into beneficiary_purchases(user_id, product_id, slots_purchased, stripe_payment_id, price_paid, purchase_date)
+theme:
+insert into theme_purchases(...)
+Never mix the insert destinations.
+Database trigger hardening
+If you have triggers that write into user_unlocked_themes, ensure they only fire for the correct source table:
+
+Theme purchases only:
+
+AFTER INSERT ON public.theme_purchases
+Insert into user_unlocked_themes(user_id, theme_id, purchase_type, unlocked_at)
+Guard: NEW.theme_id IS NOT NULL
+Beneficiary purchases only:
+
+AFTER INSERT ON public.beneficiary_purchases
+Insert/update an entitlements table (e.g., user_beneficiary_entitlements)
+DO NOT write to user_unlocked_themes
+If you share your current trigger/function code, I’ll provide an exact patch.
+
+How to test quickly
+Create a new Checkout Session with metadata.quantity="1" for the beneficiary product.
+Complete the payment.
+I can search the three purchase tables for the new payment_intent ID to confirm the write path.
+Verify:
+beneficiary_purchases has a row with slots_purchased >= 1
+user_unlocked_themes remains unchanged for this purchase
+entitlements table (if you have one) is updated
+If you want, say “check logs” and I’ll pull your recent Edge Function logs to confirm the branch taken and any fallback that could cause theme unlocks.

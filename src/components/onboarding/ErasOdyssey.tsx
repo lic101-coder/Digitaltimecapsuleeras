@@ -5,7 +5,7 @@ import { OdysseyProgress } from './OdysseyProgress';
 import './devHelpers'; // Exposes window.odyssey dev helpers
 import { WelcomeScene } from './steps/01-WelcomeScene';
 import { SeeItInAction } from './steps/02-SeeItInAction';
-import { ExampleGallery } from './steps/03-ExampleGallery';
+import { ThemedCapsuleShowcase } from './steps/03-ThemedCapsuleShowcase';
 import { YourVault } from './steps/04-YourVault';
 import { DashboardTour } from './steps/05-DashboardTour';
 import { DiscoverMore } from './steps/06-DiscoverMore';
@@ -82,7 +82,7 @@ export function ErasOdyssey({ onComplete, onSkip }: ErasOdysseyProps) {
   const steps = [
     <WelcomeScene key="welcome" onContinue={nextStep} />,
     <SeeItInAction key="action" onContinue={nextStep} onBack={prevStep} />,
-    <ExampleGallery key="gallery" onContinue={nextStep} onBack={prevStep} />,
+    <ThemedCapsuleShowcase key="gallery" onContinue={nextStep} onBack={prevStep} />,
     <YourVault key="vault" onContinue={nextStep} onBack={prevStep} />,
     <DashboardTour key="dashboard" onContinue={nextStep} onBack={prevStep} />,
     <DiscoverMore key="discover" onContinue={nextStep} onBack={prevStep} />,

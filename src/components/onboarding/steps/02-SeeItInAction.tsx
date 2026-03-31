@@ -58,12 +58,37 @@ export function SeeItInAction({ onContinue }: SeeItInActionProps) {
               exit={{ opacity: 0, scale: 0.9 }}
               className="absolute inset-0 flex flex-col items-center justify-center"
             >
+              {/* Mini 4-tab navigation preview */}
+              <motion.div
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center gap-4 mb-8 px-6 py-3 bg-white/5 backdrop-blur-sm rounded-full border border-white/10"
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-2xl">🏡</span>
+                  <span className="text-[10px] text-white/60">Home</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-2xl">✨</span>
+                  <span className="text-[10px] text-emerald-400 font-bold">Compose</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-2xl">📹</span>
+                  <span className="text-[10px] text-amber-400 font-semibold">Record</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-2xl">🏛️</span>
+                  <span className="text-[10px] text-purple-400 font-semibold">Vault</span>
+                </div>
+              </motion.div>
+
               <div className="w-full max-w-sm bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-purple-400/30 rounded-full flex items-center justify-center">
                     <Send className="w-5 h-5 text-purple-300" />
                   </div>
-                  <div className="text-white/90 font-medium">Create a Capsule</div>
+                  <div className="text-white/90 font-medium">Compose a Capsule</div>
                 </div>
                 
                 {/* Typing animation */}

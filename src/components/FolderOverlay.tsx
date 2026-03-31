@@ -737,22 +737,8 @@ function FolderOverlayContent({
                     )}
                   </div>
                   
-                  {/* Second Row - Enhance and Delete */}
-                  <div className={`grid gap-2 ${onEdit ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                    {onEdit && (
-                      <Button
-                        onClick={onEdit}
-                        variant="outline"
-                        disabled={selectedIds.size === 0}
-                        className="h-10 disabled:opacity-50 shadow-md transition-all hover:scale-105 border-purple-400/50 bg-purple-500/20 text-white hover:bg-purple-500/30"
-                      >
-                        <Wand2 className="w-4 h-4 mr-1.5 shrink-0" />
-                        <span className="text-xs whitespace-nowrap">
-                          {selectedIds.size > 1 ? `Enhance (${selectedIds.size})` : 'Enhance'}
-                        </span>
-                      </Button>
-                    )}
-                    
+                  {/* Second Row - Delete only */}
+                  <div className="grid gap-2 grid-cols-1">
                     {onDelete && (
                       <Button
                         onClick={onDelete}

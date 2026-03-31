@@ -1,7 +1,7 @@
 // ============================================================================
 // LEGACY ARCHITECT HORIZON - "Legacy Architect" (Epic Tier)
 // ============================================================================
-// Achievement: "Vault Guardian" - Complete the Vault Mastery tutorial
+// Achievement: "Vault Guardian" / "Folder Architect" - Complete the Vault Mastery tutorial (v2.8.0: A047 renamed to Folder Architect)
 // 
 // CONCEPT: A cosmic architectural forge where monuments materialize from golden energy
 // 

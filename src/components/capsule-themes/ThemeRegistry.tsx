@@ -1,6 +1,25 @@
 import React from 'react';
 import { Gift, Heart, Baby, Rocket, Camera, Map, Star, Zap, PawPrint, Sparkles, Briefcase, Home, GraduationCap, Plane } from 'lucide-react';
 
+// ============================================================================
+// COLORFUL EMOJI ICON WRAPPER
+// Provides vibrant, full-color emoji icons for themes instead of monochrome lucide icons
+// ============================================================================
+const EmojiIcon = ({ emoji, className, style }: { emoji: string; className?: string; style?: React.CSSProperties }) => (
+  <span 
+    className={className}
+    style={{ 
+      lineHeight: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...style // Merge any custom styles (including fontSize!)
+    }}
+  >
+    {emoji}
+  </span>
+);
+
 // Theme Definitions
 export type ThemeId = 'standard' | 'birthday' | 'anniversary' | 'new_life' | 'future' | 'wedding' | 'graduation' | 'friendship' | 'travel' | 'pet' | 'gratitude' | 'career' | 'new_year' | 'new_home' | 'first_day';
 
@@ -16,14 +35,25 @@ export interface ThemeConfig {
   bgGradient: string; // CSS gradient string
   interactionPrompt: string; // "Tear to open", "Wipe fog", "Scan finger"
   particleColors: string[]; // For confetti/effects
+  isPremium?: boolean;
+  audio?: {
+    ambient?: string; // Loop playing while viewing the locked capsule
+    sealing?: string;  // Sound when sender seals it
+    opening?: string;  // Sound when recipient opens it
+    interaction?: string; // "Tear", "Click", "Scan" sound
+  };
+  haptics?: {
+    sealing?: number[]; // Vibration pattern [200, 100, 200]
+    opening?: number[];
+  };
 }
 
 export const THEMES: Record<ThemeId, ThemeConfig> = {
   standard: {
     id: 'standard',
     name: 'Standard Eras',
-    description: 'The classic timeless capsule experience',
-    icon: Star,
+    description: 'The classic capsule experience reimagined',
+    icon: (props: any) => <EmojiIcon emoji="⭐" {...props} />,
     primaryColor: '#0f172a', // Dark blue (slate-900) for mobile visibility and contrast
     secondaryColor: '#94a3b8',
     textColor: '#ffffff',
@@ -36,7 +66,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     id: 'birthday',
     name: 'Solar Return',
     description: 'A celebration of another trip around the sun',
-    icon: Gift,
+    icon: (props: any) => <EmojiIcon emoji="🎁" {...props} />,
     primaryColor: '#FF6B6B',
     secondaryColor: '#FFD93D',
     textColor: '#ffffff',
@@ -49,7 +79,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     id: 'anniversary',
     name: 'Eternal Flame',
     description: 'For celebrating milestones of love',
-    icon: Heart,
+    icon: (props: any) => <EmojiIcon emoji="💕" {...props} />,
     primaryColor: '#db2777', // Pink-600, darker/richer than Birthday
     secondaryColor: '#fce7f3',
     textColor: '#ffffff',
@@ -62,7 +92,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     id: 'new_life',
     name: 'New Life',
     description: 'Welcoming a new arrival',
-    icon: Baby,
+    icon: (props: any) => <EmojiIcon emoji="👶" {...props} />,
     primaryColor: '#A18CD1',
     secondaryColor: '#FBC2EB',
     textColor: '#ffffff',
@@ -75,20 +105,31 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     id: 'future',
     name: 'Time Traveler',
     description: 'A message to your future self',
-    icon: Zap,
+    icon: (props: any) => <EmojiIcon emoji="⚡" {...props} />,
     primaryColor: '#00F260',
     secondaryColor: '#0575E6',
     textColor: '#ffffff',
     accentColor: '#00F260',
     bgGradient: 'linear-gradient(to right, #00f260, #0575e6)',
     interactionPrompt: 'Scan biometric ID',
-    particleColors: ['#00F260', '#0575E6', '#FFFFFF']
+    particleColors: ['#00F260', '#0575E6', '#FFFFFF'],
+    isPremium: true,
+    audio: {
+      ambient: 'https://cdn.pixabay.com/download/audio/2022/03/24/audio_c8c8a73467.mp3?filename=spaceship-ambience-27354.mp3', // Deep space drone
+      sealing: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_c291244f76.mp3?filename=scifi-door-lock-34868.mp3', // Heavy airlock
+      opening: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_6b77209865.mp3?filename=warp-speed-3868.mp3', // Warp sound
+      interaction: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_2434544607.mp3?filename=hud-menu-select-37255.mp3' // Digital beeps
+    },
+    haptics: {
+      sealing: [50, 50, 50, 200], // Rattle then thud
+      opening: [100, 50, 100, 50, 500] // Pulse then explosion
+    }
   },
   wedding: {
     id: 'wedding',
-    name: 'Golden Hour',
+    name: 'Golden Moments',
     description: 'Elegant memories for the big day',
-    icon: Heart,
+    icon: (props: any) => <EmojiIcon emoji="💍" {...props} />,
     primaryColor: '#e6b980',
     secondaryColor: '#eacda3',
     textColor: '#000000',
@@ -101,7 +142,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     id: 'graduation',
     name: 'Launchpad',
     description: 'For big achievements and next steps',
-    icon: Rocket,
+    icon: (props: any) => <EmojiIcon emoji="🚀" {...props} />,
     primaryColor: '#4facfe',
     secondaryColor: '#00f2fe',
     textColor: '#ffffff',
@@ -114,7 +155,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     id: 'friendship',
     name: 'Mixtape',
     description: 'Fun, retro vibes for friends',
-    icon: Camera,
+    icon: (props: any) => <EmojiIcon emoji="📼" {...props} />,
     primaryColor: '#0d9488', // Teal-600, distinct from others
     secondaryColor: '#99f6e4', // Teal-200
     textColor: '#ffffff',
@@ -127,7 +168,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     id: 'travel',
     name: 'Voyage',
     description: 'For adventures and journeys',
-    icon: Map,
+    icon: (props: any) => <EmojiIcon emoji="✈️" {...props} />,
     primaryColor: '#F97316', // Orange-500
     secondaryColor: '#FDBA74', // Orange-300
     textColor: '#ffffff',
@@ -140,7 +181,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     id: 'pet',
     name: 'Furry Friends',
     description: 'Celebrate your beloved pet companion',
-    icon: PawPrint,
+    icon: (props: any) => <EmojiIcon emoji="🐾" {...props} />,
     primaryColor: '#8B5A3C', // Warm brown for mobile (solid)
     secondaryColor: '#FFE4B5',
     textColor: '#ffffff',
@@ -153,7 +194,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     id: 'gratitude',
     name: 'Grateful Heart',
     description: 'Express heartfelt thanks and appreciation',
-    icon: Sparkles,
+    icon: (props: any) => <EmojiIcon emoji="🙏" {...props} />,
     primaryColor: '#DC2626', // Deep red for mobile (solid)
     secondaryColor: '#FCA5A5',
     textColor: '#ffffff',
@@ -166,7 +207,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     id: 'career',
     name: 'Career Summit',
     description: 'Mark your professional achievements',
-    icon: Briefcase,
+    icon: (props: any) => <EmojiIcon emoji="💼" {...props} />,
     primaryColor: '#1E3A8A', // Deep blue for mobile (solid)
     secondaryColor: '#60A5FA',
     textColor: '#ffffff',
@@ -179,7 +220,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     id: 'new_year',
     name: 'New Year\'s Eve',
     description: 'Ring in the new year with resolutions',
-    icon: Sparkles,
+    icon: (props: any) => <EmojiIcon emoji="🎉" {...props} />,
     primaryColor: '#7C3AED', // Deep purple for mobile (solid)
     secondaryColor: '#FDE047',
     textColor: '#ffffff',
@@ -192,7 +233,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     id: 'new_home',
     name: 'New Nest',
     description: 'Celebrate your new home sweet home',
-    icon: Home,
+    icon: (props: any) => <EmojiIcon emoji="🏠" {...props} />,
     primaryColor: '#059669', // Deep green for mobile (solid)
     secondaryColor: '#A7F3D0',
     textColor: '#ffffff',
@@ -205,7 +246,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     id: 'first_day',
     name: 'Fresh Start',
     description: 'Your exciting first day adventure',
-    icon: GraduationCap,
+    icon: (props: any) => <EmojiIcon emoji="🌅" {...props} />,
     primaryColor: '#EA580C', // Warm orange for mobile (solid)
     secondaryColor: '#FED7AA',
     textColor: '#ffffff',

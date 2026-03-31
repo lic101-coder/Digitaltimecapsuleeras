@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Camera, FlipHorizontal, X, Check } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface ProfileCameraCaptureProps {
   onCapture: (imageDataUrl: string) => void;
@@ -50,10 +50,14 @@ export function ProfileCameraCapture({ onCapture, onCancel }: ProfileCameraCaptu
 
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
+          // Force video to play (critical for proper display)
+          videoRef.current.play().catch(err => {
+            console.log('Video autoplay prevented:', err);
+          });
         }
-      } catch (error) {
+      } catch (error: any) {
         // Permission denial is expected user behavior, not an error
-        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        if (error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError' || error?.message?.includes('Permission denied')) {
           console.log('📷 Camera permission denied by user');
         } else {
           console.error('❌ Camera error:', error);

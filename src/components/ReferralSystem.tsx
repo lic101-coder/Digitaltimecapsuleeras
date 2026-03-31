@@ -171,7 +171,7 @@ export function ReferralSystem({ onClose, accessToken }: ReferralSystemProps) {
             Invite Friends
           </h2>
           <p className="text-slate-400 mt-2">
-            Share Eras with friends and unlock exclusive horizon effects
+            Share Eras with friends and unlock premium themes for free!
           </p>
         </div>
         {onClose && (
@@ -255,10 +255,12 @@ export function ReferralSystem({ onClose, accessToken }: ReferralSystemProps) {
         </div>
 
         <p className="text-sm text-slate-400">
-          {stats?.milestones.next === 1 && "Invite 1 friend to unlock Stardust Drift horizon ✨"}
-          {stats?.milestones.next === 5 && "Invite 5 friends to unlock Eternal Aurora horizon 🌌"}
-          {stats?.milestones.next === 10 && "Invite 10 friends to unlock Supernova Bloom horizon 💥"}
-          {stats?.milestones.next === 25 && "Invite 25 friends to unlock Infinity Nexus horizon ♾️"}
+          {stats?.milestones.next === 1 && "Invite 1 friend to unlock a premium theme 🎁"}
+          {stats?.milestones.next === 3 && "Invite 3 friends to unlock another premium theme 🎨"}
+          {stats?.milestones.next === 5 && "Invite 5 friends to unlock Celebration Bundle (4 themes) 🎉"}
+          {stats?.milestones.next === 10 && "Invite 10 friends to unlock Life Milestones Bundle (5 themes) 🏆"}
+          {stats?.milestones.next === 25 && "Invite 25 friends to unlock ALL 11 THEMES! 🌟"}
+          {!stats?.milestones.next && stats?.friendsJoined >= 25 && "You've unlocked all referral rewards! 🎊"}
         </p>
       </motion.div>
 

@@ -157,7 +157,7 @@ export function ReadyToBegin({ onComplete }: ReadyToBeginProps) {
 
           <div className="relative flex items-center justify-center gap-2">
             <Sparkles className="w-5 h-5" />
-            <span>Create My First Capsule</span>
+            <span>Start in Compose ✨</span>
             <motion.div
               animate={{ x: [0, 4, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}

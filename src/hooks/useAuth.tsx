@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '../utils/supabase/client';
 import { DatabaseService } from '../utils/supabase/database';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { CacheService } from '../utils/cache';
 
 export function useAuth() {
@@ -29,10 +29,33 @@ export function useAuth() {
       
       // Clear stored tokens and auth state
       try {
+        // Get the current user ID before clearing (for cache cleanup)
+        const authStateStr = localStorage.getItem('eras-auth-state');
+        let userId = null;
+        if (authStateStr) {
+          try {
+            const authState = JSON.parse(authStateStr);
+            userId = authState.user?.id;
+          } catch (e) {
+            console.warn('Could not parse auth state for cleanup:', e);
+          }
+        }
+        
+        // Clear auth-related storage
         localStorage.removeItem('eras-auth-state');
         localStorage.removeItem('eras_capsule_draft');
         sessionStorage.removeItem('capsule_redirect');
         sessionStorage.removeItem('capsule_view_token');
+        
+        // 🔥 CRITICAL: Clear dashboard cache to prevent stale data showing after logout
+        if (userId) {
+          console.log(`🧹 Clearing dashboard cache for user ${userId.substring(0, 8)}...`);
+          localStorage.removeItem(`dashboard_capsules_${userId}`);
+          sessionStorage.removeItem(`dashboard_capsules_${userId}`);
+          localStorage.removeItem(`received_capsules_${userId}`);
+          localStorage.removeItem(`received_count_${userId}`);
+          console.log('✅ Dashboard cache cleared');
+        }
         
         // Clear Supabase's stored session
         supabase.auth.signOut({ scope: 'local' });
@@ -290,9 +313,22 @@ export function useAuth() {
           // Clear cached auth if Supabase session doesn't exist
           if (isAuthenticated) {
             console.log('⚠️ Cached auth exists but Supabase session is gone - clearing cache');
+            
+            // Get user ID before clearing for cache cleanup
+            const userId = user?.id;
+            
             setUser(null);
             setIsAuthenticated(false);
             localStorage.removeItem('eras-auth-state');
+            
+            // 🔥 Clear dashboard cache to prevent stale data
+            if (userId) {
+              console.log(`🧹 Clearing dashboard cache for expired session...`);
+              localStorage.removeItem(`dashboard_capsules_${userId}`);
+              sessionStorage.removeItem(`dashboard_capsules_${userId}`);
+              localStorage.removeItem(`received_capsules_${userId}`);
+              localStorage.removeItem(`received_count_${userId}`);
+            }
             
             toast.error('Your session has expired. Please sign in again.', {
               duration: 4000

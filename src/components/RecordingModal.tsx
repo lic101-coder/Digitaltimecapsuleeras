@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { FileBox, Mic, Send, RotateCcw, Play, Sparkles } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { Mic, Send, RotateCcw, Play } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface MediaItem {
   id: string;
@@ -16,10 +16,9 @@ interface RecordingModalProps {
   onSendToCapsule: () => void;
   onRetake: () => void;
   isSaving?: boolean;
-  onEnhance?: () => void;
 }
 
-export function RecordingModal({ media, onSendToCapsule, onRetake, isSaving = false, onEnhance }: RecordingModalProps) {
+export function RecordingModal({ media, onSendToCapsule, onRetake, isSaving = false }: RecordingModalProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   
@@ -108,8 +107,8 @@ export function RecordingModal({ media, onSendToCapsule, onRetake, isSaving = fa
         {/* Action Buttons - Positioned below video */}
         <div className="relative w-full p-4 bg-gradient-to-t from-slate-950 via-slate-900 to-black border-t border-purple-500/20">
           <div className="flex flex-col gap-3 max-w-2xl mx-auto">
-            {/* Single Row: All 3 Actions */}
-            <div className="grid grid-cols-3 gap-3">
+            {/* Side by side: Send to Capsule and Retake */}
+            <div className="grid grid-cols-2 gap-3">
               {/* 🟢 Send to Capsule - Premium emerald gradient with glow */}
               <button
                 onClick={onSendToCapsule}
@@ -132,32 +131,6 @@ export function RecordingModal({ media, onSendToCapsule, onRetake, isSaving = fa
                 {/* Subtle inner glow */}
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
               </button>
-
-              {/* 🎬 HIDE ENHANCE FOR VIDEOS: Videos cannot be enhanced */}
-              {onEnhance && media.type !== 'video' && (
-                /* 🎨 Enhance - Vibrant pink/orange gradient with sparkle */
-                <button
-                  onClick={onEnhance}
-                  disabled={isSaving}
-                  className="group relative h-20 rounded-2xl bg-gradient-to-br from-pink-400 via-rose-500 to-orange-500 disabled:opacity-50 disabled:saturate-50 flex flex-col items-center justify-center gap-2 border-2 border-pink-300/40 shadow-lg shadow-pink-500/25 hover:shadow-pink-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 overflow-hidden"
-                >
-                  {/* Animated shimmer effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                  
-                  {/* Icon with sparkle animation */}
-                  <div className="relative z-10">
-                    <Sparkles className="w-6 h-6 text-white drop-shadow-md group-hover:rotate-12 group-hover:scale-110 transition-transform duration-300" />
-                  </div>
-                  
-                  {/* Text with better typography */}
-                  <span className="relative z-10 text-xs font-semibold text-white drop-shadow-md tracking-wide">
-                    Enhance
-                  </span>
-                  
-                  {/* Subtle inner glow */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
-                </button>
-              )}
 
               {/* 🔄 Retake - Premium gradient to match the others */}
               <button

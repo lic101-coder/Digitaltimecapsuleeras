@@ -23,7 +23,7 @@ import { DatabaseService } from '../utils/supabase/database';
 import { formatDistanceToNow, format } from 'date-fns';
 import type { TimeCapsule } from '../utils/supabase/client';
 import { useIsMobile } from './ui/use-mobile';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 import { PullToRefresh } from './PullToRefresh';
 import { useOfflineSync } from '../hooks/useOfflineSync';
@@ -905,12 +905,12 @@ function HorizontalDateSection({
   const shouldShowScrollArrows = totalItems > 1;
   const isGroupedRow = dateKeys.length > 1;
   
-  // Grid layout logic: Use grid for 5+ items, always show first 5, expand incrementally
-  const useGridLayout = !isGroupedRow && totalItems >= 5;
+  // Grid layout logic: Use grid for 5+ items on DESKTOP ONLY, always use carousel on mobile
+  const useGridLayout = !isMobile && !isGroupedRow && totalItems >= 5;
 
   // Diagnostic logging - MORE VERBOSE
   React.useEffect(() => {
-    console.log(`🔍 [Timeline Row] dateKeys: ${dateKeys.join(', ')}, totalItems: ${totalItems}, isGroupedRow: ${isGroupedRow}, useGridLayout: ${useGridLayout}`);
+    console.log(`🔍 [Timeline Row] dateKeys: ${dateKeys.join(', ')}, totalItems: ${totalItems}, isGroupedRow: ${isGroupedRow}, isMobile: ${isMobile}, useGridLayout: ${useGridLayout}`);
     if (!isGroupedRow && totalItems >= 5) {
       console.log(`📊 Grid layout ACTIVATED for ${dateKeys[0]}: ${totalItems} items`);
     } else if (isGroupedRow) {
@@ -984,7 +984,7 @@ function HorizontalDateSection({
             return (
               <div key={dateKey} className="space-y-4">
                 {/* Grid of capsules */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 max-w-6xl mx-auto">
                   {visibleItems.map(item => (
                     <div key={item.id} className="w-full">
                       <FeedItemCard item={item} onViewCapsule={onViewCapsule} />

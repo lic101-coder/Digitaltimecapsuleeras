@@ -192,17 +192,29 @@ export function TitleUnlockModal({
                 duration: 0.5, 
                 ease: [0.22, 1, 0.36, 1]
               }}
-              className={`relative w-[400px] rounded-[32px] overflow-hidden pointer-events-auto bg-gradient-to-br from-purple-600 via-pink-600 to-purple-700 ${
-                animationPhase === 'glow' || animationPhase === 'complete' 
-                  ? 'shadow-[0_0_60px_rgba(147,51,234,0.8)]' 
-                  : ''
-              } transition-shadow duration-300`}
+              className={`relative w-[400px] rounded-3xl overflow-hidden pointer-events-auto
+                bg-gradient-to-br from-purple-900 via-fuchsia-900 to-purple-900
+                shadow-2xl
+                ${animationPhase === 'glow' || animationPhase === 'complete' 
+                  ? 'shadow-[0_0_80px_rgba(168,85,247,0.6),0_0_40px_rgba(217,70,239,0.4),inset_0_2px_0_rgba(255,255,255,0.1)]' 
+                  : 'shadow-[0_20px_60px_rgba(0,0,0,0.5),inset_0_2px_0_rgba(255,255,255,0.08)]'
+                }
+                transition-shadow duration-500
+                border border-white/10`}
               onClick={(e) => e.stopPropagation()}
+              style={{
+                willChange: 'transform, opacity',
+                transform: 'translate3d(0, 0, 0)' // Force GPU acceleration
+              }}
             >
               {/* Close Button */}
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                className="absolute top-4 right-4 z-10 p-2 rounded-full 
+                  bg-black/30 hover:bg-black/50 
+                  border border-white/20
+                  backdrop-blur-sm
+                  transition-all duration-200 hover:scale-110"
               >
                 <X className="w-5 h-5 text-white" />
               </button>
@@ -216,15 +228,24 @@ export function TitleUnlockModal({
                   transition={{ delay: 0.1, duration: 0.4 }}
                   className="mb-6"
                 >
-                  <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-white/40 bg-white/20">
-                    <TitleIcon className="w-5 h-5 text-yellow-300" />
-                    <span className="text-base font-semibold text-white">
+                  <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full 
+                    bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-400
+                    shadow-lg shadow-amber-500/40
+                    border border-amber-300/50"
+                    style={{
+                      boxShadow: '0 4px 20px rgba(251, 191, 36, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+                    }}
+                  >
+                    <TitleIcon className="w-5 h-5 text-amber-900 drop-shadow-sm" />
+                    <span className="text-base font-bold text-amber-900 tracking-wide" style={{
+                      textShadow: '0 1px 0 rgba(255, 255, 255, 0.5)'
+                    }}>
                       Title Unlocked!
                     </span>
                   </div>
                 </motion.div>
 
-                {/* Crown Icon with Animation */}
+                {/* Icon with Radial Glow */}
                 <motion.div
                   initial={{ scale: 0.5, opacity: 0, rotate: -180 }}
                   animate={{ 
@@ -239,16 +260,46 @@ export function TitleUnlockModal({
                   }}
                   className="relative mb-8"
                 >
-                  <div className={`
-                    w-28 h-28 rounded-full 
-                    bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500
+                  {/* Pulsing radial glow background */}
+                  <motion.div 
+                    className="absolute inset-0 rounded-full blur-xl"
+                    animate={animationPhase === 'complete' ? {
+                      opacity: [0.4, 0.7, 0.4],
+                      scale: [1, 1.15, 1]
+                    } : {}}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    style={{
+                      background: 'radial-gradient(circle, rgba(251, 191, 36, 0.6) 0%, rgba(251, 191, 36, 0) 70%)',
+                      width: '140px',
+                      height: '140px',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                  />
+                  
+                  <div className="relative w-28 h-28 rounded-full 
+                    bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500
                     flex items-center justify-center
-                    ${animationPhase === 'glow' || animationPhase === 'complete' ? 'ring-8 ring-yellow-300/40' : ''}
-                  `}>
+                    shadow-xl"
+                    style={{
+                      boxShadow: `
+                        0 0 0 3px rgba(251, 191, 36, 0.3),
+                        0 0 0 6px rgba(251, 191, 36, 0.15),
+                        0 10px 40px rgba(251, 191, 36, 0.5),
+                        inset 0 2px 0 rgba(255, 255, 255, 0.5),
+                        inset 0 -2px 8px rgba(180, 83, 9, 0.3)
+                      `
+                    }}
+                  >
                     <TitleIcon className="w-16 h-16 text-white drop-shadow-lg" strokeWidth={1.5} />
                   </div>
 
-                  {/* Sparkles around crown */}
+                  {/* Sparkles around icon */}
                   {animationPhase === 'complete' && (
                     <>
                       {[...Array(8)].map((_, i) => (
@@ -267,7 +318,7 @@ export function TitleUnlockModal({
                             repeat: Infinity,
                             repeatDelay: 1
                           }}
-                          className="absolute w-2 h-2 bg-yellow-300 rounded-full"
+                          className="absolute w-2 h-2 bg-amber-300 rounded-full shadow-lg shadow-amber-400/50"
                           style={{ 
                             top: '50%', 
                             left: '50%',
@@ -298,7 +349,7 @@ export function TitleUnlockModal({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.7, duration: 0.4 }}
-                  className="text-white/90 text-sm mb-6"
+                  className="text-white/80 text-sm mb-6 font-medium"
                 >
                   You can now equip this title in your profile!
                 </motion.p>
@@ -312,7 +363,15 @@ export function TitleUnlockModal({
                 >
                   <button
                     onClick={onClose}
-                    className="flex-1 px-6 py-3 rounded-full bg-white/30 hover:bg-white/40 text-white font-medium transition-all hover:scale-105"
+                    className="flex-1 px-6 py-3 rounded-full 
+                      bg-white/20 hover:bg-white/30 
+                      border border-white/30
+                      text-white font-semibold 
+                      transition-all duration-200 hover:scale-105
+                      shadow-lg"
+                    style={{
+                      backdropFilter: 'blur(10px)'
+                    }}
                   >
                     Awesome!
                   </button>
@@ -322,11 +381,14 @@ export function TitleUnlockModal({
                         onViewAll();
                         onClose();
                       }}
-                      className="flex-1 px-6 py-3 rounded-full font-medium transition-all hover:scale-105 flex items-center justify-center gap-2"
+                      className="flex-1 px-6 py-3 rounded-full font-bold transition-all duration-200 hover:scale-105 
+                        flex items-center justify-center gap-2
+                        border border-amber-400/30"
                       style={{
-                        background: 'linear-gradient(135deg, #d4af37 0%, #f4d03f 100%)',
-                        color: 'rgba(0, 0, 0, 0.85)',
-                        boxShadow: '0 4px 20px rgba(212, 175, 55, 0.4)'
+                        background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%)',
+                        color: 'rgba(0, 0, 0, 0.9)',
+                        boxShadow: '0 6px 24px rgba(251, 191, 36, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+                        textShadow: '0 1px 0 rgba(255, 255, 255, 0.3)'
                       }}
                     >
                       <Crown className="w-4 h-4" />

@@ -50,9 +50,10 @@ import {
   XCircle,
   Loader2,
   Search,
-  X
+  X,
+  ShoppingBag
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { LegacyAccessDisclaimer } from './LegacyAccessDisclaimer';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { validateLegacyAccessDate, getMinimumScheduleDate, getMaximumScheduleDate } from '../utils/time-validation';
@@ -104,10 +105,11 @@ interface VaultFolder {
   isPrivate?: boolean;
 }
 
-export function LegacyAccessBeneficiaries() {
+export function LegacyAccessBeneficiaries({ onOpenStore }: { onOpenStore?: () => void } = {}) {
   const { session } = useAuth();
   const [config, setConfig] = useState<LegacyAccessConfig | null>(null);
   const [loading, setLoading] = useState(true);
+  const [beneficiaryLimit, setBeneficiaryLimit] = useState<number>(1); // 1 free, -1 = unlimited
   const [showAddForm, setShowAddForm] = useState(false);
   const [daysUntilUnlock, setDaysUntilUnlock] = useState<number | null>(null);
   const [activeStep, setActiveStep] = useState<1 | 2>(1);
@@ -177,6 +179,23 @@ export function LegacyAccessBeneficiaries() {
       console.log('🔐 [Legacy Access] Config loaded:', data);
       setConfig(data.config);
       setDaysUntilUnlock(data.daysUntilUnlock);
+
+      // Fetch beneficiary slot limit from purchases endpoint
+      try {
+        const userId = session.user?.id;
+        if (userId) {
+          const limitsRes = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/purchases/${userId}`,
+            { headers: { 'Authorization': `Bearer ${publicAnonKey}` } }
+          );
+          if (limitsRes.ok) {
+            const limitsData = await limitsRes.json();
+            setBeneficiaryLimit(limitsData.beneficiaryLimit ?? 1);
+          }
+        }
+      } catch (limErr) {
+        console.error('🔐 [Legacy Access] Could not fetch slot limit:', limErr);
+      }
     } catch (error: any) {
       console.error('🔐 [Legacy Access] Error loading config:', error);
       toast.error('Failed to load Legacy Access settings');
@@ -196,6 +215,27 @@ export function LegacyAccessBeneficiaries() {
     if (!session?.access_token) {
       toast.error('Authentication required');
       return;
+    }
+
+    // Slot limit check (only when adding new, not editing)
+    if (!editingBeneficiary && config) {
+      const activeCount = config.beneficiaries.filter(b => b.status !== 'revoked').length;
+      const isUnlimited = beneficiaryLimit === -1;
+      if (!isUnlimited && activeCount >= beneficiaryLimit) {
+        toast.error(
+          <span>
+            You've used all {beneficiaryLimit} slot{beneficiaryLimit !== 1 ? 's' : ''}.{' '}
+            <button
+              onClick={() => { if (onOpenStore) onOpenStore(); }}
+              className="underline font-semibold"
+            >
+              Get more slots in the Store →
+            </button>
+          </span>,
+          { duration: 6000 }
+        );
+        return;
+      }
     }
 
     try {
@@ -598,6 +638,39 @@ export function LegacyAccessBeneficiaries() {
       {/* Step 1: Beneficiaries */}
       {activeStep === 1 && (
         <div className="space-y-6 animate-fade-in-up">
+
+          {/* Slot Status Banner */}
+          {(() => {
+            const activeCount = config?.beneficiaries.filter(b => b.status !== 'revoked').length ?? 0;
+            const isUnlimited = beneficiaryLimit === -1;
+            const atLimit = !isUnlimited && activeCount >= beneficiaryLimit;
+            return (
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border text-sm ${
+                atLimit
+                  ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-300'
+                  : 'bg-purple-500/10 border-purple-500/30 text-purple-700 dark:text-purple-300'
+              }`}>
+                <span>
+                  {isUnlimited
+                    ? '♾️ Unlimited slots — add as many as you need'
+                    : atLimit
+                      ? `⚠️ Slot limit reached (${activeCount}/${beneficiaryLimit})`
+                      : `👥 ${activeCount} of ${beneficiaryLimit} slot${beneficiaryLimit !== 1 ? 's' : ''} used`
+                  }
+                </span>
+                {atLimit && onOpenStore && (
+                  <button
+                    onClick={onOpenStore}
+                    className="flex items-center gap-1 ml-3 px-2.5 py-1 rounded-lg bg-amber-500 text-black text-xs font-bold whitespace-nowrap hover:bg-amber-400 transition-colors"
+                  >
+                    <ShoppingBag className="w-3 h-3" />
+                    Get more slots
+                  </button>
+                )}
+              </div>
+            );
+          })()}
+
           {/* Add Beneficiary Card */}
           <Card className="border-2 border-purple-200 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/20">
             <CardHeader className="pb-3 sm:pb-6">

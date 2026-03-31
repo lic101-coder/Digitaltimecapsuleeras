@@ -32,7 +32,31 @@ export function OnboardingOrchestrator({
   // Load completion state from KV store
   useEffect(() => {
     loadCompletionState();
+    
+    // Set onboarding flag to suppress achievement modals during tutorial
+    localStorage.setItem('eras_onboarding_in_progress', 'true');
+    logger.info('📚 [Onboarding] Setting onboarding flag - achievement modals will be suppressed');
+    
+    return () => {
+      // Clear flag when orchestrator unmounts
+      localStorage.removeItem('eras_onboarding_in_progress');
+      logger.info('📚 [Onboarding] Clearing onboarding flag - achievement modals can show now');
+    };
   }, [userId]);
+
+  // React to forceModule changes (for menu-triggered tutorials)
+  useEffect(() => {
+    if (forceModule) {
+      logger.info(`Onboarding: forceModule set to \"${forceModule}\", loading module...`);
+      const module = getModule(forceModule);
+      if (module) {
+        logger.info(`Onboarding: Force-loading module ${forceModule}`, module);
+        setCurrentModule(module);
+      } else {
+        logger.error(`Onboarding: Could not find module for forceModule: ${forceModule}`);
+      }
+    }
+  }, [forceModule]); // Remove 'loading' dependency - should run immediately
 
   // Listen for "start-vault-mastery" event from First Capsule completion screen
   useEffect(() => {
@@ -50,13 +74,15 @@ export function OnboardingOrchestrator({
 
   // Determine which module to show - moved logic into a helper or run inside loadCompletionState
   const determineModule = (state: Record<string, boolean>) => {
+    logger.info(`Onboarding: determineModule called with forceModule="${forceModule}", state=`, state);
+    
     if (forceModule) {
       const module = getModule(forceModule);
       if (module) {
-        logger.info(`Onboarding: Loading forced module ${forceModule}`);
+        logger.info(`Onboarding: Loading forced module ${forceModule}`, module);
         return module;
       } else {
-        logger.warn(`Onboarding: Module not found for forceModule: ${forceModule}`);
+        logger.error(`Onboarding: Module not found for forceModule: ${forceModule}`);
       }
     } else {
       // Check if core onboarding is needed
@@ -102,10 +128,17 @@ export function OnboardingOrchestrator({
   // Safe-guard to close orchestrator if no module is found after loading
   useEffect(() => {
     if (!loading && !currentModule) {
+      // Don't close if we have a forceModule - it will be loaded by the forceModule effect
+      if (forceModule) {
+        // Silently wait for the forceModule effect to handle it
+        // No warning needed - this is expected behavior during initialization
+        return;
+      }
+      
       logger.warn('Onboarding: No current module to display after loading, closing orchestrator');
       onComplete();
     }
-  }, [loading, currentModule, onComplete]);
+  }, [loading, currentModule, onComplete, forceModule]);
 
   const handleModuleComplete = async (moduleId: string) => {
     logger.info(`Onboarding: Module ${moduleId} completed`);

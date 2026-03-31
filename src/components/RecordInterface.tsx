@@ -14,7 +14,7 @@ import {
 import { RecordingModal } from './RecordingModal';
 import { supabase } from '../utils/supabase/client';
 import { projectId } from '../utils/supabase/info';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { uploadWithTUS } from '../utils/tus-upload';
 
 // ZOOM FIX v10: 1x=20%, 2x=40% native zoom + condensed spacing
@@ -31,19 +31,13 @@ interface MediaItem {
   filename?: string;
 }
 
-export function RecordInterface({ onMediaCaptured, onOpenVault, onEnhance, onClose, onRegisterRestoreCallback }) {
+export function RecordInterface({ onMediaCaptured, onOpenVault, onClose, onRegisterRestoreCallback }) {
   const [mode, setMode] = useState<RecordingMode>('video');
   const onMediaCapturedRef = React.useRef(onMediaCaptured);
-  const onEnhanceRef = React.useRef(onEnhance);
-  const enhancingMediaRef = React.useRef<MediaItem | null>(null); // Store media while in enhancement mode
   
   React.useEffect(() => {
     onMediaCapturedRef.current = onMediaCaptured;
   }, [onMediaCaptured]);
-  
-  React.useEffect(() => {
-    onEnhanceRef.current = onEnhance;
-  }, [onEnhance]);
   
   // Register restore callback on mount
   React.useEffect(() => {
@@ -1084,56 +1078,6 @@ export function RecordInterface({ onMediaCaptured, onOpenVault, onEnhance, onClo
     }
   };
 
-  const handleEnhance = async () => {
-    if (!currentMedia) {
-      toast.error('No media to enhance');
-      return;
-    }
-    
-    if (!onEnhanceRef.current) {
-      toast.error('Enhancement feature not available');
-      return;
-    }
-    
-    console.log('🎨 Sending media to enhancement:', currentMedia.id);
-    
-    const mediaToEnhance = currentMedia;
-    
-    // Store media in ref so it can be restored if user cancels enhancement
-    enhancingMediaRef.current = currentMedia;
-    
-    // CRITICAL FIX: Exit fullscreen if active to prevent layout corruption
-    if (isFullscreen) {
-      try {
-        console.log('🖥️ Exiting fullscreen mode before enhancement...');
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-          await document.webkitExitFullscreen();
-        } else if (document.mozCancelFullScreen) {
-          await document.mozCancelFullScreen();
-        } else if (document.msExitFullscreen) {
-          await document.msExitFullscreen();
-        }
-        setIsFullscreen(false);
-        console.log('✅ Fullscreen exited successfully');
-      } catch (err) {
-        console.error('❌ Error exiting fullscreen:', err);
-        setIsFullscreen(false);
-      }
-    }
-    
-    // Hide modal but DON'T clear media yet (keep it for restore on cancel)
-    setShowModal(false);
-    
-    // Send to enhancement overlay
-    setTimeout(() => {
-      onEnhanceRef.current(mediaToEnhance);
-    }, 50);
-    
-    console.log('✅ Media sent to enhancement, stored for potential restore');
-  };
-
   // Helper function to save to localStorage as fallback
   const saveToLocalStorage = async (media: MediaItem) => {
     try {
@@ -1193,7 +1137,6 @@ export function RecordInterface({ onMediaCaptured, onOpenVault, onEnhance, onClo
         <RecordingModal
           media={currentMedia}
           onSendToCapsule={handleSendToCapsule}
-          onEnhance={handleEnhance}
           onRetake={handleRetake}
           isSaving={isSaving}
         />

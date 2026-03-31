@@ -66,10 +66,10 @@ import {
   AlertTriangle,
   Mail
 } from 'lucide-react';
-import { format, addDays } from 'date-fns@4.1.0';
+import { format, addDays } from 'date-fns';
 import { DatabaseService } from '../utils/supabase/database';
 import { supabase } from '../utils/supabase/client';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { MediaPreview } from './MediaPreview';
 import { MediaThumbnail } from './MediaThumbnail';
 import { MediaPreviewModal } from './MediaPreviewModal';
@@ -92,10 +92,7 @@ import { useIsMobile } from './ui/use-mobile';
 
 // Utility functions for formatting delivery date and time - optimized
 const formatDeliveryDateTime = (deliveryDate, deliveryTime, timeZone) => {
-  console.log('🕐 formatDeliveryDateTime called with:', { deliveryDate, deliveryTime, timeZone });
-  
   if (!deliveryDate) {
-    console.log('❌ No delivery date provided');
     return 'No delivery date set';
   }
   
@@ -107,20 +104,15 @@ const formatDeliveryDateTime = (deliveryDate, deliveryTime, timeZone) => {
     if (deliveryTime && deliveryDate.length === 10) {
       // deliveryDate is just a date string (YYYY-MM-DD), combine with time
       const dateTimeString = `${deliveryDate}T${deliveryTime}:00Z`;
-      console.log('🕐 Combining date and time:', dateTimeString);
       utcDateTime = new Date(dateTimeString);
-    } else {
-      console.log('🕐 Parsing ISO timestamp:', deliveryDate);
     }
     
     if (isNaN(utcDateTime.getTime())) {
-      console.log('❌ Invalid UTC datetime');
       return 'Invalid delivery date';
     }
     
     // Convert to display timezone
     const displayTimeZone = timeZone || getUserTimeZone();
-    console.log('🌍 Converting to timezone:', displayTimeZone);
     
     const formatted = utcDateTime.toLocaleString('en-US', {
       timeZone: displayTimeZone,
@@ -132,7 +124,6 @@ const formatDeliveryDateTime = (deliveryDate, deliveryTime, timeZone) => {
       hour12: true
     });
     
-    console.log('✅ Formatted:', formatted);
     return formatted;
   } catch (error) {
     console.error('❌ Error formatting delivery date:', error);
@@ -195,11 +186,6 @@ const formatRelativeDeliveryTime = (deliveryDate, deliveryTime, timeZone, status
 // Media Carousel Component for capsule cards
 function MediaCarousel({ mediaFiles, onMediaClick }) {
   const [currentIndex, setCurrentIndex] = React.useState(0);
-  
-  // Debug logging
-  if (mediaFiles && mediaFiles.length > 0) {
-    console.log('📸 MediaCarousel received media files:', mediaFiles.length, mediaFiles);
-  }
   
   if (!Array.isArray(mediaFiles) || mediaFiles.length === 0) return null;
   
@@ -599,7 +585,7 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
             return;
           }
           
-          console.log('👁️ 🚨 MARKING CAPSULE AS VIEWED:', {
+          console.log('👁️ ���� MARKING CAPSULE AS VIEWED:', {
             id: viewingCapsule.id,
             title: viewingCapsule.title,
             isReceived: viewingCapsule.isReceived,
@@ -891,16 +877,6 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
 
         if (!mounted) return;
 
-        // DEBUG: Log delivered capsules order from server
-        const deliveredCapsules = (result.capsules || []).filter(c => c.status === 'delivered');
-        if (deliveredCapsules.length > 0) {
-          console.log(`\n📊 DELIVERED CAPSULES ORDER FROM SERVER (should be newest first):`);
-          deliveredCapsules.slice(0, 10).forEach((c, idx) => {
-            const sortKey = c.delivered_at || c.delivery_date || c.created_at;
-            console.log(`  ${idx + 1}. "${c.title}" | delivered_at: ${c.delivered_at || 'MISSING'} | delivery_date: ${c.delivery_date} | created_at: ${c.created_at} | Sort Key: ${sortKey}`);
-          });
-        }
-
         // Merge with existing state to preserve hydrated media
         // This prevents media flickering/re-loading when fresh metadata arrives
         setCapsules(prev => {
@@ -1122,41 +1098,66 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
           
           if (session?.data?.session?.access_token) {
             console.log('🔄 [AUTO-CLAIM] Calling claim-pending endpoint...');
-            const claimResponse = await fetch(
-              `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/claim-pending`,
-              {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${session.data.session.access_token}` }
-              }
-            );
             
-            console.log('🔄 [AUTO-CLAIM] Response status:', claimResponse.status);
-            
-            if (claimResponse.ok) {
-              const claimData = await claimResponse.json();
-              console.log('🔄 [AUTO-CLAIM] Response data:', claimData);
-              claimedCount = claimData.claimed || 0;
+            try {
+              // Add timeout to prevent hanging
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout - increased for slow connections
               
-              if (claimedCount > 0) {
-                console.log(`✅ [AUTO-CLAIM] Successfully claimed ${claimedCount} capsule(s):`, claimData.capsuleIds);
+              const claimResponse = await fetch(
+                `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/claim-pending`,
+                {
+                  method: 'POST',
+                  headers: { 
+                    'Authorization': `Bearer ${session.data.session.access_token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  signal: controller.signal
+                }
+              );
+              
+              clearTimeout(timeoutId);
+              console.log('🔄 [AUTO-CLAIM] Response status:', claimResponse.status);
+              
+              if (claimResponse.ok) {
+                const claimData = await claimResponse.json();
+                console.log('🔄 [AUTO-CLAIM] Response data:', claimData);
+                claimedCount = claimData.claimed || 0;
                 
-                // ✅ CRITICAL: Invalidate cache after claiming capsules
-                console.log('🔄 [AUTO-CLAIM] Invalidating cache to force fresh data...');
-                localStorage.removeItem(cacheKey);
-                
-                toast.success(`${claimedCount} new capsule${claimedCount > 1 ? 's' : ''} added to your collection!`, {
-                  duration: 4000
-                });
+                if (claimedCount > 0) {
+                  console.log(`✅ [AUTO-CLAIM] Successfully claimed ${claimedCount} capsule(s):`, claimData.capsuleIds);
+                  
+                  // ✅ CRITICAL: Invalidate cache after claiming capsules
+                  console.log('🔄 [AUTO-CLAIM] Invalidating cache to force fresh data...');
+                  localStorage.removeItem(cacheKey);
+                  
+                  toast.success(`${claimedCount} new capsule${claimedCount > 1 ? 's' : ''} added to your collection!`, {
+                    duration: 4000
+                  });
+                } else {
+                  console.log('ℹ️ [AUTO-CLAIM] No pending capsules to claim');
+                }
               } else {
-                console.log('ℹ️ [AUTO-CLAIM] No pending capsules to claim');
+                const errorText = await claimResponse.text();
+                console.error('❌ [AUTO-CLAIM] Claim-pending failed:', claimResponse.status, errorText);
               }
-            } else {
-              const errorText = await claimResponse.text();
-              console.error('❌ [AUTO-CLAIM] Claim-pending failed:', claimResponse.status, errorText);
+            } catch (fetchError: any) {
+              if (fetchError.name === 'AbortError') {
+                console.warn('⏱️ [AUTO-CLAIM] Request timed out after 15s - continuing without claiming');
+              } else if (fetchError.message?.includes('Failed to fetch')) {
+                console.warn('🌐 [AUTO-CLAIM] Network error - server may be starting up or temporarily unavailable');
+                console.warn('   This is usually temporary and will resolve automatically');
+                console.warn('   Continuing to load dashboard with existing data...');
+              } else {
+                console.error('❌ [AUTO-CLAIM] Unexpected error:', fetchError);
+              }
+              // Don't show error to user - this is a background operation
+              // Dashboard will still load with existing data
             }
           }
         } catch (claimError) {
           console.error('❌ [AUTO-CLAIM] Exception during auto-claim:', claimError);
+          // Silently continue - this shouldn't block dashboard loading
         }
         
         // ✅ PHASE 1: Fetch fresh data (skip cache if we just claimed capsules)
@@ -3202,8 +3203,20 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
               }
             }} modal={false}>
               <DialogContent 
-                className="max-w-full h-screen w-screen p-0 gap-0 [&>button]:!hidden !top-0 !left-0 !translate-x-0 !translate-y-0 !rounded-none bg-slate-900 dark:bg-slate-950"
-                style={{ overflow: 'hidden' }}
+                className="!max-w-none !h-screen !w-screen !p-0 !gap-0 [&>button]:!hidden !top-0 !left-0 !translate-x-0 !translate-y-0 !rounded-none !bg-slate-900 dark:!bg-slate-950 !inset-0 !m-0 !border-0"
+                style={{ 
+                  position: 'fixed',
+                  overflow: 'hidden',
+                  width: '100vw',
+                  height: '100vh',
+                  maxWidth: 'none',
+                  maxHeight: 'none',
+                  margin: 0,
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0
+                }}
                 aria-describedby="folder-description"
             >
               <DialogDescription id="folder-description" className="sr-only">

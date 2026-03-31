@@ -243,7 +243,7 @@ export function AchievementsDashboard() {
           <Progress value={completionPercentage} className="h-3" />
           
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-4 sm:mt-6">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
             <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3 sm:p-4 text-center">
               <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Capsules</div>
               <div className="text-2xl text-slate-900 dark:text-white">
@@ -260,12 +260,6 @@ export function AchievementsDashboard() {
               <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Streak</div>
               <div className="text-2xl text-slate-900 dark:text-white whitespace-nowrap">
                 {userStats?.current_streak || 0} days
-              </div>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3 sm:p-4 text-center">
-              <div className="text-sm text-slate-600 dark:text-slate-400 mb-1 truncate">Enhancements</div>
-              <div className="text-2xl text-slate-900 dark:text-white">
-                {userStats?.enhancements_used || 0}
               </div>
             </div>
           </div>

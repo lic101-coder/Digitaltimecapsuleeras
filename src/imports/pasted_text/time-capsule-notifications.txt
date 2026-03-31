@@ -1,0 +1,285 @@
+✅ [DEDUP] New notification added: {id: 'notif_1766607838420_zevv96hin', type: 'received', title: 'Your time capsule "title" has been delivered!', key: 'received:capsule_1766098302567_dgxaiaa5h'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1766547421856_a4m4me16i', type: 'received', title: 'Your time capsule "Gghh" has been delivered!', key: 'received:capsule_1766194671339_rw22wep7o'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1766538303111_omq44ojz3', type: 'received', title: 'Your time capsule "hhhhhh" has been delivered!', key: 'received:capsule_1766538167239_j74edwrv3'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1766263025320_jbe14z4si', type: 'received', title: 'Your time capsule "ttttt" has been delivered!', key: 'received:capsule_1766100221759_piv1ut0ot'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1766116801060_1d3kwq5y3', type: 'received', title: 'Your time capsule "ggggg" has been delivered!', key: 'received:capsule_1766102129200_68az0vbg5'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765951022265_2tf6e7h33', type: 'received', title: 'Your time capsule "gggg" has been delivered!', key: 'received:capsule_1765950922563_7d6ugoz92'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765950422649_jaq8v1azp', type: 'received', title: 'Your time capsule "gggg" has been delivered!', key: 'received:capsule_1765950339728_cxs7fwjdd'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765950002492_qy4zhjaxk', type: 'received', title: 'Your time capsule "Hhh" has been delivered!', key: 'received:capsule_1765949899612_bdzgiven1'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765947663762_spqyyf5hk', type: 'received', title: 'Your time capsule "ffffff" has been delivered!', key: 'received:capsule_1765947553474_ozwlk06iz'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765946400874_n62wxr5s5', type: 'received', title: 'Your time capsule "hhhh" has been delivered!', key: 'received:capsule_1765946304279_p3ijkl8ug'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765945741023_zvj50ifd1', type: 'received', title: 'Your time capsule "jjjjj" has been delivered!', key: 'received:capsule_1765945671365_47j11ehq2'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765945140823_vijbrnz8r', type: 'received', title: 'Your time capsule "titkle" has been delivered!', key: 'received:capsule_1765945072693_xwa0eqaj9'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765944721830_6tgcjdrds', type: 'received', title: 'Your time capsule "hhhh" has been delivered!', key: 'received:capsule_1765944660031_fuzj3h6ng'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765944420825_si55wuffy', type: 'received', title: 'Your time capsule "title" has been delivered!', key: 'received:capsule_1765944329067_un7krbuzm'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765943641685_mniuqmxc9', type: 'received', title: 'Your time capsule "yyyyy" has been delivered!', key: 'received:capsule_1765753984411_baeezr1aj'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765943401180_h1el3ult2', type: 'received', title: 'Your time capsule "yyyyy" has been delivered!', key: 'received:capsule_1765943324558_p7c8ueqgk'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765942980852_gbcegh3ad', type: 'received', title: 'Your time capsule "Hello" has been delivered!', key: 'received:capsule_1765768774918_tpgpiklr6'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765942560840_vma0rhth6', type: 'received', title: 'Your time capsule "Inspire" has been delivered!', key: 'received:capsule_1765769806473_xlyg82kk9'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765942141835_ff7wym14i', type: 'received', title: 'Your time capsule "Hhb" has been delivered!', key: 'received:capsule_1765769437936_a7dha4hrh'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765941721056_uqv0fsvtq', type: 'received', title: 'Your time capsule "Hello" has been delivered!', key: 'received:capsule_1765769469315_ys2gumaci'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765941302493_3wmk1xf8h', type: 'received', title: 'Your time capsule "yyyyy" has been delivered!', key: 'received:capsule_1765750133921_ob127vaix'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765746543935_oo45hzer4', type: 'received', title: 'Your time capsule "HELLO" has been delivered!', key: 'received:capsule_1765746088389_xy6qrc1kb'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765742416731_tk6rfyrq8', type: 'received', title: 'Your time capsule "title" has been delivered!', key: 'received:capsule_1765741687151_7v5h8oov7'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765741622132_azxj5gm5y', type: 'received', title: 'Your time capsule "title" has been delivered!', key: 'received:capsule_1765741520804_qaq14n32m'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765739163390_y4x4dnw72', type: 'received', title: 'Your time capsule "yay" has been delivered!', key: 'received:capsule_1765739106128_qszzptlq4'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765736280907_h7swxe1fq', type: 'received', title: 'Your time capsule "love" has been delivered!', key: 'received:capsule_1765736222856_1sqngtgwq'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765735801046_4pc2rrmzx', type: 'received', title: 'Your time capsule "title" has been delivered!', key: 'received:capsule_1765735732425_k02sdxeg9'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765735801006_reqahu0fr', existingId: 'notif_1765735801046_4pc2rrmzx', key: 'received:capsule_1765735732425_k02sdxeg9'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765596653310_gxkjn5u', type: 'echo', title: 'Ryan Cohen commented on your capsule', key: 'echo:echo_1765596652711_aveecnd'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765433281282_w6dov3x1m', type: 'received', title: 'Your time capsule "Inspire" has been delivered!', key: 'received:capsule_1765433201506_gggghlz3g'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1765425154196_c9f46ei', type: 'echo', title: 'Brandon Graf reacted to your comment', key: 'echo:echo_1765314855030_laqvk78'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764293326733_uwvaees', type: 'echo', title: 'Sarah reacted to your comment', key: 'echo:echo_1763878656399_lcn6v0u'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764293006251_c26m4sl', type: 'echo', title: 'Sarah opened your capsule', key: 'echo|Sarah opened your capsule|Sarah opened your capsule|Advice|Sarah|undefined|undefined'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764293004631_y3ptz53', type: 'echo', title: 'Sarah opened your capsule', key: 'echo|Sarah opened your capsule|Sarah opened your capsule|I love you|Sarah|undefined|undefined'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764293000921_rx82pqv', type: 'echo', title: 'Sarah opened your capsule', key: 'echo|Sarah opened your capsule|Sarah opened your c…|Happy Future Birthday!|Sarah|undefined|undefined'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764292960538_2hx88hx', type: 'echo', title: 'Sarah reacted to your comment', key: 'echo:echo_1763880480091_ah13vkk'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764292952395_yvi2csy', existingId: 'notif_1764293000921_rx82pqv', key: 'echo|Sarah opened your capsule|Sarah opened your c…|Happy Future Birthday!|Sarah|undefined|undefined'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764288546217_002nf90', type: 'echo', title: 'Sarah reacted to your capsule', key: 'echo:echo_1764288546074_sywrvps'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764288295142_i9yponc', type: 'echo', title: 'Sarah reacted to your comment', key: 'echo:echo_1763880509684_5zyx4wx'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764286944511_zoq7iv8', existingId: 'notif_1764288295142_i9yponc', key: 'echo:echo_1763880509684_5zyx4wx'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764286888490_lg22ofw', existingId: 'notif_1764288295142_i9yponc', key: 'echo:echo_1763880509684_5zyx4wx'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764286697865_bhyszne', existingId: 'notif_1764288295142_i9yponc', key: 'echo:echo_1763880509684_5zyx4wx'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764285693610_26sa6li', type: 'echo', title: 'Sarah reacted to your comment', key: 'echo:echo_1763879089563_uo5pytj'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764285208733_pnpkjt1', type: 'echo', title: 'Sarah opened your capsule', key: 'echo|Sarah opened your capsule|Sarah opened your capsule|Milestone|Sarah|undefined|undefined'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764053309210_ft6jd7g', type: 'echo', title: 'madisonmae1988 commented on your capsule', key: 'echo:echo_1764053309099_2tcs897'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764052976372_cy2vhmm', type: 'echo', title: 'madisonmae1988 commented on your capsule', key: 'echo:echo_1764052976250_t9kievv'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764050965747_x4ax71e', type: 'echo', title: 'madisonmae1988 reacted to your capsule', key: 'echo:echo_1764050965526_nvf25lo'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764050610651_cjej7o0', type: 'echo', title: 'madisonmae1988 commented on your capsule', key: 'echo:echo_1764050610503_bdydw48'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764050581978_d1vbrkg', type: 'echo', title: 'madisonmae1988 commented on your capsule', key: 'echo:echo_1764050581771_a6xanrp'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764050562935_2uo14qj', type: 'echo', title: 'madisonmae1988 reacted to your capsule', key: 'echo:echo_1764050562728_9uh5w8x'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1764048916691_lki3dtx', type: 'echo', title: 'Sarah commented on your capsule', key: 'echo:echo_1764048916289_7jyi9f8'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1763880458800_57kk4th', type: 'echo', title: 'Sarah commented on your capsule', key: 'echo:echo_1763880458674_8env5ze'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1763880442191_jv6m019', type: 'echo', title: 'Sarah commented on your capsule', key: 'echo:echo_1763880441996_erew2mo'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1763879506424_8hbye74', type: 'echo', title: 'Sarah reacted to your capsule', key: 'echo:echo_1763879506227_kk5767e'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1763879462387_e9esvhu', type: 'echo', title: 'Sarah commented on your capsule', key: 'echo:echo_1763879462239_riwysrz'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1763867366168_5ihbbz9', type: 'echo', title: 'Sarah commented on your capsule', key: 'echo:echo_1763867365969_67rih1z'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1763867343975_3bp41bl', type: 'echo', title: 'Sarah reacted to your capsule', key: 'echo:echo_1763867343771_iagpsge'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1763863587568_c8ovffr', type: 'echo', title: 'Sarah commented on your capsule', key: 'echo:echo_1763863587420_yqkc8nh'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ✅ [DEDUP] New notification added: {id: 'notif_1763863557729_qca7u3f', type: 'echo', title: 'Sarah reacted to your capsule', key: 'echo:echo_1763863557421_oy45qgt'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1773906534479_32x2qjyti', existingId: 'notif_1773906534479_32x2qjyti', key: 'received:capsule_1772602980212_qwj3qo52x'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1773898791905_s2rvhqkcc', existingId: 'notif_1773898791905_s2rvhqkcc', key: 'received:capsule_1772599183647_xsr8flr9a'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1773812830132_8t3cgkbll', existingId: 'notif_1773812830132_8t3cgkbll', key: 'received:capsule_1773207933559_nhvhf6j1e'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1773269000759_ywq9pe0lu', existingId: 'notif_1773269000759_ywq9pe0lu', key: 'received:capsule_1772570638046_0gyp3wjut'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1773198552003_bzdr7x7ra', existingId: 'notif_1773198552003_bzdr7x7ra', key: `delivery_failed|Your time capsule "jjj" couldn't b… back in Drafts|jjj|undefined|undefined|undefined`}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1773099375820_4t0s6wj4n', existingId: 'notif_1773099375820_4t0s6wj4n', key: `delivery_failed|Your time capsule "ddd" couldn't b… back in Drafts|ddd|undefined|undefined|undefined`}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1772300029906_3k7g8rcsa', existingId: 'notif_1772300029906_3k7g8rcsa', key: 'received:capsule_1772052900706_isu56aqwd'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1772217281225_wuxhjwhgg', existingId: 'notif_1772217281225_wuxhjwhgg', key: 'received:capsule_1772167657038_2elonhk4j'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1772217279021_ikn1im6xe', existingId: 'notif_1772217279021_ikn1im6xe', key: 'received:capsule_1772159091602_x3kovlidj'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1772217271988_1jocp5yje', existingId: 'notif_1772217271988_1jocp5yje', key: 'received:capsule_1771814266383_sif1c4trt'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1772164263908_stp6ow04g', existingId: 'notif_1772164263908_stp6ow04g', key: 'received:capsule_1772059900975_vnbwoqvam'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1772162852600_vtgmpqyy6', existingId: 'notif_1772162852600_vtgmpqyy6', key: 'received:capsule_1772058140253_b93tjtiwy'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1772140982339_ddd2xr7r1', existingId: 'notif_1772140982339_ddd2xr7r1', key: 'received:capsule_1771813358500_na5gvtdf2'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1772140981966_13zv33var', existingId: 'notif_1772140981966_13zv33var', key: `delivery_failed|Your time capsule "ggggg" couldn't…ack in Drafts|ggggg|undefined|undefined|undefined`}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1772140981080_lhhu386h7', existingId: 'notif_1772140981080_lhhu386h7', key: 'received:capsule_1771813689133_hysbe2m0w'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1772140980110_uq6mrzvuj', existingId: 'notif_1772140980110_uq6mrzvuj', key: `delivery_failed|Your time capsule "dddd" couldn't …back in Drafts|dddd|undefined|undefined|undefined`}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1771957723530_bxqr6fomn', existingId: 'notif_1771957723530_bxqr6fomn', key: 'received:capsule_1771895172741_q1pg30nrz'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1771957720645_gbi1wtnpe', existingId: 'notif_1771957720645_gbi1wtnpe', key: 'received:capsule_1771812053032_1vxbh4scn'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1771893955932_pkr161qzd', existingId: 'notif_1771893955932_pkr161qzd', key: 'received:capsule_1771810090897_jjy1clrhu'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1771823284649_w76t3py80', existingId: 'notif_1771823284649_w76t3py80', key: 'received:capsule_1771808906230_zdwac40e3'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1771822210090_0a6piodcx', existingId: 'notif_1771822210090_0a6piodcx', key: 'received:capsule_1771811427722_arbjx28ls'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1771821547808_giqqcjzdz', existingId: 'notif_1771821547808_giqqcjzdz', key: 'received:capsule_1771811080719_xlo36pjwr'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1771821546661_6frsp69yt', existingId: 'notif_1771821546661_6frsp69yt', key: 'received:capsule_1771810787460_hfmrh3m5k'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1771821247460_uh3ua2g5r', existingId: 'notif_1771821247460_uh3ua2g5r', key: 'received:capsule_1771812682740_jr1599pl2'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1771686399991_zttk0pn', existingId: 'notif_1771686399991_zttk0pn', key: 'echo:echo_1771686399863_fdbzwj2'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1771686374054_3859c4a', existingId: 'notif_1771686374054_3859c4a', key: 'echo:echo_1771686372119_roey5z8'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1771686316910_rsi1evz', existingId: 'notif_1771686316910_rsi1evz', key: 'echo|Brandon Graf opened your capsule|Brandon Graf…e Undying Viking|Brandon Graf|undefined|undefined'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1770690064959_ejlovc1bb', existingId: 'notif_1770690064959_ejlovc1bb', key: 'received:capsule_1770689957619_ypknjqpv8'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1770689704179_763h2bwrz', existingId: 'notif_1770689704179_763h2bwrz', key: 'received:capsule_1770689603037_24v5v24wb'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1770681125852_njalsdm59', existingId: 'notif_1770681125852_njalsdm59', key: 'received:capsule_1770677541612_xinc5wqzc'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1769571663345_5btnb3q5y', existingId: 'notif_1769571663345_5btnb3q5y', key: 'received:capsule_1769571377124_ko41vjk0w'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1769124124877_7uijjuvzp', existingId: 'notif_1769124124877_7uijjuvzp', key: 'received:capsule_1768974222946_gjbu7a4w7'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1769124123438_5d7rrpopu', existingId: 'notif_1769124123438_5d7rrpopu', key: 'received:capsule_1768973763583_cpplt89ac'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1769058930667_8xe2ri4nx', existingId: 'notif_1769058930667_8xe2ri4nx', key: 'received:capsule_1768972101181_q755ep54j'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1769038467880_00x22yyxe', existingId: 'notif_1769038467880_00x22yyxe', key: 'received:capsule_1768974060096_co8i44sma'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1768971843419_2ezce2sdy', existingId: 'notif_1768971843419_2ezce2sdy', key: 'received:capsule_1768967422767_iltzl1y6a'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1768857304885_8v93spsr8', existingId: 'notif_1768857304885_8v93spsr8', key: 'received:capsule_1768857093295_02qwgbadz'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1768628164281_vnni484eg', existingId: 'notif_1768628164281_vnni484eg', key: 'received:capsule_1768628069243_308llb5df'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1768539782330_2negb5cfi', existingId: 'notif_1768539782330_2negb5cfi', key: 'received:capsule_1768520431898_inuflrzok'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1768453921334_f9j8cgfp8', existingId: 'notif_1768453921334_f9j8cgfp8', key: 'received:capsule_1768453573081_5okf2ueh9'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1768445599158_f1rmhqgea', existingId: 'notif_1768445599158_f1rmhqgea', key: 'received:capsule_1768431080469_vl67kvltt'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1768372500973_ye2i7yrx4', existingId: 'notif_1768372500973_ye2i7yrx4', key: 'received:capsule_1768372358339_8rdtkmj0k'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1768372201140_8ohkvtsws', existingId: 'notif_1768372201140_8ohkvtsws', key: 'received:capsule_1768353039689_zma6o1rcc'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1768372024348_c8ktejcai', existingId: 'notif_1768372024348_c8ktejcai', key: 'received:capsule_1768349269021_yic1m12v5'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1768363923096_5a1qdtkiu', existingId: 'notif_1768363923096_5a1qdtkiu', key: 'received:capsule_1768357069643_wde285pd7'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1768102263415_6ob1i5l3g', existingId: 'notif_1768102263415_6ob1i5l3g', key: 'received:capsule_1767929750999_14nqtrqlv'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767932967913_awxk5w9', existingId: 'notif_1767932967913_awxk5w9', key: 'echo:echo_1767932967026_3nyysdh'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767932763455_o241pjwl7', existingId: 'notif_1767932763455_o241pjwl7', key: 'received:capsule_1767932652660_8cb1ge2d3'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767921844642_xdikuw5wb', existingId: 'notif_1767921844642_xdikuw5wb', key: 'received:capsule_1767921776338_pectkh7kf'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767917221898_xxg1ot82o', existingId: 'notif_1767917221898_xxg1ot82o', key: 'received:capsule_1767917133522_kf1em8onp'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767916021618_z6nfg7fqj', existingId: 'notif_1767916021618_z6nfg7fqj', key: 'received:capsule_1767915956116_5qc1qswds'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767915184765_sjx9d9hqd', existingId: 'notif_1767915184765_sjx9d9hqd', key: 'received:capsule_1767915035100_1k6b3rcp7'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767912842825_t3pishbrs', existingId: 'notif_1767912842825_t3pishbrs', key: 'received:capsule_1767912758241_86dait086'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767912541936_cjw20p3ko', existingId: 'notif_1767912541936_cjw20p3ko', key: 'received:capsule_1767912486356_5e8a26a0e'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767911581617_5xrbtv1dw', existingId: 'notif_1767911581617_5xrbtv1dw', key: 'received:capsule_1767911503675_r18mk5ps3'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767910803398_src5uan88', existingId: 'notif_1767910803398_src5uan88', key: 'received:capsule_1767910742903_blusy23ls'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767910743623_cwcsys2j0', existingId: 'notif_1767910743623_cwcsys2j0', key: 'received:capsule_1767910671310_w6fldd7gw'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767822316938_o2j01xw', existingId: 'notif_1767822316938_o2j01xw', key: 'echo:echo_1767822316055_wzx4yrn'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767821704369_1b1zma5a2', existingId: 'notif_1767821704369_1b1zma5a2', key: 'received:capsule_1767821496062_odhc54he3'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767821525301_9qm2zabg2', existingId: 'notif_1767821525301_9qm2zabg2', key: 'received:capsule_1767821377031_iczhe12p0'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767759841307_lhj4bxelx', existingId: 'notif_1767759841307_lhj4bxelx', key: 'received:capsule_1767759746043_0jhcj1a18'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767759242997_2zssh8la7', existingId: 'notif_1767759242997_2zssh8la7', key: 'received:capsule_1767759173700_fi4600bcx'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767594662769_0vg1kgk6q', existingId: 'notif_1767594662769_0vg1kgk6q', key: 'received:capsule_1767594570944_dwxc1zpc1'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767594141111_zb86bd1', existingId: 'notif_1767594141111_zb86bd1', key: 'echo|Sarah opened your capsule|Sarah opened your capsule|Mdjdj|Sarah|undefined|undefined'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767567484688_mvd15y0', existingId: 'notif_1767567484688_mvd15y0', key: 'echo:echo_1767231394797_kriuc9t'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767404104977_ur7pi828x', existingId: 'notif_1767404104977_ur7pi828x', key: 'received:capsule_1767308443598_m9nxrvoww'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767307203091_t3ztnou1x', existingId: 'notif_1767307203091_t3ztnou1x', key: 'received:capsule_1767306978919_l7ibo6qs7'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767306241901_7gbz4guq6', existingId: 'notif_1767306241901_7gbz4guq6', key: 'received:capsule_1767306132676_hgqi18hin'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767264200230_z8d2hwvtb', existingId: 'notif_1767264200230_z8d2hwvtb', key: 'received:capsule_1767155852987_5ug59b31g'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767233821010_5nwwyhaqm', existingId: 'notif_1767233821010_5nwwyhaqm', key: 'received:capsule_1767233714294_fz03yyhyu'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767225902898_a9yenfmmr', existingId: 'notif_1767225902898_a9yenfmmr', key: 'received:capsule_1767225849431_kqsbupb9m'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767196059095_dludt2swr', existingId: 'notif_1767196059095_dludt2swr', key: 'received:capsule_1767155782130_36iou5nji'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767158520907_qyrzk56bd', existingId: 'notif_1767158520907_qyrzk56bd', key: 'received:capsule_1766994647046_s71u51hdl'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1767127502341_m829uz0f3', existingId: 'notif_1767127502341_m829uz0f3', key: 'received:capsule_1767127319867_rlpnx6m52'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1766607838420_zevv96hin', existingId: 'notif_1766607838420_zevv96hin', key: 'received:capsule_1766098302567_dgxaiaa5h'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1766547421856_a4m4me16i', existingId: 'notif_1766547421856_a4m4me16i', key: 'received:capsule_1766194671339_rw22wep7o'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1766538303111_omq44ojz3', existingId: 'notif_1766538303111_omq44ojz3', key: 'received:capsule_1766538167239_j74edwrv3'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1766263025320_jbe14z4si', existingId: 'notif_1766263025320_jbe14z4si', key: 'received:capsule_1766100221759_piv1ut0ot'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1766116801060_1d3kwq5y3', existingId: 'notif_1766116801060_1d3kwq5y3', key: 'received:capsule_1766102129200_68az0vbg5'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765951022265_2tf6e7h33', existingId: 'notif_1765951022265_2tf6e7h33', key: 'received:capsule_1765950922563_7d6ugoz92'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765950422649_jaq8v1azp', existingId: 'notif_1765950422649_jaq8v1azp', key: 'received:capsule_1765950339728_cxs7fwjdd'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765950002492_qy4zhjaxk', existingId: 'notif_1765950002492_qy4zhjaxk', key: 'received:capsule_1765949899612_bdzgiven1'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765947663762_spqyyf5hk', existingId: 'notif_1765947663762_spqyyf5hk', key: 'received:capsule_1765947553474_ozwlk06iz'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765946400874_n62wxr5s5', existingId: 'notif_1765946400874_n62wxr5s5', key: 'received:capsule_1765946304279_p3ijkl8ug'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765945741023_zvj50ifd1', existingId: 'notif_1765945741023_zvj50ifd1', key: 'received:capsule_1765945671365_47j11ehq2'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765945140823_vijbrnz8r', existingId: 'notif_1765945140823_vijbrnz8r', key: 'received:capsule_1765945072693_xwa0eqaj9'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765944721830_6tgcjdrds', existingId: 'notif_1765944721830_6tgcjdrds', key: 'received:capsule_1765944660031_fuzj3h6ng'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765944420825_si55wuffy', existingId: 'notif_1765944420825_si55wuffy', key: 'received:capsule_1765944329067_un7krbuzm'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765943641685_mniuqmxc9', existingId: 'notif_1765943641685_mniuqmxc9', key: 'received:capsule_1765753984411_baeezr1aj'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765943401180_h1el3ult2', existingId: 'notif_1765943401180_h1el3ult2', key: 'received:capsule_1765943324558_p7c8ueqgk'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765942980852_gbcegh3ad', existingId: 'notif_1765942980852_gbcegh3ad', key: 'received:capsule_1765768774918_tpgpiklr6'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765942560840_vma0rhth6', existingId: 'notif_1765942560840_vma0rhth6', key: 'received:capsule_1765769806473_xlyg82kk9'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765942141835_ff7wym14i', existingId: 'notif_1765942141835_ff7wym14i', key: 'received:capsule_1765769437936_a7dha4hrh'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765941721056_uqv0fsvtq', existingId: 'notif_1765941721056_uqv0fsvtq', key: 'received:capsule_1765769469315_ys2gumaci'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765941302493_3wmk1xf8h', existingId: 'notif_1765941302493_3wmk1xf8h', key: 'received:capsule_1765750133921_ob127vaix'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765746543935_oo45hzer4', existingId: 'notif_1765746543935_oo45hzer4', key: 'received:capsule_1765746088389_xy6qrc1kb'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765742416731_tk6rfyrq8', existingId: 'notif_1765742416731_tk6rfyrq8', key: 'received:capsule_1765741687151_7v5h8oov7'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765741622132_azxj5gm5y', existingId: 'notif_1765741622132_azxj5gm5y', key: 'received:capsule_1765741520804_qaq14n32m'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765739163390_y4x4dnw72', existingId: 'notif_1765739163390_y4x4dnw72', key: 'received:capsule_1765739106128_qszzptlq4'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765736280907_h7swxe1fq', existingId: 'notif_1765736280907_h7swxe1fq', key: 'received:capsule_1765736222856_1sqngtgwq'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765735801046_4pc2rrmzx', existingId: 'notif_1765735801046_4pc2rrmzx', key: 'received:capsule_1765735732425_k02sdxeg9'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765596653310_gxkjn5u', existingId: 'notif_1765596653310_gxkjn5u', key: 'echo:echo_1765596652711_aveecnd'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765433281282_w6dov3x1m', existingId: 'notif_1765433281282_w6dov3x1m', key: 'received:capsule_1765433201506_gggghlz3g'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1765425154196_c9f46ei', existingId: 'notif_1765425154196_c9f46ei', key: 'echo:echo_1765314855030_laqvk78'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764293326733_uwvaees', existingId: 'notif_1764293326733_uwvaees', key: 'echo:echo_1763878656399_lcn6v0u'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764293006251_c26m4sl', existingId: 'notif_1764293006251_c26m4sl', key: 'echo|Sarah opened your capsule|Sarah opened your capsule|Advice|Sarah|undefined|undefined'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764293004631_y3ptz53', existingId: 'notif_1764293004631_y3ptz53', key: 'echo|Sarah opened your capsule|Sarah opened your capsule|I love you|Sarah|undefined|undefined'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764293000921_rx82pqv', existingId: 'notif_1764293000921_rx82pqv', key: 'echo|Sarah opened your capsule|Sarah opened your c…|Happy Future Birthday!|Sarah|undefined|undefined'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764292960538_2hx88hx', existingId: 'notif_1764292960538_2hx88hx', key: 'echo:echo_1763880480091_ah13vkk'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764288546217_002nf90', existingId: 'notif_1764288546217_002nf90', key: 'echo:echo_1764288546074_sywrvps'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764288295142_i9yponc', existingId: 'notif_1764288295142_i9yponc', key: 'echo:echo_1763880509684_5zyx4wx'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764285693610_26sa6li', existingId: 'notif_1764285693610_26sa6li', key: 'echo:echo_1763879089563_uo5pytj'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764285208733_pnpkjt1', existingId: 'notif_1764285208733_pnpkjt1', key: 'echo|Sarah opened your capsule|Sarah opened your capsule|Milestone|Sarah|undefined|undefined'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764053309210_ft6jd7g', existingId: 'notif_1764053309210_ft6jd7g', key: 'echo:echo_1764053309099_2tcs897'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764052976372_cy2vhmm', existingId: 'notif_1764052976372_cy2vhmm', key: 'echo:echo_1764052976250_t9kievv'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764050965747_x4ax71e', existingId: 'notif_1764050965747_x4ax71e', key: 'echo:echo_1764050965526_nvf25lo'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764050610651_cjej7o0', existingId: 'notif_1764050610651_cjej7o0', key: 'echo:echo_1764050610503_bdydw48'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764050581978_d1vbrkg', existingId: 'notif_1764050581978_d1vbrkg', key: 'echo:echo_1764050581771_a6xanrp'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764050562935_2uo14qj', existingId: 'notif_1764050562935_2uo14qj', key: 'echo:echo_1764050562728_9uh5w8x'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1764048916691_lki3dtx', existingId: 'notif_1764048916691_lki3dtx', key: 'echo:echo_1764048916289_7jyi9f8'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1763880458800_57kk4th', existingId: 'notif_1763880458800_57kk4th', key: 'echo:echo_1763880458674_8env5ze'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1763880442191_jv6m019', existingId: 'notif_1763880442191_jv6m019', key: 'echo:echo_1763880441996_erew2mo'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1763879506424_8hbye74', existingId: 'notif_1763879506424_8hbye74', key: 'echo:echo_1763879506227_kk5767e'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1763879462387_e9esvhu', existingId: 'notif_1763879462387_e9esvhu', key: 'echo:echo_1763879462239_riwysrz'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1763867366168_5ihbbz9', existingId: 'notif_1763867366168_5ihbbz9', key: 'echo:echo_1763867365969_67rih1z'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1763867343975_3bp41bl', existingId: 'notif_1763867343975_3bp41bl', key: 'echo:echo_1763867343771_iagpsge'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1763863587568_c8ovffr', existingId: 'notif_1763863587568_c8ovffr', key: 'echo:echo_1763863587420_yqkc8nh'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140991 ⏭️ [DEDUP] Skipping duplicate: {id: 'notif_1763863557729_qca7u3f', existingId: 'notif_1763863557729_qca7u3f', key: 'echo:echo_1763863557421_oy45qgt'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140996 🔔 [NOTIFICATION] Total notifications after merge: 128
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140996 📊 [NOTIFICATION] Unread count: 0
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140996 📬 [NOTIFICATION] Latest 3 notifications: (3) [{…}, {…}, {…}]
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:21221 ✅ Database request successful on attempt 1/2 (took 697ms)
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:21200 🌐 Response status (attempt 1): 200 
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142733 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142781 [HeaderBackground] Rendering with: {titleName: 'Dedicated Keeper', rarity: 'rare', equippedTitleData: {…}}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:141690 🔔 [Echo Notifications] Cleaning up broadcast listener
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:141623 🔔 [Echo Notifications] Setting up broadcast listener for user: d70db3e0-6fd8-484a-856c-dead04599ed5
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142261 🔔 [Notifications] Using unified Notification Center for all echo notifications
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142263 📊 [Notifications] Current notification count: 37, Unread: 0
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142265 📊 [Notifications] UNIFIED unreadCount: 0
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142267 📊 [Notifications] UNIFIED notifications: 128
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142269 🔔 [BADGE CHECK] Should show badge: NO
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:21221 ✅ Database request successful on attempt 1/2 (took 746ms)
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142733 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142781 [HeaderBackground] Rendering with: {titleName: 'Dedicated Keeper', rarity: 'rare', equippedTitleData: {…}}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:141686 🔔 [Echo Notifications] Channel status: SUBSCRIBED
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:137074 🎉 [Welcome Manager] Checking welcome celebration status
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142733 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142781 [HeaderBackground] Rendering with: {titleName: 'Dedicated Keeper', rarity: 'rare', equippedTitleData: {…}}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:135689 🔍 [Achievement] Window focused - checking for queued achievements
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142733 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142781 [HeaderBackground] Rendering with: {titleName: 'Dedicated Keeper', rarity: 'rare', equippedTitleData: {…}}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:135689 🔍 [Achievement] Window focused - checking for queued achievements
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142733 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142781 [HeaderBackground] Rendering with: {titleName: 'Dedicated Keeper', rarity: 'rare', equippedTitleData: {…}}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:137090 🎉 [Welcome Manager] Response: {shouldShowCelebration: false}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:137092 🎉 [Welcome Manager] No celebration to show
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142138 📄 No draft found in localStorage
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142143 🔄 TAB CHANGE: {from: 'store', to: 'create', isActuallyNavigatingToCreate: true, shouldPreserveWorkflow: false, hasDraftWorkInProgress: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142153 🔄 ❌ RESETTING CreateCapsule - component will REMOUNT and LOSE state (coming from: store )
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140581 🧹 Resetting workflow - clearing workflowMedia and resetting workflowStep
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140673 🔄 Tab change requested: store → create
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142733 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142781 [HeaderBackground] Rendering with: {titleName: 'Dedicated Keeper', rarity: 'rare', equippedTitleData: {…}}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142733 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142781 [HeaderBackground] Rendering with: {titleName: 'Dedicated Keeper', rarity: 'rare', equippedTitleData: {…}}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140673 ✅ Tab changed to: create
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142193 📜 Scrolling to top for new tab: create
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142733 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142781 [HeaderBackground] Rendering with: {titleName: 'Dedicated Keeper', rarity: 'rare', equippedTitleData: {…}}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143453 🎬 Rendering Create with triggerSlideAnimation: false (ref: false state: false )
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143482 📝 Rendering Create tab content: {hasUser: true, userId: 'd70db3e0-6fd8-484a-856c-dead04599ed5', userName: 'Len', hasEditingCapsule: false, editingCapsuleId: undefined, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:96757 🎬 CreateCapsule RENDER: CC-1773981750269-2mzdybf {initialMedia: 0, workflowStep: 'record', editingCapsule: false}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:97378 🎨 [STEP INIT] Determining initial step: {editingCapsule: false, workflowTheme: null, hasInitialMedia: false, workflowStep: 'record'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:97383 🎨 [STEP INIT] No theme from workflow → Starting at Step 1
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:141759 🎬 MainAppContent unmounting (ID: c659zo)
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:96761 ✅ CreateCapsule MOUNTED: CC-1773981750269-2mzdybf {hasInitialMedia: false, editingCapsule: false}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:82375 🏆 Fetching achievement definitions...
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:82782 🏆 Loading state: {loadingDefinitions: true, loadingAchievements: false, combined: true}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:96793 🆔 Generated stable temp capsule ID: temp_1773981750342_eeqdpmdbx
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:96844 📥 No initialMedia to process
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:97376 🆕 Starting new capsule - clearing processed initialMedia ref
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:97490 🎨 [THEME RESTORE] Effect triggered: {workflowTheme: null, editingCapsule: false, currentThemeId: 'standard'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:97494 🎨 [THEME RESTORE] No workflow theme to restore
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143474 🎬 Create motion.div animation STARTED, shouldAnimate: false
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140641 💾 Persisted active tab to sessionStorage: create
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:140643 🔗 Updated URL hash and browser history: #create
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142019 📊 Active tab changed: store → create {timestamp: '2026-03-20T04:42:30.344Z', isAuthenticated: true, hasEditingCapsule: false, createCapsuleKey: 1, workflowStep: 'record', …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142046 📋 Tab validation check: {isAuthenticated: true, isLoading: false, hasValidated: 'true', activeTab: 'create'}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142078 🎨 User opened Create tab
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142733 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142781 [HeaderBackground] Rendering with: {titleName: 'Dedicated Keeper', rarity: 'rare', equippedTitleData: {…}}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143453 🎬 Rendering Create with triggerSlideAnimation: false (ref: false state: false )
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143482 📝 Rendering Create tab content: {hasUser: true, userId: 'd70db3e0-6fd8-484a-856c-dead04599ed5', userName: 'Len', hasEditingCapsule: false, editingCapsuleId: undefined, …}
+25f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:83250 ⏱️ Initial auth check completed - ready for login
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143478 🎬 Create motion.div animation COMPLETED
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:83250 ⏱️ Initial auth check completed - ready for login
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142733 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142781 [HeaderBackground] Rendering with: {titleName: 'Dedicated Keeper', rarity: 'rare', equippedTitleData: {…}}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143453 🎬 Rendering Create with triggerSlideAnimation: false (ref: false state: false )
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143482 📝 Rendering Create tab content: {hasUser: true, userId: 'd70db3e0-6fd8-484a-856c-dead04599ed5', userName: 'Len', hasEditingCapsule: false, editingCapsuleId: undefined, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:96757 🎬 CreateCapsule RENDER: CC-1773981750269-2mzdybf {initialMedia: 0, workflowStep: 'record', editingCapsule: false}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142733 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142781 [HeaderBackground] Rendering with: {titleName: 'Dedicated Keeper', rarity: 'rare', equippedTitleData: {…}}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143453 🎬 Rendering Create with triggerSlideAnimation: false (ref: false state: false )
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143482 📝 Rendering Create tab content: {hasUser: true, userId: 'd70db3e0-6fd8-484a-856c-dead04599ed5', userName: 'Len', hasEditingCapsule: false, editingCapsuleId: undefined, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:96757 🎬 CreateCapsule RENDER: CC-1773981750269-2mzdybf {initialMedia: 0, workflowStep: 'record', editingCapsule: false}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142733 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142781 [HeaderBackground] Rendering with: {titleName: 'Dedicated Keeper', rarity: 'rare', equippedTitleData: {…}}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143453 🎬 Rendering Create with triggerSlideAnimation: false (ref: false state: false )
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143482 📝 Rendering Create tab content: {hasUser: true, userId: 'd70db3e0-6fd8-484a-856c-dead04599ed5', userName: 'Len', hasEditingCapsule: false, editingCapsuleId: undefined, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:96757 🎬 CreateCapsule RENDER: CC-1773981750269-2mzdybf {initialMedia: 0, workflowStep: 'record', editingCapsule: false}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:96784 🎨 Loaded purchased themes: []
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:82389 ✅ Achievement definitions loaded: 57
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142733 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142781 [HeaderBackground] Rendering with: {titleName: 'Dedicated Keeper', rarity: 'rare', equippedTitleData: {…}}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143453 🎬 Rendering Create with triggerSlideAnimation: false (ref: false state: false )
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143482 📝 Rendering Create tab content: {hasUser: true, userId: 'd70db3e0-6fd8-484a-856c-dead04599ed5', userName: 'Len', hasEditingCapsule: false, editingCapsuleId: undefined, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:96757 🎬 CreateCapsule RENDER: CC-1773981750269-2mzdybf {initialMedia: 0, workflowStep: 'record', editingCapsule: false}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:82782 🏆 Loading state: {loadingDefinitions: false, loadingAchievements: false, combined: false}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142733 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142781 [HeaderBackground] Rendering with: {titleName: 'Dedicated Keeper', rarity: 'rare', equippedTitleData: {…}}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143453 🎬 Rendering Create with triggerSlideAnimation: false (ref: false state: false )
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:143482 📝 Rendering Create tab content: {hasUser: true, userId: 'd70db3e0-6fd8-484a-856c-dead04599ed5', userName: 'Len', hasEditingCapsule: false, editingCapsuleId: undefined, …}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:96757 🎬 CreateCapsule RENDER: CC-1773981750269-2mzdybf {initialMedia: 0, workflowStep: 'record', editingCapsule: false}
+5f1b0153d9847e0e2535518379e0a2ffe9873c9b.js:142080 🎨 User is now actively working on Create tab (5s+ elapsed)

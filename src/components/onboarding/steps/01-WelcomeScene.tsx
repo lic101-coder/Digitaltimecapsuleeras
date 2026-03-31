@@ -101,10 +101,52 @@ export function WelcomeScene({ onContinue }: WelcomeSceneProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1, duration: 1 }}
-          className="text-lg md:text-xl text-white/80 leading-relaxed px-4"
+          className="text-lg md:text-xl text-black font-black leading-relaxed px-4 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]"
         >
           Capture Today, Unlock Tomorrow
         </motion.p>
+
+        {/* Navigation Preview */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5, duration: 0.8 }}
+          className="mt-8 text-center"
+        >
+          <p className="text-white/60 text-sm mb-4">Your journey through four spaces</p>
+          <div className="flex items-center justify-center gap-3 md:gap-6">
+            {[
+              { emoji: '🏡', label: 'Home' },
+              { emoji: '✨', label: 'Compose' },
+              { emoji: '📹', label: 'Record' },
+              { emoji: '🏛️', label: 'Vault' }
+            ].map((tab, i) => (
+              <motion.div
+                key={tab.label}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 1.7 + i * 0.1, type: 'spring' }}
+                className="flex flex-col items-center gap-1"
+              >
+                <motion.div
+                  animate={{
+                    scale: [1, 1.1, 1],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    delay: i * 0.5,
+                    ease: 'easeInOut'
+                  }}
+                  className="text-2xl md:text-3xl"
+                >
+                  {tab.emoji}
+                </motion.div>
+                <span className="text-white/70 text-xs md:text-sm font-medium">{tab.label}</span>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </motion.div>
 
       {/* Subtle hint to wait */}

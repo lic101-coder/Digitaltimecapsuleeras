@@ -1,39 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Camera, Video, Mic, ChevronRight, Sparkles, Home, Film } from 'lucide-react';
+import { X, Camera, Video, Mic, ChevronRight, Sparkles, Home, Film, Play } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { OnboardingModuleProps } from '../../../utils/onboarding/registry';
 import { MomentPrismLogo } from '../../MomentPrismLogo';
 import { logger } from '../../../utils/logger';
+import { CeremonyPreviewModal } from '../../capsule-themes/CeremonyPreviewModal';
 
-// Theme definitions (tutorial only - doesn't affect app)
-const THEMES = [
-  { 
-    id: 'champagne', 
-    name: 'Golden Hour', 
-    icon: '🍾', 
-    color: '#FFD700',
-    gradient: 'from-amber-500/20 via-yellow-500/10 to-transparent'
+// Real themed capsules for tutorial
+const THEMED_CAPSULES = [
+  {
+    id: 'birthday',
+    themeId: 'birthday',
+    ceremonyId: 'party',
+    name: 'Birthday Serenade',
+    icon: '🎂',
+    price: '$2.99',
+    color: '#FF6B6B',
+    gradient: 'from-pink-500/20 via-purple-500/10 to-indigo-500/10',
+    ringColor: 'from-pink-400 to-purple-400'
   },
-  { 
-    id: 'aurora', 
-    name: 'Birthday', 
-    icon: '🎂', 
-    color: '#8B5CF6',
-    gradient: 'from-purple-500/20 via-teal-500/10 to-green-500/10'
+  {
+    id: 'love',
+    themeId: 'anniversary',
+    ceremonyId: 'passionate',
+    name: 'Love Letter',
+    icon: '💌',
+    price: '$2.99',
+    color: '#db2777',
+    gradient: 'from-red-500/20 via-pink-500/10 to-rose-500/10',
+    ringColor: 'from-red-400 to-pink-400'
   },
-  { 
-    id: 'retro', 
-    name: 'Voyage', 
-    icon: '✈️', 
-    color: '#FF6B35',
-    gradient: 'from-orange-500/20 via-amber-600/10 to-transparent'
+  {
+    id: 'adventure',
+    themeId: 'travel',
+    ceremonyId: 'premium',
+    name: 'Adventure Chronicle',
+    icon: '🏔️',
+    price: '$1.99',
+    color: '#3b82f6',
+    gradient: 'from-blue-500/20 via-cyan-500/10 to-teal-500/10',
+    ringColor: 'from-blue-400 to-cyan-400'
   }
 ];
 
 export default function FirstCapsule({ onComplete, onSkip }: OnboardingModuleProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedTheme, setSelectedTheme] = useState(THEMES[0]);
+  const [selectedCapsule, setSelectedCapsule] = useState(THEMED_CAPSULES[0]);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
 
@@ -70,8 +83,8 @@ export default function FirstCapsule({ onComplete, onSkip }: OnboardingModulePro
     }
   };
 
-  const handleThemeSelect = (theme: typeof THEMES[0]) => {
-    setSelectedTheme(theme);
+  const handleCapsuleSelect = (capsule: typeof THEMED_CAPSULES[0]) => {
+    setSelectedCapsule(capsule);
     setTimeout(() => handleNext(), 400);
   };
 
@@ -118,16 +131,16 @@ export default function FirstCapsule({ onComplete, onSkip }: OnboardingModulePro
         {currentStep === 1 && (
           <ThemeScreen 
             key="theme" 
-            themes={THEMES}
-            selected={selectedTheme}
-            onSelect={handleThemeSelect}
+            capsules={THEMED_CAPSULES}
+            selected={selectedCapsule}
+            onSelect={handleCapsuleSelect}
           />
         )}
         
         {currentStep === 2 && (
           <CreateScreen 
             key="create" 
-            theme={selectedTheme}
+            theme={selectedCapsule}
             title={title}
             message={message}
             onTitleChange={setTitle}
@@ -139,7 +152,7 @@ export default function FirstCapsule({ onComplete, onSkip }: OnboardingModulePro
         {currentStep === 3 && (
           <MediaScreen 
             key="media" 
-            theme={selectedTheme}
+            theme={selectedCapsule}
             onNext={handleNext}
           />
         )}
@@ -147,7 +160,7 @@ export default function FirstCapsule({ onComplete, onSkip }: OnboardingModulePro
         {currentStep === 4 && (
           <ScheduleScreen 
             key="schedule" 
-            theme={selectedTheme}
+            theme={selectedCapsule}
             onNext={handleNext}
           />
         )}
@@ -312,10 +325,10 @@ function IntroScreen({ onNext }: { onNext: () => void }) {
             />
           </button>
 
-          {/* Capture */}
+          {/* Record */}
           <button className="flex flex-col items-center justify-start gap-2 py-3 px-4 min-w-[85px]">
-            <div className="text-5xl leading-none">📸</div>
-            <span className="text-sm text-amber-400 font-semibold whitespace-nowrap">Capture</span>
+            <div className="text-5xl leading-none">📹</div>
+            <span className="text-sm text-amber-400 font-semibold whitespace-nowrap">Record</span>
           </button>
 
           {/* Vault */}
@@ -410,10 +423,10 @@ function IntroScreen({ onNext }: { onNext: () => void }) {
 // ============================================================================
 // STEP 2: THEME SELECTION (8-10s)
 // ============================================================================
-function ThemeScreen({ themes, selected, onSelect }: { 
-  themes: typeof THEMES;
-  selected: typeof THEMES[0];
-  onSelect: (theme: typeof THEMES[0]) => void;
+function ThemeScreen({ capsules, selected, onSelect }: { 
+  capsules: typeof THEMED_CAPSULES;
+  selected: typeof THEMED_CAPSULES[0];
+  onSelect: (capsule: typeof THEMED_CAPSULES[0]) => void;
 }) {
   return (
     <motion.div
@@ -431,9 +444,9 @@ function ThemeScreen({ themes, selected, onSelect }: {
         Pick a themed capsule opening celebration!
       </motion.h2>
       
-      <div className="flex flex-col sm:flex-row gap-4 w-full max-w-2xl">{themes.map((theme, i) => (
+      <div className="flex flex-col sm:flex-row gap-4 w-full max-w-2xl">{capsules.map((capsule, i) => (
           <motion.button
-            key={theme.id}
+            key={capsule.id}
             initial={{ scale: 0, opacity: 0, rotateY: -90 }}
             animate={{ scale: 1, opacity: 1, rotateY: 0 }}
             transition={{ 
@@ -442,19 +455,19 @@ function ThemeScreen({ themes, selected, onSelect }: {
               stiffness: 200,
               damping: 20
             }}
-            onClick={() => onSelect(theme)}
+            onClick={() => onSelect(capsule)}
             className={`flex-1 flex flex-col items-center gap-2 sm:gap-3 p-5 sm:p-8 rounded-3xl transition-all duration-300 ${
-              selected.id === theme.id
+              selected.id === capsule.id
                 ? 'bg-white/20 border-2 border-white scale-105 shadow-2xl'
                 : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:scale-102'
             }`}
           >
-            <span className="text-4xl sm:text-6xl mb-1 sm:mb-2">{theme.icon}</span>
-            <span className="text-base sm:text-lg font-semibold">{theme.name}</span>
+            <span className="text-4xl sm:text-6xl mb-1 sm:mb-2">{capsule.icon}</span>
+            <span className="text-base sm:text-lg font-semibold">{capsule.name}</span>
             
             {/* Preview gradient */}
             <div 
-              className={`w-full h-2 rounded-full bg-gradient-to-r ${theme.gradient} mt-1 sm:mt-2`}
+              className={`w-full h-2 rounded-full bg-gradient-to-r ${capsule.gradient} mt-1 sm:mt-2`}
             />
           </motion.button>
         ))}
@@ -476,7 +489,7 @@ function ThemeScreen({ themes, selected, onSelect }: {
 // STEP 3: TITLE + MESSAGE WITH THEME EFFECTS (12s)
 // ============================================================================
 function CreateScreen({ theme, title, message, onTitleChange, onMessageChange, onNext }: { 
-  theme: typeof THEMES[0];
+  theme: typeof THEMED_CAPSULES[0];
   title: string;
   message: string;
   onTitleChange: (value: string) => void;
@@ -577,7 +590,7 @@ function CreateScreen({ theme, title, message, onTitleChange, onMessageChange, o
 // STEP 4: MEDIA AWARENESS WITH THEME EFFECTS (6-8s)
 // ============================================================================
 function MediaScreen({ theme, onNext }: { 
-  theme: typeof THEMES[0];
+  theme: typeof THEMED_CAPSULES[0];
   onNext: () => void;
 }) {
   const mediaTypes = [
@@ -611,7 +624,7 @@ function MediaScreen({ theme, onNext }: {
         transition={{ delay: 0.2 }}
         className="text-white/60 mb-10 text-center relative z-10"
       >
-        Add these when creating real capsules
+        Add media in Compose or use the Record 📹 tab for quick capture
       </motion.p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-2xl relative z-10">
@@ -647,7 +660,7 @@ function MediaScreen({ theme, onNext }: {
 // STEP 5: SCHEDULE WITH THEME EFFECTS (10s)
 // ============================================================================
 function ScheduleScreen({ theme, onNext }: { 
-  theme: typeof THEMES[0];
+  theme: typeof THEMED_CAPSULES[0];
   onNext: () => void;
 }) {
   const [selected, setSelected] = useState('1week');
@@ -871,7 +884,7 @@ function CompletionScreen({ onComplete }: { onComplete: () => void }) {
 // ============================================================================
 // THEME BACKGROUND COMPONENT
 // ============================================================================
-function ThemeBackground({ theme }: { theme: typeof THEMES[0] }) {
+function ThemeBackground({ theme }: { theme: typeof THEMED_CAPSULES[0] }) {
   return (
     <>
       {/* Gradient Overlay */}
@@ -880,7 +893,7 @@ function ThemeBackground({ theme }: { theme: typeof THEMES[0] }) {
       />
 
       {/* Champagne Bubbles */}
-      {theme.id === 'champagne' && (
+      {theme.id === 'birthday' && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {Array.from({ length: 20 }).map((_, i) => (
             <motion.div
@@ -907,7 +920,7 @@ function ThemeBackground({ theme }: { theme: typeof THEMES[0] }) {
       )}
 
       {/* Aurora Flow */}
-      {theme.id === 'aurora' && (
+      {theme.id === 'love' && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
             className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-teal-500/20 to-green-500/20"
@@ -945,7 +958,7 @@ function ThemeBackground({ theme }: { theme: typeof THEMES[0] }) {
       )}
 
       {/* Retro Film Grain */}
-      {theme.id === 'retro' && (
+      {theme.id === 'adventure' && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div 
             className="absolute inset-0 opacity-20"

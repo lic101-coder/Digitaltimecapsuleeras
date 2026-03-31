@@ -161,24 +161,16 @@ export function VaultFolderDialog({
                 damping: 22,
                 duration: 0.35
               }}
-              className={`relative w-full pointer-events-auto ${
-                isMobile ? 'max-w-md' : 'max-w-2xl'
-              }`}
+              className={`relative w-full pointer-events-auto ${isMobile ? 'max-w-[90vw]' : 'max-w-2xl'}`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Vault-Style Cosmic Container */}
-              <div className={`relative overflow-hidden ${
-                isMobile ? 'rounded-2xl' : 'rounded-3xl'
-              }`}>
+              <div className={`relative overflow-hidden ${isMobile ? 'rounded-xl' : 'rounded-3xl'}`}>
                 {/* Outer glow matching vault folders */}
-                          <div className={`absolute inset-0 bg-gradient-to-br from-blue-500/40 via-purple-500/40 to-pink-500/40 blur-2xl opacity-60 ${
-                  isMobile ? 'rounded-2xl' : 'rounded-3xl'
-                }`} />
+                <div className={`absolute inset-0 bg-gradient-to-br from-blue-500/40 via-purple-500/40 to-pink-500/40 blur-2xl opacity-60 ${isMobile ? 'rounded-xl' : 'rounded-3xl'}`} />
                 
                 {/* Main card with vault folder styling */}
-                <div className={`relative bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 backdrop-blur-2xl border-2 border-purple-500/40 shadow-2xl shadow-purple-900/60 ${
-                  isMobile ? 'rounded-2xl' : 'rounded-3xl'
-                }`}>
+                <div className={`relative bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 backdrop-blur-2xl border-2 border-purple-500/40 shadow-2xl shadow-purple-900/60 ${isMobile ? 'rounded-xl' : 'rounded-3xl'}`}>
                   {/* Cosmic Background Effects */}
                   <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-600/15 via-transparent to-transparent pointer-events-none" />
                   <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-blue-600/10 via-transparent to-transparent pointer-events-none" />
@@ -197,10 +189,10 @@ export function VaultFolderDialog({
                     }`} />
                   </button>
 
-                  <div className={isMobile ? 'relative p-5' : 'relative p-8 sm:p-10'}>
+                  <div className={isMobile ? 'relative p-4' : 'relative p-8 sm:p-10'}>
                     {/* Icon and Title Section */}
-                    <div className={`flex items-start mb-6 ${
-                      isMobile ? 'gap-3' : 'gap-5 mb-8'
+                    <div className={`flex items-start ${
+                      isMobile ? 'gap-2.5 mb-4' : 'gap-5 mb-8'
                     }`}>
                       {mode === 'create' ? (
                         <div className="relative flex-shrink-0">
@@ -230,26 +222,26 @@ export function VaultFolderDialog({
                         </div>
                       )}
                       
-                      <div className="flex-1 min-w-0 pr-10">
+                      <div className="flex-1 min-w-0 pr-8">
                         <h2 className={`font-bold bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight ${
-                          isMobile ? 'text-xl mb-1' : 'text-2xl sm:text-3xl mb-2'
+                          isMobile ? 'text-xl mb-1' : 'text-3xl mb-2'
                         }`}>
                           {mode === 'create' ? 'Create New Folder' : 'Rename Folder'}
                         </h2>
                         <p className={`text-slate-400 ${
-                          isMobile ? 'text-xs' : 'text-sm'
+                          isMobile ? 'text-sm' : 'text-base'
                         }`}>
                           {mode === 'create' 
-                            ? 'Organize your memories' 
-                            : 'Update folder details'
+                            ? 'Organize your memories with style' 
+                            : 'Update your folder details'
                           }
                         </p>
                       </div>
                     </div>
 
-                    <form onSubmit={handleSubmit} className={isMobile ? 'space-y-5' : 'space-y-7'}>
+                    <form onSubmit={handleSubmit} className={isMobile ? 'space-y-4' : 'space-y-7'}>
                       {/* Folder Name Input */}
-                      <div className="space-y-3">
+                      <div className={isMobile ? 'space-y-2' : 'space-y-3'}>
                         <Label htmlFor="folder-name" className={`font-semibold text-slate-200 flex items-center gap-2 ${
                           isMobile ? 'text-xs' : 'text-sm'
                         }`}>
@@ -291,7 +283,7 @@ export function VaultFolderDialog({
                         </div>
                       </div>
 
-                      {/* Color/Theme Picker - MOBILE vs DESKTOP */}
+                      {/* Color/Theme Picker */}
                       <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                         <div className="flex items-center justify-between">
                           <Label className={`font-semibold text-slate-200 flex items-center gap-2 ${
@@ -300,18 +292,18 @@ export function VaultFolderDialog({
                             <div className={`rounded-full bg-gradient-to-br ${selectedColorData.gradient} shadow-xl ring-2 ring-white/30 ${
                               isMobile ? 'w-3 h-3' : 'w-4 h-4'
                             }`} />
-                            {isMobile ? 'Theme' : 'Folder Theme'}
+                            {isMobile ? 'Theme' : 'Choose Theme'}
                           </Label>
                           <div className={`flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-800/60 border border-slate-700/50 ${
                             isMobile ? 'text-[10px]' : 'text-xs px-3 py-1.5'
                           }`}>
-                            <span className={isMobile ? 'text-lg leading-none' : 'text-2xl leading-none'}>{selectedColorData.icon}</span>
+                            <span className={isMobile ? 'text-xl leading-none' : 'text-2xl leading-none'}>{selectedColorData.icon}</span>
                             {!isMobile && <span className="text-slate-300 font-medium">{selectedColorData.displayName}</span>}
                           </div>
                         </div>
                         
-                        {/* UNIFIED GRID - Same 4-column layout for mobile and desktop, just scaled */}
-                        <div className={`grid grid-cols-3 ${isMobile ? 'gap-2' : 'gap-3'}`}>
+                        {/* Theme Grid - Redesigned with better icon/text placement */}
+                        <div className={`grid grid-cols-4 ${isMobile ? 'gap-2.5' : 'gap-3'}`}>
                           {FOLDER_COLORS.map((color) => (
                             <button
                               key={color.value}
@@ -319,12 +311,13 @@ export function VaultFolderDialog({
                               onClick={() => setFolderColor(color.value)}
                               disabled={isLoading}
                               className={`
-                                group relative aspect-square rounded-2xl transition-all duration-300 transform overflow-hidden
+                                group relative rounded-2xl transition-all duration-300 transform overflow-hidden
                                 ${folderColor === color.value 
                                   ? `ring-4 ${color.ring} ${isMobile ? 'ring-offset-2' : 'ring-offset-4'} ring-offset-slate-950 scale-105 shadow-2xl` 
                                   : `${isMobile ? 'hover:scale-105' : 'hover:scale-[1.08]'} shadow-xl hover:shadow-2xl border-2 border-slate-700/60 hover:border-slate-600`
                                 }
                                 disabled:opacity-40 disabled:cursor-not-allowed
+                                ${isMobile ? 'p-3 min-h-[80px]' : 'p-4 min-h-[100px]'}
                               `}
                               title={color.displayName}
                             >
@@ -334,33 +327,27 @@ export function VaultFolderDialog({
                               {/* Shimmer overlay on hover */}
                               <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                               
-                              {/* Centered content: icon + text with spacing */}
-                              <div className="absolute inset-0 flex flex-col items-center justify-start px-1 -mt-2.5">
+                              {/* Centered content with proper icon/text layout */}
+                              <div className="relative h-full flex flex-col items-center justify-center gap-1.5">
                                 {folderColor === color.value ? (
                                   <>
-                                    <div className="flex items-center justify-center mb-0.5">
-                                      <motion.div 
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        className={`rounded-full bg-white/50 backdrop-blur-md flex items-center justify-center border-3 border-white shadow-2xl ${
-                                          color.name.length > 1
-                                            ? (isMobile ? 'w-6 h-6' : 'w-9 h-9')
-                                            : (isMobile ? 'w-8 h-8' : 'w-12 h-12')
-                                        }`}
-                                      >
-                                        <Check className={`text-white font-bold ${
-                                          color.name.length > 1
-                                            ? (isMobile ? 'w-3.5 h-3.5' : 'w-5 h-5')
-                                            : (isMobile ? 'w-5 h-5' : 'w-7 h-7')
-                                        }`} strokeWidth={3.5} />
-                                      </motion.div>
-                                    </div>
-                                    <div className={`text-center ${color.name.length > 1 ? 'leading-[1.1]' : 'leading-tight'}`}>
+                                    <motion.div 
+                                      initial={{ scale: 0 }}
+                                      animate={{ scale: 1 }}
+                                      className={`rounded-full bg-white/50 backdrop-blur-md flex items-center justify-center border-3 border-white shadow-2xl ${
+                                        isMobile ? 'w-7 h-7' : 'w-10 h-10'
+                                      }`}
+                                    >
+                                      <Check className={`text-white font-bold ${
+                                        isMobile ? 'w-4 h-4' : 'w-6 h-6'
+                                      }`} strokeWidth={3.5} />
+                                    </motion.div>
+                                    <div className="text-center leading-tight">
                                       {color.name.map((line, idx) => (
                                         <div 
                                           key={idx}
                                           className={`font-bold text-white uppercase tracking-wide drop-shadow-lg ${
-                                            isMobile ? 'text-[8px]' : 'text-xs'
+                                            isMobile ? 'text-[9px]' : 'text-[10px]'
                                           }`}
                                         >
                                           {line}
@@ -370,19 +357,17 @@ export function VaultFolderDialog({
                                   </>
                                 ) : (
                                   <>
-                                    <div className={`opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-200 drop-shadow-lg mb-0.5 ${
-                                      color.name.length > 1 
-                                        ? (isMobile ? 'text-2xl' : 'text-3xl')
-                                        : (isMobile ? 'text-3xl' : 'text-4xl')
+                                    <div className={`opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-200 drop-shadow-lg ${
+                                      isMobile ? 'text-2xl' : 'text-3xl'
                                     }`}>
                                       {color.icon}
                                     </div>
-                                    <div className={`text-center ${color.name.length > 1 ? 'leading-[1.1]' : 'leading-tight'}`}>
+                                    <div className="text-center leading-tight">
                                       {color.name.map((line, idx) => (
                                         <div 
                                           key={idx}
-                                          className={`font-bold text-slate-300 group-hover:text-white uppercase tracking-wide ${
-                                            isMobile ? 'text-[8px]' : 'text-xs'
+                                          className={`font-bold text-white/90 group-hover:text-white uppercase tracking-wide drop-shadow ${
+                                            isMobile ? 'text-[9px]' : 'text-[10px]'
                                           }`}
                                         >
                                           {line}

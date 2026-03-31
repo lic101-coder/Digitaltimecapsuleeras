@@ -252,7 +252,7 @@ export function MomentPrismLogo({
         <div className="flex flex-col space-y-1">
           <div className="relative">
             <h1 
-              className="logo-gradient-text logo-title-enhanced font-black tracking-tight leading-none -ml-1 sm:ml-0"
+              className="logo-gradient-text logo-title-enhanced font-black tracking-tight leading-none -ml-[2.5rem] sm:ml-0"
               style={{ 
                 fontSize: `${isMobile ? logoMainSize * 0.8 : logoMainSize}px`,
                 fontFamily: '"SF Pro Display", "Inter", -apple-system, BlinkMacSystemFont, sans-serif',
@@ -265,13 +265,13 @@ export function MomentPrismLogo({
           
           <div className="relative">
             <p 
-              className="logo-subtitle-enhanced text-slate-600 dark:text-slate-400 font-medium tracking-wide leading-tight animate-fade-in-glow"
+              className="logo-subtitle-enhanced text-black dark:text-black font-black tracking-wide leading-tight animate-fade-in-glow"
               style={{ 
                 fontSize: `${logoSubSize}px`,
                 fontFamily: '"SF Pro Text", "Inter", system-ui, sans-serif',
                 letterSpacing: '0.05em',
                 animation: 'fadeInWithGlow 0.8s ease-out 0.5s both',
-                textShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(255, 255, 255, 0.3)'
+                textShadow: '0 2px 4px rgba(0, 0, 0, 0.9), 0 4px 12px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 255, 255, 0.4)'
               }}
             >
               {forceAuthLayout ? (

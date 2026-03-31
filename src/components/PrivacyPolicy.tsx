@@ -33,7 +33,7 @@ export function PrivacyPolicy() {
             </div>
             <div>
               <CardTitle className="text-2xl">Privacy Policy</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">Last Updated: February 19, 2026</p>
+              <p className="text-sm text-muted-foreground mt-1">Last Updated: March 19, 2026</p>
             </div>
           </div>
         </CardHeader>
@@ -67,6 +67,9 @@ export function PrivacyPolicy() {
                       <li><strong className="text-foreground">Profile Information:</strong> Display name, first name, last name, bio, and profile picture</li>
                       <li><strong className="text-foreground">Capsule Content:</strong> Videos, audio recordings, photos, text messages, and other media you upload</li>
                       <li><strong className="text-foreground">Theme Selections:</strong> Capsule theme choices (Birthday, Wedding, Travel, etc.) and customizations</li>
+                      <li><strong className="text-foreground">Theme Purchases:</strong> Premium theme purchases, bundle purchases, Complete Library access, and purchase history tracked with Row Level Security</li>
+                      <li><strong className="text-foreground">Beneficiary Purchases:</strong> Additional beneficiary slot purchases (+1, +3, or Unlimited tiers) and slot usage tracking</li>
+                      <li><strong className="text-foreground">Payment Information:</strong> Payment transaction data processed by Stripe (we do not store complete credit card information)</li>
                       <li><strong className="text-foreground">Recipient Information:</strong> Email addresses of people you send capsules to, including multi-recipient capsule configurations</li>
                       <li><strong className="text-foreground">Social Interactions:</strong> Reactions (emojis), comments, and echoes you add to capsules</li>
                       <li><strong className="text-foreground">Achievement Progress:</strong> Unlocked achievements, titles earned, and progression data across 57 achievements</li>
@@ -76,7 +79,8 @@ export function PrivacyPolicy() {
                       <li><strong className="text-foreground">Communications:</strong> Messages you send us through support channels</li>
                       <li><strong className="text-foreground">Notification Preferences:</strong> Your choices about how and when to receive notifications</li>
                       <li><strong className="text-foreground">Security Settings:</strong> Two-factor authentication (2FA) settings and preferences</li>
-                      <li><strong className="text-foreground">Referral Activity:</strong> Unique referral links, referral tracking codes, invitation email addresses, referral milestone progress, and rewards earned (Horizon Gallery unlocks)</li>
+                      <li><strong className="text-foreground">Referral Activity:</strong> Unique referral links, referral tracking codes, invitation email addresses, referral milestone progress, and rewards earned (Premium theme unlocks)</li>
+                      <li><strong className="text-foreground">Navigation Patterns:</strong> Home view preferences (Timeline, Calendar, or Classic), capsule viewing behavior, and interaction with tutorial system (Eras Odyssey)</li>
                     </ul>
                   </div>
 
@@ -157,6 +161,7 @@ export function PrivacyPolicy() {
                     <p>We work with third-party companies that provide essential services:</p>
                     <ul className="list-disc list-inside ml-4 space-y-2 mt-2">
                       <li><strong className="text-foreground">Supabase:</strong> Database hosting, authentication, file storage, and backend infrastructure</li>
+                      <li><strong className="text-foreground">Stripe:</strong> Payment processing for premium theme purchases, beneficiary slot purchases, and all monetization transactions (Stripe's Terms of Service and Privacy Policy apply)</li>
                       <li><strong className="text-foreground">Resend:</strong> Email delivery services for capsule delivery and notifications</li>
                       <li><strong className="text-foreground">Cloud Storage:</strong> Secure storage of your media files and capsule content</li>
                       <li><strong className="text-foreground">AI Services:</strong> Processing for text enhancement and media optimization features</li>
@@ -395,8 +400,12 @@ export function PrivacyPolicy() {
                 </h2>
                 <div className="space-y-2 text-muted-foreground">
                   <div className="p-3 bg-green-500/10 rounded-md border border-green-500/20">
+                    <p className="font-medium text-foreground">Version 6.0 - March 19, 2026</p>
+                    <p className="text-xs mt-1">Major payment processing and navigation data disclosure: Added comprehensive information about premium theme purchases (11 themes, pricing tiers from $0.99–$9.99), beneficiary slot purchase tracking (+1, +3, Unlimited tiers), Stripe payment processor integration (emphasizing we do not store complete credit card information), purchase history tracked with Row Level Security policies, navigation pattern collection (Home view preferences for Timeline/Calendar/Classic modes), capsule viewing behavior (smart routing between draft edit mode and detail view), tutorial system interaction tracking (Eras Odyssey with 3 tutorial flows), and expanded third-party service provider disclosure for monetization transactions</p>
+                  </div>
+                  <div className="p-3 bg-green-500/10 rounded-md border border-green-500/20">
                     <p className="font-medium text-foreground">Version 5.0 - February 19, 2026</p>
-                    <p className="text-xs mt-1">Referral program and notification system data disclosure: Added information about referral link tracking, invitation email addresses collected for referral program, milestone progress monitoring (1, 5, 10, and 25 referral tiers), Horizon Gallery reward unlocks, email invitation delivery tracking, and notification system enhancements with 6-color coding (tracking of notification types: received from others, self-delivered, echoes, achievements, urgent alerts, and system messages)</p>
+                    <p className="text-xs mt-1">Referral program and notification system data disclosure: Added information about referral link tracking, invitation email addresses collected for referral program, milestone progress monitoring (1, 3, 5, 10, and 25 referral tiers), Premium theme reward unlocks (individual themes and bundle rewards), email invitation delivery tracking, and notification system enhancements with 6-color coding (tracking of notification types: received from others, self-delivered, echoes, achievements, urgent alerts, and system messages)</p>
                   </div>
                   <div className="p-3 bg-muted/30 rounded-md">
                     <p className="font-medium text-foreground">Version 4.0 - January 8, 2026</p>

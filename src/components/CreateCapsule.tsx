@@ -33,7 +33,7 @@ import { MultiRecipientSelector } from './MultiRecipientSelector';
 import { supabase } from '../utils/supabase/client';
 import { DatabaseService } from '../utils/supabase/database';
 import { mediaCache } from '../utils/mediaCache';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { getUserTimeZone, TIME_ZONES, getTimeZoneDisplay, convertToUTCForStorage, fromUTC } from '../utils/timezone';
 import { validateScheduleTime, getMinimumScheduleDate, getMaximumScheduleDate } from '../utils/time-validation';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
@@ -51,6 +51,37 @@ import { queueOfflineAction } from '../utils/offline-storage';
 import { ThemeSelector } from './capsule-themes/ThemeSelector';
 import { getThemeConfig } from './capsule-themes/ThemeRegistry';
 import { ThemeSpecificInputs } from './capsule-themes/ThemeSpecificInputs';
+import { CeremonySelector } from './capsule-themes/CeremonySelector';
+import { supportsCeremonies } from './capsule-themes/CeremonyRegistry';
+import { TimeTravelerStep3 } from './capsule-themes/TimeTravelerStep3';
+import { TimeTravelerStep2Media } from './capsule-themes/TimeTravelerStep2Media';
+import { MixtapeStep2Media } from './capsule-themes/MixtapeStep2Media';
+import { MixtapeStep3Delivery } from './capsule-themes/MixtapeStep3Delivery';
+import { BabyStep1Media } from './capsule-themes/BabyStep1Media';
+import { BabyStep3Delivery } from './capsule-themes/BabyStep3Delivery';
+import { NewLifeStep1Media } from './capsule-themes/NewLifeStep1Media';
+import { PetStep1Media } from './capsule-themes/PetStep1Media';
+import { PetStep3Delivery } from './capsule-themes/PetStep3Delivery';
+import { AnniversaryStep1Media } from './capsule-themes/AnniversaryStep1Media';
+import { AnniversaryStep3Delivery } from './capsule-themes/AnniversaryStep3Delivery';
+import { GraduationStep1Media } from './capsule-themes/GraduationStep1Media';
+import { GraduationStep3Delivery } from './capsule-themes/GraduationStep3Delivery';
+import { BirthdayStep1Media } from './capsule-themes/BirthdayStep1Media';
+import { BirthdayStep3Delivery } from './capsule-themes/BirthdayStep3Delivery';
+import { GratitudeStep1Media } from './capsule-themes/GratitudeStep1Media';
+import { GratitudeStep3Delivery } from './capsule-themes/GratitudeStep3Delivery';
+import { NewYearStep1Media } from './capsule-themes/NewYearStep1Media';
+import { NewYearStep3Delivery } from './capsule-themes/NewYearStep3Delivery';
+import { WeddingStep1Media } from './capsule-themes/WeddingStep1Media';
+import { WeddingStep3Delivery } from './capsule-themes/WeddingStep3Delivery';
+import { NewHomeStep1Media } from './capsule-themes/NewHomeStep1Media';
+import { NewHomeStep3Delivery } from './capsule-themes/NewHomeStep3Delivery';
+import { TravelStep1Media } from './capsule-themes/TravelStep1Media';
+import { TravelStep3Delivery } from './capsule-themes/TravelStep3Delivery';
+import { CareerStep1Media } from './capsule-themes/CareerStep1Media';
+import { CareerStep3Delivery } from './capsule-themes/CareerStep3Delivery';
+import { FirstDayStep1Media } from './capsule-themes/FirstDayStep1Media';
+import { FirstDayStep3Delivery } from './capsule-themes/FirstDayStep3Delivery';
 import { SealingOverlay } from './SealingOverlay';
 import { VaultLoadingModal } from './VaultLoadingModal';
 
@@ -114,14 +145,15 @@ interface CreateCapsuleProps {
   workflowThemeMetadata?: any; // 🎨 Theme metadata from workflow
   onWorkInProgressChange?: (hasWork: boolean) => void;
   user?: any;
-  onEnhance?: (media: any) => void;
   onOpenVault?: ((currentMedia?: any[], currentTheme?: string, currentThemeMetadata?: any) => void) | null;
   onOpenRecord?: () => void; // ADDED: Callback to navigate to Record tab
+  onNavigateToStore?: () => void; // 🎨 ADDED: Callback to navigate to Store tab (for locked themes)
   initialDeliveryDate?: Date; // ADDED: Pre-fill delivery date (for Quick Add from Calendar)
   onMediaRemoved?: (mediaId: string, wasFromVault: boolean, vaultId?: string) => void; // ADDED: Notify when media is removed
   onVaultMediaIdsLoaded?: (vaultMediaIds: string[]) => void; // 🔥 ADDED: Notify when vault media IDs are loaded from editing capsule
   workflow?: any; // 🔥 ADDED: Workflow object for populating workflowMedia after draft hydration
   onRegisterRemoveMedia?: (removeMediaFn: (vaultId: string) => void) => void; // 🔥 ADDED: Register removeMedia function with parent
+  onRegisterReturnToTheme?: (returnFn: () => void) => void; // 🎨 ADDED: Register callback to return to theme selection (Step 1)
 }
 
 export function CreateCapsule({ 
@@ -135,14 +167,15 @@ export function CreateCapsule({
   workflowThemeMetadata,
   onWorkInProgressChange,
   user,
-  onEnhance,
   onOpenVault,
   onOpenRecord,
+  onNavigateToStore,
   initialDeliveryDate,
   workflow,
   onMediaRemoved,
   onVaultMediaIdsLoaded,
-  onRegisterRemoveMedia
+  onRegisterRemoveMedia,
+  onRegisterReturnToTheme
 }: CreateCapsuleProps) {
   // 🔍 MOUNT/UNMOUNT TRACKING
   const mountId = useRef(`CC-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`);
@@ -166,6 +199,48 @@ export function CreateCapsule({
   const { trackAction } = useAchievements();
   const { session } = useAuth();
   const { isOnline } = useNetworkStatus();
+  
+  // 🎨 STORE INTEGRATION: Fetch user's purchased themes on mount
+  useEffect(() => {
+    const fetchPurchasedThemes = async () => {
+      if (!user?.id) {
+        setPurchasedThemesLoading(false);
+        return;
+      }
+      
+      try {
+        setPurchasedThemesLoading(true);
+        const accessToken = await supabase.auth.getSession().then(res => res.data.session?.access_token);
+        if (!accessToken) {
+          setPurchasedThemesLoading(false);
+          return;
+        }
+        
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/store/purchases`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+            },
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          const themeIds = (data.themes || []).map((t: any) => t.theme_id);
+          setPurchasedThemes(themeIds);
+          console.log('🎨 Loaded purchased themes:', themeIds);
+        }
+      } catch (error) {
+        console.error('Failed to fetch purchased themes:', error);
+      } finally {
+        setPurchasedThemesLoading(false);
+      }
+    };
+    
+    fetchPurchasedThemes();
+  }, [user?.id]);
+  
   // Internal state to track newly created drafts that have not been sealed yet
   // CRITICAL FIX: Initialize with unique ID to prevent collisions and ensure vault media linking works
   // FIX: Include setter so we can update when draft is saved to DB
@@ -227,7 +302,8 @@ export function CreateCapsule({
         compressed: !!queueFile.compressedSize,
         originalSize: queueFile.size,
         thumbnail: queueFile.thumbnailUrl, // Add thumbnail from upload queue
-        uploading: false // Upload complete
+        uploading: false, // Upload complete
+        alreadyUploaded: true // 🔥 FIX: Mark as already uploaded so it doesn't get re-uploaded during seal
       };
       
       setMedia(prev => {
@@ -1330,15 +1406,29 @@ export function CreateCapsule({
   }, [editingCapsule]); // FIXED: Removed initialMedia to prevent infinite loop - only track editing state changes
   
   // Step management
-  // CRITICAL FIX: Initialize step based on props to prevent resetting to step 1 (Theme) 
-  // when returning from Record/Vault workflow (which provides initialMedia)
+  // CRITICAL FIX: Initialize step based on workflow state
+  // - If returning from Vault WITH theme: Go to Step 2 (preserve theme + media)
+  // - If editing existing capsule: Go to Step 2 (skip theme selection)
+  // - Otherwise: Start at Step 1 (theme selection)
   const [currentStep, setCurrentStep] = useState(() => {
-    // 🎨 THEME SELECTION FIX: Always start at step 1 when using media from vault
-    // Only skip theme selection when editing existing capsules (theme already chosen)
+    console.log('🎨 [STEP INIT] Determining initial step:', {
+      editingCapsule: !!editingCapsule,
+      workflowTheme,
+      hasInitialMedia: !!initialMedia && initialMedia.length > 0,
+      workflowStep
+    });
+    
     if (editingCapsule) {
+      console.log('🎨 [STEP INIT] Editing capsule → Starting at Step 2');
       return 2; // Skip to content step for existing capsules
     }
-    return 1; // Start at theme selection for new capsules (including vault media)
+    // 🎨 FIX: If returning from vault with theme already selected, skip to Step 2
+    if (workflowTheme && (initialMedia || workflowStep === 'create')) {
+      console.log('🎨 [STEP INIT] Restoring from vault with theme:', workflowTheme, '- Starting at Step 2');
+      return 2; // Skip theme selection when returning from vault with theme
+    }
+    console.log('🎨 [STEP INIT] No theme from workflow → Starting at Step 1');
+    return 1; // Start at theme selection for new capsules
   });
   const [direction, setDirection] = useState(0);
   
@@ -1353,6 +1443,10 @@ export function CreateCapsule({
   const [recipientType, setRecipientType] = useState<'self' | 'others' | null>(null); // No default - user must select
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [media, setMedia] = useState<MediaItem[]>([]);
+  
+  // 🎨 STORE INTEGRATION: Track purchased themes for locked state UI
+  const [purchasedThemes, setPurchasedThemes] = useState<string[]>([]);
+  const [purchasedThemesLoading, setPurchasedThemesLoading] = useState(true);
   
   // ⏰ TIME VALIDATION STATE - Track scheduling validation errors
   const [timeValidationError, setTimeValidationError] = useState<string | null>(null);
@@ -1422,6 +1516,20 @@ export function CreateCapsule({
   const folderInputRef = useRef<HTMLInputElement>(null);
   const messageTextareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Utility functions
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  // Computed values
+  const totalMediaSize = media.reduce((total, item) => {
+    return total + (item.file?.size || 0);
+  }, 0);
   
   // Draft auto-save
   const { lastSaved, saveDraft: saveDraftToStorage, clearDraft, loadDraft: loadDraftFromStorage, hasDraft: draftExists } = useDraftAutoSave();
@@ -1597,12 +1705,22 @@ export function CreateCapsule({
   
   // 🎨 CRITICAL FIX: Restore theme from workflow when returning from Vault
   useEffect(() => {
+    console.log('🎨 [THEME RESTORE] Effect triggered:', {
+      workflowTheme,
+      editingCapsule: !!editingCapsule,
+      currentThemeId: themeId
+    });
+    
     if (workflowTheme && !editingCapsule) {
-      console.log('🎨 Restoring theme from workflow:', workflowTheme);
+      console.log('🎨 [THEME RESTORE] Restoring theme from workflow:', workflowTheme);
       setThemeId(workflowTheme);
       if (workflowThemeMetadata) {
         setThemeMetadata(workflowThemeMetadata);
       }
+    } else if (!workflowTheme) {
+      console.log('🎨 [THEME RESTORE] No workflow theme to restore');
+    } else if (editingCapsule) {
+      console.log('🎨 [THEME RESTORE] Skipping - editing existing capsule');
     }
   }, [workflowTheme, workflowThemeMetadata, editingCapsule]);
   
@@ -1861,6 +1979,14 @@ export function CreateCapsule({
                     const realMedia: MediaItem[] = files.map((file: any, idx: number) => {
                         // Use the actual MIME type from the database
                         const mediaType = file.file_type || file.type || file.media_type || 'application/octet-stream';
+                        
+                        console.log(`🔍 [HYDRATE DEBUG] File ${idx}:`, {
+                          file_name: file.file_name,
+                          file_type: file.file_type,
+                          type: file.type,
+                          media_type: file.media_type,
+                          resolved_mediaType: mediaType
+                        });
                         
                         // Determine simple type for UI rendering
                         const simpleType = mediaType.startsWith('video') ? 'video' 
@@ -2161,63 +2287,6 @@ export function CreateCapsule({
     toast.success(`Deleted ${selectedMediaIds.size} item${selectedMediaIds.size > 1 ? 's' : ''}`);
   };
 
-  const handleEnhanceSelectedMedia = () => {
-    if (selectedMediaIds.size === 0) {
-      toast.error('No media selected');
-      return;
-    }
-
-    const selectedMedia = media.filter(m => selectedMediaIds.has(m.id));
-    
-    // 🎬 Filter out documents AND videos - they cannot be enhanced
-    const enhanceableMedia = selectedMedia.filter(m => 
-      m.type === 'image' || m.type === 'audio'
-    );
-    
-    const documentCount = selectedMedia.filter(m => m.type === 'document').length;
-    const videoCount = selectedMedia.filter(m => m.type === 'video').length;
-    
-    if (enhanceableMedia.length === 0) {
-      toast.error('No items can be enhanced', {
-        description: 'Please select photos or audio files.'
-      });
-      return;
-    }
-    
-    // Show warning if videos or documents were filtered out
-    const excludedItems = [];
-    if (documentCount > 0) excludedItems.push(`${documentCount} document${documentCount > 1 ? 's' : ''}`);
-    if (videoCount > 0) excludedItems.push(`${videoCount} video${videoCount > 1 ? 's' : ''}`);
-    
-    if (excludedItems.length > 0) {
-      toast.warning(`${excludedItems.join(' and ')} skipped`, {
-        description: 'Only photos and audio files can be enhanced.'
-      });
-    }
-    
-    if (onEnhance && enhanceableMedia.length > 0) {
-      // Pass ALL enhanceable media with their IDs for replacement tracking
-      const mediaWithIds = enhanceableMedia.map(m => ({
-        ...m,
-        originalId: m.id, // Track original ID for replacement
-        vaultId: m.vault_id || m.vaultId, // 🆕 Track vault ID if from vault
-        fromVault: m.fromVault // 🆕 Track if from vault
-      }));
-      
-      // If single media, pass as single object; if multiple, pass as array
-      if (mediaWithIds.length === 1) {
-        onEnhance(mediaWithIds[0]);
-      } else {
-        onEnhance(mediaWithIds); // Pass array for batch enhancement
-      }
-      
-      setIsMultiSelectMode(false);
-      setSelectedMediaIds(new Set());
-    } else {
-      toast.error('Enhancement not available');
-    }
-  };
-
   const removeMedia = async (id: string) => {
     // Find the media item before removing it
     const mediaItem = media.find(m => m.id === id);
@@ -2256,6 +2325,36 @@ export function CreateCapsule({
     }
   };
 
+  const handlePreviewMedia = (mediaItem: any) => {
+    if (mediaItem && mediaItem.id) {
+      setPreviewMediaId(mediaItem.id);
+      setShowMediaPreview(true);
+    }
+  };
+
+  const handleDownloadMedia = async (mediaItem: any) => {
+    if (!mediaItem || !mediaItem.url) {
+      toast.error('Cannot download media');
+      return;
+    }
+
+    try {
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = mediaItem.url;
+      link.download = mediaItem.name || 'download';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Download started');
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download media');
+    }
+  };
+
   // 🔥 Register removeMedia function with parent so vault can call it directly
   const mediaRef = useRef(media);
   useEffect(() => {
@@ -2275,6 +2374,19 @@ export function CreateCapsule({
       onRegisterRemoveMedia(removeByVaultId);
     }
   }, [onRegisterRemoveMedia]);
+
+  // 🎨 Register callback to return to theme selection (Step 1)
+  useEffect(() => {
+    if (onRegisterReturnToTheme) {
+      const returnToTheme = () => {
+        console.log('🎨 Returning to theme selection (Step 1)');
+        setDirection(-1);
+        setCurrentStep(1);
+        toast.info('Returning to theme selection');
+      };
+      onRegisterReturnToTheme(returnToTheme);
+    }
+  }, [onRegisterReturnToTheme]);
 
   // Recipient management
   const addRecipient = () => {
@@ -2708,6 +2820,18 @@ export function CreateCapsule({
         
         console.log(`📸 Upload summary: ${filesToUpload.length} new file(s) to upload, ${alreadyUploadedFiles.length} already uploaded`);
         
+        // 🔍 DEBUG: Log all media items and their status
+        console.log('🔍 [MEDIA DEBUG] All media items:', media.map((m, i) => ({
+          index: i,
+          name: m.file?.name,
+          id: m.id,
+          alreadyUploaded: m.alreadyUploaded,
+          fromVault: m.fromVault,
+          uploading: m.uploading,
+          hasUrl: !!m.url,
+          url: m.url?.substring(0, 100)
+        })));
+        
         // Upload media files to storage
         // CRITICAL FIX: Upload files SEQUENTIALLY instead of parallel to prevent race conditions
         // When multiple files write to capsule_media:CAPSULE_ID simultaneously, they can overwrite each other
@@ -2832,6 +2956,16 @@ export function CreateCapsule({
         const mediaIds = mediaResults
           .map(r => r.id)
           .filter(id => id && !id.toString().startsWith('existing-') && !id.toString().startsWith('hydrated-') && !id.toString().startsWith('restored-') && !id.toString().startsWith('initial-'));
+
+        // 🔍 DEBUG: Log final media arrays being sent
+        console.log('🔍 [MEDIA DEBUG] Final arrays to send:', {
+          mediaResultsCount: mediaResults.length,
+          mediaUrlsCount: mediaUrls.length,
+          mediaIdsCount: mediaIds.length,
+          mediaResults: mediaResults.map(r => ({ url: r.url?.substring(0, 80), id: r.id })),
+          mediaUrls: mediaUrls.map(u => u?.substring(0, 80)),
+          mediaIds: mediaIds
+        });
 
         // Calculate correct UTC delivery date if date is set
         let deliveryIsoString = null;
@@ -3506,11 +3640,18 @@ export function CreateCapsule({
       });
       
       // CRITICAL FIX: Upload files SEQUENTIALLY instead of parallel to prevent race conditions
-      const mediaUrls = [];
+      // 🔥 FIX: Track both URLs and IDs (like handleSaveBackground does) for proper media persistence
+      const mediaResults = [];
       
       // Add already-uploaded files to results first
       for (const m of alreadyUploadedFiles) {
-        mediaUrls.push(m.url);
+        console.log(`📎 Including already-uploaded media:`, {
+          id: m.id,
+          fileName: m.file?.name,
+          hasUrl: !!m.url,
+          fromVault: m.fromVault
+        });
+        mediaResults.push({ url: m.url, id: m.id });
       }
       
       // Upload new files
@@ -3530,6 +3671,7 @@ export function CreateCapsule({
         let retries = 2;
         let lastError: any = null;
         let uploadedUrl: string | null = null;
+        let uploadedId: string | null = null; // 🔥 Track media ID
         
         for (let attempt = 0; attempt <= retries; attempt++) {
           try {
@@ -3631,7 +3773,8 @@ export function CreateCapsule({
               }
               
               uploadedUrl = publicUrl;
-              console.log(`✅ [LARGE FILE] Uploaded ${m.file.name} directly to storage`);
+              uploadedId = mediaFile.id; // 🔥 Track media ID for capsule linkage
+              console.log(`✅ [LARGE FILE] Uploaded ${m.file.name} directly to storage with ID: ${mediaFile.id}`);
               break; // Success!
             } else {
               // Small file - use existing server endpoint
@@ -3697,9 +3840,11 @@ export function CreateCapsule({
                 fileType: m.file.type,
                 mimeType: m.mimeType,
                 mediaType: m.type,
-                url: uploadResult.publicUrl
+                url: uploadResult.publicUrl,
+                mediaId: uploadResult.mediaFile?.id // 🔥 Log media ID
               });
               uploadedUrl = uploadResult.publicUrl;
+              uploadedId = uploadResult.mediaFile?.id; // 🔥 Track media ID
               break; // Success, exit retry loop
             }
             
@@ -3728,13 +3873,21 @@ export function CreateCapsule({
           throw new Error(`Failed to upload ${m.file.name}: ${lastError?.message || 'Unknown error'}`);
         }
         
-        mediaUrls.push(uploadedUrl);
+        // 🔥 FIX: Push both URL and ID to results
+        mediaResults.push({ url: uploadedUrl, id: uploadedId });
       }
       
       // ⚡ Dismiss upload progress toast
       toast.dismiss('upload-progress');
       
+      // Extract URLs and IDs from results
+      const mediaUrls = mediaResults.map(r => r.url);
+      const mediaIds = mediaResults
+        .map(r => r.id)
+        .filter(id => id && !id.toString().startsWith('existing-') && !id.toString().startsWith('hydrated-') && !id.toString().startsWith('restored-') && !id.toString().startsWith('initial-'));
+      
       console.log(`✅ All ${mediaUrls.length} media files uploaded successfully`);
+      console.log(`🔑 Extracted ${mediaIds.length} media IDs for capsule linkage`);
       console.log(`📊 DIAGNOSTIC - Upload summary:`, {
         totalMediaItems: media.length,
         totalUrlsReturned: mediaUrls.length,
@@ -3811,6 +3964,7 @@ export function CreateCapsule({
           },
           theme: themeId, // Redundant backup at root level for safer retrieval
           media_urls: mediaUrls,
+          media_files: mediaIds, // 🔥 FIX: Include media IDs for proper capsule linkage
           delivery_date: deliveryDateTime.toISOString(),
           delivery_time: deliveryTime,
           time_zone: timeZone,
@@ -3834,7 +3988,9 @@ export function CreateCapsule({
           isUpdate: !!existingCapsuleId,
           id: existingCapsuleId,
           theme: themeId,
-          metadata: capsulePayload.metadata
+          metadata: capsulePayload.metadata,
+          mediaUrls: capsulePayload.media_urls?.length || 0,
+          mediaFiles: capsulePayload.media_files?.length || 0 // 🔥 Log media IDs count
         });
 
       if (existingCapsuleId) {
@@ -4063,7 +4219,10 @@ export function CreateCapsule({
                 <div className="flex items-center gap-2">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="relative w-12 h-12 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-all border border-white/20">
+                        <Button 
+                          variant="ghost"
+                          className="relative w-12 h-12 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-all border border-white/20 p-0"
+                        >
                           <MoreVertical className="h-5 w-5 text-white" />
                           
                           {/* Badge indicator when draft exists or was saved */}
@@ -4072,7 +4231,7 @@ export function CreateCapsule({
                               <span className="text-white text-[10px] font-bold leading-none">{draftExists ? '!' : '✓'}</span>
                             </div>
                           )}
-                        </button>
+                        </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48 bg-slate-900 border-slate-700 z-[9999]" sideOffset={8}>
                         <DropdownMenuItem onClick={handleSaveDraft} className="text-white focus:bg-slate-800 focus:text-white cursor-pointer">
@@ -4119,15 +4278,28 @@ export function CreateCapsule({
                      ].map((item) => {
                        const isActive = currentStep >= item.step;
                        const isCurrent = currentStep === item.step;
+                       const canGoBack = currentStep > item.step; // Can click to go back to previous steps
                        
                        return (
-                         <div key={item.step} className="flex flex-col items-center gap-2">
+                         <button
+                           key={item.step}
+                           onClick={() => {
+                             if (canGoBack) {
+                               console.log(`🔙 Navigating back to step ${item.step}`);
+                               setDirection(-1);
+                               setCurrentStep(item.step);
+                               toast.info(`Returned to ${item.label}`);
+                             }
+                           }}
+                           disabled={!canGoBack}
+                           className={`flex flex-col items-center gap-2 ${canGoBack ? 'cursor-pointer' : 'cursor-default'}`}
+                         >
                             <motion.div 
                               className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors duration-300 ${
                                 isActive 
                                   ? 'bg-purple-500 border-purple-500' 
                                   : 'bg-slate-900 border-white/20'
-                              }`}
+                              } ${canGoBack ? 'hover:scale-110' : ''}`}
                               animate={{ 
                                 scale: isCurrent ? 1.2 : 1,
                                 backgroundColor: isActive ? '#a855f7' : '#0f172a',
@@ -4144,10 +4316,10 @@ export function CreateCapsule({
                             </motion.div>
                             <span className={`text-xs font-medium transition-colors duration-300 ${
                               isActive ? 'text-white' : 'text-white/40'
-                            }`}>
+                            } ${canGoBack ? 'hover:text-purple-300' : ''}`}>
                               {item.label}
                             </span>
-                         </div>
+                         </button>
                        );
                      })}
                   </div>
@@ -4185,18 +4357,18 @@ export function CreateCapsule({
                   className="space-y-6"
                 >
                   <Card className={`border-2 shadow-2xl ${isMobile ? 'border-purple-700 bg-purple-950' : 'border-purple-500/30 bg-white/5 backdrop-blur-md'}`} style={{ willChange: 'auto' }}>
-                    <CardHeader className={`border-b ${isMobile ? 'bg-purple-900 border-purple-700' : 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-purple-500/30'}`}>
-                      <CardTitle className="flex items-center gap-3 text-white">
-                        <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-lg">
-                          <Palette className="h-5 w-5 text-white" />
+                    <CardHeader className={`border-b ${isMobile ? 'bg-purple-900 border-purple-700 pb-5' : 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-purple-500/30 pb-6'}`}>
+                      <CardTitle className={`flex items-center text-white ${isMobile ? 'gap-3 text-xl' : 'gap-4 text-2xl'}`}>
+                        <div className={`bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl shadow-lg ${isMobile ? 'p-2.5' : 'p-3'}`}>
+                          <Palette className={isMobile ? 'h-5 w-5 text-white' : 'h-6 w-6 text-white'} />
                         </div>
                         Choose a Theme
                       </CardTitle>
-                      <p className="text-sm text-white/70 mt-2">
-                        Select a visual style and unboxing experience for your recipient
+                      <p className={`text-white/70 ${isMobile ? 'text-sm mt-2.5 leading-relaxed' : 'text-base mt-3 leading-relaxed'}`}>
+                        Select a visual style and opening ceremony for your time capsule
                       </p>
                     </CardHeader>
-                    <CardContent className="pt-6">
+                    <CardContent className={isMobile ? 'pt-5 pb-6' : 'pt-7 pb-8'}>
                       <ThemeSelector 
                         selectedThemeId={themeId}
                         onSelectTheme={(id) => {
@@ -4210,6 +4382,9 @@ export function CreateCapsule({
                             goToNextStep();
                           }, 400);
                         }}
+                        purchasedThemes={purchasedThemes}
+                        purchasedThemesLoading={purchasedThemesLoading}
+                        onNavigateToStore={onNavigateToStore}
                       />
                     </CardContent>
                   </Card>
@@ -4230,6 +4405,35 @@ export function CreateCapsule({
                   }}
                   className="space-y-6"
                 >
+                  {/* 🎬 Ceremony Selection - Only shown for themes with ceremony support */}
+                  {supportsCeremonies(themeId) && (
+                    <Card 
+                      className={`border-2 shadow-2xl ${isMobile ? 'border-purple-700 bg-purple-950' : 'border-purple-500/30 bg-white/5 backdrop-blur-md'}`}
+                      style={{ 
+                        willChange: 'auto',
+                        // Apply theme glow if not standard
+                        borderColor: themeId !== 'standard' ? currentTheme.primaryColor : undefined,
+                        boxShadow: themeId !== 'standard' ? `0 0 20px ${currentTheme.primaryColor}20` : undefined
+                      }}
+                    >
+                      <CardContent className="pt-6">
+                        <CeremonySelector
+                          themeId={themeId}
+                          selectedCeremony={themeMetadata.ceremonyStyle || null}
+                          onCeremonyChange={(ceremonyId) => {
+                            console.log('🎬 [CreateCapsule] User selected ceremony:', ceremonyId, 'for theme:', themeId);
+                            setThemeMetadata({
+                              ...themeMetadata,
+                              ceremonyStyle: ceremonyId
+                            });
+                          }}
+                          capsuleTitle={title}
+                          sampleMedia={media.slice(0, 4)}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
+
                   {/* Quick Start Templates - Only for Standard Theme */}
                   {themeId === 'standard' && (
                     <Card className={`border-2 shadow-2xl ${isMobile ? 'border-purple-700 bg-purple-950' : 'border-purple-500/30 bg-white/5 backdrop-blur-md'}`} style={{ willChange: 'auto' }}>
@@ -4278,13 +4482,86 @@ export function CreateCapsule({
                     <CardContent className="pt-6 space-y-6">
                       {/* Title */}
                       <div className="space-y-2">
-                        <Label htmlFor="title" className="text-base text-white/90">Title</Label>
+                        <Label htmlFor="title" className={`text-base text-white/90 ${
+                          themeId === 'future' ? 'font-mono text-cyan-400' : 
+                          themeId === 'friendship' ? 'font-handwriting text-lg text-teal-300' :
+                          themeId === 'new_life' ? 'font-handwriting text-lg text-purple-300' :
+                          themeId === 'pet' ? 'font-handwriting text-lg text-amber-300' :
+                          themeId === 'anniversary' ? 'font-handwriting text-lg bg-gradient-to-r from-rose-300 via-amber-200 to-rose-300 bg-clip-text text-transparent' :
+                          themeId === 'graduation' ? 'font-serif text-lg text-blue-300' :
+                          themeId === 'birthday' ? 'text-lg bg-gradient-to-r from-red-300 via-yellow-300 to-blue-300 bg-clip-text text-transparent font-bold' :
+                          themeId === 'gratitude' ? 'font-serif text-lg text-orange-300' :
+                          themeId === 'new_year' ? 'text-lg bg-gradient-to-r from-purple-300 via-violet-300 to-amber-300 bg-clip-text text-transparent font-bold' :
+                          themeId === 'wedding' ? 'font-serif text-lg bg-gradient-to-r from-amber-300 via-rose-300 to-amber-300 bg-clip-text text-transparent italic' :
+                          themeId === 'new_home' ? 'text-lg bg-gradient-to-r from-blue-300 via-slate-300 to-amber-300 bg-clip-text text-transparent font-bold' :
+                          themeId === 'travel' ? 'text-lg bg-gradient-to-r from-amber-300 via-orange-300 to-yellow-300 bg-clip-text text-transparent font-bold' :
+                          themeId === 'career' ? 'text-lg bg-gradient-to-r from-blue-300 via-slate-300 to-gray-300 bg-clip-text text-transparent font-bold' :
+                          themeId === 'first_day' ? 'text-lg bg-gradient-to-r from-orange-300 via-yellow-300 to-amber-300 bg-clip-text text-transparent font-bold' : ''
+                        }`}>
+                          {themeId === 'future' ? '> DESIGNATE_CAPSULE_ID:' : 
+                           themeId === 'friendship' ? '🎵 Track Title:' :
+                           themeId === 'new_life' ? '💫 Memory Title' :
+                           themeId === 'pet' ? '🐾 Pet Memory Title' :
+                           themeId === 'anniversary' ? '❤️ Love Letter Title' :
+                           themeId === 'graduation' ? '🎓 Achievement Title' :
+                           themeId === 'birthday' ? '🎂 Birthday Wish Title' :
+                           themeId === 'gratitude' ? '🙏 Gratitude Title' :
+                           themeId === 'new_year' ? '✨ Resolution Title' :
+                           themeId === 'wedding' ? '💍 Your Vow Title' :
+                           themeId === 'new_home' ? '🏠 Home Memory Title' :
+                           themeId === 'travel' ? '✈️ Travel Title' :
+                           themeId === 'career' ? '💼 Professional Milestone' :
+                           themeId === 'first_day' ? '📓 First Day Title' : 'Title'}
+                        </Label>
                         <Input
                           id="title"
                           value={title}
                           onChange={(e) => setTitle(e.target.value)}
-                          placeholder="Give your capsule a memorable title..."
-                          className="h-12 text-base bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                          placeholder={themeId === 'future' ? "[ ENTER_IDENTIFIER ]" : 
+                                      themeId === 'friendship' ? "Side A - Best Friends Forever" :
+                                      themeId === 'new_life' ? "Baby's First Year..." :
+                                      themeId === 'pet' ? "Forever in Our Hearts..." :
+                                      themeId === 'anniversary' ? "Our Love Story..." :
+                                      themeId === 'graduation' ? "My Greatest Achievement..." :
+                                      themeId === 'birthday' ? "Best Birthday Ever..." :
+                                      themeId === 'gratitude' ? "Thankful Reflections..." :
+                                      themeId === 'new_year' ? "My New Year's Resolution..." :
+                                      themeId === 'wedding' ? "Forever and Always..." :
+                                      themeId === 'new_home' ? "New Chapter Begins..." :
+                                      themeId === 'travel' ? "Around the World..." :
+                                      themeId === 'career' ? "Achieving Excellence..." :
+                                      themeId === 'first_day' ? "New Beginnings..." : "Give your capsule a memorable title..."}
+                          className={`h-12 text-base text-white placeholder:text-white/40 ${
+                            themeId === 'future' 
+                              ? 'bg-black/40 border-cyan-500/50 font-mono tracking-wider focus:ring-cyan-500 focus:border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.1)]' 
+                              : themeId === 'friendship'
+                              ? 'bg-gradient-to-r from-amber-900/40 to-amber-800/40 border-teal-500/50 font-handwriting text-lg focus:ring-teal-500 focus:border-teal-400 shadow-[0_0_15px_rgba(20,184,166,0.1)]'
+                              : themeId === 'new_life'
+                              ? 'bg-gradient-to-r from-purple-900/40 to-pink-900/40 border-purple-400/50 font-handwriting text-lg focus:ring-purple-400 focus:border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.1)]'
+                              : themeId === 'pet'
+                              ? 'bg-gradient-to-r from-amber-900/40 to-orange-900/40 border-amber-400/50 font-handwriting text-lg focus:ring-amber-400 focus:border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.1)]'
+                              : themeId === 'anniversary'
+                              ? 'bg-gradient-to-r from-rose-900/40 to-pink-900/40 border-rose-400/50 font-handwriting text-lg focus:ring-rose-400 focus:border-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.2)]'
+                              : themeId === 'graduation'
+                              ? 'bg-gradient-to-r from-blue-900/40 to-slate-900/40 border-blue-400/50 font-serif text-lg focus:ring-blue-400 focus:border-blue-400 shadow-[0_0_15px_rgba(96,165,250,0.2)]'
+                              : themeId === 'birthday'
+                              ? 'bg-gradient-to-r from-red-900/40 via-yellow-900/40 to-blue-900/40 border-red-400/50 text-lg focus:ring-red-400 focus:border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.2)]'
+                              : themeId === 'gratitude'
+                              ? 'bg-gradient-to-r from-orange-900/40 to-amber-900/40 border-orange-400/50 font-serif text-lg focus:ring-orange-400 focus:border-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.2)]'
+                              : themeId === 'new_year'
+                              ? 'bg-gradient-to-r from-purple-900/40 via-violet-900/40 to-amber-900/40 border-purple-400/50 text-lg focus:ring-purple-400 focus:border-purple-400 shadow-[0_0_20px_rgba(147,51,234,0.2)]'
+                              : themeId === 'wedding'
+                              ? 'bg-gradient-to-r from-amber-900/40 via-rose-900/40 to-amber-900/40 border-amber-400/50 font-serif text-lg focus:ring-amber-400 focus:border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.3)]'
+                              : themeId === 'new_home'
+                              ? 'bg-gradient-to-r from-blue-900/40 via-slate-900/40 to-amber-900/40 border-blue-400/50 text-lg focus:ring-blue-400 focus:border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.2)]'
+                              : themeId === 'travel'
+                              ? 'bg-gradient-to-r from-amber-900/40 via-orange-900/40 to-yellow-900/40 border-amber-500/50 text-lg focus:ring-amber-500 focus:border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.2)]'
+                              : themeId === 'career'
+                              ? 'bg-gradient-to-r from-blue-900/40 via-slate-900/40 to-gray-900/40 border-blue-400/50 text-lg focus:ring-blue-400 focus:border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] font-sans'
+                              : themeId === 'first_day'
+                              ? 'bg-gradient-to-r from-orange-900/40 via-yellow-900/40 to-amber-900/40 border-orange-400/50 text-lg focus:ring-orange-400 focus:border-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.2)]'
+                              : 'bg-white/10 border-white/20'
+                          }`}
                         />
                       </div>
 
@@ -4297,14 +4574,87 @@ export function CreateCapsule({
 
                       {/* Message */}
                       <div className="space-y-2">
-                        <Label htmlFor="message" className="text-lg font-semibold text-white/90">Your Message</Label>
+                        <Label htmlFor="message" className={`text-lg font-semibold text-white/90 ${
+                          themeId === 'future' ? 'font-mono text-cyan-400' :
+                          themeId === 'friendship' ? 'font-handwriting text-xl text-teal-300' :
+                          themeId === 'new_life' ? 'font-handwriting text-xl text-purple-300' :
+                          themeId === 'pet' ? 'font-handwriting text-xl text-amber-300' :
+                          themeId === 'anniversary' ? 'font-handwriting text-xl text-rose-300' :
+                          themeId === 'graduation' ? 'font-serif text-xl text-blue-300' :
+                          themeId === 'birthday' ? 'text-xl bg-gradient-to-r from-red-300 via-yellow-300 to-blue-300 bg-clip-text text-transparent font-bold' :
+                          themeId === 'gratitude' ? 'font-serif text-xl text-orange-300' :
+                          themeId === 'new_year' ? 'text-xl bg-gradient-to-r from-purple-300 via-violet-300 to-amber-300 bg-clip-text text-transparent font-bold' :
+                          themeId === 'wedding' ? 'font-serif text-xl bg-gradient-to-r from-amber-300 via-rose-300 to-amber-300 bg-clip-text text-transparent italic' :
+                          themeId === 'new_home' ? 'text-xl bg-gradient-to-r from-blue-300 via-slate-300 to-amber-300 bg-clip-text text-transparent font-bold' :
+                          themeId === 'travel' ? 'text-xl bg-gradient-to-r from-amber-300 via-orange-300 to-yellow-300 bg-clip-text text-transparent font-bold' :
+                          themeId === 'career' ? 'text-xl bg-gradient-to-r from-blue-300 via-slate-300 to-gray-300 bg-clip-text text-transparent font-bold' :
+                          themeId === 'first_day' ? 'text-xl bg-gradient-to-r from-orange-300 via-yellow-300 to-amber-300 bg-clip-text text-transparent font-bold' : ''
+                        }`}>
+                          {themeId === 'future' ? '> INITIATE_TEMPORAL_LOG:' : 
+                           themeId === 'friendship' ? '🎵 Liner Notes:' :
+                           themeId === 'new_life' ? '💫 Memory Title' :
+                           themeId === 'pet' ? '💝 Special Moments' :
+                           themeId === 'anniversary' ? '💕 Romantic Message' :
+                           themeId === 'graduation' ? '📜 Future Advice' :
+                           themeId === 'birthday' ? '🎉 Your Birthday Message' :
+                           themeId === 'gratitude' ? '💛 Thankful Message' :
+                           themeId === 'new_year' ? '🎊 New Year Message' :
+                           themeId === 'wedding' ? '💌 Love Letter to the Future' :
+                           themeId === 'new_home' ? '🔑 New Chapter Message' :
+                           themeId === 'travel' ? '🗺️ Journey Notes' :
+                           themeId === 'career' ? '📋 Career Message' :
+                           themeId === 'first_day' ? '✏️ Day One Thoughts' : 'Your Message'}
+                        </Label>
                         <Textarea
                           id="message"
                           ref={messageTextareaRef}
                           value={message}
                           onChange={(e) => setMessage(e.target.value)}
-                          placeholder="Write your message to the future..."
-                          className="text-base md:text-sm p-5 leading-relaxed !text-left bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                          placeholder={themeId === 'future' ? "[ ENTER_TRANSMISSION_DATA ]" : 
+                                      themeId === 'friendship' ? "Write your message like liner notes in a mixtape..." :
+                                      themeId === 'new_life' ? "Write a loving message to the future..." :
+                                      themeId === 'pet' ? "Share your treasured memories and love..." :
+                                      themeId === 'anniversary' ? "Write your romantic message to the future..." :
+                                      themeId === 'graduation' ? "Share advice and wisdom for your future self..." :
+                                      themeId === 'birthday' ? "Make a birthday wish and share your celebration message..." :
+                                      themeId === 'gratitude' ? "Express what you're thankful for..." :
+                                      themeId === 'new_year' ? "Write your resolution and hopes for the future..." :
+                                      themeId === 'wedding' ? "Write your vows and promises to the future..." :
+                                      themeId === 'new_home' ? "Capture this fresh start and new beginning..." :
+                                      themeId === 'travel' ? "Document your adventures and discoveries..." :
+                                      themeId === 'career' ? "Reflect on achievements and future goals..." :
+                                      themeId === 'first_day' ? "How are you feeling on this new beginning?..." : "Write your message to the future..."}
+                          className={`text-base md:text-sm p-5 leading-relaxed !text-left text-white placeholder:text-white/40 ${
+                            themeId === 'future'
+                              ? 'bg-black/40 border-cyan-500/50 font-mono tracking-wide focus:ring-cyan-500 focus:border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.1)]'
+                              : themeId === 'friendship'
+                              ? 'bg-gradient-to-br from-amber-900/40 to-amber-800/40 border-teal-500/50 font-handwriting text-base focus:ring-teal-500 focus:border-teal-400 shadow-[0_0_15px_rgba(20,184,166,0.1)]'
+                              : themeId === 'new_life'
+                              ? 'bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-400/50 font-handwriting text-base focus:ring-purple-400 focus:border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.1)]'
+                              : themeId === 'pet'
+                              ? 'bg-gradient-to-br from-amber-900/40 to-orange-900/40 border-amber-400/50 font-handwriting text-base focus:ring-amber-400 focus:border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.1)]'
+                              : themeId === 'anniversary'
+                              ? 'bg-gradient-to-br from-rose-900/40 to-pink-900/40 border-rose-400/50 font-handwriting text-base focus:ring-rose-400 focus:border-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.2)]'
+                              : themeId === 'graduation'
+                              ? 'bg-gradient-to-br from-blue-900/40 to-slate-900/40 border-blue-400/50 font-serif text-base focus:ring-blue-400 focus:border-blue-400 shadow-[0_0_15px_rgba(96,165,250,0.2)]'
+                              : themeId === 'birthday'
+                              ? 'bg-gradient-to-br from-red-900/40 via-yellow-900/40 to-blue-900/40 border-red-400/50 text-base focus:ring-red-400 focus:border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.2)]'
+                              : themeId === 'gratitude'
+                              ? 'bg-gradient-to-br from-orange-900/40 to-amber-900/40 border-orange-400/50 font-serif text-base focus:ring-orange-400 focus:border-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.2)]'
+                              : themeId === 'new_year'
+                              ? 'bg-gradient-to-br from-purple-900/40 via-violet-900/40 to-amber-900/40 border-purple-400/50 text-base focus:ring-purple-400 focus:border-purple-400 shadow-[0_0_20px_rgba(147,51,234,0.2)]'
+                              : themeId === 'wedding'
+                              ? 'bg-gradient-to-br from-amber-900/40 via-rose-900/40 to-amber-900/40 border-amber-400/50 font-serif text-base focus:ring-amber-400 focus:border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.3)]'
+                              : themeId === 'new_home'
+                              ? 'bg-gradient-to-br from-blue-900/40 via-slate-900/40 to-amber-900/40 border-blue-400/50 text-base focus:ring-blue-400 focus:border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.2)]'
+                              : themeId === 'travel'
+                              ? 'bg-gradient-to-br from-amber-900/40 via-orange-900/40 to-yellow-900/40 border-amber-500/50 text-base focus:ring-amber-500 focus:border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.2)]'
+                              : themeId === 'career'
+                              ? 'bg-gradient-to-br from-blue-900/40 via-slate-900/40 to-gray-900/40 border-blue-400/50 text-base focus:ring-blue-400 focus:border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] font-sans'
+                              : themeId === 'first_day'
+                              ? 'bg-gradient-to-br from-orange-900/40 via-yellow-900/40 to-amber-900/40 border-orange-400/50 text-base focus:ring-orange-400 focus:border-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.2)]'
+                              : 'bg-white/10 border-white/20'
+                          }`}
                           style={{ 
                             minHeight: window.innerWidth < 768 ? '240px' : '140px',
                             height: window.innerWidth < 768 ? '240px' : '140px',
@@ -4313,7 +4663,11 @@ export function CreateCapsule({
                             direction: 'ltr',
                             display: 'block',
                             justifyContent: 'flex-start',
-                            alignItems: 'flex-start'
+                            alignItems: 'flex-start',
+                            backgroundImage: themeId === 'future' ? 'linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px)' : 
+                                           themeId === 'friendship' ? 'linear-gradient(rgba(20, 184, 166, 0.05) 1px, transparent 1px)' :
+                                           themeId === 'new_life' ? 'linear-gradient(rgba(168, 85, 247, 0.05) 1px, transparent 1px)' : 'none',
+                            backgroundSize: themeId === 'future' || themeId === 'friendship' || themeId === 'new_life' ? '100% 24px' : 'auto'
                           }}
                         />
                         
@@ -4342,7 +4696,443 @@ export function CreateCapsule({
                   </Card>
 
                   {/* Media Card */}
-                  <Card className={`border-2 shadow-2xl ${isMobile ? 'border-emerald-700 bg-emerald-950' : 'border-emerald-500/30 bg-white/5 backdrop-blur-md'}`} style={{ willChange: 'auto' }}>
+                  {themeId === 'future' ? (
+                    <TimeTravelerStep2Media
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      uploadQueue={uploadQueue}
+                      media={media}
+                      isMultiSelectMode={isMultiSelectMode}
+                      selectedMediaIds={selectedMediaIds}
+                      onFileSelect={handleFileSelect}
+                      onFolderClick={() => {
+                        folderInputRef.current?.click();
+                        toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                      }}
+                      onRecordClick={() => {
+                        console.log('🎥 Record button clicked - navigating to Record tab');
+                        onOpenRecord?.();
+                      }}
+                      onVaultClick={() => {
+                        console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
+                        onOpenVault?.(media, themeId, themeMetadata);
+                      }}
+                      onToggleMultiSelect={() => {
+                        setIsMultiSelectMode(!isMultiSelectMode);
+                        if (isMultiSelectMode) setSelectedMediaIds(new Set());
+                      }}
+                      onDeleteSelected={handleDeleteSelectedMedia}
+                      onSetSelectedMediaIds={setSelectedMediaIds}
+                      onDrop={async (e) => {
+                        e.preventDefault();
+                        e.currentTarget.classList.remove('!border-emerald-500', '!bg-emerald-500/20');
+                        const files = Array.from(e.dataTransfer.files);
+                        if (files.length > 0) {
+                          const largeFiles = files.filter((f) => f.size > 10 * 1024 * 1024);
+                          if (largeFiles.length > 0) {
+                            setPendingFiles(files);
+                            setShowFileSizeWarning(true);
+                          } else {
+                            await uploadQueue.addFiles(files);
+                            toast.success(`Added ${files.length} file${files.length > 1 ? 's' : ''} to queue`);
+                          }
+                        }
+                      }}
+                      themeId={themeId}
+                      themeMetadata={themeMetadata}
+                    />
+                  ) : themeId === 'friendship' ? (
+                    <MixtapeStep2Media
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      uploadQueue={uploadQueue}
+                      media={media}
+                      onRemoveMedia={removeMedia}
+                      onFileSelect={handleFileSelect}
+                      onFolderClick={() => {
+                        folderInputRef.current?.click();
+                        toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                      }}
+                      onRecordClick={() => {
+                        console.log('🎥 Record button clicked - navigating to Record tab');
+                        onOpenRecord?.();
+                      }}
+                      onVaultClick={() => {
+                        console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
+                        onOpenVault?.(media, themeId, themeMetadata);
+                      }}
+                      onPreviewMedia={handlePreviewMedia}
+                      onOpenMobileRecorder={() => {
+                        console.log('🎥 Mobile recorder requested');
+                        onOpenRecord?.();
+                      }}
+                      isMobile={isMobile}
+                      totalMediaSize={totalMediaSize}
+                      formatFileSize={formatFileSize}
+                      onDownloadMedia={handleDownloadMedia}
+                    />
+                  ) : themeId === 'new_life' ? (
+                    <NewLifeStep1Media
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      uploadQueue={uploadQueue}
+                      media={media}
+                      onRemoveMedia={removeMedia}
+                      onFileSelect={handleFileSelect}
+                      onFolderClick={() => {
+                        folderInputRef.current?.click();
+                        toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                      }}
+                      onRecordClick={() => {
+                        console.log('🎥 Record button clicked - navigating to Record tab');
+                        onOpenRecord?.();
+                      }}
+                      onVaultClick={() => {
+                        console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
+                        onOpenVault?.(media, themeId, themeMetadata);
+                      }}
+                      onPreviewMedia={handlePreviewMedia}
+                      onOpenMobileRecorder={(mode) => {
+                        console.log('🎥 Mobile recorder requested:', mode);
+                        onOpenRecord?.();
+                      }}
+                      isMobile={isMobile}
+                      totalMediaSize={totalMediaSize}
+                      formatFileSize={formatFileSize}
+                      onDownloadMedia={handleDownloadMedia}
+                    />
+                  ) : themeId === 'pet' ? (
+                    <PetStep1Media
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      uploadQueue={uploadQueue}
+                      media={media}
+                      onRemoveMedia={removeMedia}
+                      onFileSelect={handleFileSelect}
+                      onFolderClick={() => {
+                        folderInputRef.current?.click();
+                        toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                      }}
+                      onRecordClick={() => {
+                        console.log('🎥 Record button clicked - navigating to Record tab');
+                        onOpenRecord?.();
+                      }}
+                      onVaultClick={() => {
+                        console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
+                        onOpenVault?.(media, themeId, themeMetadata);
+                      }}
+                      onPreviewMedia={handlePreviewMedia}
+                      onOpenMobileRecorder={(mode) => {
+                        console.log('🎥 Mobile recorder requested:', mode);
+                        onOpenRecord?.();
+                      }}
+                      isMobile={isMobile}
+                      totalMediaSize={totalMediaSize}
+                      formatFileSize={formatFileSize}
+                      onDownloadMedia={handleDownloadMedia}
+                    />
+                  ) : themeId === 'anniversary' ? (
+                    <AnniversaryStep1Media
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      uploadQueue={uploadQueue}
+                      media={media}
+                      onRemoveMedia={removeMedia}
+                      onFileSelect={handleFileSelect}
+                      onFolderClick={() => {
+                        folderInputRef.current?.click();
+                        toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                      }}
+                      onRecordClick={() => {
+                        console.log('🎥 Record button clicked - navigating to Record tab');
+                        onOpenRecord?.();
+                      }}
+                      onVaultClick={() => {
+                        console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
+                        onOpenVault?.(media, themeId, themeMetadata);
+                      }}
+                      onPreviewMedia={handlePreviewMedia}
+                      onOpenMobileRecorder={(mode) => {
+                        console.log('🎥 Mobile recorder requested:', mode);
+                        onOpenRecord?.();
+                      }}
+                      isMobile={isMobile}
+                      totalMediaSize={totalMediaSize}
+                      formatFileSize={formatFileSize}
+                      onDownloadMedia={handleDownloadMedia}
+                    />
+                  ) : themeId === 'graduation' ? (
+                    <GraduationStep1Media
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      uploadQueue={uploadQueue}
+                      media={media}
+                      onRemoveMedia={removeMedia}
+                      onFileSelect={handleFileSelect}
+                      onFolderClick={() => {
+                        folderInputRef.current?.click();
+                        toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                      }}
+                      onRecordClick={() => {
+                        console.log('🎥 Record button clicked - navigating to Record tab');
+                        onOpenRecord?.();
+                      }}
+                      onVaultClick={() => {
+                        console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
+                        onOpenVault?.(media, themeId, themeMetadata);
+                      }}
+                      onPreviewMedia={handlePreviewMedia}
+                      onOpenMobileRecorder={(mode) => {
+                        console.log('🎥 Mobile recorder requested:', mode);
+                        onOpenRecord?.();
+                      }}
+                      isMobile={isMobile}
+                      totalMediaSize={totalMediaSize}
+                      formatFileSize={formatFileSize}
+                      onDownloadMedia={handleDownloadMedia}
+                    />
+                  ) : themeId === 'birthday' ? (
+                    <BirthdayStep1Media
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      uploadQueue={uploadQueue}
+                      media={media}
+                      onRemoveMedia={removeMedia}
+                      onFileSelect={handleFileSelect}
+                      onFolderClick={() => {
+                        folderInputRef.current?.click();
+                        toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                      }}
+                      onRecordClick={() => {
+                        console.log('🎥 Record button clicked - navigating to Record tab');
+                        onOpenRecord?.();
+                      }}
+                      onVaultClick={() => {
+                        console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
+                        onOpenVault?.(media, themeId, themeMetadata);
+                      }}
+                      onPreviewMedia={handlePreviewMedia}
+                      onOpenMobileRecorder={(mode) => {
+                        console.log('🎥 Mobile recorder requested:', mode);
+                        onOpenRecord?.();
+                      }}
+                      isMobile={isMobile}
+                      totalMediaSize={totalMediaSize}
+                      formatFileSize={formatFileSize}
+                      onDownloadMedia={handleDownloadMedia}
+                    />
+                  ) : themeId === 'gratitude' ? (
+                    <GratitudeStep1Media
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      uploadQueue={uploadQueue}
+                      media={media}
+                      onRemoveMedia={removeMedia}
+                      onFileSelect={handleFileSelect}
+                      onFolderClick={() => {
+                        folderInputRef.current?.click();
+                        toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                      }}
+                      onRecordClick={() => {
+                        console.log('🎥 Record button clicked - navigating to Record tab');
+                        onOpenRecord?.();
+                      }}
+                      onVaultClick={() => {
+                        console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
+                        onOpenVault?.(media, themeId, themeMetadata);
+                      }}
+                      onPreviewMedia={handlePreviewMedia}
+                      onOpenMobileRecorder={(mode) => {
+                        console.log('🎥 Mobile recorder requested:', mode);
+                        onOpenRecord?.();
+                      }}
+                      isMobile={isMobile}
+                      totalMediaSize={totalMediaSize}
+                      formatFileSize={formatFileSize}
+                      onDownloadMedia={handleDownloadMedia}
+                    />
+                  ) : themeId === 'new_year' ? (
+                    <NewYearStep1Media
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      uploadQueue={uploadQueue}
+                      media={media}
+                      onRemoveMedia={removeMedia}
+                      onFileSelect={handleFileSelect}
+                      onFolderClick={() => {
+                        folderInputRef.current?.click();
+                        toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                      }}
+                      onRecordClick={() => {
+                        console.log('🎥 Record button clicked - navigating to Record tab');
+                        onOpenRecord?.();
+                      }}
+                      onVaultClick={() => {
+                        console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
+                        onOpenVault?.(media, themeId, themeMetadata);
+                      }}
+                      onPreviewMedia={handlePreviewMedia}
+                      onOpenMobileRecorder={(mode) => {
+                        console.log('🎥 Mobile recorder requested:', mode);
+                        onOpenRecord?.();
+                      }}
+                      isMobile={isMobile}
+                      totalMediaSize={totalMediaSize}
+                      formatFileSize={formatFileSize}
+                      onDownloadMedia={handleDownloadMedia}
+                    />
+                  ) : themeId === 'wedding' ? (
+                    <WeddingStep1Media
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      uploadQueue={uploadQueue}
+                      media={media}
+                      onRemoveMedia={removeMedia}
+                      onFileSelect={handleFileSelect}
+                      onFolderClick={() => {
+                        folderInputRef.current?.click();
+                        toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                      }}
+                      onRecordClick={() => {
+                        console.log('🎥 Record button clicked - navigating to Record tab');
+                        onOpenRecord?.();
+                      }}
+                      onVaultClick={() => {
+                        console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
+                        onOpenVault?.(media, themeId, themeMetadata);
+                      }}
+                      onPreviewMedia={handlePreviewMedia}
+                      onOpenMobileRecorder={(mode) => {
+                        console.log('🎥 Mobile recorder requested:', mode);
+                        onOpenRecord?.();
+                      }}
+                      isMobile={isMobile}
+                      totalMediaSize={totalMediaSize}
+                      formatFileSize={formatFileSize}
+                      onDownloadMedia={handleDownloadMedia}
+                    />
+                  ) : themeId === 'new_home' ? (
+                    <NewHomeStep1Media
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      uploadQueue={uploadQueue}
+                      media={media}
+                      onRemoveMedia={removeMedia}
+                      onFileSelect={handleFileSelect}
+                      onFolderClick={() => {
+                        folderInputRef.current?.click();
+                        toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                      }}
+                      onRecordClick={() => {
+                        console.log('🎥 Record button clicked - navigating to Record tab');
+                        onOpenRecord?.();
+                      }}
+                      onVaultClick={() => {
+                        console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
+                        onOpenVault?.(media, themeId, themeMetadata);
+                      }}
+                      onPreviewMedia={handlePreviewMedia}
+                      onOpenMobileRecorder={(mode) => {
+                        console.log('🎥 Mobile recorder requested:', mode);
+                        onOpenRecord?.();
+                      }}
+                      isMobile={isMobile}
+                      totalMediaSize={totalMediaSize}
+                      formatFileSize={formatFileSize}
+                      onDownloadMedia={handleDownloadMedia}
+                    />
+                  ) : themeId === 'travel' ? (
+                    <TravelStep1Media
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      uploadQueue={uploadQueue}
+                      media={media}
+                      onRemoveMedia={removeMedia}
+                      onFileSelect={handleFileSelect}
+                      onFolderClick={() => {
+                        folderInputRef.current?.click();
+                        toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                      }}
+                      onRecordClick={() => {
+                        console.log('🎥 Record button clicked - navigating to Record tab');
+                        onOpenRecord?.();
+                      }}
+                      onVaultClick={() => {
+                        console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
+                        onOpenVault?.(media, themeId, themeMetadata);
+                      }}
+                      onPreviewMedia={handlePreviewMedia}
+                      onOpenMobileRecorder={(mode) => {
+                        console.log('🎥 Mobile recorder requested:', mode);
+                        onOpenRecord?.();
+                      }}
+                      isMobile={isMobile}
+                      totalMediaSize={totalMediaSize}
+                      formatFileSize={formatFileSize}
+                      onDownloadMedia={handleDownloadMedia}
+                    />
+                  ) : themeId === 'career' ? (
+                    <CareerStep1Media
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      uploadQueue={uploadQueue}
+                      media={media}
+                      onRemoveMedia={removeMedia}
+                      onFileSelect={handleFileSelect}
+                      onFolderClick={() => {
+                        folderInputRef.current?.click();
+                        toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                      }}
+                      onRecordClick={() => {
+                        console.log('🎥 Record button clicked - navigating to Record tab');
+                        onOpenRecord?.();
+                      }}
+                      onVaultClick={() => {
+                        console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
+                        onOpenVault?.(media, themeId, themeMetadata);
+                      }}
+                      onPreviewMedia={handlePreviewMedia}
+                      onOpenMobileRecorder={(mode) => {
+                        console.log('🎥 Mobile recorder requested:', mode);
+                        onOpenRecord?.();
+                      }}
+                      isMobile={isMobile}
+                      totalMediaSize={totalMediaSize}
+                      formatFileSize={formatFileSize}
+                      onDownloadMedia={handleDownloadMedia}
+                    />
+                  ) : themeId === 'first_day' ? (
+                    <FirstDayStep1Media
+                      fileInputRef={fileInputRef}
+                      folderInputRef={folderInputRef}
+                      uploadQueue={uploadQueue}
+                      media={media}
+                      onRemoveMedia={removeMedia}
+                      onFileSelect={handleFileSelect}
+                      onFolderClick={() => {
+                        folderInputRef.current?.click();
+                        toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                      }}
+                      onRecordClick={() => {
+                        console.log('🎥 Record button clicked - navigating to Record tab');
+                        onOpenRecord?.();
+                      }}
+                      onVaultClick={() => {
+                        console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
+                        onOpenVault?.(media, themeId, themeMetadata);
+                      }}
+                      onPreviewMedia={handlePreviewMedia}
+                      onOpenMobileRecorder={(mode) => {
+                        console.log('🎥 Mobile recorder requested:', mode);
+                        onOpenRecord?.();
+                      }}
+                      isMobile={isMobile}
+                      totalMediaSize={totalMediaSize}
+                      formatFileSize={formatFileSize}
+                      onDownloadMedia={handleDownloadMedia}
+                    />
+                  ) : (
+                    <Card className={`border-2 shadow-2xl ${isMobile ? 'border-emerald-700 bg-emerald-950' : 'border-emerald-500/30 bg-white/5 backdrop-blur-md'}`} style={{ willChange: 'auto' }}>
                     <CardHeader className={`border-b ${isMobile ? 'bg-emerald-900 border-emerald-700' : 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/30'}`}>
                       <CardTitle className="flex items-center gap-3 text-white">
                         <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg">
@@ -4378,32 +5168,39 @@ export function CreateCapsule({
                           onChange={handleFileSelect}
                         />
                         
-                        {/* Action Buttons Row */}
-                        <div className="grid grid-cols-4 gap-2">
-                          <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full justify-center bg-white/5 border-white/20 text-white/90 hover:bg-white/10">
-                            <Upload className="h-4 w-4 mr-1.5" />
-                            Upload
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => {
-                            folderInputRef.current?.click();
-                            toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
-                          }} className="w-full justify-center bg-white/5 border-white/20 text-white/90 hover:bg-white/10">
-                            <FolderUp className="h-4 w-4 mr-1.5" />
-                            Folder
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => {
-                            console.log('🎥 Record button clicked - navigating to Record tab');
-                            onOpenRecord?.();
-                          }} className="w-full justify-center bg-white/5 border-white/20 text-white/90 hover:bg-white/10">
-                            <Video className="h-4 w-4 mr-1.5" />
-                            Record
+                        {/* Action Buttons Row - 2x2 Grid */}
+                        <div 
+                          className="gap-3" 
+                          style={{ 
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gridTemplateRows: 'auto auto'
+                          }}
+                        >
+                          <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full h-16 flex-col justify-center gap-1 bg-white/5 border-white/20 text-white/90 hover:bg-white/10">
+                            <Upload className="h-5 w-5" />
+                            <span className="text-xs">Upload</span>
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => {
                             console.log('🏛️ From Vault clicked - navigating to Vault tab with theme:', themeId);
                             onOpenVault?.(media, themeId, themeMetadata);
-                          }} className="w-full justify-center bg-white/5 border-white/20 text-white/90 hover:bg-white/10">
-                            <Folder className="h-4 w-4 mr-1.5" />
-                            Vault
+                          }} className="w-full h-16 flex-col justify-center gap-1 bg-white/5 border-white/20 text-white/90 hover:bg-white/10">
+                            <Folder className="h-5 w-5" />
+                            <span className="text-xs">From Vault</span>
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => {
+                            console.log('🎥 Record button clicked - navigating to Record tab');
+                            onOpenRecord?.();
+                          }} className="w-full h-16 flex-col justify-center gap-1 bg-white/5 border-white/20 text-white/90 hover:bg-white/10">
+                            <Video className="h-5 w-5" />
+                            <span className="text-xs">Record</span>
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => {
+                            folderInputRef.current?.click();
+                            toast.info('Select a folder - files will appear in the queue', { duration: 3000 });
+                          }} className="w-full h-16 flex-col justify-center gap-1 bg-white/5 border-white/20 text-white/90 hover:bg-white/10">
+                            <FolderUp className="h-5 w-5" />
+                            <span className="text-xs">Folder</span>
                           </Button>
                         </div>
 
@@ -4480,25 +5277,14 @@ export function CreateCapsule({
                           </Button>
 
                           {isMultiSelectMode && selectedMediaIds.size > 0 && (
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={handleEnhanceSelectedMedia}
-                                className="bg-white/5 border-white/20 text-white/90 hover:bg-white/10"
-                              >
-                                <Palette className="h-4 w-4 mr-1" />
-                                Enhance ({selectedMediaIds.size})
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={handleDeleteSelectedMedia}
-                              >
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                Delete ({selectedMediaIds.size})
-                              </Button>
-                            </div>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={handleDeleteSelectedMedia}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete ({selectedMediaIds.size})
+                            </Button>
                           )}
                         </div>
                       )}
@@ -4560,25 +5346,6 @@ export function CreateCapsule({
                                       ? 'opacity-100' // Always visible on mobile
                                       : 'opacity-0 group-hover:opacity-100' // Hover on desktop
                                   }`}>
-                                    {/* 🎬 HIDE ENHANCE FOR VIDEOS: Videos cannot be enhanced */}
-                                    {onEnhance && (item.type === 'image' || item.type === 'audio') && (
-                                      <Button
-                                        size="sm"
-                                        variant="secondary"
-                                        className="h-8 w-8 p-0 bg-purple-600 hover:bg-purple-700 shadow-lg"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          onEnhance({ 
-                                            ...item, 
-                                            originalId: item.id,
-                                            vaultId: item.vault_id || item.vaultId, // 🆕 Pass vault ID if from vault
-                                            fromVault: item.fromVault // 🆕 Pass vault flag
-                                          });
-                                        }}
-                                      >
-                                        <Palette className="h-4 w-4" />
-                                      </Button>
-                                    )}
                                     <Button
                                       size="sm"
                                       variant="destructive"
@@ -4615,6 +5382,7 @@ export function CreateCapsule({
                       )}
                     </CardContent>
                   </Card>
+                  )}
                 </motion.div>
               )}
 
@@ -4632,8 +5400,184 @@ export function CreateCapsule({
                   }}
                   className="space-y-6"
                 >
-                  {/* Delivery Card */}
-                  <Card className={`border-2 shadow-2xl ${isMobile ? 'border-orange-700 bg-orange-950' : 'border-orange-500/30 bg-white/5 backdrop-blur-md'}`} style={{ willChange: 'auto' }}>
+                  {/* Time Traveler Premium Step 3 */}
+                  {themeId === 'future' ? (
+                    <TimeTravelerStep3
+                      deliveryDate={deliveryDate}
+                      deliveryTime={deliveryTime}
+                      timeZone={timeZone}
+                      recipientType={recipientType}
+                      recipients={recipients}
+                      timeValidationError={timeValidationError}
+                      calendarOpen={calendarOpen}
+                      onDeliveryDateChange={setDeliveryDate}
+                      onDeliveryTimeChange={setDeliveryTime}
+                      onTimeZoneChange={setTimeZone}
+                      onRecipientTypeChange={setRecipientType}
+                      onRecipientsChange={setRecipients}
+                      onCalendarOpenChange={setCalendarOpen}
+                      isMobile={isMobile}
+                    />
+                  ) : themeId === 'friendship' ? (
+                    <MixtapeStep3Delivery
+                      deliveryDate={deliveryDate}
+                      deliveryTime={deliveryTime}
+                      onDateChange={setDeliveryDate}
+                      onTimeChange={setDeliveryTime}
+                      minDate={startOfDay(new Date())}
+                      recipientType={recipientType}
+                      onRecipientTypeChange={setRecipientType}
+                      recipients={recipients}
+                      onRecipientsChange={setRecipients}
+                    />
+                  ) : themeId === 'new_life' ? (
+                    <BabyStep3Delivery
+                      deliveryDate={deliveryDate}
+                      deliveryTime={deliveryTime}
+                      onDateChange={setDeliveryDate}
+                      onTimeChange={setDeliveryTime}
+                      minDate={startOfDay(new Date())}
+                      recipientType={recipientType}
+                      onRecipientTypeChange={setRecipientType}
+                      recipients={recipients}
+                      onRecipientsChange={setRecipients}
+                    />
+                  ) : themeId === 'pet' ? (
+                    <PetStep3Delivery
+                      deliveryDate={deliveryDate}
+                      deliveryTime={deliveryTime}
+                      onDateChange={setDeliveryDate}
+                      onTimeChange={setDeliveryTime}
+                      minDate={startOfDay(new Date())}
+                      recipientType={recipientType}
+                      onRecipientTypeChange={setRecipientType}
+                      recipients={recipients}
+                      onRecipientsChange={setRecipients}
+                    />
+                  ) : themeId === 'anniversary' ? (
+                    <AnniversaryStep3Delivery
+                      deliveryDate={deliveryDate}
+                      deliveryTime={deliveryTime}
+                      onDateChange={setDeliveryDate}
+                      onTimeChange={setDeliveryTime}
+                      minDate={startOfDay(new Date())}
+                      recipientType={recipientType}
+                      onRecipientTypeChange={setRecipientType}
+                      recipients={recipients}
+                      onRecipientsChange={setRecipients}
+                    />
+                  ) : themeId === 'graduation' ? (
+                    <GraduationStep3Delivery
+                      deliveryDate={deliveryDate}
+                      deliveryTime={deliveryTime}
+                      onDateChange={setDeliveryDate}
+                      onTimeChange={setDeliveryTime}
+                      minDate={startOfDay(new Date())}
+                      recipientType={recipientType}
+                      onRecipientTypeChange={setRecipientType}
+                      recipients={recipients}
+                      onRecipientsChange={setRecipients}
+                    />
+                  ) : themeId === 'birthday' ? (
+                    <BirthdayStep3Delivery
+                      deliveryDate={deliveryDate}
+                      deliveryTime={deliveryTime}
+                      onDateChange={setDeliveryDate}
+                      onTimeChange={setDeliveryTime}
+                      minDate={startOfDay(new Date())}
+                      recipientType={recipientType}
+                      onRecipientTypeChange={setRecipientType}
+                      recipients={recipients}
+                      onRecipientsChange={setRecipients}
+                    />
+                  ) : themeId === 'gratitude' ? (
+                    <GratitudeStep3Delivery
+                      deliveryDate={deliveryDate}
+                      deliveryTime={deliveryTime}
+                      onDateChange={setDeliveryDate}
+                      onTimeChange={setDeliveryTime}
+                      minDate={startOfDay(new Date())}
+                      recipientType={recipientType}
+                      onRecipientTypeChange={setRecipientType}
+                      recipients={recipients}
+                      onRecipientsChange={setRecipients}
+                    />
+                  ) : themeId === 'new_year' ? (
+                    <NewYearStep3Delivery
+                      deliveryDate={deliveryDate}
+                      deliveryTime={deliveryTime}
+                      onDateChange={setDeliveryDate}
+                      onTimeChange={setDeliveryTime}
+                      minDate={startOfDay(new Date())}
+                      recipientType={recipientType}
+                      onRecipientTypeChange={setRecipientType}
+                      recipients={recipients}
+                      onRecipientsChange={setRecipients}
+                    />
+                  ) : themeId === 'wedding' ? (
+                    <WeddingStep3Delivery
+                      deliveryDate={deliveryDate}
+                      deliveryTime={deliveryTime}
+                      onDateChange={setDeliveryDate}
+                      onTimeChange={setDeliveryTime}
+                      minDate={startOfDay(new Date())}
+                      recipientType={recipientType}
+                      onRecipientTypeChange={setRecipientType}
+                      recipients={recipients}
+                      onRecipientsChange={setRecipients}
+                    />
+                  ) : themeId === 'new_home' ? (
+                    <NewHomeStep3Delivery
+                      deliveryDate={deliveryDate}
+                      deliveryTime={deliveryTime}
+                      onDateChange={setDeliveryDate}
+                      onTimeChange={setDeliveryTime}
+                      minDate={startOfDay(new Date())}
+                      recipientType={recipientType}
+                      onRecipientTypeChange={setRecipientType}
+                      recipients={recipients}
+                      onRecipientsChange={setRecipients}
+                    />
+                  ) : themeId === 'travel' ? (
+                    <TravelStep3Delivery
+                      deliveryDate={deliveryDate}
+                      deliveryTime={deliveryTime}
+                      onDateChange={setDeliveryDate}
+                      onTimeChange={setDeliveryTime}
+                      minDate={startOfDay(new Date())}
+                      recipientType={recipientType}
+                      onRecipientTypeChange={setRecipientType}
+                      recipients={recipients}
+                      onRecipientsChange={setRecipients}
+                    />
+                  ) : themeId === 'career' ? (
+                    <CareerStep3Delivery
+                      deliveryDate={deliveryDate}
+                      deliveryTime={deliveryTime}
+                      onDateChange={setDeliveryDate}
+                      onTimeChange={setDeliveryTime}
+                      minDate={startOfDay(new Date())}
+                      recipientType={recipientType}
+                      onRecipientTypeChange={setRecipientType}
+                      recipients={recipients}
+                      onRecipientsChange={setRecipients}
+                    />
+                  ) : themeId === 'first_day' ? (
+                    <FirstDayStep3Delivery
+                      deliveryDate={deliveryDate}
+                      deliveryTime={deliveryTime}
+                      onDateChange={setDeliveryDate}
+                      onTimeChange={setDeliveryTime}
+                      minDate={startOfDay(new Date())}
+                      recipientType={recipientType}
+                      onRecipientTypeChange={setRecipientType}
+                      recipients={recipients}
+                      onRecipientsChange={setRecipients}
+                    />
+                  ) : (
+                    <>
+                      {/* Standard Delivery Card */}
+                      <Card className={`border-2 shadow-2xl ${isMobile ? 'border-orange-700 bg-orange-950' : 'border-orange-500/30 bg-white/5 backdrop-blur-md'}`} style={{ willChange: 'auto' }}>
                     <CardHeader className={`border-b ${isMobile ? 'bg-orange-900 border-orange-700' : 'bg-gradient-to-r from-orange-500/20 to-amber-500/20 border-orange-500/30'}`}>
                       <CardTitle className="flex items-center gap-3 text-white">
                         <div className="p-2 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg">
@@ -4801,6 +5745,8 @@ export function CreateCapsule({
                       )}
                     </CardContent>
                   </Card>
+                    </>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -4815,10 +5761,14 @@ export function CreateCapsule({
                     variant="outline"
                     size="lg"
                     onClick={goToPreviousStep}
-                    className="flex-1 bg-slate-900/80 backdrop-blur-md border-white/20 text-white hover:bg-slate-800"
+                    className={`flex-1 ${
+                      themeId === 'future'
+                        ? 'bg-cyan-950/30 backdrop-blur-md border-cyan-500/30 text-cyan-300 hover:bg-cyan-950/50 font-mono'
+                        : 'bg-slate-900/80 backdrop-blur-md border-white/20 text-white hover:bg-slate-800'
+                    }`}
                   >
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
+                    {themeId === 'future' ? '< BACK' : 'Back'}
                   </Button>
                   
                   {currentStep < 3 ? (
@@ -4836,28 +5786,36 @@ export function CreateCapsule({
                     onClick={deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType && isTimeValid ? handleSubmit : handleSaveDraft}
                     disabled={isSubmitting || media.some(m => m.uploading) || (deliveryDate && deliveryTime && deliveryTime.trim() !== '' && !isTimeValid)}
                     className={`flex-1 ${
-                      deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType && isTimeValid
-                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400'
-                        : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500'
-                    } text-white shadow-lg shadow-emerald-500/20 border-0`}
+                      themeId === 'future'
+                        ? deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType && isTimeValid
+                          ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-lg shadow-cyan-500/30 font-mono tracking-wider'
+                          : 'bg-gradient-to-r from-cyan-600/50 to-blue-600/50 hover:from-cyan-600/70 hover:to-blue-600/70 font-mono tracking-wider'
+                        : deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType && isTimeValid
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400'
+                          : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500'
+                    } text-white shadow-lg ${themeId !== 'future' ? 'shadow-emerald-500/20' : ''} border-0`}
                   >
                     {media.some(m => m.uploading) ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing {media.filter(m => m.uploading).length} file(s)...
+                        {themeId === 'future' ? 'PROCESSING...' : `Processing ${media.filter(m => m.uploading).length} file(s)...`}
                       </>
                     ) : isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         {deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType && isTimeValid
-                          ? (editingCapsule ? 'Updating...' : 'Sealing Capsule...')
-                          : 'Saving Draft...'}
+                          ? (themeId === 'future' 
+                              ? (editingCapsule ? 'UPDATING...' : 'ENGAGING WARP DRIVE...')
+                              : (editingCapsule ? 'Updating...' : 'Sealing Capsule...'))
+                          : (themeId === 'future' ? 'SAVING...' : 'Saving Draft...')}
                       </>
                     ) : (
                       <>
                         {deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType && isTimeValid
-                          ? (editingCapsule ? 'Update Capsule' : 'Seal & Send')
-                          : 'Save Draft'}
+                          ? (themeId === 'future'
+                              ? (editingCapsule ? 'UPDATE MISSION' : 'INITIATE JUMP SEQUENCE')
+                              : (editingCapsule ? 'Update Capsule' : 'Seal & Send'))
+                          : (themeId === 'future' ? 'SAVE DRAFT' : 'Save Draft')}
                         {deliveryDate && deliveryTime && deliveryTime.trim() !== '' && recipientType && isTimeValid ? (
                           <Rocket className="ml-2 h-4 w-4" />
                         ) : (

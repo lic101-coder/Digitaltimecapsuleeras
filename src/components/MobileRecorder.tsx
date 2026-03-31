@@ -15,7 +15,8 @@ import {
   Laptop,
   X,
   CheckCircle,
-  Clock
+  Clock,
+  Eye
 } from 'lucide-react';
 import { CameraRecorder } from './CameraRecorder';
 import { AudioRecorder } from './AudioRecorder';

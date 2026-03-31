@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Webhook Calls - Eras</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #0a0a0a;
+      color: #fff;
+    }
+    .container {
+      background: #1a1a1a;
+      padding: 30px;
+      border-radius: 12px;
+      border: 1px solid #333;
+    }
+    h1 { color: #fbbf24; margin-bottom: 10px; }
+    h2 { color: #60a5fa; margin-top: 30px; }
+    .status {
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    .success { background: #1e3a1e; border: 1px solid #22c55e; }
+    .error { background: #3a1e1e; border: 1px solid #ef4444; }
+    .info { background: #1e2a3a; border: 1px solid #3b82f6; }
+    .warning { background: #3a2e1e; border: 1px solid #f59e0b; }
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 10px 10px 10px 0;
+      transition: transform 0.2s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+    }
+    button:active {
+      transform: translateY(0);
+    }
+    pre {
+      background: #0a0a0a;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      border: 1px solid #333;
+    }
+    .step {
+      background: #2a2a2a;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+      border-left: 4px solid #fbbf24;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 Webhook Test - Eras Purchase System</h1>
+    <p>This will simulate Stripe webhook calls to unlock themes and beneficiaries.</p>
+
+    <div class="step">
+      <strong>📋 Your User ID:</strong> <code>fff635a5-0246-4562-aa1f-de35635a8f9d</code>
+    </div>
+
+    <h2>Step 1: Clean Up Test Data</h2>
+    <div class="info">
+      <strong>⚠️ First, run this SQL in Supabase to delete old test data:</strong>
+      <pre>DELETE FROM public.theme_purchases 
+WHERE user_id = 'fff635a5-0246-4562-aa1f-de35635a8f9d' 
+AND stripe_payment_id LIKE 'test_%';
+
+DELETE FROM public.bundle_purchases 
+WHERE user_id = 'fff635a5-0246-4562-aa1f-de35635a8f9d' 
+AND stripe_payment_id LIKE 'test_%';
+
+DELETE FROM public.beneficiary_purchases 
+WHERE user_id = 'fff635a5-0246-4562-aa1f-de35635a8f9d' 
+AND stripe_payment_id LIKE 'test_%';
+
+DELETE FROM public.user_unlocked_themes
+WHERE user_id = 'fff635a5-0246-4562-aa1f-de35635a8f9d';</pre>
+    </div>
+
+    <h2>Step 2: Simulate Purchases via Webhook</h2>
+    <p>Click buttons below to simulate Stripe webhook calls:</p>
+
+    <button onclick="purchaseTheme()">🎨 Purchase Theme: Genesis (new_life)</button>
+    <button onclick="purchaseBundle()">📦 Purchase Bundle: Life Milestones</button>
+    <button onclick="purchaseBeneficiary()">👥 Purchase 3 Beneficiary Slots</button>
+    <button onclick="purchaseAll()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">⚡ Purchase All (1 click)</button>
+
+    <div id="results"></div>
+
+    <h2>Step 3: Verify Purchases</h2>
+    <button onclick="verifyPurchases()">✅ Check Unlocked Themes</button>
+    <button onclick="verifyBeneficiaries()">👥 Check Beneficiary Limit</button>
+
+    <div id="verification"></div>
+  </div>
+
+  <script>
+    const userId = 'fff635a5-0246-4562-aa1f-de35635a8f9d';
+    const webhookUrl = 'https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/stripe-webhook'; // ✅ NEW PUBLIC WEBHOOK
+    const apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwZGZ2cGdhem5wcWxvcmRraXB3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwMTcyOTksImV4cCI6MjA1MzU5MzI5OX0.AhqN7Ew_ZO8jd4hjl_-RFI7UShEtJMWQQiPNmj1V-gE';
+
+    function log(message, type = 'info') {
+      const div = document.createElement('div');
+      div.className = `status ${type}`;
+      div.innerHTML = message;
+      document.getElementById('results').appendChild(div);
+      div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    async function simulateStripeWebhook(checkoutSession) {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'stripe-signature': 'test_signature'
+        },
+        body: JSON.stringify({
+          type: 'checkout.session.completed',
+          data: {
+            object: checkoutSession
+          }
+        })
+      });
+
+      return response;
+    }
+
+    async function purchaseTheme() {
+      log('🎨 Simulating theme purchase: Genesis (new_life)...', 'info');
+      
+      const session = {
+        id: 'cs_test_theme_' + Date.now(),
+        customer_email: 'test@example.com',
+        metadata: {
+          userId: userId,
+          purchaseType: 'theme',
+          themeId: 'new_life'
+        },
+        amount_total: 299,
+        payment_intent: 'pi_test_theme_correct'
+      };
+
+      try {
+        const response = await simulateStripeWebhook(session);
+        const data = await response.text();
+        
+        if (response.ok) {
+          log(`✅ Theme purchase successful!<br><pre>${data}</pre>`, 'success');
+        } else {
+          log(`❌ Theme purchase failed: ${response.status}<br><pre>${data}</pre>`, 'error');
+        }
+      } catch (error) {
+        log(`❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function purchaseBundle() {
+      log('📦 Simulating bundle purchase: Life Milestones...', 'info');
+      
+      const session = {
+        id: 'cs_test_bundle_' + Date.now(),
+        customer_email: 'test@example.com',
+        metadata: {
+          userId: userId,
+          purchaseType: 'bundle',
+          bundleId: 'life-milestones'
+        },
+        amount_total: 599,
+        payment_intent: 'pi_test_bundle_correct'
+      };
+
+      try {
+        const response = await simulateStripeWebhook(session);
+        const data = await response.text();
+        
+        if (response.ok) {
+          log(`✅ Bundle purchase successful!<br>Should unlock 5 themes: wedding, career, new_life, graduation, new_home<br><pre>${data}</pre>`, 'success');
+        } else {
+          log(`❌ Bundle purchase failed: ${response.status}<br><pre>${data}</pre>`, 'error');
+        }
+      } catch (error) {
+        log(`❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function purchaseBeneficiary() {
+      log('👥 Simulating beneficiary purchase: 3 slots...', 'info');
+      
+      const session = {
+        id: 'cs_test_beneficiary_' + Date.now(),
+        customer_email: 'test@example.com',
+        metadata: {
+          userId: userId,
+          purchaseType: 'beneficiary',
+          beneficiaryType: 'slot-3',
+          quantity: '3'
+        },
+        amount_total: 199,
+        payment_intent: 'pi_test_beneficiary_correct'
+      };
+
+      try {
+        const response = await simulateStripeWebhook(session);
+        const data = await response.text();
+        
+        if (response.ok) {
+          log(`✅ Beneficiary purchase successful!<br>Total limit should be 4 (1 default + 3 purchased)<br><pre>${data}</pre>`, 'success');
+        } else {
+          log(`❌ Beneficiary purchase failed: ${response.status}<br><pre>${data}</pre>`, 'error');
+        }
+      } catch (error) {
+        log(`❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function purchaseAll() {
+      log('⚡ Purchasing all items...', 'info');
+      await purchaseTheme();
+      await new Promise(r => setTimeout(r, 1000));
+      await purchaseBundle();
+      await new Promise(r => setTimeout(r, 1000));
+      await purchaseBeneficiary();
+      log('🎉 All purchases complete! Click "Check Unlocked Themes" to verify.', 'success');
+    }
+
+    async function verifyPurchases() {
+      const verificationDiv = document.getElementById('verification');
+      verificationDiv.innerHTML = '<div class="status info">🔍 Checking unlocked themes...</div>';
+
+      try {
+        const response = await fetch(
+          `https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/purchases/${userId}`,
+          {
+            headers: { 'Authorization': `Bearer ${apiKey}` }
+          }
+        );
+
+        const data = await response.json();
+        
+        const html = `
+          <div class="status success">
+            <strong>✅ Unlocked Themes (${data.themes.length}):</strong><br>
+            <pre>${JSON.stringify(data.themes.map(t => t.theme_id), null, 2)}</pre>
+            <br>
+            <strong>Expected:</strong> ["new_life", "wedding", "career", "graduation", "new_home"]<br>
+            <strong>Match:</strong> ${data.themes.length === 5 ? '✅ YES!' : `❌ NO (got ${data.themes.length}, expected 5)`}
+          </div>
+        `;
+        verificationDiv.innerHTML = html;
+      } catch (error) {
+        verificationDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+      }
+    }
+
+    async function verifyBeneficiaries() {
+      const verificationDiv = document.getElementById('verification');
+      verificationDiv.innerHTML = '<div class="status info">🔍 Checking beneficiary limit...</div>';
+
+      try {
+        const response = await fetch(
+          `https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/purchases/${userId}`,
+          {
+            headers: { 'Authorization': `Bearer ${apiKey}` }
+          }
+        );
+
+        const data = await response.json();
+        
+        const html = `
+          <div class="status success">
+            <strong>👥 Beneficiary Limit:</strong> ${data.beneficiaryLimit}<br>
+            <strong>Expected:</strong> 4 (1 default + 3 purchased)<br>
+            <strong>Match:</strong> ${data.beneficiaryLimit === 4 ? '✅ YES!' : `❌ NO (got ${data.beneficiaryLimit}, expected 4)`}
+          </div>
+        `;
+        verificationDiv.innerHTML = html;
+      } catch (error) {
+        verificationDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+      }
+    }
+  </script>
+</body>
+</html>

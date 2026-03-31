@@ -78,7 +78,7 @@ import {
 import { Badge } from './ui/badge';
 import { supabase } from '../utils/supabase/client';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useIsMobile } from './ui/use-mobile';
 import { VaultFolder } from './VaultFolder';
@@ -181,6 +181,7 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
   // Folder system state
   const [folders, setFolders] = useState<any[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [uploadDestinationId, setUploadDestinationId] = useState<string | null>(null); // Track where to upload
   const [showFolderDialog, setShowFolderDialog] = useState(false);
   const [folderDialogMode, setFolderDialogMode] = useState<'create' | 'rename'>('create');
   const [editingFolder, setEditingFolder] = useState<any | null>(null);
@@ -313,12 +314,9 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
     loadGlobalLegacyConfig();
   }, [loadGlobalLegacyConfig]);
 
-  // 🐛 DEBUG: Track vaultItems changes
+  // Track vaultItems changes for sync diagnostics
   useEffect(() => {
-    console.log('📊 vaultItems changed! Count:', vaultItems.length);
-    console.log('📊 Optimistic IDs tracked:', optimisticItemIds.size);
-    console.log('📊 Lock state:', uploadInProgressRef.current);
-    console.trace('☝️ vaultItems was updated from:');
+    // Vault items updated - sync diagnostics will handle cleanup if needed
   }, [vaultItems]);
 
   // 🔍 SYNC DIAGNOSTIC: Detect and auto-fix sync issues between devices
@@ -467,39 +465,7 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
     }
   }, [folders, mobileOpenFolder?.id, vaultItems.length]); // Also depend on vaultItems.length so we re-check when items are added
 
-  console.log('🔍 About to register global click listener useEffect');
 
-  // 🐛 DEBUG: Global click listener to see where clicks are going
-  useEffect(() => {
-    console.log('🎯 INSTALLING GLOBAL CLICK LISTENER');
-    
-    const handleGlobalClick = (e: MouseEvent) => {
-      console.log('🖱️ GLOBAL CLICK detected!');
-      console.log('🖱️ Target tag:', (e.target as HTMLElement).tagName);
-      console.log('🖱️ Target class:', (e.target as HTMLElement).className);
-      console.log('🖱️ Target id:', (e.target as HTMLElement).id);
-      console.log('🖱️ Computed z-index:', window.getComputedStyle(e.target as HTMLElement).zIndex);
-      console.log('🖱️ Pointer events:', window.getComputedStyle(e.target as HTMLElement).pointerEvents);
-      
-      // Check for invisible overlays
-      const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
-      console.log('🎯 All elements at click point:', elementsAtPoint.map(el => ({
-        tag: el.tagName,
-        classes: el.className,
-        id: el.id,
-        zIndex: window.getComputedStyle(el).zIndex,
-        pointerEvents: window.getComputedStyle(el).pointerEvents
-      })));
-    };
-    
-    document.addEventListener('click', handleGlobalClick, true); // Use capture phase
-    console.log('✅ GLOBAL CLICK LISTENER INSTALLED');
-    
-    return () => {
-      document.removeEventListener('click', handleGlobalClick, true);
-      console.log('❌ GLOBAL CLICK LISTENER REMOVED');
-    };
-  }, []);
 
   // MOBILE UX: Force 3x3 grid view on mobile (best for touch and visual scanning)
   useEffect(() => {
@@ -556,13 +522,8 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
   const loadVault = async () => {
     // 🔒 NUCLEAR: Don't refresh during uploads to prevent disappear/reappear
     if (uploadInProgressRef.current) {
-      console.log('⏸️ Upload in progress - deferring loadVault()');
-      console.trace('☝️ loadVault() was called from:'); // Show call stack
       return;
     }
-    
-    console.log('📥 loadVault() executing...');
-    console.trace('☝️ loadVault() was called from:'); // Show call stack
     
     // Always load localStorage first to ensure users can access their media
     let localItems: LibraryItem[] = [];
@@ -3956,6 +3917,16 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
       <div className={`relative max-w-7xl mx-auto space-y-4 ${
         isMobile ? 'p-4' : 'p-4 sm:p-6 space-y-6'
       }`}>
+        {/* 🔧 CRITICAL: Single file input shared by both mobile and desktop - prevents duplicate ref conflicts */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm,video/ogg,audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/aac,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.csv,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/rtf,text/csv"
+          className="hidden"
+          onChange={(e) => handleFileUpload(e.target.files, uploadDestinationId)}
+        />
+        
         {/* Header */}
         <div className={`flex items-center ${
           isMobile ? 'gap-2' : 'gap-3 sm:gap-4'
@@ -3967,26 +3938,54 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
                 <Lock className="w-5 h-5 text-white" />
               </div>
               <h1 className="text-xl font-bold text-white truncate flex-1">Vault</h1>
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm,video/ogg,audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/aac,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.csv,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/rtf,text/csv"
-                className="hidden"
-                onChange={(e) => handleFileUpload(e.target.files, selectedFolderId)}
-              />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="gap-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/50 shrink-0"
-                size="sm"
-              >
-                {isUploading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Upload className="w-4 h-4" />
-                )}
-              </Button>
+              {/* 🔧 TOP UPLOAD: First, then X after - Dropdown with dynamic folder list */}
+              <DropdownMenu key={folders.map(f => f.id).join(',')}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    disabled={isUploading}
+                    className="gap-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/50 shrink-0"
+                    size="sm"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Upload to...</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onSelect={() => {
+                      setUploadDestinationId(null);
+                      setTimeout(() => fileInputRef.current?.click(), 0);
+                    }}
+                  >
+                    <Grid3x3 className="w-4 h-4 mr-2" />
+                    Unsorted Media
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {folders.length > 0 ? (
+                    folders.map((folder) => (
+                      <DropdownMenuItem
+                        key={folder.id}
+                        onSelect={() => {
+                          setUploadDestinationId(folder.id);
+                          setTimeout(() => fileInputRef.current?.click(), 0);
+                        }}
+                      >
+                        <Folder className="w-4 h-4 mr-2" />
+                        {folder.name}
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <DropdownMenuItem disabled>
+                      <span className="text-xs text-muted-foreground">No folders yet</span>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
               {onClose && (
                 <Button
                   variant="outline"
@@ -4031,32 +4030,60 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
                     </Badge>
                   </div>
                 )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm,video/ogg,audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/aac,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.csv,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/rtf,text/csv"
-                  className="hidden"
-                  onChange={(e) => handleFileUpload(e.target.files, selectedFolderId)}
-                />
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                  className="gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/50"
-                  size="sm"
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="hidden sm:inline">Uploading...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4" />
-                      <span className="hidden sm:inline">{selectedFolderId ? 'Upload to Folder' : 'Upload'}</span>
-                    </>
-                  )}
-                </Button>
+                {/* 🔧 SECOND UPLOAD: Green button for current folder, then # items after */}
+                <DropdownMenu key={folders.map(f => f.id).join(',')}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      disabled={isUploading}
+                      className="gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/50"
+                      size="sm"
+                    >
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="hidden sm:inline">Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          <span className="hidden sm:inline">Upload</span>
+                        </>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Upload to...</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onSelect={() => {
+                        setUploadDestinationId(null);
+                        setTimeout(() => fileInputRef.current?.click(), 0);
+                      }}
+                    >
+                      <Grid3x3 className="w-4 h-4 mr-2" />
+                      Unsorted Media
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {folders.length > 0 ? (
+                      folders.map((folder) => (
+                        <DropdownMenuItem
+                          key={folder.id}
+                          onSelect={() => {
+                            setUploadDestinationId(folder.id);
+                            setTimeout(() => fileInputRef.current?.click(), 0);
+                          }}
+                        >
+                          <Folder className="w-4 h-4 mr-2" />
+                          {folder.name}
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <DropdownMenuItem disabled>
+                        <span className="text-xs text-muted-foreground">No folders yet</span>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 {onClose && (
                   <Button
                     variant="outline"
@@ -4382,17 +4409,40 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
                     )}
                   </div>
                   
-                  {/* Item count */}
-                  <Badge 
-                    variant="secondary" 
-                    className={`text-xs ${
-                      isMobile
-                        ? 'bg-slate-800 text-white border-slate-700'
-                        : 'bg-white/20 text-white border-white/30'
-                    }`}
-                  >
-                    {displayedItems.length} {displayedItems.length === 1 ? 'item' : 'items'}
-                  </Badge>
+                  {/* Item count and Upload button */}
+                  <div className="flex items-center gap-2">
+                    <Badge 
+                      variant="secondary" 
+                      className={`text-xs ${
+                        isMobile
+                          ? 'bg-slate-800 text-white border-slate-700'
+                          : 'bg-white/20 text-white border-white/30'
+                      }`}
+                    >
+                      {displayedItems.length} {displayedItems.length === 1 ? 'item' : 'items'}
+                    </Badge>
+                    
+                    {/* Upload button - only show in Unsorted Media section */}
+                    {!selectedFolderId && (
+                      <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        size="sm"
+                        className={`gap-1.5 h-7 shrink-0 ${
+                          isMobile
+                            ? 'bg-green-600 hover:bg-green-700 text-white px-2'
+                            : 'bg-white/20 hover:bg-white/30 text-white border border-white/30 px-3'
+                        }`}
+                      >
+                        {isUploading ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Upload className="w-3.5 h-3.5" />
+                        )}
+                        {!isMobile && <span className="text-xs">Upload</span>}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -4526,58 +4576,8 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
                         </Select>
                       </div>
                       
-                      {/* Second Row - Enhance and Delete */}
-                      <div className={`grid gap-2 ${onEdit ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                        {(() => {
-                          // 🎬 Check if selected items include videos/documents (cannot be enhanced)
-                          const selectedItems = vaultItems.filter(item => selectedIds.has(item.id));
-                          const hasEnhanceableItems = selectedItems.some(item => item.type !== 'video' && item.type !== 'document');
-                          const onlyVideosOrDocs = selectedIds.size > 0 && !hasEnhanceableItems;
-                          
-                          console.log('🎨 📋 ENHANCE BUTTON RENDER:', {
-                            onEditExists: !!onEdit,
-                            selectedCount: selectedIds.size,
-                            selected: Array.from(selectedIds),
-                            hasEnhanceableItems,
-                            onlyVideosOrDocs,
-                            willBeDisabled: selectedIds.size === 0 || onlyVideosOrDocs
-                          });
-                          return null;
-                        })()}
-                        {onEdit && (() => {
-                          // 🎬 Calculate if button should be disabled (no selection OR only videos/documents)
-                          const selectedItems = vaultItems.filter(item => selectedIds.has(item.id));
-                          const hasEnhanceableItems = selectedItems.some(item => item.type !== 'video' && item.type !== 'document');
-                          const isDisabled = selectedIds.size === 0 || !hasEnhanceableItems;
-                          
-                          return (
-                            <Button
-                              onClick={(e) => {
-                                console.log('🎨 ========== ENHANCE CLICKED ==========');
-                                console.log('🎨 Selected count:', selectedIds.size);
-                                console.log('🎨 Selected IDs:', Array.from(selectedIds));
-                                e.stopPropagation();
-                                e.preventDefault();
-                                handleEdit();
-                              }}
-                              variant="outline"
-                              disabled={isDisabled}
-                              type="button"
-                              className={`h-10 !h-10 min-h-[2.5rem] max-h-[2.5rem] disabled:opacity-50 shadow-md transition-all hover:scale-105 flex items-center justify-center px-3 ${
-                                isMobile
-                                  ? 'border-purple-400/50 bg-purple-500/20 text-white hover:bg-purple-500/30'
-                                  : 'border-purple-300/50 bg-purple-500/20 text-white hover:bg-purple-500/30'
-                              }`}
-                              title={isDisabled && selectedIds.size > 0 ? 'Videos and documents cannot be enhanced' : ''}
-                            >
-                              <Wand2 className="w-4 h-4 mr-1.5 sm:mr-2 shrink-0" />
-                              <span className="text-xs sm:text-sm whitespace-nowrap">
-                                {selectedIds.size > 1 ? `Enhance (${selectedIds.size})` : 'Enhance'}
-                              </span>
-                            </Button>
-                          );
-                        })()}
-                        
+                      {/* Second Row - Delete only */}
+                      <div className="grid gap-2 grid-cols-1">
                         <Button
                           onClick={handleDelete}
                           variant="outline"

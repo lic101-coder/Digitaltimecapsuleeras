@@ -12,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog';
-import { ArrowLeft, CheckCircle, Trash2, Image, Video, Mic, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Trash2, Image, Video, Mic, AlertTriangle, Eye } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { supabase } from '../utils/supabase/client';
 import { projectId } from '../utils/supabase/info';
@@ -38,9 +38,10 @@ interface MediaItem {
 interface RecordLibraryProps {
   onSelect: (selectedMedia: MediaItem[]) => void;
   onBack: () => void;
+  onViewDetail?: (itemId: string) => void; // New: Navigate to detail view
 }
 
-export function RecordLibrary({ onSelect, onBack }: RecordLibraryProps) {
+export function RecordLibrary({ onSelect, onBack, onViewDetail }: RecordLibraryProps) {
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showDeleteWarning, setShowDeleteWarning] = useState(false);
@@ -400,17 +401,21 @@ export function RecordLibrary({ onSelect, onBack }: RecordLibraryProps) {
               {libraryItems.map((item) => (
                 <Card
                   key={item.id}
-                  className={`relative cursor-pointer transition-all hover:shadow-lg ${
+                  className={`relative cursor-pointer transition-all hover:shadow-lg group ${ 
                     selectedIds.has(item.id) 
                       ? 'ring-2 ring-purple-500 shadow-lg' 
                       : 'hover:ring-2 hover:ring-gray-300'
                   }`}
-                  onClick={() => toggleSelect(item.id)}
                 >
                   <CardContent className="p-0">
                     {/* Checkbox */}
                     <div className="absolute top-2 left-2 z-10">
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                      <div 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSelect(item.id);
+                        }}
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${ 
                         selectedIds.has(item.id)
                           ? 'bg-purple-600 border-purple-600'
                           : 'bg-white/80 border-white backdrop-blur-sm'
@@ -421,8 +426,28 @@ export function RecordLibrary({ onSelect, onBack }: RecordLibraryProps) {
                       </div>
                     </div>
 
+                    {/* View Details Button - appears on hover */}
+                    {onViewDetail && (
+                      <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-lg"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onViewDetail(item.id);
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+
                     {/* Media Preview */}
-                    <div className="aspect-square bg-gray-900 overflow-hidden rounded-t-lg">
+                    <div 
+                      className="aspect-square bg-gray-900 overflow-hidden rounded-t-lg"
+                      onClick={() => toggleSelect(item.id)}
+                    >
                       {item.type === 'photo' && (
                         <img
                           src={item.thumbnail || item.base64Data}

@@ -1,32 +1,40 @@
 // Achievement Service - Backend logic for Legacy Achievements System
-// Total: 57 achievements (45 base + 2 vault + 2 echo + 2 multi-recipient + 6 epic tier achievements)
-// Distribution: 14 Common, 13 Uncommon/Rare Era-Themed, 5 Time-Based, 5 Volume, 13 Special/Legendary, 7 Epic
-// v2.6.0: PRODUCTION READY
-//   - Fixed 4 critical achievements (Cinematic, Golden Hour Guardian, Golden Ratio, Memory Weaver)
-//   - Adjusted difficulty (Lucky Number: 777→177, Perfect Chronicle: 30→14, Archive Master: 1000→750)
-//   - Verified all custom validators working
-//   - Added unique echo sender tracking for Community Beacon (A053)
+// Total: 57 achievements — All fully triggered & wired v2.8.0
+// Distribution: 13 Common, 13 Uncommon/Rare Era-Themed, 5 Time-Based, 5 Volume, 13 Special/Legendary, 6 Epic
+// v2.8.0: FULL TRIGGER AUDIT
+//   - A017: Fixed (count-based capsules_edited ≥ 5, was broken specific_action)
+//   - A018: Fixed (capsules_created_today_max stat tracks daily max)
+//   - A026: Fixed (midnight_capsules stat — triggered in trackCapsuleCreation)
+//   - A027: Replaced "Birthday Capsule" → "New Year's Spirit" (new_year_capsules, Jan 1)
+//   - A031: Fixed (golden_hour_capsules stat — fixed validator always-false bug)
+//   - A042: Fixed (early_bird_capsules stat — triggered in trackCapsuleCreation)
+//   - A046: Replaced "Vault Pioneer" → "Folder Pioneer" (folders_created ≥ 1)
+//   - A047: Replaced "Vault Guardian" → "Folder Architect" (folders_created ≥ 5)
 import * as kv from './kv_store.tsx';
+import { getAchievementVisual } from './achievement-visuals.tsx';
 
 // Initialize achievement service
-console.log('🏆 Achievement Service initialized - v2.6.0 (57 Achievements - PRODUCTION READY)');
+console.log('🏆 Achievement Service initialized - v2.8.0 (57 Achievements - All Triggers Wired)');
 
 // ============================================
-// ACHIEVEMENT DEFINITIONS (57 Total)
+// ACHIEVEMENT DEFINITIONS (57 Total — all triggers wired v2.8.0)
 // ============================================
 // 
-// Grid Layout (45 achievements in 9×5 grid):
-// Row 1 (1-9):   Starter Basics
+// Grid Layout (43 achievements in 9×5 grid):
+// Row 1 (1-9):   Starter Basics (A001-A006, A008-A010)
 // Row 2 (10-18): Era-Themed & Consistency  
 // Row 3 (19-27): Time & Volume Mastery
 // Row 4 (28-36): Special & Legendary
 // Row 5 (37-45): New Achievements (v2.1.0)
 // 
 // Additional Achievements:
-// A046-A047: Vault Achievements (v2.2.0)
+// A046-A047: Folder Achievements (v2.8.0 — Folder Pioneer, Folder Architect)
 // A048-A053: Epic Tier Achievements Phase 2 (v2.5.0)
 // ECH001-ECH002: Echo Achievements (v2.3.0)
 // MR001-MR002: Multi-Recipient Achievements (v2.4.0 - Phase 1 Feature A1)
+// 
+// Note: A007 (Enhanced Memory) removed in v2.7.0
+// Note: E007 (Master Curator) removed in v2.7.0
 // ============================================
 
 export interface Achievement {
@@ -34,7 +42,7 @@ export interface Achievement {
   title: string;
   description: string;
   detailedDescription: string;
-  category: 'starter' | 'era_themed' | 'time_based' | 'volume' | 'special' | 'enhance';
+  category: 'starter' | 'era_themed' | 'time_based' | 'volume' | 'special';
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   icon: string;
   unlockCriteria: {
@@ -57,7 +65,6 @@ export interface Achievement {
     glowColor: string;
     animation?: string;
   };
-  eraTheme?: string;
   shareText: string;
   hidden: boolean;
   order: number;
@@ -65,7 +72,7 @@ export interface Achievement {
 
 export const ACHIEVEMENT_DEFINITIONS: Record<string, Achievement> = {
   // ============================================
-  // STARTER ACHIEVEMENTS (Common) - IDs A001-A010
+  // STARTER ACHIEVEMENTS (Common) - IDs A001-A010 (skipping A007)
   // ============================================
   A001: {
     id: 'A001',
@@ -241,32 +248,6 @@ export const ACHIEVEMENT_DEFINITIONS: Record<string, Achievement> = {
     order: 6
   },
 
-  A007: {
-    id: 'A007',
-    title: 'Enhanced Memory',
-    description: 'Use any enhancement feature 5 times',
-    detailedDescription: 'You\'ve discovered the power of AI enhancement. Filters, stickers, effects - you\'re making your memories special.',
-    category: 'enhance',
-    rarity: 'common',
-    icon: 'Sparkles',
-    unlockCriteria: {
-      type: 'count',
-      stat: 'enhancements_used',
-      threshold: 5,
-      operator: '>='
-    },
-    rewards: { points: 10 },
-    visual: {
-      gradientStart: '#22D3EE',
-      gradientEnd: '#0891B2',
-      particleColor: '#67E8F9',
-      glowColor: '#06B6D4'
-    },
-    shareText: 'Enhanced 5 memories in Eras! ✨ #ErasApp',
-    hidden: false,
-    order: 7
-  },
-
   A008: {
     id: 'A008',
     title: 'Multimedia Creator',
@@ -352,225 +333,234 @@ export const ACHIEVEMENT_DEFINITIONS: Record<string, Achievement> = {
   // ============================================
   // ROW 2: ERA-THEMED & CONSISTENCY (Order 11-18)
   // ============================================
-  B001: {
-    id: 'B001',
-    title: 'Yesterday\'s Echo',
-    description: 'Use the "Yesterday" filter 10 times',
-    detailedDescription: 'The warm, nostalgic glow of memories. You\'ve mastered the Yesterday filter, wrapping your moments in a golden hue that whispers of times gone by.',
+  A011: {
+    id: 'A011',
+    title: 'Genesis Era',
+    description: 'Create 5 capsules',
+    detailedDescription: 'Five capsules mark the beginning of your archive. The Genesis Era - where your journey truly begins.',
     category: 'era_themed',
     rarity: 'uncommon',
-    icon: 'Sunrise',
+    icon: 'Sparkles',
     unlockCriteria: {
       type: 'count',
-      stat: 'filter_usage.yesterday',
-      threshold: 10,
+      stat: 'capsules_created',
+      threshold: 5,
       operator: '>='
     },
-    rewards: { points: 25, title: 'Golden Hour Guardian' },
-    visual: {
-      gradientStart: '#FBBF24',
-      gradientEnd: '#EA580C',
-      particleColor: '#FCD34D',
-      glowColor: '#F59E0B',
-      animation: 'pulse'
+    rewards: { 
+      points: 20,
+      title: 'Era Initiate'
     },
-    eraTheme: 'yesterday',
-    shareText: 'Unlocked "Yesterday\'s Echo" in Eras! 🌅 Mastering the art of nostalgia. #ErasApp',
+    visual: {
+      gradientStart: '#8B5CF6',
+      gradientEnd: '#6D28D9',
+      particleColor: '#C4B5FD',
+      glowColor: '#7C3AED'
+    },
+    shareText: 'Reached the Genesis Era! 5 capsules created. ✨ #ErasApp',
     hidden: false,
     order: 11
   },
 
-  B002: {
-    id: 'B002',
-    title: 'Future Light',
-    description: 'Use the "Future Light" filter 10 times',
-    detailedDescription: 'Illuminating tomorrow with hope and wonder. The Future Light filter has become your signature.',
+  A012: {
+    id: 'A012',
+    title: 'Bronze Age',
+    description: 'Create 10 capsules',
+    detailedDescription: 'Ten capsules strong. You\'ve entered the Bronze Age of your memory archive.',
     category: 'era_themed',
     rarity: 'uncommon',
-    icon: 'Stars',
+    icon: 'Award',
     unlockCriteria: {
       type: 'count',
-      stat: 'filter_usage.future_light',
+      stat: 'capsules_created',
       threshold: 10,
       operator: '>='
     },
-    rewards: { points: 25, title: 'Neon Dreamer' },
-    visual: {
-      gradientStart: '#22D3EE',
-      gradientEnd: '#0284C7',
-      particleColor: '#67E8F9',
-      glowColor: '#06B6D4',
-      animation: 'pulse'
+    rewards: { 
+      points: 30,
+      title: 'Bronze Chronicler'
     },
-    eraTheme: 'future_light',
-    shareText: 'Mastered the Future Light! 💫 #ErasApp',
+    visual: {
+      gradientStart: '#D97706',
+      gradientEnd: '#92400E',
+      particleColor: '#FCD34D',
+      glowColor: '#B45309'
+    },
+    shareText: 'Entered the Bronze Age! 10 capsules created. 🥉 #ErasApp',
     hidden: false,
     order: 12
   },
 
-  B003: {
-    id: 'B003',
-    title: 'Dream Weaver',
-    description: 'Use the "Dream" filter 10 times',
-    detailedDescription: 'Reality blurs into fantasy. You\'ve perfected the ethereal, dreamlike quality that makes memories feel magical.',
+  A013: {
+    id: 'A013',
+    title: 'Silver Age',
+    description: 'Create 25 capsules',
+    detailedDescription: 'Twenty-five memories preserved. The Silver Age shines with your growing collection.',
     category: 'era_themed',
-    rarity: 'uncommon',
-    icon: 'Cloud',
+    rarity: 'rare',
+    icon: 'Medal',
     unlockCriteria: {
       type: 'count',
-      stat: 'filter_usage.dream',
-      threshold: 10,
+      stat: 'capsules_created',
+      threshold: 25,
       operator: '>='
     },
-    rewards: { points: 25, title: 'Surrealist' },
-    visual: {
-      gradientStart: '#818CF8',
-      gradientEnd: '#4F46E5',
-      particleColor: '#C7D2FE',
-      glowColor: '#6366F1',
-      animation: 'pulse'
+    rewards: { 
+      points: 50,
+      title: 'Silver Archivist'
     },
-    eraTheme: 'dream',
-    shareText: 'Mastered the Dream filter! 🎨 #ErasApp',
+    visual: {
+      gradientStart: '#94A3B8',
+      gradientEnd: '#475569',
+      particleColor: '#CBD5E1',
+      glowColor: '#64748B'
+    },
+    shareText: 'Reached the Silver Age! 25 capsules created. 🥈 #ErasApp',
     hidden: false,
     order: 13
   },
 
-  B004: {
-    id: 'B004',
-    title: 'Effect Master',
-    description: 'Use all 8 audio filters',
-    detailedDescription: 'A true master of atmosphere. You\'ve experimented with every audio filter Eras offers - Yesterday, Future Light, Echo, Dream, and all the rest.',
+  A014: {
+    id: 'A014',
+    title: 'Golden Age',
+    description: 'Create 50 capsules',
+    detailedDescription: 'Fifty capsules! You\'ve reached the Golden Age - a milestone of dedication.',
     category: 'era_themed',
     rarity: 'rare',
-    icon: 'Radio',
+    icon: 'Crown',
     unlockCriteria: {
-      type: 'combo',
-      requirements: [
-        { stat: 'filter_usage.yesterday', threshold: 1, operator: '>=' },
-        { stat: 'filter_usage.future_light', threshold: 1, operator: '>=' },
-        { stat: 'filter_usage.echo', threshold: 1, operator: '>=' },
-        { stat: 'filter_usage.dream', threshold: 1, operator: '>=' },
-        { stat: 'filter_usage.vintage', threshold: 1, operator: '>=' },
-        { stat: 'filter_usage.cosmic', threshold: 1, operator: '>=' },
-        { stat: 'filter_usage.underwater', threshold: 1, operator: '>=' },
-        { stat: 'filter_usage.cathedral', threshold: 1, operator: '>=' }
-      ]
+      type: 'count',
+      stat: 'capsules_created',
+      threshold: 50,
+      operator: '>='
     },
-    rewards: { points: 75, title: 'Audio Alchemist' },
+    rewards: { 
+      points: 75,
+      title: 'Golden Keeper'
+    },
     visual: {
-      gradientStart: '#F472B6',
-      gradientEnd: '#E11D48',
-      particleColor: '#FBCFE8',
-      glowColor: '#EC4899',
-      animation: 'rainbow'
+      gradientStart: '#FBBF24',
+      gradientEnd: '#D97706',
+      particleColor: '#FDE68A',
+      glowColor: '#F59E0B'
     },
-    shareText: 'Became an Effect Master in Eras! ✨ Mastered all 8 audio filters. #ErasApp',
+    shareText: 'Achieved the Golden Age! 50 capsules created. 👑 #ErasApp',
     hidden: false,
     order: 14
   },
 
-  B005: {
-    id: 'B005',
-    title: 'Sticker Collector',
-    description: 'Use 50+ stickers across capsules',
-    detailedDescription: 'You\'ve embraced the playful side of memory-making. Stickers add personality and joy to your time capsules.',
+  A015: {
+    id: 'A015',
+    title: 'Digital Enlightenment',
+    description: 'Create 100 capsules',
+    detailedDescription: 'One hundred memories. You\'ve reached Digital Enlightenment - a testament to your commitment.',
     category: 'era_themed',
     rarity: 'rare',
-    icon: 'Sticker',
+    icon: 'Sparkle',
     unlockCriteria: {
       type: 'count',
-      stat: 'stickers_used',
-      threshold: 50,
+      stat: 'capsules_created',
+      threshold: 100,
       operator: '>='
     },
-    rewards: { points: 50, title: 'Sticker Master' },
-    visual: {
-      gradientStart: '#FB923C',
-      gradientEnd: '#DC2626',
-      particleColor: '#FDBA74',
-      glowColor: '#F97316',
-      animation: 'pulse'
+    rewards: { 
+      points: 100,
+      title: 'Enlightened One'
     },
-    shareText: 'Became a Sticker Collector! 🎭 50+ stickers used in Eras. #ErasApp',
+    visual: {
+      gradientStart: '#60A5FA',
+      gradientEnd: '#2563EB',
+      particleColor: '#DBEAFE',
+      glowColor: '#3B82F6'
+    },
+    shareText: 'Reached Digital Enlightenment! 100 capsules created. ⚡ #ErasApp',
     hidden: false,
     order: 15
   },
 
-  B006: {
-    id: 'B006',
-    title: 'Memory Revisited',
-    description: 'Edit 5 existing capsules after creation',
-    detailedDescription: 'Memories aren\'t set in stone. You\'ve gone back to refine, update, or enhance 5 of your time capsules before they\'re delivered.',
-    category: 'enhance',
+  A016: {
+    id: 'A016',
+    title: 'Week Warrior',
+    description: 'Create capsules 7 days in a row',
+    detailedDescription: 'Seven consecutive days of memory-making. You\'ve built a powerful streak!',
+    category: 'time_based',
     rarity: 'uncommon',
-    icon: 'Wand2',
+    icon: 'CalendarCheck2',
+    unlockCriteria: {
+      type: 'streak',
+      stat: 'max_streak_days',
+      threshold: 7,
+      operator: '>='
+    },
+    rewards: { 
+      points: 30,
+      title: 'Streak Master'
+    },
+    visual: {
+      gradientStart: '#F59E0B',
+      gradientEnd: '#DC2626',
+      particleColor: '#FCD34D',
+      glowColor: '#F97316'
+    },
+    shareText: 'Built a 7-day streak in Eras! 🔥 #ErasApp',
+    hidden: false,
+    order: 16
+  },
+
+  A017: {
+    id: 'A017',
+    title: 'Memory Perfectionist',
+    description: 'Edit your capsules 5 times',
+    detailedDescription: 'You keep coming back to get it just right. Editing your capsules five times total shows your dedication to perfecting every memory.',
+    category: 'special',
+    rarity: 'uncommon',
+    icon: 'FileEdit',
     unlockCriteria: {
       type: 'count',
       stat: 'capsules_edited',
       threshold: 5,
       operator: '>='
     },
-    rewards: { points: 30, title: 'Time Sculptor' },
+    rewards: { 
+      points: 20,
+      title: 'Detail Devotee'
+    },
     visual: {
-      gradientStart: '#14B8A6',
-      gradientEnd: '#0D9488',
-      particleColor: '#5EEAD4',
-      glowColor: '#14B8A6'
+      gradientStart: '#EC4899',
+      gradientEnd: '#BE185D',
+      particleColor: '#FBCFE8',
+      glowColor: '#DB2777'
     },
-    shareText: 'Edited 5 capsules in Eras! 🔄 #ErasApp',
-    hidden: false,
-    order: 16
-  },
-
-  B007: {
-    id: 'B007',
-    title: 'Social Butterfly',
-    description: 'Send capsules to 5 different recipients',
-    detailedDescription: 'You\'re spreading memories across your circle. Five unique people will receive time capsules from you.',
-    category: 'special',
-    rarity: 'uncommon',
-    icon: 'Heart',
-    unlockCriteria: {
-      type: 'count',
-      stat: 'unique_recipients',
-      threshold: 5,
-      operator: '>='
-    },
-    rewards: { points: 35, title: 'Memory Broadcaster' },
-    visual: {
-      gradientStart: '#FB7185',
-      gradientEnd: '#E11D48',
-      particleColor: '#FECDD3',
-      glowColor: '#FB7185'
-    },
-    shareText: 'Became a Social Butterfly! 🦋 Sent capsules to 5 people. #ErasApp',
+    shareText: 'Edited a capsule 5 times! Perfection takes time. ✨ #ErasApp',
     hidden: false,
     order: 17
   },
 
-  C002: {
-    id: 'C002',
-    title: 'Weekly Ritual',
-    description: 'Create capsules for 7 consecutive days',
-    detailedDescription: 'Consistency is the key to meaningful documentation. You\'ve made Eras part of your daily life.',
-    category: 'time_based',
+  A018: {
+    id: 'A018',
+    title: 'Marathon Creator',
+    description: 'Create 10 capsules in a single day',
+    detailedDescription: 'Ten capsules in one day! You\'re on a creative marathon, capturing memories at lightning speed.',
+    category: 'volume',
     rarity: 'uncommon',
-    icon: 'CalendarDays',
+    icon: 'Bolt',
     unlockCriteria: {
-      type: 'streak',
-      stat: 'current_streak',
-      threshold: 7,
+      type: 'count',
+      stat: 'capsules_created_today_max',
+      threshold: 10,
       operator: '>='
     },
-    rewards: { points: 50, title: 'Ritual Keeper' },
-    visual: {
-      gradientStart: '#34D399',
-      gradientEnd: '#059669',
-      particleColor: '#6EE7B7',
-      glowColor: '#10B981'
+    rewards: { 
+      points: 25,
+      title: 'Speed Archivist'
     },
-    shareText: '7-day streak unlocked! 📅 Making memories daily with Eras. #ErasApp',
+    visual: {
+      gradientStart: '#10B981',
+      gradientEnd: '#047857',
+      particleColor: '#6EE7B7',
+      glowColor: '#059669'
+    },
+    shareText: 'Created 10 capsules in 24 hours! 🏃 #ErasApp',
     hidden: false,
     order: 18
   },
@@ -578,335 +568,605 @@ export const ACHIEVEMENT_DEFINITIONS: Record<string, Achievement> = {
   // ============================================
   // ROW 3: TIME & VOLUME MASTERY (Order 19-27)
   // ============================================
-  C001: {
-    id: 'C001',
-    title: 'Time Traveler',
-    description: 'Successfully deliver a capsule scheduled 1+ year in advance',
-    detailedDescription: 'You\'ve sent a message across the chasm of time. A capsule scheduled for a year or more from now shows true faith in the future.',
+  A019: {
+    id: 'A019',
+    title: 'Patient Soul',
+    description: 'Wait 30+ days for a capsule to arrive',
+    detailedDescription: 'Patience is a virtue. You\'ve waited over a month for a capsule to arrive - true delayed gratification.',
     category: 'time_based',
-    rarity: 'rare',
-    icon: 'Satellite',
+    rarity: 'uncommon',
+    icon: 'Clock',
     unlockCriteria: {
       type: 'time_wait',
-      stat: 'max_schedule_days',
-      threshold: 365,
+      stat: 'max_wait_days',
+      threshold: 30,
       operator: '>='
     },
-    rewards: { points: 100, title: 'Chrononaut' },
-    visual: {
-      gradientStart: '#C084FC',
-      gradientEnd: '#EC4899',
-      particleColor: '#E9D5FF',
-      glowColor: '#A855F7',
-      animation: 'shimmer'
+    rewards: { 
+      points: 25,
+      title: 'Time Patient'
     },
-    shareText: 'Just became a Time Traveler in Eras! ⏰ Sending messages to 2026 and beyond. #ErasApp #TimeCapsule',
+    visual: {
+      gradientStart: '#8B5CF6',
+      gradientEnd: '#6D28D9',
+      particleColor: '#C4B5FD',
+      glowColor: '#7C3AED'
+    },
+    shareText: 'Waited 30+ days for a time capsule! Patience pays off. ⏰ #ErasApp',
     hidden: false,
     order: 19
   },
 
-  C003: {
-    id: 'C003',
-    title: 'Monthly Chronicle',
-    description: 'Create at least 1 capsule per month for 6 months',
-    detailedDescription: 'Half a year of consistent memory-making. You\'ve built a lasting habit of preserving your life\'s moments.',
+  A020: {
+    id: 'A020',
+    title: 'Distant Future',
+    description: 'Schedule a capsule 90+ days ahead',
+    detailedDescription: 'Three months into the future. You\'re planning far ahead with your memory preservation.',
     category: 'time_based',
     rarity: 'rare',
-    icon: 'Medal',
+    icon: 'CalendarClock',
     unlockCriteria: {
-      type: 'specific_action',
-      action: 'monthly_streak_check',
-      threshold: 6
+      type: 'count',
+      stat: 'max_schedule_days',
+      threshold: 90,
+      operator: '>='
     },
-    rewards: { points: 75, title: 'Chronicler' },
+    rewards: { 
+      points: 35,
+      title: 'Far Planner'
+    },
     visual: {
-      gradientStart: '#10B981',
-      gradientEnd: '#047857',
-      particleColor: '#6EE7B7',
-      glowColor: '#059669'
+      gradientStart: '#3B82F6',
+      gradientEnd: '#1E40AF',
+      particleColor: '#93C5FD',
+      glowColor: '#2563EB'
     },
-    shareText: '6 months of consistent capsule creation! 🗓️ #ErasApp',
+    shareText: 'Scheduled a capsule 90+ days ahead! Planning for the distant future. 📅 #ErasApp',
     hidden: false,
     order: 20
   },
 
-  C004: {
-    id: 'C004',
-    title: 'Anniversary',
-    description: 'Been using Eras for 1 year',
-    detailedDescription: 'A full year of preserving memories. You\'ve been with Eras through all four seasons.',
+  A021: {
+    id: 'A021',
+    title: 'Year Traveler',
+    description: 'Schedule a capsule 365+ days ahead',
+    detailedDescription: 'A full year into the future! Your message will travel through an entire orbit around the sun.',
     category: 'time_based',
     rarity: 'rare',
-    icon: 'PartyPopper',
+    icon: 'Globe',
     unlockCriteria: {
-      type: 'specific_action',
-      action: 'account_age_check',
-      threshold: 365
+      type: 'count',
+      stat: 'max_schedule_days',
+      threshold: 365,
+      operator: '>='
     },
-    rewards: { points: 100, title: 'Veteran' },
+    rewards: { 
+      points: 50,
+      title: 'Annual Voyager'
+    },
     visual: {
-      gradientStart: '#F59E0B',
-      gradientEnd: '#D97706',
-      particleColor: '#FCD34D',
-      glowColor: '#FBBF24',
-      animation: 'shimmer'
+      gradientStart: '#06B6D4',
+      gradientEnd: '#0891B2',
+      particleColor: '#67E8F9',
+      glowColor: '#0EA5E9'
     },
-    shareText: 'Celebrating 1 year with Eras! 🎂 #ErasApp #Anniversary',
+    shareText: 'Scheduled a capsule a full year ahead! 🌍 #ErasApp',
     hidden: false,
     order: 21
   },
 
-  D001: {
-    id: 'D001',
-    title: 'Capsule Collector',
-    description: 'Create 10 capsules',
-    detailedDescription: 'You\'re building a rich archive of memories and moments.',
-    category: 'volume',
-    rarity: 'uncommon',
-    icon: 'Package',
+  A022: {
+    id: 'A022',
+    title: 'Decade Dreamer',
+    description: 'Schedule a capsule 3650+ days (10 years) ahead',
+    detailedDescription: 'Ten years into the future! Your message will cross an entire decade, a true time capsule for your future self.',
+    category: 'time_based',
+    rarity: 'legendary',
+    icon: 'Rocket',
     unlockCriteria: {
       type: 'count',
-      stat: 'capsules_created',
-      threshold: 10,
+      stat: 'max_schedule_days',
+      threshold: 3650,
       operator: '>='
     },
-    rewards: { points: 30, title: 'Vault Starter' },
-    visual: {
-      gradientStart: '#60A5FA',
-      gradientEnd: '#2563EB',
-      particleColor: '#93C5FD',
-      glowColor: '#3B82F6'
+    rewards: { 
+      points: 100,
+      title: 'Decade Dreamer'
     },
-    shareText: 'Created 10 time capsules! 📦 #ErasApp',
+    visual: {
+      gradientStart: '#A855F7',
+      gradientEnd: '#7E22CE',
+      particleColor: '#E9D5FF',
+      glowColor: '#9333EA',
+      animation: 'pulse'
+    },
+    shareText: 'Sent a capsule 10 years into the future! 🚀 #ErasApp',
     hidden: false,
     order: 22
   },
 
-  D002: {
-    id: 'D002',
-    title: 'Archivist',
-    description: 'Create 50 capsules',
-    detailedDescription: 'You\'re not just documenting life - you\'re curating it. An impressive collection.',
+  A023: {
+    id: 'A023',
+    title: 'Content Creator',
+    description: 'Upload 50 total media files',
+    detailedDescription: 'Fifty photos, videos, and audio files. You\'re building a rich multimedia archive.',
+    category: 'volume',
+    rarity: 'uncommon',
+    icon: 'FolderOpen',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'total_media_files',
+      threshold: 50,
+      operator: '>='
+    },
+    rewards: { 
+      points: 30,
+      title: 'Media Maven'
+    },
+    visual: {
+      gradientStart: '#F59E0B',
+      gradientEnd: '#D97706',
+      particleColor: '#FCD34D',
+      glowColor: '#F97316'
+    },
+    shareText: 'Uploaded 50 media files to Eras! 📁 #ErasApp',
+    hidden: false,
+    order: 23
+  },
+
+  A024: {
+    id: 'A024',
+    title: 'Media Mogul',
+    description: 'Upload 200 total media files',
+    detailedDescription: 'Two hundred files! Your archive is becoming a comprehensive multimedia library.',
+    category: 'volume',
+    rarity: 'rare',
+    icon: 'Database',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'total_media_files',
+      threshold: 200,
+      operator: '>='
+    },
+    rewards: { 
+      points: 75,
+      title: 'Archive Mogul'
+    },
+    visual: {
+      gradientStart: '#8B5CF6',
+      gradientEnd: '#6D28D9',
+      particleColor: '#DDD6FE',
+      glowColor: '#7C3AED'
+    },
+    shareText: 'Hit 200 media files in my Eras archive! 🎬 #ErasApp',
+    hidden: false,
+    order: 24
+  },
+
+  A025: {
+    id: 'A025',
+    title: 'Prolific Archivist',
+    description: 'Create 177 capsules',
+    detailedDescription: 'One hundred seventy-seven! A lucky number for a prolific memory keeper. Your archive is truly impressive.',
     category: 'volume',
     rarity: 'rare',
     icon: 'Library',
     unlockCriteria: {
       type: 'count',
       stat: 'capsules_created',
-      threshold: 50,
+      threshold: 177,
       operator: '>='
     },
-    rewards: { points: 100, title: 'Master Archivist' },
+    rewards: { 
+      points: 100,
+      title: 'Lucky Archivist'
+    },
     visual: {
-      gradientStart: '#818CF8',
-      gradientEnd: '#4F46E5',
-      particleColor: '#C7D2FE',
-      glowColor: '#6366F1'
+      gradientStart: '#10B981',
+      gradientEnd: '#047857',
+      particleColor: '#6EE7B7',
+      glowColor: '#059669'
     },
-    shareText: '50 time capsules created! 🗃️ I\'m an Archivist in Eras. #ErasApp',
-    hidden: false,
-    order: 23
-  },
-
-  D003: {
-    id: 'D003',
-    title: 'Historian',
-    description: 'Create 100 capsules',
-    detailedDescription: 'A legendary achievement. You\'ve documented a century of moments.',
-    category: 'volume',
-    rarity: 'rare',
-    icon: 'ScrollText',
-    unlockCriteria: {
-      type: 'count',
-      stat: 'capsules_created',
-      threshold: 100,
-      operator: '>='
-    },
-    rewards: { points: 200, title: 'Grand Historian' },
-    visual: {
-      gradientStart: '#FBBF24',
-      gradientEnd: '#D97706',
-      particleColor: '#FCD34D',
-      glowColor: '#F59E0B',
-      animation: 'shimmer'
-    },
-    shareText: '100 time capsules! 🏛️ I\'m a Historian in Eras. #ErasApp',
-    hidden: false,
-    order: 24
-  },
-
-  D004: {
-    id: 'D004',
-    title: 'Legend',
-    description: 'Create 500 capsules',
-    detailedDescription: 'An extraordinary milestone. You\'ve built an epic archive of 500 time capsules - a true legend of memory preservation.',
-    category: 'volume',
-    rarity: 'legendary',
-    icon: 'Gem',
-    unlockCriteria: {
-      type: 'count',
-      stat: 'capsules_created',
-      threshold: 500,
-      operator: '>='
-    },
-    rewards: { points: 500, title: 'Legend' },
-    visual: {
-      gradientStart: '#F59E0B',
-      gradientEnd: '#DC2626',
-      particleColor: '#FCD34D',
-      glowColor: '#F97316',
-      animation: 'rainbow'
-    },
-    shareText: '500 time capsules created! 🌟 I\'m a Legend in Eras. #ErasApp',
+    shareText: 'Created 177 capsules! Lucky number reached. 🍀 #ErasApp',
     hidden: false,
     order: 25
   },
 
-  D005: {
-    id: 'D005',
-    title: 'Media Mogul',
-    description: 'Upload 100 media files total',
-    detailedDescription: 'Photos, videos, audio - you\'ve preserved a vast multimedia archive.',
-    category: 'volume',
-    rarity: 'rare',
-    icon: 'ImagePlay',
+  A026: {
+    id: 'A026',
+    title: 'Midnight Creator',
+    description: 'Create a capsule between midnight and 3 AM',
+    detailedDescription: 'The quiet hours. You\'ve captured a memory in the stillness of the night.',
+    category: 'special',
+    rarity: 'uncommon',
+    icon: 'Moon',
     unlockCriteria: {
       type: 'count',
-      stat: 'media_uploaded',
-      threshold: 100,
+      stat: 'midnight_capsules',
+      threshold: 1,
       operator: '>='
     },
-    rewards: { points: 75 },
-    visual: {
-      gradientStart: '#F472B6',
-      gradientEnd: '#DB2777',
-      particleColor: '#FBCFE8',
-      glowColor: '#EC4899'
+    rewards: { 
+      points: 15,
+      title: 'Night Owl'
     },
-    shareText: 'Uploaded 100 media files! 💎 #ErasApp',
+    visual: {
+      gradientStart: '#6366F1',
+      gradientEnd: '#4338CA',
+      particleColor: '#C7D2FE',
+      glowColor: '#818CF8'
+    },
+    shareText: 'Created a capsule at midnight! 🌙 #ErasApp',
     hidden: false,
     order: 26
   },
 
-  E001: {
-    id: 'E001',
-    title: 'Night Owl',
-    description: 'Create a capsule between 12 AM - 3 AM',
-    detailedDescription: 'The world sleeps, but you\'re wide awake with thoughts to preserve. Created a capsule in the quiet hours when creativity flows differently.',
+  A027: {
+    id: 'A027',
+    title: "New Year's Spirit",
+    description: 'Create a capsule on January 1st',
+    detailedDescription: 'Starting the new year by preserving a memory is a beautiful tradition. You\'ve created a time capsule on the very first day of a brand new year.',
     category: 'special',
-    rarity: 'rare',
-    icon: 'MoonStar',
+    rarity: 'uncommon',
+    icon: 'Sparkles',
     unlockCriteria: {
-      type: 'specific_action',
-      action: 'capsule_created_at_hour_range',
-      threshold: [0, 3] // 12 AM (hour 0) to 3 AM (hour 3, exclusive)
+      type: 'count',
+      stat: 'new_year_capsules',
+      threshold: 1,
+      operator: '>='
     },
-    rewards: { points: 50, title: 'Midnight Chronicler' },
+    rewards: { 
+      points: 25,
+      title: "New Year's Keeper"
+    },
     visual: {
-      gradientStart: '#6366F1',
-      gradientEnd: '#312E81',
-      particleColor: '#A5B4FC',
-      glowColor: '#4F46E5'
+      gradientStart: '#8B5CF6',
+      gradientEnd: '#4338CA',
+      particleColor: '#DDD6FE',
+      glowColor: '#7C3AED'
     },
-    shareText: 'Unlocked the rare "Night Owl" achievement! 🌙 Creating memories in the midnight hours. #ErasApp',
-    hidden: true,
+    shareText: "Started the new year with a time capsule! 🎆 #ErasApp",
+    hidden: false,
     order: 27
   },
 
   // ============================================
   // ROW 4: SPECIAL & LEGENDARY (Order 28-36)
   // ============================================
-
-  E002: {
-    id: 'E002',
-    title: 'Echo Chamber',
-    description: 'Receive 50 echoes across all your capsules',
-    detailedDescription: 'Your memories resonate! You\'ve sparked 50 emotional connections, proving your stories touch hearts across time and space.',
+  A028: {
+    id: 'A028',
+    title: 'Wordsmith',
+    description: 'Write a capsule with 500+ words',
+    detailedDescription: 'Five hundred words of thoughts, feelings, and memories. You\'ve poured your heart into this message.',
     category: 'special',
-    rarity: 'rare',
-    icon: 'Radio',
+    rarity: 'uncommon',
+    icon: 'PenTool',
     unlockCriteria: {
-      type: 'specific_action',
-      action: 'received_50_echoes'
+      type: 'count',
+      stat: 'max_capsule_word_count',
+      threshold: 500,
+      operator: '>='
     },
-    rewards: { points: 75, title: 'Echo Magnet' },
+    rewards: { 
+      points: 30,
+      title: 'Word Weaver'
+    },
     visual: {
-      gradientStart: '#8B5CF6',
-      gradientEnd: '#6366F1',
-      particleColor: '#C4B5FD',
-      glowColor: '#7C3AED',
-      animation: 'pulse'
+      gradientStart: '#14B8A6',
+      gradientEnd: '#0F766E',
+      particleColor: '#5EEAD4',
+      glowColor: '#14B8A6'
     },
-    shareText: 'Unlocked Echo Chamber! 🌊 50 echoes received across my time capsules. #ErasApp',
+    shareText: 'Wrote a 500+ word capsule! 📝 #ErasApp',
     hidden: false,
     order: 28
   },
 
-  E003: {
-    id: 'E003',
-    title: 'Vault Guardian',
-    description: 'Set up Legacy Access with beneficiaries',
-    detailedDescription: 'You\'ve planned for the unplannable. Your digital legacy is secured for those who matter most.',
+  A029: {
+    id: 'A029',
+    title: 'Novelist',
+    description: 'Write a capsule with 2000+ words',
+    detailedDescription: 'Two thousand words! You\'ve written a short story for your future self.',
     category: 'special',
     rarity: 'rare',
-    icon: 'Shield',
+    icon: 'BookOpen',
     unlockCriteria: {
-      type: 'specific_action',
-      action: 'legacy_vault_setup'
+      type: 'count',
+      stat: 'max_capsule_word_count',
+      threshold: 2000,
+      operator: '>='
     },
-    rewards: { points: 100, title: 'Legacy Guardian' },
+    rewards: { 
+      points: 75,
+      title: 'Memory Novelist'
+    },
     visual: {
-      gradientStart: '#A78BFA',
+      gradientStart: '#8B5CF6',
       gradientEnd: '#6D28D9',
       particleColor: '#DDD6FE',
-      glowColor: '#8B5CF6',
-      animation: 'shimmer'
+      glowColor: '#7C3AED'
     },
-    shareText: 'Secured my digital legacy! 🔮 #ErasApp',
+    shareText: 'Wrote a 2000+ word time capsule! 📖 #ErasApp',
     hidden: false,
     order: 29
   },
 
-  E004: {
-    id: 'E004',
+  A030: {
+    id: 'A030',
     title: 'Cinematic',
     description: 'Create a capsule with 10+ media files',
-    detailedDescription: 'You\'ve created a multimedia masterpiece. A capsule packed with 10 or more photos, videos, and audio creates a rich, cinematic experience.',
+    detailedDescription: 'Ten or more photos and videos in one capsule. You\'re creating a cinematic experience!',
     category: 'special',
     rarity: 'rare',
-    icon: 'Clapperboard',
+    icon: 'Film',
     unlockCriteria: {
-      type: 'specific_action',
-      action: 'capsule_with_10_media'
+      type: 'custom',
+      validator: 'validateCinematic'
     },
-    rewards: { points: 75, title: 'Cinematographer' },
+    rewards: { 
+      points: 50,
+      title: 'Film Director'
+    },
     visual: {
-      gradientStart: '#8B5CF6',
-      gradientEnd: '#6D28D9',
-      particleColor: '#C4B5FD',
-      glowColor: '#7C3AED',
-      animation: 'pulse'
+      gradientStart: '#F59E0B',
+      gradientEnd: '#DC2626',
+      particleColor: '#FCD34D',
+      glowColor: '#F97316'
     },
-    shareText: 'Created a cinematic capsule with 10+ media files! 📺 #ErasApp',
+    shareText: 'Created a cinematic capsule with 10+ media files! 🎬 #ErasApp',
     hidden: false,
     order: 30
   },
 
-  E005: {
-    id: 'E005',
+  A031: {
+    id: 'A031',
+    title: 'Golden Hour Guardian',
+    description: 'Create a capsule during sunrise or sunset hours',
+    detailedDescription: 'You\'ve captured a message during the golden hour — 6–8 AM at dawn or 5–7 PM at dusk, when the light is most magical.',
+    category: 'special',
+    rarity: 'uncommon',
+    icon: 'Sunrise',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'golden_hour_capsules',
+      threshold: 1,
+      operator: '>='
+    },
+    rewards: { 
+      points: 20,
+      title: 'Golden Hour Keeper'
+    },
+    visual: {
+      gradientStart: '#FBBF24',
+      gradientEnd: '#F59E0B',
+      particleColor: '#FDE68A',
+      glowColor: '#F59E0B'
+    },
+    shareText: 'Sent a capsule during the golden hour! 🌅 #ErasApp',
+    hidden: false,
+    order: 31
+  },
+
+  A032: {
+    id: 'A032',
     title: 'Globe Trotter',
-    description: 'Send capsules to 10+ different recipients',
-    detailedDescription: 'You\'re spreading memories across your social circle. Ten or more unique recipients have received your time capsules.',
+    description: 'Send capsules to 5+ different recipients',
+    detailedDescription: 'You\'re sharing memories far and wide! Five different people will receive your time capsules.',
     category: 'special',
     rarity: 'rare',
-    icon: 'Globe',
+    icon: 'Users',
     unlockCriteria: {
       type: 'count',
       stat: 'unique_recipients',
-      threshold: 10,
+      threshold: 5,
       operator: '>='
     },
-    rewards: { points: 80, title: 'Social Connector' },
+    rewards: { 
+      points: 50,
+      title: 'Memory Sharer'
+    },
+    visual: {
+      gradientStart: '#06B6D4',
+      gradientEnd: '#0891B2',
+      particleColor: '#67E8F9',
+      glowColor: '#0EA5E9'
+    },
+    shareText: 'Shared capsules with 5+ people! 🌍 #ErasApp',
+    hidden: false,
+    order: 32
+  },
+
+  A033: {
+    id: 'A033',
+    title: 'Golden Ratio',
+    description: 'Have exactly 89 capsules',
+    detailedDescription: 'Eighty-nine capsules - a Fibonacci number and part of the golden ratio. Mathematical perfection in your archive.',
+    category: 'special',
+    rarity: 'rare',
+    icon: 'Sparkles',
+    unlockCriteria: {
+      type: 'custom',
+      validator: 'validateGoldenRatio'
+    },
+    rewards: { 
+      points: 89,
+      title: 'Golden Mathematician'
+    },
+    visual: {
+      gradientStart: '#FBBF24',
+      gradientEnd: '#D97706',
+      particleColor: '#FDE68A',
+      glowColor: '#F59E0B'
+    },
+    shareText: 'Reached the Golden Ratio! 89 capsules (Fibonacci number). ✨ #ErasApp',
+    hidden: false,
+    order: 33
+  },
+
+  A034: {
+    id: 'A034',
+    title: 'Memory Weaver',
+    description: 'Create capsules with all 4 media types',
+    detailedDescription: 'Photo, video, audio, and text - you\'ve woven together every format. A true multimedia master.',
+    category: 'special',
+    rarity: 'rare',
+    icon: 'Grid3x3',
+    unlockCriteria: {
+      type: 'custom',
+      validator: 'validateMemoryWeaver'
+    },
+    rewards: { 
+      points: 50,
+      title: 'Format Master'
+    },
+    visual: {
+      gradientStart: '#A78BFA',
+      gradientEnd: '#6D28D9',
+      particleColor: '#DDD6FE',
+      glowColor: '#8B5CF6'
+    },
+    shareText: 'Used all 4 media types in Eras! 🎭 #ErasApp',
+    hidden: false,
+    order: 34
+  },
+
+  A035: {
+    id: 'A035',
+    title: 'Perfect Chronicle',
+    description: 'Create a capsule on 14 consecutive days',
+    detailedDescription: 'Two weeks of daily capsules! You\'ve achieved the perfect chronicle - sustained dedication to memory preservation.',
+    category: 'time_based',
+    rarity: 'legendary',
+    icon: 'Trophy',
+    unlockCriteria: {
+      type: 'streak',
+      stat: 'max_streak_days',
+      threshold: 14,
+      operator: '>='
+    },
+    rewards: { 
+      points: 100,
+      title: 'Chronicle Master'
+    },
+    visual: {
+      gradientStart: '#F59E0B',
+      gradientEnd: '#DC2626',
+      particleColor: '#FCD34D',
+      glowColor: '#F97316',
+      animation: 'shimmer'
+    },
+    shareText: 'Completed a 14-day streak! Perfect Chronicle achieved. 🏆 #ErasApp',
+    hidden: false,
+    order: 35
+  },
+
+  A036: {
+    id: 'A036',
+    title: 'Time Lord',
+    description: 'Have capsules scheduled across 5+ different years',
+    detailedDescription: 'Your capsules span across five or more years. You\'re truly mastering the flow of time.',
+    category: 'time_based',
+    rarity: 'legendary',
+    icon: 'Hourglass',
+    unlockCriteria: {
+      type: 'custom',
+      validator: 'validateTimeLord'
+    },
+    rewards: { 
+      points: 100,
+      title: 'Time Lord'
+    },
+    visual: {
+      gradientStart: '#06B6D4',
+      gradientEnd: '#0891B2',
+      particleColor: '#67E8F9',
+      glowColor: '#0EA5E9',
+      animation: 'rainbow'
+    },
+    shareText: 'Became a Time Lord! ⏳ Capsules across 5+ years. #ErasApp',
+    hidden: false,
+    order: 36
+  },
+
+  // ============================================
+  // ROW 5: NEW ACHIEVEMENTS v2.1.0 (Order 37-45)
+  // ============================================
+  A037: {
+    id: 'A037',
+    title: 'Renaissance',
+    description: 'Create 200 capsules',
+    detailedDescription: 'Two hundred capsules! You\'ve entered the Renaissance - a golden age of memory creation and preservation.',
+    category: 'era_themed',
+    rarity: 'rare',
+    icon: 'Crown',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'capsules_created',
+      threshold: 200,
+      operator: '>='
+    },
+    rewards: { 
+      points: 150,
+      title: 'Renaissance Keeper'
+    },
+    visual: {
+      gradientStart: '#A855F7',
+      gradientEnd: '#7E22CE',
+      particleColor: '#E9D5FF',
+      glowColor: '#9333EA'
+    },
+    shareText: 'Reached the Renaissance! 200 capsules created. 👑 #ErasApp',
+    hidden: false,
+    order: 37
+  },
+
+  A038: {
+    id: 'A038',
+    title: 'Information Age',
+    description: 'Create 350 capsules',
+    detailedDescription: 'Three hundred fifty memories preserved. Welcome to the Information Age of your personal archive.',
+    category: 'era_themed',
+    rarity: 'rare',
+    icon: 'Cpu',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'capsules_created',
+      threshold: 350,
+      operator: '>='
+    },
+    rewards: { 
+      points: 200,
+      title: 'Digital Era Master'
+    },
+    visual: {
+      gradientStart: '#3B82F6',
+      gradientEnd: '#1E40AF',
+      particleColor: '#93C5FD',
+      glowColor: '#2563EB'
+    },
+    shareText: 'Entered the Information Age! 350 capsules created. 💻 #ErasApp',
+    hidden: false,
+    order: 38
+  },
+
+  A039: {
+    id: 'A039',
+    title: 'Modern Era',
+    description: 'Create 500 capsules',
+    detailedDescription: 'Five hundred capsules strong! You\'ve built a Modern Era archive that rivals any museum.',
+    category: 'era_themed',
+    rarity: 'legendary',
+    icon: 'Sparkles',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'capsules_created',
+      threshold: 500,
+      operator: '>='
+    },
+    rewards: { 
+      points: 250,
+      title: 'Modern Archivist'
+    },
     visual: {
       gradientStart: '#10B981',
       gradientEnd: '#047857',
@@ -914,64 +1174,553 @@ export const ACHIEVEMENT_DEFINITIONS: Record<string, Achievement> = {
       glowColor: '#059669',
       animation: 'pulse'
     },
-    shareText: 'Became a Globe Trotter! 🌍 Sent capsules to 10+ people. #ErasApp',
+    shareText: 'Reached the Modern Era! 500 capsules created. ✨ #ErasApp',
     hidden: false,
-    order: 31
+    order: 39
   },
 
-  E006: {
-    id: 'E006',
-    title: 'Time Lord',
-    description: 'Have active capsules scheduled across 5+ different years',
-    detailedDescription: 'You\'re playing the long game. With capsules scheduled across five or more different years, you\'ve shown exceptional commitment to your future self.',
-    category: 'time_based',
-    rarity: 'legendary',
-    icon: 'Clock',
-    unlockCriteria: {
-      type: 'specific_action',
-      action: 'capsules_across_years',
-      threshold: 5
-    },
-    rewards: { points: 100, title: 'Time Lord' },
-    visual: {
-      gradientStart: '#8B5CF6',
-      gradientEnd: '#6D28D9',
-      particleColor: '#C4B5FD',
-      glowColor: '#7C3AED',
-      animation: 'rainbow'
-    },
-    shareText: 'Became a Time Lord! ⏳ Capsules across 5+ years. #ErasApp',
-    hidden: false,
-    order: 32
-  },
-
-  E007: {
-    id: 'E007',
-    title: 'Master Curator',
-    description: 'Apply 100+ total enhancements across all capsules',
-    detailedDescription: 'You\'ve become an artist of memory. With over 100 filters, effects, stickers, and enhancements applied, you\'re crafting masterpieces.',
-    category: 'enhance',
-    rarity: 'legendary',
-    icon: 'Crown',
+  A040: {
+    id: 'A040',
+    title: 'Media Library',
+    description: 'Upload 500 total media files',
+    detailedDescription: 'Five hundred media files! Your archive has become a comprehensive library of memories.',
+    category: 'volume',
+    rarity: 'rare',
+    icon: 'HardDrive',
     unlockCriteria: {
       type: 'count',
-      stat: 'enhancements_used',
-      threshold: 100,
+      stat: 'total_media_files',
+      threshold: 500,
       operator: '>='
     },
-    rewards: { points: 100, title: 'Master Curator' },
+    rewards: { 
+      points: 150,
+      title: 'Library Keeper'
+    },
+    visual: {
+      gradientStart: '#F59E0B',
+      gradientEnd: '#D97706',
+      particleColor: '#FCD34D',
+      glowColor: '#F97316'
+    },
+    shareText: 'Built a media library with 500+ files! 🎬 #ErasApp',
+    hidden: false,
+    order: 40
+  },
+
+  A041: {
+    id: 'A041',
+    title: 'Social Butterfly',
+    description: 'Send capsules to 10+ different recipients',
+    detailedDescription: 'Ten different people receiving your memories! You\'re spreading joy across your network.',
+    category: 'special',
+    rarity: 'rare',
+    icon: 'Send',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'unique_recipients',
+      threshold: 10,
+      operator: '>='
+    },
+    rewards: { 
+      points: 75,
+      title: 'Social Memory Keeper'
+    },
+    visual: {
+      gradientStart: '#EC4899',
+      gradientEnd: '#BE185D',
+      particleColor: '#FBCFE8',
+      glowColor: '#DB2777'
+    },
+    shareText: 'Shared capsules with 10+ people! 🦋 #ErasApp',
+    hidden: false,
+    order: 41
+  },
+
+  A042: {
+    id: 'A042',
+    title: 'Early Bird',
+    description: 'Create a capsule between 5 AM and 7 AM',
+    detailedDescription: 'The early hours when the world is waking up. You\'ve captured a memory at dawn.',
+    category: 'special',
+    rarity: 'uncommon',
+    icon: 'Sunrise',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'early_bird_capsules',
+      threshold: 1,
+      operator: '>='
+    },
+    rewards: { 
+      points: 15,
+      title: 'Dawn Keeper'
+    },
     visual: {
       gradientStart: '#FBBF24',
       gradientEnd: '#F59E0B',
+      particleColor: '#FDE68A',
+      glowColor: '#F59E0B'
+    },
+    shareText: 'Created an early morning capsule! 🌅 #ErasApp',
+    hidden: false,
+    order: 42
+  },
+
+  A043: {
+    id: 'A043',
+    title: 'Time Traveler',
+    description: 'Schedule capsules spanning 3+ decades',
+    detailedDescription: 'Your capsules reach across thirty years or more. You\'re truly traveling through time!',
+    category: 'time_based',
+    rarity: 'legendary',
+    icon: 'Zap',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'max_schedule_days',
+      threshold: 1825,
+      operator: '>='
+    },
+    rewards: { 
+      points: 150,
+      title: 'Time Traveler'
+    },
+    visual: {
+      gradientStart: '#A855F7',
+      gradientEnd: '#7E22CE',
+      particleColor: '#E9D5FF',
+      glowColor: '#9333EA',
+      animation: 'rainbow'
+    },
+    shareText: 'Scheduled a capsule 5+ years ahead! Time Traveler unlocked. ⚡ #ErasApp',
+    hidden: false,
+    order: 43
+  },
+
+  A044: {
+    id: 'A044',
+    title: 'Dedication',
+    description: 'Use Eras for 100+ days',
+    detailedDescription: 'One hundred days with Eras. Your dedication to preserving memories is truly remarkable.',
+    category: 'time_based',
+    rarity: 'rare',
+    icon: 'Heart',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'days_since_signup',
+      threshold: 100,
+      operator: '>='
+    },
+    rewards: { 
+      points: 100,
+      title: 'Dedicated Keeper'
+    },
+    visual: {
+      gradientStart: '#EF4444',
+      gradientEnd: '#DC2626',
+      particleColor: '#FCA5A5',
+      glowColor: '#F87171'
+    },
+    shareText: 'Been using Eras for 100+ days! ❤️ #ErasApp',
+    hidden: false,
+    order: 44
+  },
+
+  A045: {
+    id: 'A045',
+    title: 'Year of Memories',
+    description: 'Use Eras for 365+ days',
+    detailedDescription: 'A full year with Eras! You\'ve made memory preservation a lasting part of your life.',
+    category: 'time_based',
+    rarity: 'legendary',
+    icon: 'Calendar',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'days_since_signup',
+      threshold: 365,
+      operator: '>='
+    },
+    rewards: { 
+      points: 150,
+      title: 'Annual Keeper'
+    },
+    visual: {
+      gradientStart: '#8B5CF6',
+      gradientEnd: '#6D28D9',
+      particleColor: '#DDD6FE',
+      glowColor: '#7C3AED',
+      animation: 'shimmer'
+    },
+    shareText: 'Celebrated a full year with Eras! 🎉 #ErasApp',
+    hidden: false,
+    order: 45
+  },
+
+  // ============================================
+  // VAULT FOLDER ACHIEVEMENTS v2.8.0 (Order 46-47)
+  // Replaced "Vault Pioneer/Guardian" (no import feature) with folder-based achievements
+  // ============================================
+  A046: {
+    id: 'A046',
+    title: 'Folder Pioneer',
+    description: 'Create your first memory folder',
+    detailedDescription: 'Organization is the key to a great archive. You\'ve created your first memory folder to keep your capsules neatly arranged.',
+    category: 'special',
+    rarity: 'common',
+    icon: 'FolderOpen',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'folders_created',
+      threshold: 1,
+      operator: '>='
+    },
+    rewards: { 
+      points: 10,
+      title: 'Folder Keeper'
+    },
+    visual: {
+      gradientStart: '#64748B',
+      gradientEnd: '#475569',
+      particleColor: '#94A3B8',
+      glowColor: '#64748B'
+    },
+    shareText: 'Created my first memory folder in Eras! 📁 #ErasApp',
+    hidden: false,
+    order: 46
+  },
+
+  A047: {
+    id: 'A047',
+    title: 'Folder Architect',
+    description: 'Create 5 memory folders',
+    detailedDescription: 'Five folders, each holding a chapter of your life. You\'re building a beautifully structured memory archive.',
+    category: 'special',
+    rarity: 'rare',
+    icon: 'FolderOpen',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'folders_created',
+      threshold: 5,
+      operator: '>='
+    },
+    rewards: { 
+      points: 50,
+      title: 'Folder Architect'
+    },
+    visual: {
+      gradientStart: '#3B82F6',
+      gradientEnd: '#1E40AF',
+      particleColor: '#93C5FD',
+      glowColor: '#2563EB'
+    },
+    shareText: 'Built 5 memory folders in Eras! 🗂️ #ErasApp',
+    hidden: false,
+    order: 47
+  },
+
+  // ============================================
+  // EPIC TIER ACHIEVEMENTS v2.5.0 Phase 2 (Order 48-53)
+  // ============================================
+  A048: {
+    id: 'A048',
+    title: 'Memory Titan',
+    description: 'Create 1000 capsules',
+    detailedDescription: 'One thousand time capsules. A monumental achievement that cements your status as a Sevenfold Sage.',
+    category: 'volume',
+    rarity: 'epic',
+    icon: 'Mountain',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'capsules_created',
+      threshold: 1000,
+      operator: '>='
+    },
+    rewards: { 
+      points: 500,
+      title: 'Sevenfold Sage'
+    },
+    visual: {
+      gradientStart: '#F59E0B',
+      gradientEnd: '#DC2626',
       particleColor: '#FCD34D',
+      glowColor: '#F97316',
+      animation: 'rainbow'
+    },
+    shareText: 'Became a Sevenfold Sage! 1000 capsules created. 🔮 #ErasApp',
+    hidden: false,
+    order: 48
+  },
+
+  A049: {
+    id: 'A049',
+    title: 'Century Streaker',
+    description: 'Create capsules 100 days in a row',
+    detailedDescription: 'One hundred consecutive days! Your dedication is legendary. A streak for the history books.',
+    category: 'time_based',
+    rarity: 'epic',
+    icon: 'Flame',
+    unlockCriteria: {
+      type: 'streak',
+      stat: 'max_streak_days',
+      threshold: 100,
+      operator: '>='
+    },
+    rewards: { 
+      points: 500,
+      title: 'Century Streaker'
+    },
+    visual: {
+      gradientStart: '#F59E0B',
+      gradientEnd: '#DC2626',
+      particleColor: '#FCD34D',
+      glowColor: '#F97316',
+      animation: 'pulse'
+    },
+    shareText: 'Achieved a 100-day streak! Century Streaker! 🔥 #ErasApp',
+    hidden: false,
+    order: 49
+  },
+
+  A050: {
+    id: 'A050',
+    title: 'Media Emperor',
+    description: 'Upload 1000 total media files',
+    detailedDescription: 'One thousand media files! Your archive rivals the greatest libraries. You are the Master Curator.',
+    category: 'volume',
+    rarity: 'epic',
+    icon: 'Database',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'total_media_files',
+      threshold: 1000,
+      operator: '>='
+    },
+    rewards: { 
+      points: 500,
+      title: 'Master Curator'
+    },
+    visual: {
+      gradientStart: '#FDE047',
+      gradientEnd: '#FACC15',
+      particleColor: '#FEF08A',
       glowColor: '#FBBF24',
       animation: 'shimmer'
     },
-    shareText: 'Became a Master Curator! 👑 100+ enhancements applied. #ErasApp',
+    shareText: 'Became a Master Curator! 1000+ files in my archive. 🎨 #ErasApp',
     hidden: false,
-    order: 33
+    order: 50
   },
 
+  A051: {
+    id: 'A051',
+    title: 'Epic Novelist',
+    description: 'Write a capsule with 5000+ words',
+    detailedDescription: 'Five thousand words! You\'ve written an epic novel for your future self. A true masterpiece.',
+    category: 'special',
+    rarity: 'epic',
+    icon: 'BookOpen',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'max_capsule_word_count',
+      threshold: 5000,
+      operator: '>='
+    },
+    rewards: { 
+      points: 300,
+      title: 'Epic Novelist'
+    },
+    visual: {
+      gradientStart: '#A855F7',
+      gradientEnd: '#7E22CE',
+      particleColor: '#E9D5FF',
+      glowColor: '#9333EA',
+      animation: 'shimmer'
+    },
+    shareText: 'Wrote a 5000+ word epic capsule! 📚 #ErasApp',
+    hidden: false,
+    order: 51
+  },
+
+  A052: {
+    id: 'A052',
+    title: 'Social Network',
+    description: 'Send capsules to 25+ different recipients',
+    detailedDescription: 'Twenty-five unique recipients! You\'ve built a social network of shared memories.',
+    category: 'special',
+    rarity: 'epic',
+    icon: 'Users',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'unique_recipients',
+      threshold: 25,
+      operator: '>='
+    },
+    rewards: { 
+      points: 300,
+      title: 'Network Builder'
+    },
+    visual: {
+      gradientStart: '#06B6D4',
+      gradientEnd: '#0891B2',
+      particleColor: '#67E8F9',
+      glowColor: '#0EA5E9',
+      animation: 'pulse'
+    },
+    shareText: 'Built a network of 25+ recipients! 🌐 #ErasApp',
+    hidden: false,
+    order: 52
+  },
+
+  A053: {
+    id: 'A053',
+    title: 'Community Beacon',
+    description: 'Receive echoes from 10+ unique senders',
+    detailedDescription: 'Ten different people have echoed your capsules! You\'re a beacon of inspiration in the Eras community.',
+    category: 'special',
+    rarity: 'epic',
+    icon: 'Heart',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'unique_echo_senders',
+      threshold: 10,
+      operator: '>='
+    },
+    rewards: { 
+      points: 300,
+      title: 'Community Beacon'
+    },
+    visual: {
+      gradientStart: '#EC4899',
+      gradientEnd: '#BE185D',
+      particleColor: '#FBCFE8',
+      glowColor: '#DB2777',
+      animation: 'rainbow'
+    },
+    shareText: 'Became a Community Beacon! 10+ unique echo senders. 💖 #ErasApp',
+    hidden: false,
+    order: 53
+  },
+
+  // ============================================
+  // ADDITIONAL: ECHO ACHIEVEMENTS v2.3.0
+  // ============================================
+  ECH001: {
+    id: 'ECH001',
+    title: 'First Echo',
+    description: 'Send your first echo',
+    detailedDescription: 'You\'ve sent your first echo - a ripple through time connecting two memories.',
+    category: 'special',
+    rarity: 'common',
+    icon: 'Radio',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'echoes_sent',
+      threshold: 1,
+      operator: '>='
+    },
+    rewards: { 
+      points: 10,
+      title: 'Echo Pioneer'
+    },
+    visual: {
+      gradientStart: '#22D3EE',
+      gradientEnd: '#0891B2',
+      particleColor: '#67E8F9',
+      glowColor: '#06B6D4'
+    },
+    shareText: 'Sent my first echo in Eras! 📡 #ErasApp',
+    hidden: false,
+    order: 54
+  },
+
+  ECH002: {
+    id: 'ECH002',
+    title: 'Echo Chamber',
+    description: 'Send 50 echoes',
+    detailedDescription: 'Fifty echoes sent! You\'re creating waves of connections across the Eras community.',
+    category: 'special',
+    rarity: 'rare',
+    icon: 'Waves',
+    unlockCriteria: {
+      type: 'count',
+      stat: 'echoes_sent',
+      threshold: 50,
+      operator: '>='
+    },
+    rewards: { 
+      points: 75,
+      title: 'Echo Master'
+    },
+    visual: {
+      gradientStart: '#06B6D4',
+      gradientEnd: '#0891B2',
+      particleColor: '#67E8F9',
+      glowColor: '#0EA5E9'
+    },
+    shareText: 'Created an Echo Chamber! 50 echoes sent. 🌊 #ErasApp',
+    hidden: false,
+    order: 55
+  },
+
+  // ============================================
+  // ADDITIONAL: MULTI-RECIPIENT ACHIEVEMENTS v2.4.0
+  // ============================================
+  MR001: {
+    id: 'MR001',
+    title: 'Broadcast Beginner',
+    description: 'Send a capsule to 3+ recipients at once',
+    detailedDescription: 'You\'ve sent your first multi-recipient capsule! Sharing the same memory with multiple people.',
+    category: 'special',
+    rarity: 'uncommon',
+    icon: 'Share2',
+    unlockCriteria: {
+      type: 'specific_action',
+      action: 'multi_recipient_capsule_sent_3'
+    },
+    rewards: { 
+      points: 20,
+      title: 'Broadcaster'
+    },
+    visual: {
+      gradientStart: '#10B981',
+      gradientEnd: '#047857',
+      particleColor: '#6EE7B7',
+      glowColor: '#059669'
+    },
+    shareText: 'Sent my first broadcast capsule to multiple people! 📢 #ErasApp',
+    hidden: false,
+    order: 56
+  },
+
+  MR002: {
+    id: 'MR002',
+    title: 'Grand Broadcast',
+    description: 'Send a capsule to 10+ recipients at once',
+    detailedDescription: 'Ten recipients receiving the same capsule! You\'re creating shared experiences across your network.',
+    category: 'special',
+    rarity: 'rare',
+    icon: 'Radio',
+    unlockCriteria: {
+      type: 'specific_action',
+      action: 'multi_recipient_capsule_sent_10'
+    },
+    rewards: { 
+      points: 50,
+      title: 'Grand Broadcaster'
+    },
+    visual: {
+      gradientStart: '#8B5CF6',
+      gradientEnd: '#6D28D9',
+      particleColor: '#DDD6FE',
+      glowColor: '#7C3AED'
+    },
+    shareText: 'Sent a Grand Broadcast to 10+ people! 📻 #ErasApp',
+    hidden: false,
+    order: 57
+  },
+
+  // ============================================
+  // LEGENDARY: ARCHIVE MASTER (Replaces removed E007)
+  // ============================================
   E008: {
     id: 'E008',
     title: 'Archive Master',
@@ -986,847 +1735,20 @@ export const ACHIEVEMENT_DEFINITIONS: Record<string, Achievement> = {
       threshold: 750,
       operator: '>='
     },
-    rewards: { points: 150, title: 'Archive Master' },
-    visual: {
-      gradientStart: '#EAB308',
-      gradientEnd: '#CA8A04',
-      particleColor: '#FDE047',
-      glowColor: '#FACC15',
-      animation: 'rainbow'
-    },
-    shareText: 'Became an Archive Master! 🏆 750 capsules created. #ErasApp',
-    hidden: false,
-    order: 34
-  },
-
-  E009: {
-    id: 'E009',
-    title: 'Perfect Chronicle',
-    description: 'Create 14 consecutive days of capsules, each with media',
-    detailedDescription: 'Flawless consistency. You\'ve created capsules with media for 14 consecutive days, demonstrating mastery of quality memory-making.',
-    category: 'time_based',
-    rarity: 'legendary',
-    icon: 'Target',
-    unlockCriteria: {
-      type: 'specific_action',
-      action: 'consecutive_media_capsules',
-      threshold: 14
-    },
-    rewards: { points: 100, title: 'Perfect Chronicler' },
-    visual: {
-      gradientStart: '#F43F5E',
-      gradientEnd: '#BE123C',
-      particleColor: '#FDA4AF',
-      glowColor: '#F43F5E',
-      animation: 'shimmer'
-    },
-    shareText: 'Achieved Perfect Chronicle! 🎯 14 days of media-rich capsules. #ErasApp',
-    hidden: false,
-    order: 35
-  },
-
-  A036: {
-    id: 'A036',
-    title: 'Multimedia Maestro',
-    description: 'Create a capsule with all 4 media types',
-    detailedDescription: 'A symphony of memories! You\'ve crafted a capsule containing photos, videos, audio, and text - the ultimate multi-sensory experience.',
-    category: 'special',
-    rarity: 'uncommon',
-    icon: 'Layers',
-    unlockCriteria: {
-      type: 'specific_action',
-      action: 'capsule_with_all_media_types'
-    },
-    rewards: { points: 30, title: 'Multimedia Virtuoso' },
-    visual: {
-      gradientStart: '#06B6D4',
-      gradientEnd: '#0891B2',
-      particleColor: '#67E8F9',
-      glowColor: '#06B6D4',
-      animation: 'shimmer'
-    },
-    shareText: 'Created a multimedia masterpiece! 🎨 All 4 media types in one capsule. #ErasApp',
-    hidden: false,
-    order: 36
-  },
-
-  // ============================================
-  // ROW 5: NEW ACHIEVEMENTS v2.1.0 (Order 37-45)
-  // ============================================
-
-  A037: {
-    id: 'A037',
-    title: 'Shared Achievement',
-    description: 'Share an achievement to social media',
-    detailedDescription: 'Spreading the word! You\'ve shared one of your Eras achievements with the world.',
-    category: 'special',
-    rarity: 'common',
-    icon: 'Share2',
-    unlockCriteria: {
-      type: 'specific_action',
-      action: 'achievement_shared_to_social'
-    },
-    rewards: { points: 15 },
-    visual: {
-      gradientStart: '#60A5FA',
-      gradientEnd: '#3B82F6',
-      particleColor: '#93C5FD',
-      glowColor: '#2563EB'
-    },
-    shareText: 'Shared my first achievement! 📣 Building memories with Eras. #ErasApp',
-    hidden: false,
-    order: 37
-  },
-
-  A038: {
-    id: 'A038',
-    title: 'Storyteller',
-    description: 'Write a capsule with 500+ words',
-    detailedDescription: 'Words flow like rivers through time. You\'ve crafted a detailed, immersive narrative capsule that truly captures a moment in depth.',
-    category: 'special',
-    rarity: 'uncommon',
-    icon: 'BookOpen',
-    unlockCriteria: {
-      type: 'specific_action',
-      action: 'capsule_with_500_words'
-    },
-    rewards: { points: 25, title: 'Word Painter' },
-    visual: {
-      gradientStart: '#818CF8',
-      gradientEnd: '#6366F1',
-      particleColor: '#C7D2FE',
-      glowColor: '#4F46E5'
-    },
-    shareText: 'Became a Storyteller! 📖 Wrote a 500+ word time capsule. #ErasApp',
-    hidden: false,
-    order: 38
-  },
-
-  // ============================================
-  // ONBOARDING ACHIEVEMENTS (Order 39-40)
-  // ============================================
-
-  time_keeper: {
-    id: 'time_keeper',
-    title: 'Time Keeper',
-    description: 'Complete your first capsule tutorial',
-    detailedDescription: 'The journey of a thousand time capsules begins with a single sealed moment. You\'ve mastered the basics and created your first memory to preserve.',
-    category: 'starter',
-    rarity: 'uncommon',
-    icon: 'Hourglass',
-    unlockCriteria: {
-      type: 'specific_action',
-      action: 'onboarding_first_capsule_complete'
-    },
     rewards: { 
-      points: 50,
-      title: 'Chrono Apprentice'
+      points: 150,
+      title: 'Archive Master'
     },
-    visual: {
-      gradientStart: '#CD7F32',
-      gradientEnd: '#8B4513',
-      particleColor: '#DEB887',
-      glowColor: '#CD7F32',
-      animation: 'rotate'
-    },
-    shareText: 'Just became a Time Keeper! ⏳ First capsule sealed in Eras. #ErasApp #TimeCapsule',
-    hidden: false,
-    order: 39
-  },
-
-  vault_guardian: {
-    id: 'vault_guardian',
-    title: 'Vault Guardian',
-    description: 'Complete the Vault Mastery tutorial',
-    detailedDescription: 'Protector of memories, architect of legacy. You understand the sacred duty of preserving capsules, organizing your vault, and planning for beneficiaries.',
-    category: 'special',
-    rarity: 'epic',
-    icon: 'Landmark',
-    unlockCriteria: {
-      type: 'specific_action',
-      action: 'onboarding_vault_mastery_complete'
-    },
-    rewards: { 
-      points: 200,
-      title: 'Legacy Architect'
-    },
-    visual: {
-      gradientStart: '#FFD700',
-      gradientEnd: '#FF8C00',
-      particleColor: '#FFF8DC',
-      glowColor: '#FFD700',
-      animation: 'pulse'
-    },
-    shareText: 'Achieved Vault Guardian status! 🏛️ Master of storage and legacy. #ErasApp',
-    hidden: false,
-    order: 40
-  },
-
-  A039: {
-    id: 'A039',
-    title: 'Music Memory',
-    description: 'Add audio to 20 capsules',
-    detailedDescription: 'Sound preservation specialist. You\'ve enriched 20 different time capsules with audio - voices, music, ambient sounds that bring memories to life.',
-    category: 'volume',
-    rarity: 'uncommon',
-    icon: 'Music',
-    unlockCriteria: {
-      type: 'count',
-      stat: 'capsules_with_audio_count',
-      threshold: 20,
-      operator: '>='
-    },
-    rewards: { points: 30, title: 'Frequency Keeper' },
-    visual: {
-      gradientStart: '#F472B6',
-      gradientEnd: '#EC4899',
-      particleColor: '#FBCFE8',
-      glowColor: '#DB2777'
-    },
-    shareText: 'Became a Sonic Archivist! 🎵 Added audio to 20 capsules. #ErasApp',
-    hidden: false,
-    order: 39
-  },
-
-  A040: {
-    id: 'A040',
-    title: 'Double Feature',
-    description: 'Schedule 2 capsules for the same delivery time',
-    detailedDescription: 'Parallel moments converging. You\'ve orchestrated two separate capsules to arrive at the exact same moment - a double dose of memories.',
-    category: 'special',
-    rarity: 'uncommon',
-    icon: 'Copy',
-    unlockCriteria: {
-      type: 'specific_action',
-      action: 'two_capsules_same_delivery_time'
-    },
-    rewards: { points: 30, title: 'Quantum Scheduler' },
-    visual: {
-      gradientStart: '#A78BFA',
-      gradientEnd: '#7C3AED',
-      particleColor: '#DDD6FE',
-      glowColor: '#8B5CF6'
-    },
-    shareText: 'Unlocked Double Feature! 🎬 Two capsules, one moment. #ErasApp',
-    hidden: false,
-    order: 41
-  },
-
-  A041: {
-    id: 'A041',
-    title: 'Group Hug',
-    description: 'Send one capsule to 5+ people',
-    detailedDescription: 'Shared joy multiplied. You\'ve sent a single capsule to five or more recipients, spreading the same memory across your circle.',
-    category: 'special',
-    rarity: 'uncommon',
-    icon: 'Users',
-    unlockCriteria: {
-      type: 'specific_action',
-      action: 'capsule_sent_to_5_plus_recipients'
-    },
-    rewards: { points: 35, title: 'Community Weaver' },
-    visual: {
-      gradientStart: '#FB7185',
-      gradientEnd: '#E11D48',
-      particleColor: '#FECDD3',
-      glowColor: '#F43F5E'
-    },
-    shareText: 'Unlocked Group Hug! 🤗 Sent one capsule to 5+ people. #ErasApp',
-    hidden: false,
-    order: 42
-  },
-
-  A042: {
-    id: 'A042',
-    title: 'Marathon Session',
-    description: 'Create 10 capsules in one day',
-    detailedDescription: 'An epic burst of creativity and documentation. You\'ve created 10 time capsules in a single day - capturing life at full speed.',
-    category: 'special',
-    rarity: 'rare',
-    icon: 'Zap',
-    unlockCriteria: {
-      type: 'specific_action',
-      action: 'ten_capsules_in_one_day'
-    },
-    rewards: { points: 60, title: 'Moment Harvester' },
-    visual: {
-      gradientStart: '#F59E0B',
-      gradientEnd: '#DC2626',
-      particleColor: '#FCD34D',
-      glowColor: '#F97316',
-      animation: 'pulse'
-    },
-    shareText: 'Completed a Marathon Session! 💪 Created 10 capsules in one day. #ErasApp',
-    hidden: false,
-    order: 43
-  },
-
-  A043: {
-    id: 'A043',
-    title: 'Around the Clock',
-    description: 'Create capsules at 12 different hours',
-    detailedDescription: 'Time knows no boundaries. You\'ve created capsules at 12 different hours of the day, documenting life around the clock.',
-    category: 'time_based',
-    rarity: 'rare',
-    icon: 'Timer',
-    unlockCriteria: {
-      type: 'specific_action',
-      action: 'capsules_at_12_different_hours'
-    },
-    rewards: { points: 75, title: 'Eternal Witness' },
-    visual: {
-      gradientStart: '#14B8A6',
-      gradientEnd: '#0D9488',
-      particleColor: '#5EEAD4',
-      glowColor: '#14B8A6',
-      animation: 'pulse'
-    },
-    shareText: 'Unlocked Around the Clock! 🕐 Created capsules at 12 different hours. #ErasApp',
-    hidden: false,
-    order: 44
-  },
-
-  A044: {
-    id: 'A044',
-    title: 'Lucky Number',
-    description: 'Create capsule #7, #77, and #177',
-    detailedDescription: 'Triple sevens in succession. You\'ve reached the mystical milestones of 7, 77, and 177 capsules - the numbers of fortune and completion.',
-    category: 'special',
-    rarity: 'legendary',
-    icon: 'Clover',
-    unlockCriteria: {
-      type: 'combo',
-      requirements: [
-        { stat: 'capsules_created', threshold: 177, operator: '>=' }
-      ]
-    },
-    rewards: { points: 120, title: 'Sevenfold Sage' },
     visual: {
       gradientStart: '#FBBF24',
-      gradientEnd: '#DC2626',
+      gradientEnd: '#F59E0B',
       particleColor: '#FCD34D',
-      glowColor: '#F59E0B',
-      animation: 'rainbow'
-    },
-    shareText: 'Unlocked Lucky Number! 🎰 Reached the legendary 177 capsules. #ErasApp',
-    hidden: false,
-    order: 45
-  },
-
-  A045: {
-    id: 'A045',
-    title: 'Golden Ratio',
-    description: 'Reach 161+ capsules + 100+ media files',
-    detailedDescription: 'Mathematical excellence achieved. You\'ve surpassed the Fibonacci milestone of 161 capsules with 100+ media files - the golden ratio of memory preservation.',
-    category: 'special',
-    rarity: 'epic',
-    icon: 'Sparkle',
-    unlockCriteria: {
-      type: 'combo',
-      requirements: [
-        { stat: 'capsules_created', threshold: 161, operator: '>=' },
-        { stat: 'media_uploaded', threshold: 100, operator: '>=' }
-      ]
-    },
-    rewards: { points: 115, title: 'Harmony Architect' },
-    visual: {
-      gradientStart: '#C084FC',
-      gradientEnd: '#7C3AED',
-      particleColor: '#E9D5FF',
-      glowColor: '#A855F7',
+      glowColor: '#FBBF24',
       animation: 'shimmer'
     },
-    shareText: 'Unlocked Golden Ratio! 🏆 Perfect harmony: 161+ capsules + 100+ media. #ErasApp',
-    hidden: false,
-    order: 46
-  },
-
-  // ============================================
-  // VAULT ACHIEVEMENTS (Phase 4B) - IDs A046-A047
-  // ============================================
-  A046: {
-    id: 'A046',
-    title: 'Memory Architect',
-    description: 'Create 5 custom folders in Vault',
-    detailedDescription: 'Organization is key to preservation. You\'ve structured your memories by creating 5 custom folders - a true architect of the past.',
-    category: 'special',
-    rarity: 'uncommon',
-    icon: 'FolderTree',
-    unlockCriteria: {
-      type: 'count',
-      stat: 'vault_folders_created',
-      threshold: 5,
-      operator: '>='
-    },
-    rewards: { 
-      points: 25,
-      title: 'Archivist'
-    },
-    visual: {
-      gradientStart: '#3B82F6',
-      gradientEnd: '#1D4ED8',
-      particleColor: '#93C5FD',
-      glowColor: '#2563EB'
-    },
-    shareText: 'Unlocked Memory Architect! 📁 Organized my Vault with 5 custom folders. #ErasApp',
-    hidden: false,
-    order: 47
-  },
-
-  A047: {
-    id: 'A047',
-    title: 'Vault Curator',
-    description: 'Organize 50 media items into folders',
-    detailedDescription: 'Chaos transformed into order. You\'ve meticulously organized 50 media items, proving yourself a master curator of memories.',
-    category: 'special',
-    rarity: 'rare',
-    icon: 'Archive',
-    unlockCriteria: {
-      type: 'count',
-      stat: 'vault_media_organized',
-      threshold: 50,
-      operator: '>='
-    },
-    rewards: { 
-      points: 50,
-      title: 'Keeper of Eras'
-    },
-    visual: {
-      gradientStart: '#8B5CF6',
-      gradientEnd: '#6D28D9',
-      particleColor: '#C4B5FD',
-      glowColor: '#7C3AED'
-    },
-    shareText: 'Unlocked Vault Curator! 🏛️ Organized 50+ memories in my Vault. #ErasApp',
-    hidden: false,
-    order: 48
-  },
-
-  // ============================================
-  // EPIC TIER ACHIEVEMENTS - Phase 2 (IDs A048-A053)
-  // ============================================
-  
-  A048: {
-    id: 'A048',
-    title: 'Eternal Keeper',
-    description: 'Use Eras for 3 consecutive years',
-    detailedDescription: 'A testament to dedication. You\'ve been preserving memories with Eras for three full years without interruption - truly eternal in your commitment.',
-    category: 'loyalty',
-    rarity: 'epic',
-    icon: 'Sparkles',
-    unlockCriteria: {
-      type: 'custom',
-      validator: 'check_consecutive_years_3'
-    },
-    rewards: { 
-      points: 200, 
-      title: 'Genesis Eternal'
-    },
-    visual: {
-      gradientStart: '#0f0f23',
-      gradientEnd: '#8b5cf6',
-      particleColor: '#4169e1',
-      glowColor: '#1a0a2e',
-      animation: 'cosmic-explosion'
-    },
-    shareText: 'Unlocked Eternal Keeper! 🌌 3 years of preserving memories. Genesis Eternal horizon activated! #ErasApp',
-    hidden: false,
-    order: 49
-  },
-
-  A049: {
-    id: 'A049',
-    title: 'Theme Connoisseur',
-    description: 'Create at least 1 capsule with all 15 themes',
-    detailedDescription: 'A master of variety. You\'ve experienced the full spectrum of memory-making by creating capsules with all 15 different themes.',
-    category: 'variety',
-    rarity: 'epic',
-    icon: 'Palette',
-    unlockCriteria: {
-      type: 'custom',
-      validator: 'check_all_themes_used'
-    },
-    rewards: { 
-      points: 200, 
-      title: 'Prismatic Dusk'
-    },
-    visual: {
-      gradientStart: '#ec4899',
-      gradientEnd: '#3b82f6',
-      particleColor: '#8b5cf6',
-      glowColor: '#f59e0b',
-      animation: 'rainbow-refraction'
-    },
-    shareText: 'Unlocked Theme Connoisseur! 🌈 Mastered all 15 themes. Prismatic Dusk horizon unlocked! #ErasApp',
-    hidden: false,
-    order: 49
-  },
-
-  A050: {
-    id: 'A050',
-    title: 'Golden Hour Guardian',
-    description: 'Share 50 capsules with recipients',
-    detailedDescription: 'A beacon of connection. You\'ve shared 50 time capsules with others, spreading memories and bringing people closer across time.',
-    category: 'social',
-    rarity: 'epic',
-    icon: 'Sunrise',
-    unlockCriteria: {
-      type: 'count',
-      stat: 'capsules_to_others',
-      threshold: 50,
-      operator: '>='
-    },
-    rewards: { 
-      points: 200, 
-      title: 'Dawn Eternal'
-    },
-    visual: {
-      gradientStart: '#fbbf24',
-      gradientEnd: '#fb923c',
-      particleColor: '#fcd34d',
-      glowColor: '#f59e0b',
-      animation: 'sunrise-burst'
-    },
-    shareText: 'Unlocked Golden Hour Guardian! 🌄 Shared 50 capsules with others. Dawn Eternal horizon rises! #ErasApp',
-    hidden: false,
-    order: 50
-  },
-
-  A051: {
-    id: 'A051',
-    title: 'Multimedia Master',
-    description: 'Upload 50 photos, 50 videos, and 50 audio files',
-    detailedDescription: 'The ultimate content creator. You\'ve mastered every medium - photos, videos, and audio - uploading 50 of each type.',
-    category: 'content',
-    rarity: 'epic',
-    icon: 'Film',
-    unlockCriteria: {
-      type: 'combo',
-      requirements: [
-        { stat: 'media_by_type.photo', threshold: 50, operator: '>=' },
-        { stat: 'media_by_type.video', threshold: 50, operator: '>=' },
-        { stat: 'media_by_type.audio', threshold: 50, operator: '>=' }
-      ]
-    },
-    rewards: { 
-      points: 200, 
-      title: 'Creative Nexus'
-    },
-    visual: {
-      gradientStart: '#06b6d4',
-      gradientEnd: '#ec4899',
-      particleColor: '#fbbf24',
-      glowColor: '#8b5cf6',
-      animation: 'media-convergence'
-    },
-    shareText: 'Unlocked Multimedia Master! 🎬 50 photos + 50 videos + 50 audio. Creative Nexus horizon converges! #ErasApp',
-    hidden: false,
-    order: 51
-  },
-
-  A052: {
-    id: 'A052',
-    title: 'Memory Weaver',
-    description: 'Create 100 capsules with photos or videos',
-    detailedDescription: 'A keeper of visual memories. You\'ve woven together 100 capsules filled with photos and videos, creating a beautiful tapestry of life\'s moments.',
-    category: 'content',
-    rarity: 'epic',
-    icon: 'Heart',
-    unlockCriteria: {
-      type: 'count',
-      stat: 'capsules_with_media_count',
-      threshold: 100,
-      operator: '>='
-    },
-    rewards: { 
-      points: 200, 
-      title: 'Nostalgia Weaver'
-    },
-    visual: {
-      gradientStart: '#d97706',
-      gradientEnd: '#92400e',
-      particleColor: '#fbbf24',
-      glowColor: '#78350f',
-      animation: 'thread-weaving'
-    },
-    shareText: 'Unlocked Memory Weaver! 🧵 100 visual memories woven together into a tapestry of time. #ErasApp',
-    hidden: false,
-    order: 52
-  },
-
-  A053: {
-    id: 'A053',
-    title: 'Community Beacon',
-    description: 'Receive echoes from 25 different people',
-    detailedDescription: 'Your capsules resonate across communities. You\'ve received echoes from 25 different people, proving your memories inspire meaningful connections.',
-    category: 'engagement',
-    rarity: 'epic',
-    icon: 'Users',
-    unlockCriteria: {
-      type: 'custom',
-      validator: 'check_unique_echo_senders'
-    },
-    rewards: { 
-      points: 200
-      // NO title unlock - just like "Shared Achievement"
-    },
-    visual: {
-      gradientStart: '#10b981',
-      gradientEnd: '#059669',
-      particleColor: '#6ee7b7',
-      glowColor: '#047857',
-      animation: 'community-pulse'
-    },
-    shareText: 'Unlocked Community Beacon! 🌟 Received echoes from 25 different people. Building bridges through memories! #ErasApp',
-    hidden: false,
-    order: 53
-  },
-
-  // ============================================
-  // ECHO ACHIEVEMENTS (Phase 1) - IDs ECH001-ECH002
-  // ============================================
-
-  ECH001: {
-    id: 'ECH001',
-    title: 'Echo Initiate',
-    description: 'Send your first echo',
-    detailedDescription: 'You\'ve sent your first echo! This simple gesture closes the emotional loop, letting senders know their capsule was appreciated.',
-    category: 'engagement',
-    rarity: 'common',
-    icon: 'MessageCircle',
-    unlockCriteria: {
-      type: 'count',
-      stat: 'echoes_sent',
-      threshold: 1,
-      operator: '>='
-    },
-    rewards: { points: 10 },
-    visual: {
-      gradientStart: '#60A5FA',
-      gradientEnd: '#3B82F6',
-      particleColor: '#93C5FD',
-      glowColor: '#2563EB'
-    },
-    shareText: 'Sent my first echo in Eras! 💫 #ErasApp',
-    hidden: false,
-    order: 54
-  },
-
-  ECH002: {
-    id: 'ECH002',
-    title: 'Warm Wave',
-    description: 'Send 10 echoes',
-    detailedDescription: 'You\'re spreading appreciation throughout Eras. Ten echoes sent means ten moments where someone felt heard and valued.',
-    category: 'engagement',
-    rarity: 'uncommon',
-    icon: 'Waves',
-    unlockCriteria: {
-      type: 'count',
-      stat: 'echoes_sent',
-      threshold: 10,
-      operator: '>='
-    },
-    rewards: { 
-      points: 25,
-      title: 'Echo Artisan'
-    },
-    visual: {
-      gradientStart: '#34D399',
-      gradientEnd: '#10B981',
-      particleColor: '#6EE7B7',
-      glowColor: '#059669'
-    },
-    shareText: 'Sent 10 echoes in Eras! 🌊 Spreading appreciation. #ErasApp',
-    hidden: false,
-    order: 55
-  },
-
-  // ============================================
-  // MULTI-RECIPIENT ACHIEVEMENTS (Phase 1 A1) - IDs MR001-MR002
-  // ============================================
-
-  MR001: {
-    id: 'MR001',
-    title: 'Circle of Trust',
-    description: 'Send one capsule to 5 recipients',
-    detailedDescription: 'You\'ve brought five people into a shared moment. This capsule will reach multiple hearts at once, creating a circle of connection across time.',
-    category: 'special',
-    rarity: 'uncommon',
-    icon: 'Users',
-    unlockCriteria: {
-      type: 'specific_action',
-      action: 'multi_recipient_capsule',
-      threshold: 5,
-      operator: '>='
-    },
-    rewards: { 
-      points: 35,
-      title: 'Circle Keeper'
-    },
-    visual: {
-      gradientStart: '#F59E0B',
-      gradientEnd: '#D97706',
-      particleColor: '#FCD34D',
-      glowColor: '#F59E0B',
-      animation: 'pulse'
-    },
-    shareText: 'Unlocked Circle of Trust! ⭕ Sent a capsule to 5 people at once. #ErasApp',
-    hidden: false,
-    order: 50
-  },
-
-  MR002: {
-    id: 'MR002',
-    title: 'Grand Broadcast',
-    description: 'Send one capsule to 10 recipients',
-    detailedDescription: 'A perfect ten. You\'ve orchestrated a grand broadcast, sending a single message to ten people simultaneously. This is the art of mass connection across time.',
-    category: 'special',
-    rarity: 'rare',
-    icon: 'Broadcast',
-    unlockCriteria: {
-      type: 'specific_action',
-      action: 'multi_recipient_capsule',
-      threshold: 10,
-      operator: '>='
-    },
-    rewards: { 
-      points: 50,
-      title: 'The Broadcaster'
-    },
-    visual: {
-      gradientStart: '#8B5CF6',
-      gradientEnd: '#6D28D9',
-      particleColor: '#C4B5FD',
-      glowColor: '#7C3AED',
-      animation: 'shimmer'
-    },
-    shareText: 'Unlocked Grand Broadcast! 📡 Sent a capsule to 10 people at once! #ErasApp',
-    hidden: false,
-    order: 51
-  },
-
-  // ============================================
-  // REFERRAL ACHIEVEMENTS (Platform Growth) - IDs REF001-REF004
-  // ============================================
-  
-  REF001: {
-    id: 'REF001',
-    title: 'Community Builder',
-    description: 'Invite 1 friend who creates their first capsule',
-    detailedDescription: 'You\'ve shared the gift of time. Your first invited friend has joined Eras and created their first capsule, beginning their own journey through time.',
-    category: 'referral',
-    rarity: 'rare',
-    icon: 'Users',
-    unlockCriteria: {
-      type: 'custom',
-      validator: 'check_referral_count',
-      threshold: 1
-    },
-    rewards: { 
-      points: 100,
-      title: 'Community Builder',
-      horizon: 'stardust_drift'
-    },
-    visual: {
-      gradientStart: '#a78bfa',
-      gradientEnd: '#7c3aed',
-      particleColor: '#c4b5fd',
-      glowColor: '#8b5cf6',
-      animation: 'stardust-shimmer'
-    },
-    shareText: 'Unlocked Community Builder! ✨ My friend joined Eras and created their first capsule. Stardust Drift horizon unlocked! #ErasApp',
-    hidden: false,
-    order: 56
-  },
-
-  REF002: {
-    id: 'REF002',
-    title: 'Legacy Builder',
-    description: 'Invite 5 friends who create capsules',
-    detailedDescription: 'A true ambassador of time. Five friends have joined Eras through your invitation and begun preserving their own memories. You\'re building a legacy that spans generations.',
-    category: 'referral',
-    rarity: 'legendary',
-    icon: 'Landmark',
-    unlockCriteria: {
-      type: 'custom',
-      validator: 'check_referral_count',
-      threshold: 5
-    },
-    rewards: { 
-      points: 500,
-      title: 'Legacy Builder',
-      horizon: 'eternal_aurora'
-    },
-    visual: {
-      gradientStart: '#06b6d4',
-      gradientEnd: '#0284c7',
-      particleColor: '#67e8f9',
-      glowColor: '#06b6d4',
-      animation: 'aurora-wave'
-    },
-    shareText: 'Unlocked Legacy Builder! 🌌 5 friends joined Eras through me. Eternal Aurora horizon rises! #ErasApp',
-    hidden: false,
-    order: 57
-  },
-
-  REF003: {
-    id: 'REF003',
-    title: 'Horizon Architect',
-    description: 'Invite 10 friends who create capsules',
-    detailedDescription: 'A master of community building. Ten friends have discovered Eras through you, each beginning their journey of preserving moments. Your influence ripples through time.',
-    category: 'referral',
-    rarity: 'epic',
-    icon: 'Compass',
-    unlockCriteria: {
-      type: 'custom',
-      validator: 'check_referral_count',
-      threshold: 10
-    },
-    rewards: { 
-      points: 1000,
-      title: 'Horizon Architect',
-      horizon: 'supernova_bloom'
-    },
-    visual: {
-      gradientStart: '#f97316',
-      gradientEnd: '#dc2626',
-      particleColor: '#fdba74',
-      glowColor: '#f97316',
-      animation: 'supernova-burst'
-    },
-    shareText: 'Unlocked Horizon Architect! 💥 10 friends joined Eras through me. Supernova Bloom horizon explodes! #ErasApp',
+    shareText: 'Became an Archive Master! 750 capsules created. 🏆 #ErasApp',
     hidden: false,
     order: 58
-  },
-
-  REF004: {
-    id: 'REF004',
-    title: 'Infinity Architect',
-    description: 'Invite 25 friends who create capsules',
-    detailedDescription: 'A legendary pioneer of temporal connection. Twenty-five friends have joined Eras through your passion, creating an infinite network of preserved memories across time. You are truly a master of the cosmos.',
-    category: 'referral',
-    rarity: 'legendary',
-    icon: 'Infinity',
-    unlockCriteria: {
-      type: 'custom',
-      validator: 'check_referral_count',
-      threshold: 25
-    },
-    rewards: { 
-      points: 2500,
-      title: 'Infinity Architect',
-      horizon: 'infinity_nexus'
-    },
-    visual: {
-      gradientStart: '#ec4899',
-      gradientEnd: '#be185d',
-      particleColor: '#f9a8d4',
-      glowColor: '#ec4899',
-      animation: 'infinity-loop'
-    },
-    shareText: 'Unlocked Infinity Architect! ♾️ 25 friends joined Eras through me. Infinity Nexus horizon manifests! #ErasApp',
-    hidden: false,
-    order: 59
   }
 };
 
@@ -1835,2055 +1757,1233 @@ export const ACHIEVEMENT_DEFINITIONS: Record<string, Achievement> = {
 // ============================================
 
 export interface UserStats {
+  userId: string;
   capsules_created: number;
   capsules_sent: number;
   capsules_received: number;
-  capsules_opened: number;
-  capsules_deleted: number;
-  media_uploaded: number;
   media_by_type: {
     photo: number;
     video: number;
     audio: number;
   };
-  total_media_size_mb: number;
-  filter_usage: {
-    yesterday: number;
-    future_light: number;
-    echo: number;
-    dream: number;
-    vintage: number;
-    cosmic: number;
-    underwater: number;
-    cathedral: number;
-  };
-  stickers_used: number;
-  text_overlays_added: number;
-  enhancements_used: number;
+  total_media_files: number;
   max_schedule_days: number;
-  min_schedule_days: number;
-  avg_schedule_days: number;
-  current_streak: number;
-  longest_streak: number;
-  last_capsule_date: string;
-  total_recipients: number;
-  unique_recipients: number;
-  capsules_to_self: number;
-  capsules_to_others: number;
-  legacy_vault_setup: boolean;
-  beneficiaries_added: number;
-  night_owl_capsules: number;
-  account_created_at: string;
-  days_since_signup: number;
-  achievement_count: number;
-  achievement_points: number;
-  rarest_achievement: string | null;
-  first_capsule_at: string | null;
-  most_recent_capsule_at: string | null;
-  last_stats_update: string;
-  monthly_active_months: number; // Track how many months user has been active
-  monthly_streak: number; // Current consecutive months with at least 1 capsule
-  cinematic_capsules: number; // Capsules with 10+ media files
-  unique_recipient_emails: string[]; // Track unique recipients for Globe Trotter
-  capsules_edited: number; // Track edits for Memory Revisited
-  unique_creation_days: number; // Track unique days for Consistent Creator
+  max_wait_days: number;
+  max_capsule_word_count: number;
+  max_streak_days: number;
+  unique_creation_days: number;
   creation_day_set: string[]; // Track set of unique creation days (YYYY-MM-DD)
   multimedia_capsules: number; // Capsules with 3+ content types
   capsule_years: number[]; // Track years with scheduled capsules for Time Lord
-  consecutive_media_days: number; // Track consecutive days with media capsules for Perfect Chronicle
-  last_media_capsule_date: string; // Last date a media capsule was created
+  unique_recipients: number; // Track number of unique recipient emails
+  unique_recipient_emails: string[]; // Track unique recipient emails
+  account_created_at: string; // ISO date string
+  days_since_signup: number;
+  vaulted_capsules: number; // Track capsules stored in vault (legacy)
+  echoes_sent: number; // Track echoes sent
+  unique_echo_senders: number; // Track unique users who have echoed your capsules
+  unique_echo_sender_ids: string[]; // Track unique user IDs who have echoed
+  cinematic_capsules: number; // Capsules with 10+ media files
+  capsules_edited: number; // Track total capsule edits (A017 Memory Perfectionist)
   
-  // NEW STATS - v2.1.0
-  onboarding_first_capsule_complete?: boolean; // Track tutorial completion
-  onboarding_vault_mastery_complete?: boolean; // Track tutorial completion
-  social_shares_count: number; // Track social shares for Shared Achievement
-  capsules_with_audio_count: number; // Track capsules with audio for Music Memory
-  capsule_delivery_times: string[]; // Track delivery times for Double Feature (ISO strings)
-  capsule_creation_hours: number[]; // Track unique hours for Around the Clock
-  daily_capsule_counts: { [date: string]: number }; // Track capsules per day for Marathon Session
-  
-  // VAULT STATS - v2.2.0 (Phase 4B)
-  vault_folders_created: number; // Total custom folders created
-  vault_media_organized: number; // Total media items moved into folders
-  vault_auto_organize_used: number; // Times auto-organize was used
-  vault_smart_folders_created: number; // Smart folders (Photos, Videos, Audio)
-  
-  // ECHO STATS - v2.3.0 (Phase 1 Echoes)
-  echoes_sent: number; // Total echoes sent (emoji + text)
-  echoes_received: number; // Total echoes received on user's capsules
-  emoji_echoes_sent: number; // Emoji reactions sent
-  text_echoes_sent: number; // Text notes sent
-  unique_echo_senders?: string[]; // Array of unique sender emails
-  unique_echo_senders_count?: number; // Number of unique people who sent echoes
-  
-  // EPIC TIER STATS - v2.5.0 (Phase 2 Epic Achievements)
-  themes_used?: { [theme: string]: number }; // Track usage count for each theme
-  hourly_capsule_counts?: { [hour: string]: number }; // Track capsules created at each hour (0-23)
+  // v2.8.0: New time-aware and folder stats — all fully triggered
+  midnight_capsules: number;       // Capsules created 0:00–2:59 (A026)
+  golden_hour_capsules: number;    // Capsules created 6:00–7:59 or 17:00–18:59 (A031)
+  early_bird_capsules: number;     // Capsules created 5:00–6:59 (A042)
+  new_year_capsules: number;       // Capsules created on January 1 (A027)
+  folders_created: number;         // Vault folders created (A046 Folder Pioneer, A047 Folder Architect)
+  capsules_created_today: number;  // Rolling daily capsule count (resets each day)
+  capsules_created_today_date: string; // Date string for the above (YYYY-MM-DD)
+  capsules_created_today_max: number;  // All-time max capsules created in a single day (A018)
+
+  // Last update timestamp
+  last_updated: string; // ISO date string
+}
+
+// ============================================
+// ACHIEVEMENT PROGRESS TRACKING
+// ============================================
+
+export interface AchievementProgress {
+  userId: string;
+  unlockedAchievements: string[]; // Array of achievement IDs
+  progress: Record<string, {
+    current: number;
+    target: number;
+    percentage: number;
+  }>;
+  lastChecked: string; // ISO date string
+  shownNotifications?: string[]; // Array of achievement IDs that have been shown to user
 }
 
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
 
-function getNestedStat(stats: UserStats, path: string): number {
-  const parts = path.split('.');
+// Initialize user stats
+export async function initializeUserStats(userId: string): Promise<UserStats> {
+  const stats: UserStats = {
+    userId,
+    capsules_created: 0,
+    capsules_sent: 0,
+    capsules_received: 0,
+    media_by_type: {
+      photo: 0,
+      video: 0,
+      audio: 0
+    },
+    total_media_files: 0,
+    max_schedule_days: 0,
+    max_wait_days: 0,
+    max_capsule_word_count: 0,
+    max_streak_days: 0,
+    unique_creation_days: 0,
+    creation_day_set: [],
+    multimedia_capsules: 0,
+    capsule_years: [],
+    unique_recipients: 0,
+    unique_recipient_emails: [],
+    account_created_at: new Date().toISOString(),
+    days_since_signup: 0,
+    vaulted_capsules: 0,
+    echoes_sent: 0,
+    unique_echo_senders: 0,
+    unique_echo_sender_ids: [],
+    cinematic_capsules: 0,
+    capsules_edited: 0,
+    // v2.8.0 new stats
+    midnight_capsules: 0,
+    golden_hour_capsules: 0,
+    early_bird_capsules: 0,
+    new_year_capsules: 0,
+    folders_created: 0,
+    capsules_created_today: 0,
+    capsules_created_today_date: '',
+    capsules_created_today_max: 0,
+    last_updated: new Date().toISOString()
+  };
+  
+  await kv.set(`user_stats:${userId}`, stats);
+  return stats;
+}
+
+// Get user stats — v2.8.0: backfills new fields for older records
+export async function getUserStats(userId: string): Promise<UserStats | null> {
+  const stats = await kv.get<UserStats>(`user_stats:${userId}`);
+  if (!stats) return null;
+  // Backfill v2.8.0 fields so older records don't return undefined
+  return {
+    midnight_capsules: 0,
+    golden_hour_capsules: 0,
+    early_bird_capsules: 0,
+    new_year_capsules: 0,
+    folders_created: 0,
+    capsules_created_today: 0,
+    capsules_created_today_date: '',
+    capsules_created_today_max: 0,
+    ...stats
+  };
+}
+
+// Update user stats
+export async function updateUserStats(userId: string, updates: Partial<UserStats>): Promise<UserStats> {
+  let stats = await getUserStats(userId);
+  if (!stats) {
+    stats = await initializeUserStats(userId);
+  }
+  
+  const updated = {
+    ...stats,
+    ...updates,
+    last_updated: new Date().toISOString()
+  };
+  
+  // Calculate days since signup if account_created_at exists
+  if (updated.account_created_at) {
+    const daysBetween = (date1: string, date2: string) => {
+      const d1 = new Date(date1);
+      const d2 = new Date(date2);
+      const diffTime = Math.abs(d2.getTime() - d1.getTime());
+      return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    };
+    updated.days_since_signup = daysBetween(stats.account_created_at, new Date().toISOString());
+  }
+  
+  // Track unique creation days for Consistent Creator (A010)
+  if (!Array.isArray(updated.creation_day_set)) {
+    updated.creation_day_set = [];
+  }
+  
+  await kv.set(`user_stats:${userId}`, updated);
+  return updated;
+}
+
+// Get achievement progress
+export async function getAchievementProgress(userId: string): Promise<AchievementProgress | null> {
+  const progress = await kv.get<AchievementProgress>(`achievement_progress:${userId}`);
+  return progress;
+}
+
+// Initialize achievement progress
+export async function initializeAchievementProgress(userId: string): Promise<AchievementProgress> {
+  const progress: AchievementProgress = {
+    userId,
+    unlockedAchievements: [],
+    progress: {},
+    lastChecked: new Date().toISOString(),
+    shownNotifications: []
+  };
+  
+  await kv.set(`achievement_progress:${userId}`, progress);
+  return progress;
+}
+
+// Update achievement progress
+export async function updateAchievementProgress(
+  userId: string,
+  achievementId: string
+): Promise<AchievementProgress> {
+  let progress = await getAchievementProgress(userId);
+  if (!progress) {
+    progress = await initializeAchievementProgress(userId);
+  }
+  
+  if (!progress.unlockedAchievements.includes(achievementId)) {
+    progress.unlockedAchievements.push(achievementId);
+    progress.lastChecked = new Date().toISOString();
+    await kv.set(`achievement_progress:${userId}`, progress);
+  }
+  
+  return progress;
+}
+
+// ============================================
+// ACHIEVEMENT CHECKING
+// ============================================
+
+// Check all achievements for a user
+export async function checkAchievements(userId: string): Promise<Achievement[]> {
+  const stats = await getUserStats(userId);
+  if (!stats) {
+    return [];
+  }
+  
+  const progress = await getAchievementProgress(userId) || await initializeAchievementProgress(userId);
+  const newlyUnlocked: Achievement[] = [];
+  
+  for (const [id, achievement] of Object.entries(ACHIEVEMENT_DEFINITIONS)) {
+    // Skip if already unlocked
+    if (progress.unlockedAchievements.includes(id)) {
+      continue;
+    }
+    
+    // Check if achievement criteria is met
+    const isUnlocked = await checkAchievementCriteria(achievement, stats);
+    
+    if (isUnlocked) {
+      await updateAchievementProgress(userId, id);
+      newlyUnlocked.push(achievement);
+    }
+  }
+  
+  return newlyUnlocked;
+}
+
+// Check if a specific achievement criteria is met
+async function checkAchievementCriteria(achievement: Achievement, stats: UserStats): Promise<boolean> {
+  const { unlockCriteria } = achievement;
+  
+  switch (unlockCriteria.type) {
+    case 'count': {
+      const statValue = getNestedStat(stats, unlockCriteria.stat!);
+      const threshold = unlockCriteria.threshold!;
+      const operator = unlockCriteria.operator || '>=';
+      
+      switch (operator) {
+        case '>=': return statValue >= threshold;
+        case '>': return statValue > threshold;
+        case '==': return statValue === threshold;
+        case '<=': return statValue <= threshold;
+        case '<': return statValue < threshold;
+        default: return false;
+      }
+    }
+    
+    case 'streak': {
+      return stats.max_streak_days >= unlockCriteria.threshold!;
+    }
+    
+    case 'time_wait': {
+      return stats.max_wait_days >= unlockCriteria.threshold!;
+    }
+    
+    case 'specific_action': {
+      // These are triggered by specific events in the app
+      // They'll be checked when the action occurs
+      return false;
+    }
+    
+    case 'combo': {
+      // Check if all requirements are met
+      if (!unlockCriteria.requirements) return false;
+      return unlockCriteria.requirements.every(req => {
+        const statValue = getNestedStat(stats, req.stat);
+        const operator = req.operator || '>=';
+        switch (operator) {
+          case '>=': return statValue >= req.threshold;
+          case '>': return statValue > req.threshold;
+          case '==': return statValue === req.threshold;
+          default: return false;
+        }
+      });
+    }
+    
+    case 'custom': {
+      // Use custom validator function
+      if (!unlockCriteria.validator) return false;
+      return await runCustomValidator(unlockCriteria.validator, stats);
+    }
+    
+    default:
+      return false;
+  }
+}
+
+// Get nested stat value (e.g., 'media_by_type.photo')
+function getNestedStat(stats: UserStats, statPath: string): number {
+  const parts = statPath.split('.');
   let value: any = stats;
   
   for (const part of parts) {
-    if (value && typeof value === 'object') {
-      value = value[part];
-    } else {
-      return 0;
-    }
+    value = value[part];
+    if (value === undefined) return 0;
   }
   
   return typeof value === 'number' ? value : 0;
 }
 
-function compareValues(value: number, threshold: number, operator: string = '>='): boolean {
-  switch (operator) {
-    case '>=': return value >= threshold;
-    case '>': return value > threshold;
-    case '==': return value === threshold;
-    case '<=': return value <= threshold;
-    case '<': return value < threshold;
-    default: return false;
-  }
-}
-
-function daysBetween(date1: string, date2: string): number {
-  const d1 = new Date(date1);
-  const d2 = new Date(date2);
-  const diffTime = Math.abs(d2.getTime() - d1.getTime());
-  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
-}
-
-/**
- * Initialize default user stats
- */
-function initializeUserStats(): UserStats {
-  return {
-    capsules_created: 0,
-    capsules_sent: 0,
-    capsules_received: 0,
-    capsules_opened: 0,
-    capsules_deleted: 0,
-    media_uploaded: 0,
-    media_by_type: { photo: 0, video: 0, audio: 0 },
-    total_media_size_mb: 0,
-    filter_usage: {
-      yesterday: 0,
-      future_light: 0,
-      echo: 0,
-      dream: 0,
-      vintage: 0,
-      cosmic: 0,
-      underwater: 0,
-      cathedral: 0
-    },
-    stickers_used: 0,
-    text_overlays_added: 0,
-    enhancements_used: 0,
-    max_schedule_days: 0,
-    min_schedule_days: 0,
-    avg_schedule_days: 0,
-    current_streak: 0,
-    longest_streak: 0,
-    last_capsule_date: '',
-    total_recipients: 0,
-    unique_recipients: 0,
-    capsules_to_self: 0,
-    capsules_to_others: 0,
-    legacy_vault_setup: false,
-    beneficiaries_added: 0,
-    night_owl_capsules: 0,
-    account_created_at: new Date().toISOString(),
-    days_since_signup: 0,
-    achievement_count: 0,
-    achievement_points: 0,
-    rarest_achievement: null,
-    first_capsule_at: null,
-    most_recent_capsule_at: null,
-    last_stats_update: new Date().toISOString(),
-    monthly_active_months: 0,
-    monthly_streak: 0,
-    cinematic_capsules: 0,
-    unique_recipient_emails: [],
-    capsules_edited: 0,
-    unique_creation_days: 0,
-    creation_day_set: [],
-    multimedia_capsules: 0,
-    capsule_years: [],
-    consecutive_media_days: 0,
-    last_media_capsule_date: '',
-    
-    // NEW STATS - v2.1.0
-    social_shares_count: 0,
-    capsules_with_audio_count: 0,
-    capsules_with_media_count: 0,
-    capsule_delivery_times: [],
-    capsule_creation_hours: [],
-    daily_capsule_counts: {},
-    
-    // VAULT STATS - v2.2.0
-    vault_folders_created: 0,
-    vault_media_organized: 0,
-    vault_auto_organize_used: 0,
-    vault_smart_folders_created: 0,
-    
-    // ECHO STATS - v2.3.0
-    echoes_sent: 0,
-    echoes_received: 0,
-    emoji_echoes_sent: 0,
-    text_echoes_sent: 0,
-    unique_echo_senders: [],
-    unique_echo_senders_count: 0,
-    
-    // MULTI-RECIPIENT STATS - v2.4.0
-    max_recipients_in_single_capsule: 0,
-    total_multi_recipient_capsules: 0,
-    
-    // EPIC TIER STATS - v2.5.0
-    themes_used: {},
-    hourly_capsule_counts: {}
-  };
-}
-
 // ============================================
-// CRITERIA EVALUATION
+// CUSTOM VALIDATORS
 // ============================================
 
-function evaluateCriteria(
-  achievement: Achievement,
-  stats: UserStats,
-  action: string,
-  metadata: any
-): boolean {
-  const { type, stat, threshold, operator, action: criteriaAction, requirements } = achievement.unlockCriteria;
-  
-  switch (type) {
-    case 'count':
-      if (!stat || threshold === undefined) return false;
-      const value = getNestedStat(stats, stat);
-      return compareValues(value, threshold, operator || '>=');
-      
-    case 'streak':
-      if (!stat || threshold === undefined) return false;
-      return compareValues(stats.current_streak, threshold, operator || '>=');
-      
-    case 'time_wait':
-      if (!stat || threshold === undefined) return false;
-      return compareValues(stats.max_schedule_days, threshold, operator || '>=');
-      
-    case 'specific_action':
-      if (criteriaAction === 'capsule_created_at_hour' && threshold !== undefined) {
-        // CRITICAL FIX: Use user's local hour from frontend, not server time
-        const userLocalHour = metadata?.userLocalHour;
-        console.log(`[Night Owl Criteria Check] Looking for hour ${threshold}, user local hour: ${userLocalHour}`);
-        
-        if (userLocalHour === undefined) {
-          console.log(`[Night Owl Criteria Check] ⚠️ No userLocalHour in metadata, cannot check`);
-          return false;
-        }
-        
-        // Exact hour match (3am = 3)
-        const matches = userLocalHour === threshold;
-        console.log(`[Night Owl Criteria Check] ${matches ? '✅' : '❌'} Match result: ${matches}`);
-        return matches;
-      }
-      if (criteriaAction === 'capsule_created_at_hour_range' && threshold !== undefined) {
-        // Check if capsule was created within a time range (e.g., 12 AM - 3 AM)
-        const userLocalHour = metadata?.userLocalHour;
-        const [startHour, endHour] = Array.isArray(threshold) ? threshold : [0, 0];
-        
-        console.log(`[Night Owl Range Check] Looking for hours ${startHour}-${endHour}, user local hour: ${userLocalHour}`);
-        
-        if (userLocalHour === undefined) {
-          console.log(`[Night Owl Range Check] ⚠️ No userLocalHour in metadata, cannot check`);
-          return false;
-        }
-        
-        // Check if hour is within range (inclusive start, exclusive end)
-        // For 12 AM - 3 AM: hours 0, 1, 2 (not 3)
-        const matches = userLocalHour >= startHour && userLocalHour < endHour;
-        console.log(`[Night Owl Range Check] ${matches ? '✅' : '❌'} Match result: ${matches}`);
-        return matches;
-      }
-      if (criteriaAction === 'legacy_vault_setup') {
-        return stats.legacy_vault_setup === true;
-      }
-      if (criteriaAction === 'monthly_streak_check' && threshold !== undefined) {
-        return stats.monthly_streak >= threshold;
-      }
-      if (criteriaAction === 'account_age_check' && threshold !== undefined) {
-        return stats.days_since_signup >= threshold;
-      }
-      if (criteriaAction === 'received_50_echoes') {
-        return stats.echoes_received >= 50;
-      }
-      if (criteriaAction === 'capsule_with_10_media') {
-        return stats.cinematic_capsules > 0;
-      }
-      if (criteriaAction === 'multimedia_capsule_created') {
-        return stats.multimedia_capsules > 0;
-      }
-      if (criteriaAction === 'capsules_across_years' && threshold !== undefined) {
-        return stats.capsule_years && stats.capsule_years.length >= threshold;
-      }
-      if (criteriaAction === 'consecutive_media_capsules' && threshold !== undefined) {
-        return stats.consecutive_media_days >= threshold;
-      }
-      // NEW CRITERIA - v2.1.0
-      if (criteriaAction === 'capsule_with_all_media_types') {
-        // Check if capsule has photo, video, audio, and text (all 4 types)
-        return metadata?.hasAllMediaTypes === true;
-      }
-      if (criteriaAction === 'achievement_shared_to_social') {
-        return stats.social_shares_count > 0;
-      }
-      if (criteriaAction === 'capsule_with_500_words') {
-        return metadata?.wordCount !== undefined && metadata.wordCount >= 500;
-      }
-      if (criteriaAction === 'two_capsules_same_delivery_time') {
-        // Check if there are at least 2 capsules with the same delivery time
-        if (!stats.capsule_delivery_times || stats.capsule_delivery_times.length < 2) return false;
-        const deliveryTimes = stats.capsule_delivery_times;
-        const timeMap = new Map<string, number>();
-        for (const time of deliveryTimes) {
-          timeMap.set(time, (timeMap.get(time) || 0) + 1);
-          if (timeMap.get(time)! >= 2) return true;
-        }
-        return false;
-      }
-      if (criteriaAction === 'capsule_sent_to_5_plus_recipients') {
-        return metadata?.recipientCount !== undefined && metadata.recipientCount >= 5;
-      }
-      // PHASE 1 A1: Multi-recipient capsule achievements
-      if (criteriaAction === 'multi_recipient_capsule' && threshold !== undefined) {
-        const recipientCount = metadata?.recipientCount || 0;
-        return recipientCount >= threshold;
-      }
-      if (criteriaAction === 'ten_capsules_in_one_day') {
-        // Check if any day has 10+ capsules
-        if (!stats.daily_capsule_counts) return false;
-        return Object.values(stats.daily_capsule_counts).some(count => count >= 10);
-      }
-      if (criteriaAction === 'capsules_at_12_different_hours') {
-        return stats.capsule_creation_hours && stats.capsule_creation_hours.length >= 12;
-      }
-      
-      // Generic specific_action check - if no specific handler matched, check if action matches criteriaAction
-      if (criteriaAction && action === criteriaAction) {
-        console.log(`[Achievement] ✅ Generic specific_action match: ${action} === ${criteriaAction}`);
-        return true;
-      }
-      
-      return false;
-      
-    case 'combo':
-      if (!requirements || requirements.length === 0) return false;
-      return requirements.every(req => {
-        const val = getNestedStat(stats, req.stat);
-        return compareValues(val, req.threshold, req.operator || '>=');
-      });
-      
-    case 'custom':
-      // Custom validators for complex achievement logic
-      const validator = achievement.unlockCriteria.validator;
-      
-      if (validator === 'check_consecutive_years_3') {
-        // Check if user has been active for 3 consecutive years
-        // Requires first_capsule_date tracking
-        if (!stats.first_capsule_at) return false;
-        const firstDate = new Date(stats.first_capsule_at);
-        const currentDate = new Date();
-        const yearsDiff = currentDate.getFullYear() - firstDate.getFullYear();
-        
-        // Simple check: at least 3 years since first capsule
-        // More sophisticated: check capsules exist in each year
-        if (yearsDiff >= 2 && stats.capsule_years && stats.capsule_years.length >= 3) {
-          return true;
-        }
-        return false;
-      }
-      
-      if (validator === 'check_all_themes_used') {
-        // Check if user has created capsules with all 15 themes
-        const requiredThemes = [
-          'classic-blue', 'birthday', 'love', 'new-beginnings', 'golden-hour',
-          'milestone', 'adventure', 'grateful-heart', 'fresh-start', 'new-years-eve',
-          'new-nest', 'furry-friends', 'career-summit', 'achievement', 'memory-lane'
-        ];
-        
-        if (stats.themes_used && typeof stats.themes_used === 'object') {
-          const usedThemes = Object.keys(stats.themes_used).filter(theme => 
-            stats.themes_used && stats.themes_used[theme] > 0
-          );
-          return requiredThemes.every(theme => usedThemes.includes(theme));
-        }
-        return false;
-      }
-      
-      if (validator === 'check_golden_hour_capsules') {
-        // Check if user has created 50 capsules between 5-7 AM
-        if (stats.hourly_capsule_counts && typeof stats.hourly_capsule_counts === 'object') {
-          const goldenHourCount = (stats.hourly_capsule_counts['5'] || 0) + 
-                                 (stats.hourly_capsule_counts['6'] || 0);
-          return goldenHourCount >= 50;
-        }
-        return false;
-      }
-      
-      if (validator === 'check_nostalgic_capsules') {
-        // Check if user has 100 capsules with nostalgic themes
-        const nostalgicThemes = ['birthday', 'love', 'memory-lane', 'golden-hour'];
-        
-        if (stats.themes_used && typeof stats.themes_used === 'object') {
-          const nostalgicCount = nostalgicThemes.reduce((sum, theme) => 
-            sum + (stats.themes_used && stats.themes_used[theme] || 0), 0
-          );
-          return nostalgicCount >= 100;
-        }
-        return false;
-      }
-      
-      if (validator === 'check_unique_echo_senders') {
-        // Check if user has received echoes from 25 different people
-        // This would require tracking unique echo senders (new stat needed)
-        return (stats.unique_echo_senders_count || 0) >= 25;
-      }
-      
-      return false;
-      
+async function runCustomValidator(validatorName: string, stats: UserStats): Promise<boolean> {
+  switch (validatorName) {
+    case 'validateCinematic':
+      return stats.cinematic_capsules >= 1;
+    
+    case 'validateGoldenHour':
+      // Now tracked via golden_hour_capsules stat (v2.8.0 fix)
+      return (stats.golden_hour_capsules || 0) >= 1;
+    
+    case 'validateGoldenRatio':
+      return stats.capsules_created === 89;
+    
+    case 'validateMemoryWeaver':
+      // Check if user has created capsules with all 4 media types
+      return stats.media_by_type.photo >= 1 &&
+             stats.media_by_type.video >= 1 &&
+             stats.media_by_type.audio >= 1 &&
+             stats.capsules_created >= 1; // At least one capsule with text
+    
+    case 'validateTimeLord':
+      // Check if capsules span 5+ different years
+      return stats.capsule_years.length >= 5;
+    
     default:
       return false;
   }
 }
 
 // ============================================
-// STAT UPDATE LOGIC
+// ACHIEVEMENT TRIGGERS
 // ============================================
 
-export async function updateUserStats(
+// Trigger achievement check for specific action
+export async function triggerAchievement(
   userId: string,
   action: string,
-  metadata?: any
-): Promise<UserStats> {
-  console.log(`[Stats] Updating user stats for ${userId}, action: ${action}`);
+  metadata?: Record<string, any>
+): Promise<Achievement[]> {
+  const stats = await getUserStats(userId);
+  if (!stats) return [];
   
-  try {
-    let stats = await kvGetWithTimeout<UserStats | null>(`user_stats:${userId}`, null, 5000);
-    
-    // Initialize stats if not exists or if stats is not a valid object
-    if (!stats || typeof stats !== 'object' || stats === null) {
-      console.log(`[Stats] No existing stats found or invalid stats, initializing for ${userId}`);
-      stats = initializeUserStats();
-    }
-    
-    // CRITICAL: Ensure nested objects are always initialized to prevent hasOwnProperty errors
-    if (!stats.filter_usage || typeof stats.filter_usage !== 'object' || stats.filter_usage === null) {
-      stats.filter_usage = {
-        yesterday: 0,
-        future_light: 0,
-        echo: 0,
-        dream: 0,
-        vintage: 0,
-        cosmic: 0,
-        underwater: 0,
-        cathedral: 0
-      };
-    }
-    
-    if (!stats.media_by_type || typeof stats.media_by_type !== 'object' || stats.media_by_type === null) {
-      stats.media_by_type = { photo: 0, video: 0, audio: 0 };
-    }
-    
-    // Ensure arrays are initialized
-    if (!Array.isArray(stats.unique_recipient_emails)) {
-      stats.unique_recipient_emails = [];
-    }
-    if (!Array.isArray(stats.creation_day_set)) {
-      stats.creation_day_set = [];
-    }
-    if (!Array.isArray(stats.capsule_years)) {
-      stats.capsule_years = [];
-    }
-    
-    // NEW v2.1.0 - Ensure new stats are initialized
-    if (!Array.isArray(stats.capsule_delivery_times)) {
-      stats.capsule_delivery_times = [];
-    }
-    if (!Array.isArray(stats.capsule_creation_hours)) {
-      stats.capsule_creation_hours = [];
-    }
-    if (!stats.daily_capsule_counts || typeof stats.daily_capsule_counts !== 'object') {
-      stats.daily_capsule_counts = {};
-    }
-    if (stats.social_shares_count === undefined) {
-      stats.social_shares_count = 0;
-    }
-    if (stats.capsules_with_audio_count === undefined) {
-      stats.capsules_with_audio_count = 0;
-    }
-    if (stats.capsules_with_media_count === undefined) {
-      stats.capsules_with_media_count = 0;
-    }
-    
-    // NEW v2.4.0 - Ensure multi-recipient stats are initialized
-    if (stats.max_recipients_in_single_capsule === undefined) {
-      stats.max_recipients_in_single_capsule = 0;
-    }
-    if (stats.total_multi_recipient_capsules === undefined) {
-      stats.total_multi_recipient_capsules = 0;
-    }
-    
-    // NEW v2.5.0 - Ensure epic tier stats are initialized
-    if (!stats.themes_used || typeof stats.themes_used !== 'object') {
-      stats.themes_used = {};
-    }
-    if (!stats.hourly_capsule_counts || typeof stats.hourly_capsule_counts !== 'object') {
-      stats.hourly_capsule_counts = {};
-    }
-    if (!Array.isArray(stats.unique_echo_senders)) {
-      stats.unique_echo_senders = [];
-    }
-    if (stats.unique_echo_senders_count === undefined) {
-      stats.unique_echo_senders_count = 0;
-    }
-    
-    // Safely create updated object using Object.assign to avoid prototype issues
-    const updated = Object.assign({}, stats);
+  const progress = await getAchievementProgress(userId) || await initializeAchievementProgress(userId);
+  const newlyUnlocked: Achievement[] = [];
   
-  switch (action) {
-    case 'capsule_created':
-      updated.capsules_created++;
-      updated.most_recent_capsule_at = new Date().toISOString();
-      
-      if (!updated.first_capsule_at) {
-        updated.first_capsule_at = new Date().toISOString();
-      }
-      
-      // Update streak
-      const today = new Date().toISOString().split('T')[0];
-      const lastDate = stats.last_capsule_date;
-      
-      if (lastDate) {
-        const daysDiff = daysBetween(lastDate, today);
-        if (daysDiff === 1) {
-          updated.current_streak = (stats.current_streak || 0) + 1;
-        } else if (daysDiff > 1) {
-          updated.current_streak = 1;
-        }
-      } else {
-        updated.current_streak = 1;
-      }
-      
-      updated.last_capsule_date = today;
-      updated.longest_streak = Math.max(updated.current_streak, stats.longest_streak || 0);
-      
-      // Update schedule tracking
-      if (metadata?.scheduleDays !== undefined) {
-        updated.max_schedule_days = Math.max(
-          metadata.scheduleDays,
-          stats.max_schedule_days || 0
-        );
-        updated.min_schedule_days = stats.min_schedule_days === 0 
-          ? metadata.scheduleDays 
-          : Math.min(metadata.scheduleDays, stats.min_schedule_days);
-      }
-      
-      // Night owl check - USE USER'S LOCAL TIME (passed from frontend)
-      // CRITICAL: We must use the user's local hour, not server UTC time
-      const userLocalHour = metadata?.userLocalHour;
-      console.log(`[Night Owl Check] User local hour: ${userLocalHour}, Server UTC hour: ${new Date().getHours()}`);
-      
-      if (userLocalHour === 3) {
-        updated.night_owl_capsules = (stats.night_owl_capsules || 0) + 1;
-        console.log(`🦉 [Night Owl] User created capsule at 3am local time! Count: ${updated.night_owl_capsules}`);
-      }
-      
-      // Recipient tracking
-      if (metadata?.recipientEmail || metadata?.recipientCount) {
-        // Handle multi-recipient capsules
-        if (metadata?.recipientCount && metadata.recipientCount > 0) {
-          const count = metadata.recipientCount;
-          
-          // If sending to others (not self)
-          if (metadata.recipientEmail !== metadata.userEmail) {
-            updated.capsules_to_others++;
-            updated.total_recipients += count;
-            
-            // Track max recipients in single capsule
-            updated.max_recipients_in_single_capsule = Math.max(
-              stats.max_recipients_in_single_capsule || 0,
-              count
-            );
-            
-            // Track total multi-recipient capsules (strictly > 1 recipient)
-            if (count > 1) {
-              updated.total_multi_recipient_capsules = (stats.total_multi_recipient_capsules || 0) + 1;
-            }
-          } else {
-            // Self capsule
-            updated.capsules_to_self++;
-          }
-          
-          // Track unique recipients (if email list provided)
-          if (Array.isArray(metadata.recipientEmails)) {
-             if (!Array.isArray(updated.unique_recipient_emails)) {
-              updated.unique_recipient_emails = [];
-            }
-            
-            for (const email of metadata.recipientEmails) {
-              if (email && !updated.unique_recipient_emails.includes(email)) {
-                updated.unique_recipient_emails.push(email);
-              }
-            }
-            updated.unique_recipients = updated.unique_recipient_emails.length;
-          } else if (metadata.recipientEmail && metadata.recipientEmail !== metadata.userEmail) {
-            // Legacy/Single recipient fallback
-            if (!Array.isArray(updated.unique_recipient_emails)) {
-              updated.unique_recipient_emails = [];
-            }
-            if (!updated.unique_recipient_emails.includes(metadata.recipientEmail)) {
-              updated.unique_recipient_emails.push(metadata.recipientEmail);
-              updated.unique_recipients = updated.unique_recipient_emails.length;
-            }
-          }
-        }
-        // Legacy single recipient handling
-        else if (metadata.recipientEmail) {
-          if (metadata.recipientEmail !== metadata.userEmail) {
-            updated.capsules_to_others++;
-            updated.total_recipients++;
-            
-            // Track unique recipients for Globe Trotter achievement
-            if (!Array.isArray(updated.unique_recipient_emails)) {
-              updated.unique_recipient_emails = [];
-            }
-            if (!updated.unique_recipient_emails.includes(metadata.recipientEmail)) {
-              updated.unique_recipient_emails.push(metadata.recipientEmail);
-              updated.unique_recipients = updated.unique_recipient_emails.length;
-            }
-          } else {
-            updated.capsules_to_self++;
-          }
-        }
-      }
-      
-      // Track cinematic capsules (10+ media files)
-      if (metadata?.mediaCount && metadata.mediaCount >= 10) {
-        updated.cinematic_capsules = (stats.cinematic_capsules || 0) + 1;
-      }
-      
-      // Track birthday capsules
-      if (metadata?.isBirthdayCapsule) {
-        updated.birthday_capsules = (stats.birthday_capsules || 0) + 1;
-      }
-      
-      // Update monthly streak tracking
-      const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
-      const lastMonth = stats.last_capsule_date ? stats.last_capsule_date.slice(0, 7) : '';
-      
-      if (lastMonth && currentMonth !== lastMonth) {
-        // Check if this is a consecutive month
-        const lastMonthDate = new Date(lastMonth + '-01');
-        const currentMonthDate = new Date(currentMonth + '-01');
-        const monthsDiff = (currentMonthDate.getFullYear() - lastMonthDate.getFullYear()) * 12 + 
-                          (currentMonthDate.getMonth() - lastMonthDate.getMonth());
-        
-        if (monthsDiff === 1) {
-          updated.monthly_streak = (stats.monthly_streak || 0) + 1;
-        } else if (monthsDiff > 1) {
-          updated.monthly_streak = 1;
-        }
-        
-        updated.monthly_active_months = (stats.monthly_active_months || 0) + 1;
-      } else if (!lastMonth) {
-        updated.monthly_streak = 1;
-        updated.monthly_active_months = 1;
-      }
-      
-      // Update account age
-      if (stats.account_created_at) {
-        updated.days_since_signup = daysBetween(stats.account_created_at, new Date().toISOString());
-      }
-      
-      // Track unique creation days for Consistent Creator (A010)
-      if (!Array.isArray(updated.creation_day_set)) {
-        updated.creation_day_set = [];
-      }
-      if (!updated.creation_day_set.includes(today)) {
-        updated.creation_day_set.push(today);
-        updated.unique_creation_days = updated.creation_day_set.length;
-      }
-      
-      // Track multimedia capsules for Multimedia Creator (A008)
-      if (metadata?.contentTypes) {
-        const types = metadata.contentTypes; // Array like ['text', 'photo', 'video']
-        if (types.length >= 3) {
-          updated.multimedia_capsules = (stats.multimedia_capsules || 0) + 1;
-        }
-      }
-      
-      // Track capsule years for Time Lord (E006)
-      if (metadata?.deliveryDate) {
-        const deliveryYear = new Date(metadata.deliveryDate).getFullYear();
-        if (!Array.isArray(updated.capsule_years)) {
-          updated.capsule_years = [];
-        }
-        if (!updated.capsule_years.includes(deliveryYear)) {
-          updated.capsule_years.push(deliveryYear);
-        }
-      }
-      
-      // Track consecutive media capsules for Perfect Chronicle (E009)
-      if (metadata?.hasMedia) {
-        const lastMediaDate = stats.last_media_capsule_date;
-        if (lastMediaDate) {
-          const daysDiff = daysBetween(lastMediaDate, today);
-          if (daysDiff === 1) {
-            updated.consecutive_media_days = (stats.consecutive_media_days || 0) + 1;
-          } else if (daysDiff > 1) {
-            updated.consecutive_media_days = 1;
-          }
-        } else {
-          updated.consecutive_media_days = 1;
-        }
-        updated.last_media_capsule_date = today;
-      } else {
-        // Reset consecutive media days if no media in this capsule
-        updated.consecutive_media_days = 0;
-      }
-      
-      // ============================================
-      // NEW STAT TRACKING - v2.1.0
-      // ============================================
-      
-      // Note: Multimedia Maestro (A036) is checked via metadata.hasAllMediaTypes in checkAchievements
-      // No persistent stat tracking needed - it's checked per-capsule
-      
-      // Track delivery time for Double Feature (A040)
-      if (metadata?.deliveryTime) {
-        if (!Array.isArray(updated.capsule_delivery_times)) {
-          updated.capsule_delivery_times = [];
-        }
-        updated.capsule_delivery_times.push(metadata.deliveryTime);
-      }
-      
-      // Track creation hour for Around the Clock (A043)
-      if (userLocalHour !== undefined) {
-        if (!Array.isArray(updated.capsule_creation_hours)) {
-          updated.capsule_creation_hours = [];
-        }
-        if (!updated.capsule_creation_hours.includes(userLocalHour)) {
-          updated.capsule_creation_hours.push(userLocalHour);
-        }
-      }
-      
-      // Track daily capsule count for Marathon Session (A042)
-      if (!updated.daily_capsule_counts) {
-        updated.daily_capsule_counts = {};
-      }
-      updated.daily_capsule_counts[today] = (updated.daily_capsule_counts[today] || 0) + 1;
-      
-      // Track audio capsules for Music Memory (A039)
-      if (metadata?.hasAudio) {
-        updated.capsules_with_audio_count = (stats.capsules_with_audio_count || 0) + 1;
-      }
-      
-      // Track capsules with any media (photos/videos) for Memory Weaver (A052)
-      if (metadata?.hasMedia || metadata?.mediaCount > 0) {
-        updated.capsules_with_media_count = (stats.capsules_with_media_count || 0) + 1;
-      }
-      
-      // ============================================
-      // EPIC TIER STAT TRACKING - v2.5.0
-      // ============================================
-      
-      // Track theme usage for Theme Connoisseur (A049)
-      if (metadata?.theme) {
-        if (!updated.themes_used || typeof updated.themes_used !== 'object') {
-          updated.themes_used = {};
-        }
-        const theme = metadata.theme;
-        updated.themes_used[theme] = (updated.themes_used[theme] || 0) + 1;
-      }
-      
-      // Track hourly capsule counts for Golden Hour Guardian (A050)
-      if (userLocalHour !== undefined) {
-        if (!updated.hourly_capsule_counts || typeof updated.hourly_capsule_counts !== 'object') {
-          updated.hourly_capsule_counts = {};
-        }
-        const hourKey = userLocalHour.toString();
-        updated.hourly_capsule_counts[hourKey] = (updated.hourly_capsule_counts[hourKey] || 0) + 1;
-      }
-      
-      break;
-      
-    case 'capsule_sent':
-      updated.capsules_sent++;
-      break;
-      
-    case 'filter_used':
-      // Handle filter usage for photo/video filters
-      const filterName = metadata?.filterName || metadata?.filter;
-      if (filterName) {
-        // Normalize filter name: 'future-light' → 'future_light'
-        const normalizedFilter = filterName.replace(/-/g, '_');
-        if (updated.filter_usage && typeof updated.filter_usage === 'object' && normalizedFilter in updated.filter_usage) {
-          updated.filter_usage[normalizedFilter] = (stats.filter_usage[normalizedFilter] || 0) + 1;
-          updated.enhancements_used++;
-        }
-      }
-      break;
+  // Find achievements that match this action
+  for (const [id, achievement] of Object.entries(ACHIEVEMENT_DEFINITIONS)) {
+    if (progress.unlockedAchievements.includes(id)) continue;
     
-    case 'audio_filter_used':
-      // Handle audio filter usage
-      const audioFilterName = metadata?.filterName;
-      if (audioFilterName) {
-        const normalizedAudioFilter = audioFilterName.replace(/-/g, '_');
-        if (updated.filter_usage && typeof updated.filter_usage === 'object' && normalizedAudioFilter in updated.filter_usage) {
-          updated.filter_usage[normalizedAudioFilter] = (stats.filter_usage[normalizedAudioFilter] || 0) + 1;
-          updated.enhancements_used++;
-        }
-      }
-      break;
+    if (achievement.unlockCriteria.type === 'specific_action' &&
+        achievement.unlockCriteria.action === action) {
       
-    case 'sticker_added':
-    case 'sticker_used':
-      updated.stickers_used++;
-      updated.enhancements_used++;
-      break;
-    
-    case 'visual_effect_added':
-      updated.enhancements_used++;
-      break;
+      // Additional validation based on metadata if needed
+      let isValid = true;
       
-    case 'enhancement_used':
-      updated.enhancements_used++;
-      break;
-      
-    case 'media_uploaded':
-      updated.media_uploaded++;
-      const mediaType = metadata?.type;
-      if (mediaType && updated.media_by_type && typeof updated.media_by_type === 'object' && mediaType in updated.media_by_type) {
-        updated.media_by_type[mediaType]++;
-      }
-      if (metadata?.sizeMB) {
-        updated.total_media_size_mb += metadata.sizeMB;
-      }
-      break;
-      
-    case 'capsule_received':
-      updated.capsules_received++;
-      break;
-      
-    case 'capsule_opened':
-      updated.capsules_opened++;
-      break;
-      
-    case 'legacy_vault_setup':
-      updated.legacy_vault_setup = true;
-      if (metadata?.beneficiaryCount) {
-        updated.beneficiaries_added = metadata.beneficiaryCount;
-      }
-      break;
-      
-    case 'capsule_edited':
-      updated.capsules_edited = (stats.capsules_edited || 0) + 1;
-      break;
-      
-    // ============================================
-    // NEW ACTIONS - v2.1.0
-    // ============================================
-    case 'onboarding_first_capsule_complete':
-      // Track first capsule tutorial completion
-      updated.onboarding_first_capsule_complete = true;
-      break;
-      
-    case 'onboarding_vault_mastery_complete':
-      // Track vault mastery tutorial completion
-      updated.onboarding_vault_mastery_complete = true;
-      break;
-      
-    case 'social_share':
-      // Track social media shares for Shared Achievement (A037)
-      updated.social_shares_count = (stats.social_shares_count || 0) + 1;
-      break;
-      
-    // ============================================
-    // VAULT ACTIONS - v2.2.0 (Phase 4B)
-    // ============================================
-    case 'vault_folder_created':
-      // Track folder creation for A046: Memory Architect
-      // ONLY count CUSTOM folders (exclude default permanent folders: Photos, Videos, Audio, Documents)
-      const PERMANENT_FOLDERS = ['Photos', 'Videos', 'Audio', 'Documents'];
-      const folderName = metadata?.folderName || '';
-      
-      // Only increment count if it's NOT one of the permanent default folders
-      if (!PERMANENT_FOLDERS.includes(folderName)) {
-        updated.vault_folders_created = (stats.vault_folders_created || 0) + 1;
-        console.log(`📁 [Achievement] Custom folder created: "${folderName}" (count: ${updated.vault_folders_created})`);
-      } else {
-        console.log(`📁 [Achievement] Permanent folder created: "${folderName}" (not counted for Memory Architect)`);
+      // For multi-recipient achievements, check count
+      if (action.startsWith('multi_recipient_capsule_sent_')) {
+        const requiredCount = parseInt(action.split('_').pop() || '0');
+        isValid = (metadata?.recipientCount || 0) >= requiredCount;
       }
       
-      // Track if it's a smart folder (Photos, Videos, Audio)
-      if (metadata?.folderName) {
-        const lowerName = metadata.folderName.toLowerCase();
-        if (lowerName.includes('photo') || lowerName.includes('video') || lowerName.includes('audio')) {
-          updated.vault_smart_folders_created = (stats.vault_smart_folders_created || 0) + 1;
-        }
+      if (isValid) {
+        await updateAchievementProgress(userId, id);
+        newlyUnlocked.push(achievement);
       }
-      break;
-      
-    case 'vault_media_organized':
-      // Track media organization for A047: Vault Curator
-      const organizedCount = metadata?.count || 1;
-      updated.vault_media_organized = (stats.vault_media_organized || 0) + organizedCount;
-      break;
-      
-    case 'vault_auto_organize_used':
-      // Track auto-organize usage
-      updated.vault_auto_organize_used = (stats.vault_auto_organize_used || 0) + 1;
-      const autoOrganizedCount = metadata?.movedCount || 0;
-      updated.vault_media_organized = (stats.vault_media_organized || 0) + autoOrganizedCount;
-      break;
-      
-    // ============================================
-    // ECHO ACTIONS - v2.3.0 (Phase 1)
-    // ============================================
-    case 'echo_sent':
-      // Track echoes for E001: Echo Initiate and E002: Warm Wave
-      updated.echoes_sent = (stats.echoes_sent || 0) + 1;
-      
-      // Track by type
-      if (metadata?.type === 'emoji') {
-        updated.emoji_echoes_sent = (stats.emoji_echoes_sent || 0) + 1;
-      } else if (metadata?.type === 'text') {
-        updated.text_echoes_sent = (stats.text_echoes_sent || 0) + 1;
-      }
-      break;
-      
-    case 'echo_received':
-      // Track when users receive echoes on their capsules
-      updated.echoes_received = (stats.echoes_received || 0) + 1;
-      
-      // Track unique echo senders for A053: Community Beacon
-      if (metadata?.senderEmail) {
-        if (!Array.isArray(updated.unique_echo_senders)) {
-          updated.unique_echo_senders = [];
-        }
-        if (!updated.unique_echo_senders.includes(metadata.senderEmail)) {
-          updated.unique_echo_senders.push(metadata.senderEmail);
-          updated.unique_echo_senders_count = updated.unique_echo_senders.length;
-        }
-      }
-      break;
-      
-    // ============================================
-    // MULTI-RECIPIENT ACTIONS - v2.4.0 (Phase 1 Feature A1)
-    // ============================================
-    case 'multi_recipient_capsule':
-      // Track multi-recipient capsules for MR001: Circle of Trust and MR002: Grand Broadcast
-      const recipientCount = metadata?.recipientCount || 0;
-      
-      // Track the highest recipient count for a single capsule
-      if (!updated.highest_recipient_count || recipientCount > updated.highest_recipient_count) {
-        updated.highest_recipient_count = recipientCount;
-      }
-      
-      // Track total multi-recipient capsules sent
-      updated.multi_recipient_capsules_sent = (stats.multi_recipient_capsules_sent || 0) + 1;
-      
-      // Track capsules by recipient count brackets
-      if (!updated.recipient_count_brackets) {
-        updated.recipient_count_brackets = {
-          '5+': 0,
-          '10': 0
-        };
-      }
-      
-      if (recipientCount >= 10) {
-        updated.recipient_count_brackets['10'] = (stats.recipient_count_brackets?.['10'] || 0) + 1;
-        updated.recipient_count_brackets['5+'] = (stats.recipient_count_brackets?.['5+'] || 0) + 1;
-      } else if (recipientCount >= 5) {
-        updated.recipient_count_brackets['5+'] = (stats.recipient_count_brackets?.['5+'] || 0) + 1;
-      }
-      
-      console.log(`📊 [Multi-Recipient] Tracked capsule with ${recipientCount} recipients. Highest: ${updated.highest_recipient_count}`);
-      break;
+    }
   }
   
-    updated.last_stats_update = new Date().toISOString();
-    
-    await kv.set(`user_stats:${userId}`, updated);
-    
-    return updated;
-  } catch (error) {
-    console.error(`[Stats] Error updating user stats for ${userId}:`, error);
-    // Return initialized stats on error to prevent cascade failures
-    const fallbackStats = initializeUserStats();
-    console.log(`[Stats] Returning fallback stats for ${userId}`);
-    return fallbackStats;
-  }
+  return newlyUnlocked;
 }
 
-// ============================================
-// HELPER: KV TIMEOUT WRAPPER
-// ============================================
-
-/**
- * Helper function to wrap KV operations with timeout protection
- * This prevents the achievement system from hanging if KV is slow
- */
-async function kvGetWithTimeout<T>(key: string, defaultValue: T, timeoutMs: number = 5000): Promise<T> {
-  try {
-    const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error(`Query timed out after ${timeoutMs}ms`)), timeoutMs)
-    );
-    
-    const result = await Promise.race([
-      kv.get<T>(key),
-      timeoutPromise
-    ]);
-    
-    return result ?? defaultValue;
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    
-    // Check if it's a connection reset or network error (very common during database issues)
-    const isConnectionError = 
-      errorMsg.includes('connection reset') ||
-      errorMsg.includes('connection error') ||
-      errorMsg.includes('SendRequest') ||
-      errorMsg.includes('client error') ||
-      errorMsg.includes('Network connection lost') ||
-      errorMsg.includes('gateway error') ||
-      errorMsg.includes('ECONNRESET');
-    
-    // Check if it's a timeout
-    const isTimeout = errorMsg.includes('timed out');
-    
-    // For connection errors, only log if it's NOT an achievement_queue key (these are frequent and non-critical)
-    if (isConnectionError) {
-      if (!key.includes('achievement_queue')) {
-        console.warn(`⚠️ Connection error for key "${key.substring(0, 40)}...": Returning fallback value`);
-      }
-      // Silently return default for achievement queues during connection issues
-      return defaultValue;
-    }
-    
-    // For timeouts, use warn since we return a fallback value
-    if (isTimeout) {
-      console.warn(`⏱️ KV Store: Query timed out after ${timeoutMs}ms for ${key.split(':')[0]}:...`);
-      return defaultValue;
-    }
-    
-    // For other errors, log normally
-    console.error(`[KV] ❌ Error getting ${key}:`, errorMsg);
-    return defaultValue;
-  }
-}
-
-// ============================================
-// ACHIEVEMENT UNLOCK LOGIC
-// ============================================
-
+// Main achievement checking function - comprehensive handler for all achievement tracking
 export async function checkAndUnlockAchievements(
   userId: string,
   action: string,
-  metadata?: any
-): Promise<{ newlyUnlocked: Achievement[]; stats: UserStats }> {
-  console.log(`[Achievements] Checking achievements for user ${userId}, action: ${action}`);
-  
-  // Update stats first
-  const stats = await updateUserStats(userId, action, metadata);
-  
-  // Get user's unlocked achievements with timeout protection
-  let userAchievements = await kvGetWithTimeout<any[]>(`user_achievements:${userId}`, [], 5000);
-  const unlockedIds = userAchievements.map(a => a.achievementId);
-  
-  const newlyUnlocked: Achievement[] = [];
-  
-  // Anti-cheating: Check for action cooldown (prevent spam)
-  const cooldownKey = `achievement_cooldown_${userId}_${action}`;
-  const lastActionTime = await kvGetWithTimeout<string | null>(cooldownKey, null, 3000);
-  
-  if (lastActionTime) {
-    const timeSinceLastAction = Date.now() - new Date(lastActionTime).getTime();
-    const cooldownMs = 5000; // 5 second cooldown between same actions
-    
-    if (timeSinceLastAction < cooldownMs) {
-      console.log(`[ANTI-CHEAT] Action ${action} on cooldown for user ${userId}. Time remaining: ${(cooldownMs - timeSinceLastAction) / 1000}s`);
-      return { newlyUnlocked: [], stats }; // Silently ignore
-    }
-  }
-  
-  // Set cooldown for this action
-  await kv.set(cooldownKey, new Date().toISOString());
-  
-  // Check each achievement
-  for (const achievement of Object.values(ACHIEVEMENT_DEFINITIONS)) {
-    // Skip if already unlocked (UNIQUE CONSTRAINT at app level)
-    if (unlockedIds.includes(achievement.id)) continue;
-    
-    const meetsRequirements = evaluateCriteria(achievement, stats, action, metadata);
-    
-    if (meetsRequirements) {
-      // Unlock achievement with detailed logging
-      const unlockRecord = {
-        achievementId: achievement.id,
-        unlockedAt: new Date().toISOString(),
-        notificationShown: false,
-        shared: false,
-        progress: getNestedStat(stats, achievement.unlockCriteria.stat || 'capsules_created'),
-        sourceAction: action, // Track which action triggered unlock
-        retroactive: metadata?.retroactive || false, // Flag retroactive unlocks
-        metadata: {
-          ...metadata,
-          unlockContext: `Action: ${action}, Time: ${new Date().toISOString()}`
-        }
-      };
-      
-      userAchievements.push(unlockRecord);
-      newlyUnlocked.push(achievement);
-      
-      // Update global stats & rarity tracking
-      await incrementGlobalUnlockCount(achievement.id);
-      
-      // Analytics logging
-      await logAchievementEvent(userId, achievement.id, 'unlocked', {
-        action,
-        retroactive: metadata?.retroactive || false,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }
-  
-  // Save updated achievements with deduplication
-  if (newlyUnlocked.length > 0) {
-    // Ensure unique achievement IDs (deduplication at save time)
-    const uniqueAchievements = userAchievements.reduce((acc, current) => {
-      const exists = acc.find(item => item.achievementId === current.achievementId);
-      if (!exists) {
-        acc.push(current);
-      }
-      return acc;
-    }, [] as any[]);
-    
-    await kv.set(`user_achievements:${userId}`, uniqueAchievements);
-    
-    // Update user stats with achievement info
-    stats.achievement_count = uniqueAchievements.length;
-    stats.achievement_points = uniqueAchievements.reduce((sum, ua) => {
-      const achievement = ACHIEVEMENT_DEFINITIONS[ua.achievementId];
-      return sum + (achievement?.rewards.points || 0);
-    }, 0);
-    
-    // Update rarest achievement
-    const rarityOrder = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
-    const rarest = uniqueAchievements
-      .map(ua => ACHIEVEMENT_DEFINITIONS[ua.achievementId])
-      .filter(a => a)
-      .sort((a, b) => rarityOrder[b.rarity] - rarityOrder[a.rarity])[0];
-    
-    if (rarest) {
-      stats.rarest_achievement = rarest.id;
-    }
-    
-    await kv.set(`user_stats:${userId}`, stats);
-    
-    // Add titles to user's collection for achievements with title rewards
-    // This must happen AFTER saving achievements to KV so the safety check passes
-    for (const achievement of newlyUnlocked) {
-      if (achievement.rewards.title) {
-        console.log(`👑 [Title Unlock] Achievement ${achievement.id} (${achievement.title}) has title reward: "${achievement.rewards.title}"`);
-        await addTitleToCollection(userId, achievement.id);
-        console.log(`👑 [Title Unlock] ✅ Title added to collection for user ${userId}`);
-      } else {
-        console.log(`[Title Unlock] Achievement ${achievement.id} has no title reward`);
-      }
-    }
-    
-    // Queue notifications (with deduplication)
-    await queueAchievementNotifications(userId, newlyUnlocked);
-    
-    // Increment total user count for rarity calculations
-    await incrementTotalUserCount();
-  }
-  
-  return { newlyUnlocked, stats };
-}
-
-async function incrementGlobalUnlockCount(achievementId: string): Promise<void> {
-  let globalStats = await kvGetWithTimeout<any>('achievement_global_stats', null, 3000);
-  
-  if (!globalStats) {
-    globalStats = {
-      total_users: 0,
-      last_updated: new Date().toISOString(),
-      unlock_counts: {},
-      first_unlock_times: {} // Track when each achievement was first unlocked globally
-    };
-  }
-  
-  if (!globalStats.unlock_counts[achievementId]) {
-    globalStats.unlock_counts[achievementId] = 0;
-    globalStats.first_unlock_times[achievementId] = new Date().toISOString();
-  }
-  
-  globalStats.unlock_counts[achievementId]++;
-  globalStats.last_updated = new Date().toISOString();
-  
-  await kv.set('achievement_global_stats', globalStats);
-}
-
-async function incrementTotalUserCount(): Promise<void> {
-  let globalStats = await kvGetWithTimeout<any>('achievement_global_stats', null, 3000);
-  
-  if (!globalStats) {
-    globalStats = {
-      total_users: 1,
-      last_updated: new Date().toISOString(),
-      unlock_counts: {},
-      first_unlock_times: {}
-    };
-  } else {
-    // Only increment if user is new (has < 5 achievements unlocked)
-    // This prevents inflating user count on every unlock
-    globalStats.total_users = Math.max(globalStats.total_users, 1);
-  }
-  
-  await kv.set('achievement_global_stats', globalStats);
-}
-
-async function logAchievementEvent(
-  userId: string,
-  achievementId: string,
-  eventType: 'unlocked' | 'shared' | 'viewed',
-  metadata: any
-): Promise<void> {
-  // Log to achievement analytics
-  let analyticsKey = `achievement_analytics_${achievementId}`;
-  let analytics = await kv.get<any>(analyticsKey) || {
-    achievementId,
-    total_unlocks: 0,
-    total_shares: 0,
-    total_views: 0,
-    unlock_times: [],
-    retroactive_unlocks: 0,
-    last_updated: new Date().toISOString()
-  };
-  
-  if (eventType === 'unlocked') {
-    analytics.total_unlocks++;
-    analytics.unlock_times.push(new Date().toISOString());
-    if (metadata.retroactive) {
-      analytics.retroactive_unlocks++;
-    }
-  } else if (eventType === 'shared') {
-    analytics.total_shares++;
-  } else if (eventType === 'viewed') {
-    analytics.total_views++;
-  }
-  
-  analytics.last_updated = new Date().toISOString();
-  
-  // Keep only last 100 unlock times to prevent unbounded growth
-  if (analytics.unlock_times.length > 100) {
-    analytics.unlock_times = analytics.unlock_times.slice(-100);
-  }
-  
-  await kv.set(analyticsKey, analytics);
-}
-
-async function queueAchievementNotifications(userId: string, achievements: Achievement[]): Promise<void> {
-  console.log(`📬 [Achievement Queue] Queueing ${achievements.length} achievement(s) for user ${userId}`);
-  let queue = await kv.get<any[]>(`achievement_queue_${userId}`) || [];
-  console.log(`📬 [Achievement Queue] Current queue length: ${queue.length}`);
-  
-  // Get existing achievement IDs in queue (both shown and unshown)
-  const existingIds = new Set(queue.map(q => q.achievementId));
-  
-  // Only add achievements that aren't already in the queue
-  let addedCount = 0;
-  for (const achievement of achievements) {
-    if (!existingIds.has(achievement.id)) {
-      console.log(`📬 [Achievement Queue] Adding to queue: ${achievement.title} (${achievement.id})`);
-      queue.push({
-        achievementId: achievement.id,
-        unlockedAt: new Date().toISOString(),
-        shown: false
-      });
-      addedCount++;
-    } else {
-      console.log(`📬 [Achievement Queue] ⏭️  Skipping duplicate: ${achievement.title} (${achievement.id}) - already in queue`);
-    }
-  }
-  
-  // Clean up old shown notifications (keep only last 10 shown items to prevent unbounded growth)
-  const unshown = queue.filter(q => !q.shown);
-  const shown = queue.filter(q => q.shown).slice(-10); // Keep only last 10 shown
-  queue = [...unshown, ...shown];
-  
-  await kv.set(`achievement_queue_${userId}`, queue);
-  console.log(`📬 [Achievement Queue] ✅ Saved queue with ${queue.length} total items (${addedCount} newly added, ${unshown.length} pending)`);
-}
-
-// ============================================
-// PUBLIC API FUNCTIONS WITH TIMEOUT PROTECTION
-// ============================================
-
-/**
- * Get all achievement definitions (static data, no KV access needed)
- */
-export async function getAchievementDefinitions(): Promise<Record<string, Achievement>> {
-  console.log('[Achievements] Returning achievement definitions (static data)');
-  // This is static data, just return it immediately
-  return ACHIEVEMENT_DEFINITIONS;
-}
-
-/**
- * Get user's unlocked achievements with timeout protection
- */
-export async function getUserAchievements(userId: string): Promise<any[]> {
-  console.log(`[Achievements] Getting user achievements for: ${userId}`);
+  metadata?: Record<string, any>
+): Promise<{ newlyUnlocked: Achievement[]; allUnlocked: Achievement[] }> {
   try {
-    const achievements = await kvGetWithTimeout<any[]>(`user_achievements:${userId}`, [], 5000);
-    console.log(`[Achievements] ✅ Found ${achievements.length} achievements for user`);
-    return achievements;
-  } catch (error) {
-    console.error(`[Achievements] ❌ Error getting user achievements:`, error);
-    return [];
-  }
-}
-
-/**
- * Get user stats with timeout protection
- */
-export async function getUserStats(userId: string): Promise<UserStats> {
-  console.log(`[Achievements] Getting user stats for: ${userId}`);
-  try {
-    const stats = await kvGetWithTimeout<UserStats | null>(`user_stats:${userId}`, null, 5000);
+    console.log(`🏆 [Achievement Service] checkAndUnlockAchievements called:`, { userId, action, metadata });
     
+    // Initialize user data if needed
+    let stats = await getUserStats(userId);
     if (!stats) {
-      console.log(`[Achievements] No stats found, initializing defaults for user`);
-      return initializeUserStats();
+      stats = await initializeUserStats(userId);
     }
     
-    console.log(`[Achievements] ✅ Found stats for user (${stats.capsules_created} capsules, ${stats.achievement_count} achievements)`);
-    return stats;
-  } catch (error) {
-    console.error(`[Achievements] ❌ Error getting user stats:`, error);
-    return initializeUserStats();
-  }
-}
-
-/**
- * Get global achievement statistics with timeout protection
- */
-export async function getGlobalStats(): Promise<any> {
-  console.log('[Achievements] Getting global stats');
-  try {
-    const globalStats = await kvGetWithTimeout<any>('achievement_global_stats', null, 5000);
-    
-    if (!globalStats) {
-      console.log('[Achievements] No global stats found, returning defaults');
-      return {
-        total_users: 0,
-        unlock_counts: {},
-        last_updated: new Date().toISOString()
-      };
+    let progress = await getAchievementProgress(userId);
+    if (!progress) {
+      progress = await initializeAchievementProgress(userId);
     }
     
-    console.log(`[Achievements] ✅ Found global stats (${globalStats.total_users} users)`);
-    return globalStats;
-  } catch (error) {
-    console.error('[Achievements] ❌ Error getting global stats:', error);
-    return {
-      total_users: 0,
-      unlock_counts: {},
-      last_updated: new Date().toISOString()
-    };
-  }
-}
-
-/**
- * Get pending achievement notifications with timeout protection
- */
-export async function getPendingNotifications(userId: string): Promise<any[]> {
-  console.log(`[Achievements] Getting pending notifications for: ${userId}`);
-  try {
-    const queue = await kvGetWithTimeout<any[]>(`achievement_queue_${userId}`, [], 5000);
-    console.log(`[Achievements] Total queue items: ${queue.length}`, queue.map(q => ({ id: q.achievementId, shown: q.shown })));
-    const pending = queue.filter(q => !q.shown);
-    console.log(`[Achievements] ✅ Found ${pending.length} pending (unshown) notifications:`, pending.map(p => p.achievementId));
-    return pending;
-  } catch (error) {
-    console.error('[Achievements] ❌ Error getting pending notifications:', error);
-    return [];
-  }
-}
-
-export async function markNotificationsShown(userId: string, achievementIds: string[]): Promise<void> {
-  let queue = await kv.get<any[]>(`achievement_queue_${userId}`) || [];
-  
-  queue = queue.map(q => {
-    if (achievementIds.includes(q.achievementId)) {
-      return { ...q, shown: true };
-    }
-    return q;
-  });
-  
-  await kv.set(`achievement_queue_${userId}`, queue);
-}
-
-export async function markAchievementShared(userId: string, achievementId: string): Promise<void> {
-  let userAchievements = await kv.get<any[]>(`user_achievements:${userId}`) || [];
-  
-  userAchievements = userAchievements.map(a => {
-    if (a.achievementId === achievementId) {
-      return { ...a, shared: true, shareTimestamp: new Date().toISOString() };
-    }
-    return a;
-  });
-  
-  await kv.set(`user_achievements:${userId}`, userAchievements);
-}
-
-export async function getAchievementProgress(userId: string, achievementId: string): Promise<number> {
-  const achievement = ACHIEVEMENT_DEFINITIONS[achievementId];
-  if (!achievement) return 0;
-  
-  const stats = await getUserStats(userId);
-  if (!stats) return 0;
-  
-  const { stat, threshold } = achievement.unlockCriteria;
-  if (!stat || !threshold) return 0;
-  
-  const current = getNestedStat(stats, stat);
-  return Math.min(100, (current / threshold) * 100);
-}
-
-// ============================================
-// RARITY PERCENTAGE TRACKING
-// ============================================
-
-export async function getAchievementRarityPercentage(achievementId: string): Promise<number> {
-  const globalStats = await kv.get<any>('achievement_global_stats');
-  
-  if (!globalStats || !globalStats.total_users || globalStats.total_users === 0) {
-    return 0; // No data yet
-  }
-  
-  const unlockCount = globalStats.unlock_counts?.[achievementId] || 0;
-  const totalUsers = globalStats.total_users;
-  
-  // Calculate rarity percentage
-  const rarityPercentage = (unlockCount / totalUsers) * 100;
-  
-  return Math.round(rarityPercentage * 10) / 10; // Round to 1 decimal place
-}
-
-export async function getAllRarityPercentages(): Promise<Record<string, number>> {
-  const globalStats = await kv.get<any>('achievement_global_stats');
-  
-  if (!globalStats || !globalStats.total_users || globalStats.total_users === 0) {
-    return {};
-  }
-  
-  const rarityPercentages: Record<string, number> = {};
-  
-  for (const achievementId of Object.keys(ACHIEVEMENT_DEFINITIONS)) {
-    const unlockCount = globalStats.unlock_counts?.[achievementId] || 0;
-    const percentage = (unlockCount / globalStats.total_users) * 100;
-    rarityPercentages[achievementId] = Math.round(percentage * 10) / 10;
-  }
-  
-  return rarityPercentages;
-}
-
-// ============================================
-// RETROACTIVE UNLOCK MIGRATION
-// ============================================
-
-export async function runRetroactiveUnlockMigration(userId: string): Promise<{
-  success: boolean;
-  newUnlocks: number;
-  achievements: string[];
-  error?: string;
-}> {
-  try {
-    console.log(`[RETROACTIVE] Running migration for user ${userId}`);
+    const newlyUnlocked: Achievement[] = [];
     
-    // Get current stats
-    const stats = await getUserStats(userId);
-    if (!stats) {
-      console.log(`[RETROACTIVE] No stats found for user ${userId}, skipping`);
-      return { success: true, newUnlocks: 0, achievements: [] };
-    }
-    
-    // Get already unlocked achievements
-    const userAchievements = await kv.get<any[]>(`user_achievements:${userId}`) || [];
-    const unlockedIds = userAchievements.map(a => a.achievementId);
-    
-    const retroactiveUnlocks: Achievement[] = [];
-    
-    // Check all achievements against current stats
-    for (const achievement of Object.values(ACHIEVEMENT_DEFINITIONS)) {
-      if (unlockedIds.includes(achievement.id)) continue;
-      
-      // Evaluate criteria with current stats (no specific action)
-      const meetsRequirements = evaluateCriteria(achievement, stats, 'retroactive_check', { 
-        retroactive: true,
-        migrationRun: new Date().toISOString()
-      });
-      
-      if (meetsRequirements) {
-        // Unlock achievement retroactively
-        const unlockRecord = {
-          achievementId: achievement.id,
-          unlockedAt: new Date().toISOString(),
-          notificationShown: false,
-          shared: false,
-          progress: getNestedStat(stats, achievement.unlockCriteria.stat || 'capsules_created'),
-          sourceAction: 'retroactive_migration',
-          retroactive: true,
-          metadata: {
-            migrationRun: new Date().toISOString(),
-            note: 'Unlocked based on existing activity before Achievement System launch'
-          }
+    // Handle different action types
+    switch (action) {
+      case 'capsule_created': {
+        // Track capsule creation with full metadata
+        const capsuleData = {
+          mediaFiles: metadata?.mediaFiles || 0,
+          wordCount: metadata?.wordCount || 0,
+          scheduledDate: metadata?.scheduledDate || new Date().toISOString(),
+          contentTypes: metadata?.contentTypes || [],
+          userLocalHour: typeof metadata?.userLocalHour === 'number' ? metadata.userLocalHour : undefined
         };
+        const unlocked = await trackCapsuleCreation(userId, capsuleData);
+        newlyUnlocked.push(...unlocked);
+        break;
+      }
+      
+      case 'capsule_sent': {
+        const unlocked = await trackCapsuleSent(userId, metadata?.recipientEmails || []);
+        newlyUnlocked.push(...unlocked);
+        break;
+      }
+      
+      case 'capsule_received': {
+        const unlocked = await trackCapsuleReceived(userId, metadata?.sentDate || new Date().toISOString());
+        newlyUnlocked.push(...unlocked);
+        break;
+      }
+      
+      case 'media_uploaded': {
+        if (metadata?.mediaType) {
+          const unlocked = await trackMediaUpload(userId, metadata.mediaType);
+          newlyUnlocked.push(...unlocked);
+        }
+        break;
+      }
+      
+      case 'vault_storage': {
+        const unlocked = await trackVaultStorage(userId);
+        newlyUnlocked.push(...unlocked);
+        break;
+      }
+
+      case 'folder_created': {
+        // Tracks vault folder creation for A046/A047
+        const unlocked = await trackFolderCreated(userId);
+        newlyUnlocked.push(...unlocked);
+        break;
+      }
+      
+      case 'echo_sent': {
+        const unlocked = await trackEchoSent(userId);
+        newlyUnlocked.push(...unlocked);
+        break;
+      }
+      
+      case 'echo_received': {
+        const unlocked = await trackEchoReceived(userId, metadata?.senderUserId || '');
+        newlyUnlocked.push(...unlocked);
+        break;
+      }
+      
+      case 'capsule_edited': {
+        const unlocked = await trackCapsuleEdit(userId, metadata?.editCount || 1);
+        newlyUnlocked.push(...unlocked);
+        break;
+      }
+      
+      // Multi-recipient actions (MR001: 3+ recipients, MR002: 10+ recipients)
+      case 'multi_recipient_capsule': {
+        if (metadata?.recipientCount) {
+          const recipientCount = metadata.recipientCount;
+          
+          // Update stats for unique recipients
+          stats.unique_recipients = Math.max(stats.unique_recipients || 0, recipientCount);
+          await updateUserStats(userId, { unique_recipients: stats.unique_recipients });
+          
+          // MR001: Broadcast Beginner (3+ recipients at once)
+          if (recipientCount >= 3) {
+            const unlocked = await triggerAchievement(userId, 'multi_recipient_capsule_sent_3', { recipientCount });
+            newlyUnlocked.push(...unlocked);
+          }
+          // MR002: Grand Broadcast (10+ recipients at once)
+          if (recipientCount >= 10) {
+            const unlocked = await triggerAchievement(userId, 'multi_recipient_capsule_sent_10', { recipientCount });
+            newlyUnlocked.push(...unlocked);
+          }
+        }
+        break;
+      }
+      
+      // All media types in one capsule
+      case 'capsule_with_all_media_types': {
+        const unlocked = await triggerAchievement(userId, 'capsule_with_all_media_types', metadata);
+        newlyUnlocked.push(...unlocked);
+        break;
+      }
+      
+      // Onboarding achievements
+      case 'onboarding_first_capsule_complete':
+      case 'onboarding_vault_mastery_complete': {
+        const unlocked = await triggerAchievement(userId, action, metadata);
+        newlyUnlocked.push(...unlocked);
+        break;
+      }
+      
+      // Generic specific actions
+      default: {
+        // Try to trigger as a specific action achievement
+        const unlocked = await triggerAchievement(userId, action, metadata);
+        newlyUnlocked.push(...unlocked);
         
-        userAchievements.push(unlockRecord);
-        retroactiveUnlocks.push(achievement);
-        
-        // Update global stats
-        await incrementGlobalUnlockCount(achievement.id);
-        
-        // Log analytics
-        await logAchievementEvent(userId, achievement.id, 'unlocked', {
-          action: 'retroactive_migration',
-          retroactive: true,
-          timestamp: new Date().toISOString()
-        });
+        // Also check all achievements to see if any thresholds were met
+        const allUnlocked = await checkAchievements(userId);
+        for (const achievement of allUnlocked) {
+          if (!progress.unlockedAchievements.includes(achievement.id) &&
+              !newlyUnlocked.find(a => a.id === achievement.id)) {
+            newlyUnlocked.push(achievement);
+          }
+        }
+        break;
       }
     }
     
-    // Save updated achievements
-    if (retroactiveUnlocks.length > 0) {
+    // Get all unlocked achievements for this user
+    const updatedProgress = await getAchievementProgress(userId);
+    const allUnlocked = updatedProgress?.unlockedAchievements
+      .map(id => ACHIEVEMENT_DEFINITIONS[id])
+      .filter(Boolean) || [];
+    
+    // 🔥 CRITICAL FIX: Add newly unlocked achievements to user_achievements array
+    // This ensures the achievements dashboard can display them correctly
+    if (newlyUnlocked.length > 0) {
+      const userAchievements = await kv.get(`user_achievements:${userId}`) || [];
+      const currentTimestamp = new Date().toISOString();
+      
+      for (const achievement of newlyUnlocked) {
+        // Check if not already in the array (prevent duplicates)
+        const alreadyExists = userAchievements.some((a: any) => a.achievementId === achievement.id);
+        
+        if (!alreadyExists) {
+          userAchievements.push({
+            achievementId: achievement.id,
+            unlockedAt: currentTimestamp,
+            notificationShown: false,
+            shared: false,
+            sourceAction: action,
+            metadata: metadata || {}
+          });
+          
+          console.log(`📝 [Achievement Service] Added ${achievement.id} to user_achievements array`);
+        }
+      }
+      
+      // Save updated user_achievements array
       await kv.set(`user_achievements:${userId}`, userAchievements);
-      
-      // Update user stats
-      stats.achievement_count = userAchievements.length;
-      stats.achievement_points = userAchievements.reduce((sum, ua) => {
-        const achievement = ACHIEVEMENT_DEFINITIONS[ua.achievementId];
-        return sum + (achievement?.rewards.points || 0);
-      }, 0);
-      
-      await kv.set(`user_stats:${userId}`, stats);
-      
-      // Queue special retroactive notification
-      await kv.set(`retroactive_unlocks_${userId}`, {
-        count: retroactiveUnlocks.length,
-        achievements: retroactiveUnlocks.map(a => a.id),
-        shownNotification: false,
-        migratedAt: new Date().toISOString()
-      });
-      
-      console.log(`[RETROACTIVE] User ${userId}: Unlocked ${retroactiveUnlocks.length} achievements`);
+      console.log(`✅ [Achievement Service] Saved ${userAchievements.length} total achievements to KV`);
     }
     
-    return {
-      success: true,
-      newUnlocks: retroactiveUnlocks.length,
-      achievements: retroactiveUnlocks.map(a => a.id)
-    };
-    
-  } catch (error: any) {
-    console.error(`[RETROACTIVE] Error for user ${userId}:`, error);
-    return {
-      success: false,
-      newUnlocks: 0,
-      achievements: [],
-      error: error.message
-    };
-  }
-}
-
-export async function getRetroactiveUnlockStatus(userId: string): Promise<any> {
-  return await kv.get(`retroactive_unlocks_${userId}`);
-}
-
-export async function markRetroactiveNotificationShown(userId: string): Promise<void> {
-  const status = await kv.get<any>(`retroactive_unlocks_${userId}`);
-  if (status) {
-    status.shownNotification = true;
-    await kv.set(`retroactive_unlocks_${userId}`, status);
-  }
-}
-
-// ============================================
-// ANALYTICS & INSIGHTS
-// ============================================
-
-export async function getAchievementAnalytics(achievementId: string): Promise<any> {
-  return await kv.get(`achievement_analytics_${achievementId}`);
-}
-
-export async function getUserAchievementInsights(userId: string): Promise<{
-  totalPoints: number;
-  achievementCount: number;
-  rarityBreakdown: Record<string, number>;
-  categoryBreakdown: Record<string, number>;
-  recentUnlocks: any[];
-  nextClosest: any[];
-}> {
-  const userAchievements = await getUserAchievements(userId);
-  const stats = await getUserStats(userId);
-  
-  if (!stats) {
-    return {
-      totalPoints: 0,
-      achievementCount: 0,
-      rarityBreakdown: {},
-      categoryBreakdown: {},
-      recentUnlocks: [],
-      nextClosest: []
-    };
-  }
-  
-  // Rarity breakdown
-  const rarityBreakdown: Record<string, number> = {
-    common: 0,
-    uncommon: 0,
-    rare: 0,
-    epic: 0,
-    legendary: 0
-  };
-  
-  const categoryBreakdown: Record<string, number> = {
-    starter: 0,
-    era_themed: 0,
-    time_based: 0,
-    volume: 0,
-    special: 0,
-    enhance: 0
-  };
-  
-  let totalPoints = 0;
-  
-  for (const ua of userAchievements) {
-    const achievement = ACHIEVEMENT_DEFINITIONS[ua.achievementId];
-    if (achievement) {
-      rarityBreakdown[achievement.rarity]++;
-      categoryBreakdown[achievement.category]++;
-      totalPoints += achievement.rewards.points;
-    }
-  }
-  
-  // Recent unlocks (last 5)
-  const recentUnlocks = userAchievements
-    .sort((a, b) => new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime())
-    .slice(0, 5)
-    .map(ua => ({
-      ...ua,
-      achievement: ACHIEVEMENT_DEFINITIONS[ua.achievementId]
-    }));
-  
-  // Next closest achievements
-  const unlockedIds = userAchievements.map(a => a.achievementId);
-  const nextClosest = Object.values(ACHIEVEMENT_DEFINITIONS)
-    .filter(a => !unlockedIds.includes(a.id))
-    .map(achievement => {
-      const progress = getNestedStat(stats, achievement.unlockCriteria.stat || 'capsules_created');
-      const threshold = achievement.unlockCriteria.threshold || 1;
-      const percentage = (progress / threshold) * 100;
-      
-      return {
-        achievement,
-        progress,
-        threshold,
-        percentage: Math.min(100, percentage)
-      };
-    })
-    .filter(item => item.percentage > 0)
-    .sort((a, b) => b.percentage - a.percentage)
-    .slice(0, 5);
-  
-  return {
-    totalPoints,
-    achievementCount: userAchievements.length,
-    rarityBreakdown,
-    categoryBreakdown,
-    recentUnlocks,
-    nextClosest
-  };
-}
-
-// ============================================
-// LEGACY TITLES SYSTEM
-// ============================================
-
-/**
- * Get user's title profile (equipped title + unlocked titles)
- */
-export async function getUserTitleProfile(userId: string): Promise<any> {
-  console.log(`[Titles] Getting title profile for: ${userId}`);
-  try {
-    const profile = await kvGetWithTimeout<any>(
-      `user_title_profile:${userId}`,
-      {
-        equipped_title: null,
-        equipped_achievement_id: null,
-        unlocked_titles: []
-      },
-      5000
-    );
-    
-    console.log(`[Titles] ✅ Profile loaded:`, {
-      equipped: profile.equipped_title,
-      unlocked_count: profile.unlocked_titles?.length || 0
+    console.log(`🏆 [Achievement Service] Result:`, {
+      newlyUnlocked: newlyUnlocked.map(a => ({ id: a.id, title: a.title })),
+      totalUnlocked: allUnlocked.length
     });
     
-    return profile;
-  } catch (error) {
-    console.error(`[Titles] ❌ Error getting title profile:`, error);
     return {
+      newlyUnlocked,
+      allUnlocked
+    };
+    
+  } catch (error) {
+    console.error(`🏆 [Achievement Service] Error in checkAndUnlockAchievements:`, error);
+    return {
+      newlyUnlocked: [],
+      allUnlocked: []
+    };
+  }
+}
+
+// ============================================
+// STAT UPDATE HELPERS
+// ============================================
+
+// Track capsule creation — v2.8.0: includes all time-based achievement tracking
+export async function trackCapsuleCreation(
+  userId: string,
+  capsuleData: {
+    mediaFiles: number;
+    wordCount: number;
+    scheduledDate: string;
+    contentTypes: string[];
+    userLocalHour?: number; // Hour 0-23 in user's local timezone (passed from frontend)
+  }
+): Promise<Achievement[]> {
+  const stats = await getUserStats(userId) || await initializeUserStats(userId);
+  
+  const updates: Partial<UserStats> = {
+    capsules_created: stats.capsules_created + 1,
+    total_media_files: stats.total_media_files + capsuleData.mediaFiles,
+    max_capsule_word_count: Math.max(stats.max_capsule_word_count, capsuleData.wordCount)
+  };
+  
+  // Calculate days until scheduled date
+  const now = new Date();
+  const scheduledDate = new Date(capsuleData.scheduledDate);
+  const daysDiff = Math.floor((scheduledDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  updates.max_schedule_days = Math.max(stats.max_schedule_days, daysDiff);
+  
+  // Track year for Time Lord achievement
+  const scheduledYear = scheduledDate.getFullYear();
+  if (!stats.capsule_years.includes(scheduledYear)) {
+    updates.capsule_years = [...stats.capsule_years, scheduledYear];
+  }
+  
+  // Track multimedia capsules (3+ content types)
+  if (capsuleData.contentTypes.length >= 3) {
+    updates.multimedia_capsules = (stats.multimedia_capsules || 0) + 1;
+  }
+  
+  // Track cinematic capsules (10+ media files)
+  if (capsuleData.mediaFiles >= 10) {
+    updates.cinematic_capsules = (stats.cinematic_capsules || 0) + 1;
+  }
+  
+  // Track unique creation day
+  const today = now.toISOString().split('T')[0];
+  if (!stats.creation_day_set.includes(today)) {
+    updates.creation_day_set = [...stats.creation_day_set, today];
+    updates.unique_creation_days = updates.creation_day_set.length;
+  }
+
+  // ── v2.8.0: Time-of-day and calendar achievement tracking ─────────────────
+  // Use userLocalHour from frontend if available, else fall back to server UTC hour
+  const hour = typeof capsuleData.userLocalHour === 'number'
+    ? capsuleData.userLocalHour
+    : now.getUTCHours();
+
+  // A026 – Midnight Creator (0:00–2:59)
+  if (hour >= 0 && hour <= 2) {
+    updates.midnight_capsules = (stats.midnight_capsules || 0) + 1;
+  }
+
+  // A031 – Golden Hour Guardian (6:00–7:59 sunrise or 17:00–18:59 sunset)
+  if ((hour >= 6 && hour <= 7) || (hour >= 17 && hour <= 18)) {
+    updates.golden_hour_capsules = (stats.golden_hour_capsules || 0) + 1;
+  }
+
+  // A042 – Early Bird (5:00–6:59)
+  if (hour >= 5 && hour <= 6) {
+    updates.early_bird_capsules = (stats.early_bird_capsules || 0) + 1;
+  }
+
+  // A027 – New Year's Spirit (January 1st in user's locale or UTC)
+  const month = now.getUTCMonth() + 1; // 1-based
+  const day = now.getUTCDate();
+  if (month === 1 && day === 1) {
+    updates.new_year_capsules = (stats.new_year_capsules || 0) + 1;
+  }
+
+  // A018 – Marathon Creator (10+ capsules in a single day)
+  const todayDate = today; // YYYY-MM-DD
+  const prevDate = stats.capsules_created_today_date || '';
+  let todayCount = prevDate === todayDate ? (stats.capsules_created_today || 0) + 1 : 1;
+  updates.capsules_created_today = todayCount;
+  updates.capsules_created_today_date = todayDate;
+  updates.capsules_created_today_max = Math.max(stats.capsules_created_today_max || 0, todayCount);
+  // ──────────────────────────────────────────────────────────────────────────
+  
+  await updateUserStats(userId, updates);
+  
+  // Check for newly unlocked achievements
+  const newAchievements = await checkAchievements(userId);
+  
+  // Also check for multimedia capsule achievement (A008)
+  if (capsuleData.contentTypes.length >= 3) {
+    const multimediaAchievements = await triggerAchievement(userId, 'multimedia_capsule_created');
+    newAchievements.push(...multimediaAchievements);
+  }
+  
+  return newAchievements;
+}
+
+// Track media upload
+export async function trackMediaUpload(
+  userId: string,
+  mediaType: 'photo' | 'video' | 'audio'
+): Promise<Achievement[]> {
+  const stats = await getUserStats(userId) || await initializeUserStats(userId);
+  
+  const updates: Partial<UserStats> = {
+    media_by_type: {
+      ...stats.media_by_type,
+      [mediaType]: stats.media_by_type[mediaType] + 1
+    },
+    total_media_files: stats.total_media_files + 1
+  };
+  
+  await updateUserStats(userId, updates);
+  return checkAchievements(userId);
+}
+
+// Track capsule sent
+export async function trackCapsuleSent(
+  userId: string,
+  recipientEmails: string[]
+): Promise<Achievement[]> {
+  const stats = await getUserStats(userId) || await initializeUserStats(userId);
+  
+  // Track unique recipients
+  const newRecipients = recipientEmails.filter(
+    email => !stats.unique_recipient_emails.includes(email)
+  );
+  
+  const updates: Partial<UserStats> = {
+    capsules_sent: stats.capsules_sent + 1,
+    unique_recipient_emails: [...stats.unique_recipient_emails, ...newRecipients],
+    unique_recipients: stats.unique_recipient_emails.length + newRecipients.length
+  };
+  
+  await updateUserStats(userId, updates);
+  
+  // Check achievements
+  const achievements = await checkAchievements(userId);
+  
+  // Check multi-recipient achievements
+  if (recipientEmails.length >= 3) {
+    const multiAchievements = await triggerAchievement(userId, 'multi_recipient_capsule_sent_3', {
+      recipientCount: recipientEmails.length
+    });
+    achievements.push(...multiAchievements);
+  }
+  
+  if (recipientEmails.length >= 10) {
+    const multiAchievements = await triggerAchievement(userId, 'multi_recipient_capsule_sent_10', {
+      recipientCount: recipientEmails.length
+    });
+    achievements.push(...multiAchievements);
+  }
+  
+  return achievements;
+}
+
+// Track capsule received
+export async function trackCapsuleReceived(
+  userId: string,
+  sentDate: string
+): Promise<Achievement[]> {
+  const stats = await getUserStats(userId) || await initializeUserStats(userId);
+  
+  // Calculate wait days
+  const sent = new Date(sentDate);
+  const now = new Date();
+  const daysDiff = Math.floor((now.getTime() - sent.getTime()) / (1000 * 60 * 60 * 24));
+  
+  const updates: Partial<UserStats> = {
+    capsules_received: stats.capsules_received + 1,
+    max_wait_days: Math.max(stats.max_wait_days, daysDiff)
+  };
+  
+  await updateUserStats(userId, updates);
+  return checkAchievements(userId);
+}
+
+// Track vault storage
+export async function trackVaultStorage(userId: string): Promise<Achievement[]> {
+  const stats = await getUserStats(userId) || await initializeUserStats(userId);
+  
+  const updates: Partial<UserStats> = {
+    vaulted_capsules: (stats.vaulted_capsules || 0) + 1
+  };
+  
+  await updateUserStats(userId, updates);
+  return checkAchievements(userId);
+}
+
+// Track echo sent
+export async function trackEchoSent(userId: string): Promise<Achievement[]> {
+  const stats = await getUserStats(userId) || await initializeUserStats(userId);
+  
+  const updates: Partial<UserStats> = {
+    echoes_sent: (stats.echoes_sent || 0) + 1
+  };
+  
+  await updateUserStats(userId, updates);
+  return checkAchievements(userId);
+}
+
+// Track echo received (for Community Beacon achievement)
+export async function trackEchoReceived(userId: string, senderUserId: string): Promise<Achievement[]> {
+  const stats = await getUserStats(userId) || await initializeUserStats(userId);
+  
+  // Track unique echo senders
+  if (!stats.unique_echo_sender_ids.includes(senderUserId)) {
+    const updates: Partial<UserStats> = {
+      unique_echo_sender_ids: [...stats.unique_echo_sender_ids, senderUserId],
+      unique_echo_senders: stats.unique_echo_sender_ids.length + 1
+    };
+    
+    await updateUserStats(userId, updates);
+    return checkAchievements(userId);
+  }
+  
+  return [];
+}
+
+// Track vault folder creation (A046 Folder Pioneer, A047 Folder Architect)
+export async function trackFolderCreated(userId: string): Promise<Achievement[]> {
+  const stats = await getUserStats(userId) || await initializeUserStats(userId);
+  const updates: Partial<UserStats> = {
+    folders_created: (stats.folders_created || 0) + 1
+  };
+  await updateUserStats(userId, updates);
+  return checkAchievements(userId);
+}
+
+// Track capsule edit — A017 now uses count on capsules_edited ≥ 5
+export async function trackCapsuleEdit(userId: string, _editCount?: number): Promise<Achievement[]> {
+  const stats = await getUserStats(userId) || await initializeUserStats(userId);
+  
+  const updates: Partial<UserStats> = {
+    capsules_edited: (stats.capsules_edited || 0) + 1
+  };
+  
+  await updateUserStats(userId, updates);
+  // checkAchievements will pick up A017 once capsules_edited >= 5
+  return checkAchievements(userId);
+}
+
+// ============================================
+// LEADERBOARD FUNCTIONS
+// ============================================
+
+export async function getLeaderboard(category: 'total' | 'streak' | 'media'): Promise<Array<{
+  userId: string;
+  value: number;
+  rank: number;
+}>> {
+  // Get all user stats
+  const allStats = await kv.getByPrefix<UserStats>('user_stats:');
+  
+  // Sort based on category
+  let sorted: Array<{ userId: string; value: number }> = [];
+  
+  switch (category) {
+    case 'total':
+      sorted = allStats
+        .map(s => ({ userId: s.userId, value: s.capsules_created }))
+        .sort((a, b) => b.value - a.value);
+      break;
+    
+    case 'streak':
+      sorted = allStats
+        .map(s => ({ userId: s.userId, value: s.max_streak_days }))
+        .sort((a, b) => b.value - a.value);
+      break;
+    
+    case 'media':
+      sorted = allStats
+        .map(s => ({ userId: s.userId, value: s.total_media_files }))
+        .sort((a, b) => b.value - a.value);
+      break;
+  }
+  
+  // Add ranks
+  return sorted.map((item, index) => ({
+    ...item,
+    rank: index + 1
+  }));
+}
+
+// ============================================
+// EXPORT SERVICE
+// ============================================
+
+// Get all achievement definitions (for frontend)
+export async function getAchievementDefinitions(): Promise<Record<string, Achievement>> {
+  // Apply custom visual configs to each achievement
+  const achievementsWithVisuals: Record<string, Achievement> = {};
+  
+  for (const [id, achievement] of Object.entries(ACHIEVEMENT_DEFINITIONS)) {
+    const customVisual = getAchievementVisual(id);
+    achievementsWithVisuals[id] = {
+      ...achievement,
+      icon: customVisual.icon,
+      visual: {
+        gradientStart: customVisual.gradientStart,
+        gradientEnd: customVisual.gradientEnd,
+        particleColor: customVisual.particleColor,
+        glowColor: customVisual.glowColor,
+        animation: customVisual.animation
+      }
+    };
+  }
+  
+  return achievementsWithVisuals;
+}
+
+// Get user's title profile
+export async function getUserTitleProfile(userId: string): Promise<any> {
+  // ✅ FIX: Use correct key user_title_profile (not user_profile)
+  const profile = await kv.get(`user_title_profile:${userId}`);
+  
+  // If no profile exists, return empty profile
+  if (!profile) {
+    return {
+      userId,
       equipped_title: null,
       equipped_achievement_id: null,
       unlocked_titles: []
     };
   }
+  
+  return {
+    userId,
+    equipped_title: profile.equipped_title || null,
+    equipped_achievement_id: profile.equipped_achievement_id || null,
+    unlocked_titles: profile.unlocked_titles || []
+  };
 }
 
-/**
- * Equip a title (or unequip by passing null)
- */
-export async function equipTitle(userId: string, achievementId: string | null): Promise<any> {
-  console.log(`[Titles] ⚙️ equipTitle called for ${userId}:`, {
-    achievementId,
-    isNull: achievementId === null,
-    isUndefined: achievementId === undefined,
-    type: typeof achievementId
-  });
+// Get available titles for a user
+export async function getAvailableTitles(userId: string): Promise<{
+  titles: Array<{
+    achievementId: string;
+    title: string;
+    rarity: string;
+    category: string;
+    description: string;
+    icon: string;
+    isUnlocked: boolean;
+    unlockedAt?: string;
+    isEquipped: boolean;
+    visual: {
+      gradientStart: string;
+      gradientEnd: string;
+      particleColor: string;
+      glowColor: string;
+      animation: string;
+    };
+  }>;
+  equipped: string | null;
+  equippedAchievementId: string | null;
+  unlockedCount: number;
+  totalCount: number;
+}> {
+  // ✅ FIX: Use achievement_progress (source of truth) not user_profile
+  const progress = await getAchievementProgress(userId);
+  const unlockedAchievements = progress?.unlockedAchievements || [];
   
+  // Get title profile to find equipped title
+  const titleProfile = await getUserTitleProfile(userId);
+  const equippedAchievementId = titleProfile?.equipped_achievement_id || null;
+  const equippedTitle = titleProfile?.equipped_title || null;
+  
+  const allTitles: Array<any> = [];
+  
+  // Map achievements to their titles with full data
+  for (const [achievementId, achievement] of Object.entries(ACHIEVEMENT_DEFINITIONS)) {
+    if (achievement.rewards.title) {
+      // Check if achievement is unlocked from achievement progress (source of truth)
+      const isUnlocked = unlockedAchievements.includes(achievementId);
+      const isEquipped = achievementId === equippedAchievementId;
+      
+      allTitles.push({
+        achievementId,
+        title: achievement.rewards.title,
+        rarity: achievement.rarity,
+        category: achievement.category,
+        description: achievement.description,
+        icon: achievement.icon,
+        isUnlocked,
+        isEquipped,
+        visual: {
+          gradientStart: getGradientForRarity(achievement.rarity).start,
+          gradientEnd: getGradientForRarity(achievement.rarity).end,
+          particleColor: getParticleColorForRarity(achievement.rarity),
+          glowColor: getGlowColorForRarity(achievement.rarity),
+          animation: 'float'
+        }
+      });
+    }
+  }
+  
+  const unlockedCount = allTitles.filter(t => t.isUnlocked).length;
+  
+  return {
+    titles: allTitles,
+    equipped: equippedTitle,
+    equippedAchievementId,
+    unlockedCount,
+    totalCount: allTitles.length
+  };
+}
+
+// Helper functions for visual effects based on rarity
+function getGradientForRarity(rarity: string): { start: string; end: string } {
+  const gradients: Record<string, { start: string; end: string }> = {
+    common: { start: '#64748b', end: '#475569' },
+    uncommon: { start: '#10b981', end: '#059669' },
+    rare: { start: '#3b82f6', end: '#2563eb' },
+    epic: { start: '#a855f7', end: '#9333ea' },
+    legendary: { start: '#f59e0b', end: '#d97706' }
+  };
+  return gradients[rarity] || gradients.common;
+}
+
+function getParticleColorForRarity(rarity: string): string {
+  const colors: Record<string, string> = {
+    common: '#94a3b8',
+    uncommon: '#34d399',
+    rare: '#60a5fa',
+    epic: '#c084fc',
+    legendary: '#fbbf24'
+  };
+  return colors[rarity] || colors.common;
+}
+
+function getGlowColorForRarity(rarity: string): string {
+  const colors: Record<string, string> = {
+    common: 'rgba(148, 163, 184, 0.5)',
+    uncommon: 'rgba(52, 211, 153, 0.5)',
+    rare: 'rgba(96, 165, 250, 0.5)',
+    epic: 'rgba(192, 132, 252, 0.5)',
+    legendary: 'rgba(251, 191, 36, 0.5)'
+  };
+  return colors[rarity] || colors.common;
+}
+
+// Get pending achievement notifications (not yet shown to user)
+export async function getPendingNotifications(userId: string): Promise<Array<{
+  achievementId: string;
+  achievement: Achievement;
+  unlockedAt: string;
+}>> {
   try {
-    // Get current profile
-    const profile = await getUserTitleProfile(userId);
-    console.log(`[Titles] 📋 Current profile before change:`, profile);
-    
-    // If unequipping (null)
-    if (achievementId === null || achievementId === undefined) {
-      console.log(`[Titles] 🔄 Unequipping title - setting to null`);
-      profile.equipped_title = null;
-      profile.equipped_achievement_id = null;
-      
-      console.log(`[Titles] 💾 Saving updated profile:`, profile);
-      await kv.set(`user_title_profile:${userId}`, profile);
-      
-      // Verify it was saved
-      const verifyProfile = await kv.get(`user_title_profile:${userId}`);
-      console.log(`[Titles] ✅ Verified saved profile:`, verifyProfile);
-      
-      return { success: true, equipped_title: null };
+    const progress = await getAchievementProgress(userId);
+    if (!progress) {
+      return [];
     }
     
-    // Check if achievement exists and has a title
-    const achievement = ACHIEVEMENT_DEFINITIONS[achievementId];
-    if (!achievement || !achievement.rewards.title) {
-      console.error(`[Titles] ❌ Achievement ${achievementId} has no title`);
-      return { success: false, error: 'Achievement has no title' };
+    const shownNotifications = progress.shownNotifications || [];
+    const unlockedAchievements = progress.unlockedAchievements || [];
+    
+    // Find achievements that are unlocked but not yet shown
+    const pending = unlockedAchievements
+      .filter(id => !shownNotifications.includes(id))
+      .map(id => ({
+        achievementId: id,
+        achievement: ACHIEVEMENT_DEFINITIONS[id],
+        unlockedAt: new Date().toISOString() // We don't track exact unlock time yet
+      }))
+      .filter(item => item.achievement); // Filter out any undefined achievements
+    
+    return pending;
+  } catch (error) {
+    console.error('❌ [Achievement] Error getting pending notifications:', error);
+    // Return empty array instead of throwing to prevent breaking the app
+    return [];
+  }
+}
+
+// Get all unlocked achievements for a user (used by frontend)
+export async function getUserAchievements(userId: string): Promise<string[]> {
+  // Try user_profile first (from recalculation)
+  const profile = await kv.get(`user_profile:${userId}`);
+  if (profile?.achievements) {
+    console.log(`📊 [getUserAchievements] Retrieved from user_profile: ${profile.achievements.length} achievements`);
+    return profile.achievements;
+  }
+  
+  // Fallback to achievement_progress
+  const progress = await getAchievementProgress(userId);
+  if (progress?.unlockedAchievements) {
+    console.log(`📊 [getUserAchievements] Retrieved from achievement_progress: ${progress.unlockedAchievements.length} achievements`);
+    return progress.unlockedAchievements;
+  }
+  
+  console.log(`📊 [getUserAchievements] No achievements found for user ${userId}`);
+  return [];
+}
+
+// Mark achievement notifications as shown
+export async function markNotificationsShown(userId: string, achievementIds: string[]): Promise<void> {
+  const progress = await getAchievementProgress(userId);
+  if (!progress) {
+    return;
+  }
+  
+  const shownNotifications = progress.shownNotifications || [];
+  const updatedShown = [...new Set([...shownNotifications, ...achievementIds])];
+  
+  const updatedProgress = {
+    ...progress,
+    shownNotifications: updatedShown
+  };
+  
+  await kv.set(`achievement_progress:${userId}`, updatedProgress);
+}
+
+// Initialize user titles with Time Novice freebie
+export async function initializeUserTitles(userId: string): Promise<void> {
+  console.log(`🎁 [initializeUserTitles] Starting for user: ${userId}`);
+  
+  // Initialize achievement progress if not exists
+  let progress = await getAchievementProgress(userId);
+  if (!progress) {
+    console.log(`🎁 [initializeUserTitles] No progress found, initializing...`);
+    progress = await initializeAchievementProgress(userId);
+  } else {
+    console.log(`🎁 [initializeUserTitles] Existing progress found:`, {
+      unlocked: progress.unlockedAchievements.length,
+      hasA001: progress.unlockedAchievements.includes('A001')
+    });
+  }
+  
+  // Check if Time Novice (A001) is already unlocked
+  const firstStepAchievement = 'A001';
+  const isNewUnlock = !progress.unlockedAchievements.includes(firstStepAchievement);
+  
+  if (isNewUnlock) {
+    console.log(`🎁 [initializeUserTitles] ✅ A001 is new - unlocking now`);
+    
+    // Unlock Time Novice achievement in progress tracker
+    progress.unlockedAchievements.push(firstStepAchievement);
+    await kv.set(`achievement_progress:${userId}`, progress);
+    console.log(`🎁 [initializeUserTitles] ✓ Saved to achievement_progress`);
+    
+    // 🔥 CRITICAL: Add to user_achievements array so modal can show
+    const userAchievements = await kv.get(`user_achievements:${userId}`) || [];
+    const alreadyInArray = userAchievements.some((a: any) => a.achievementId === firstStepAchievement);
+    
+    if (!alreadyInArray) {
+      userAchievements.push({
+        achievementId: firstStepAchievement,
+        unlockedAt: new Date().toISOString(),
+        notificationShown: false, // Will trigger modal on next check
+        shared: false,
+        sourceAction: 'signup',
+        metadata: {}
+      });
+      await kv.set(`user_achievements:${userId}`, userAchievements);
+      console.log(`🎁 [initializeUserTitles] ✓ Added A001 to user_achievements array (${userAchievements.length} total)`);
+    } else {
+      console.log(`🎁 [initializeUserTitles] ⏭️ A001 already in user_achievements array`);
+    }
+  } else {
+    console.log(`🎁 [initializeUserTitles] ⏭️ A001 already unlocked, skipping`);
+  }
+  
+  // Initialize title profile
+  const titleProfile = await getUserTitleProfile(userId);
+  if (!titleProfile.equipped_title) {
+    console.log(`🎁 [initializeUserTitles] Setting up title profile with Time Novice`);
+    await kv.set(`user_title_profile:${userId}`, {
+      userId,
+      equipped_title: 'Time Novice',
+      equipped_achievement_id: firstStepAchievement,
+      unlocked_titles: [{
+        title: 'Time Novice',
+        achievementId: firstStepAchievement,
+        rarity: 'common',
+        unlockedAt: new Date().toISOString()
+      }]
+    });
+    console.log(`🎁 [initializeUserTitles] ✓ Title profile created`);
+  } else {
+    console.log(`🎁 [initializeUserTitles] ⏭️ Title profile already exists:`, titleProfile.equipped_title);
+  }
+  
+  console.log(`🎁 [initializeUserTitles] ✅ Complete for user: ${userId}`);
+}
+
+// Equip a title for a user
+export async function equipTitle(userId: string, achievementId: string | null): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log('[AchievementService] equipTitle called:', { userId, achievementId });
+    
+    // Get current title profile
+    const titleProfile = await getUserTitleProfile(userId);
+    
+    // If achievementId is null, user is unequipping their title
+    if (achievementId === null) {
+      await kv.set(`user_title_profile:${userId}`, {
+        ...titleProfile,
+        equipped_title: null,
+        equipped_achievement_id: null
+      });
+      console.log('[AchievementService] Title unequipped successfully');
+      return { success: true };
     }
     
-    // Check if user has unlocked this achievement
-    const userAchievements = await kv.get<any[]>(`user_achievements:${userId}`) || [];
-    const hasUnlocked = userAchievements.some(a => a.achievementId === achievementId);
+    // Get achievement progress to verify the title is unlocked
+    const progress = await getAchievementProgress(userId);
+    if (!progress) {
+      return { success: false, error: 'User progress not found' };
+    }
     
-    if (!hasUnlocked) {
-      console.error(`[Titles] ❌ User ${userId} hasn't unlocked ${achievementId}`);
+    // Check if the achievement is unlocked
+    if (!progress.unlockedAchievements.includes(achievementId)) {
       return { success: false, error: 'Achievement not unlocked' };
     }
     
+    // Get the achievement to find its title
+    const achievement = ACHIEVEMENT_DEFINITIONS[achievementId];
+    if (!achievement) {
+      return { success: false, error: 'Achievement not found' };
+    }
+    
+    if (!achievement.rewards.title) {
+      return { success: false, error: 'Achievement does not have a title reward' };
+    }
+    
     // Equip the title
-    profile.equipped_title = achievement.rewards.title;
-    profile.equipped_achievement_id = achievementId;
-    
-    // Ensure this title is in the unlocked list
-    if (!profile.unlocked_titles) {
-      profile.unlocked_titles = [];
-    }
-    
-    const titleData = {
-      title: achievement.rewards.title,
-      achievementId: achievementId,
-      rarity: achievement.rarity,
-      unlockedAt: userAchievements.find(a => a.achievementId === achievementId)?.unlockedAt
-    };
-    
-    // Add to unlocked titles if not already there
-    if (!profile.unlocked_titles.some((t: any) => t.achievementId === achievementId)) {
-      profile.unlocked_titles.push(titleData);
-    }
-    
-    await kv.set(`user_title_profile:${userId}`, profile);
-    
-    console.log(`[Titles] ✅ Title equipped: "${achievement.rewards.title}" for ${userId}`);
-    
-    return {
-      success: true,
+    await kv.set(`user_title_profile:${userId}`, {
+      ...titleProfile,
       equipped_title: achievement.rewards.title,
-      rarity: achievement.rarity,
-      achievementId: achievementId
-    };
+      equipped_achievement_id: achievementId
+    });
+    
+    console.log('[AchievementService] Title equipped successfully:', achievement.rewards.title);
+    return { success: true };
   } catch (error) {
-    console.error(`[Titles] ❌ Error equipping title:`, error);
+    console.error('[AchievementService] equipTitle error:', error);
     return { success: false, error: 'Failed to equip title' };
   }
 }
 
-/**
- * Add a title to user's collection when achievement is unlocked
- * IMPORTANT: This function is called from checkAndUnlockAchievements AFTER the achievement
- * has been saved to the user_achievements KV store. It only updates the title profile.
- * A safety check ensures consistency between achievements and titles in case of edge cases.
- */
-export async function addTitleToCollection(userId: string, achievementId: string): Promise<void> {
-  console.log(`👑 [Titles] Adding title from achievement ${achievementId} to ${userId}'s collection`);
-  
-  try {
-    const achievement = ACHIEVEMENT_DEFINITIONS[achievementId];
-    if (!achievement || !achievement.rewards.title) {
-      console.log(`👑 [Titles] ⚠️ Achievement ${achievementId} has no title, skipping`);
-      return;
-    }
-    
-    console.log(`👑 [Titles] Achievement found: "${achievement.title}" with title reward: "${achievement.rewards.title}"`);
-    
-    // SAFETY CHECK: Verify achievement is in user_achievements array (for horizon availability)
-    // This ensures the horizon will show as unlocked in the gallery
-    const userAchievements = await kv.get<any[]>(`user_achievements:${userId}`) || [];
-    const achievementExists = userAchievements.some(a => a.achievementId === achievementId);
-    
-    if (!achievementExists) {
-      console.error(`👑 [Titles] ⚠️ CRITICAL: Achievement ${achievementId} NOT in user_achievements array!`);
-      console.error(`👑 [Titles] This will cause horizon to show as locked even though title is unlocked.`);
-      console.error(`👑 [Titles] Adding achievement to user_achievements array now as safety measure...`);
-      
-      // Add the achievement to ensure horizon availability
-      const unlockRecord = {
-        achievementId: achievementId,
-        unlockedAt: new Date().toISOString(),
-        notificationShown: false, // Will be shown via achievement unlock modal
-        shared: false,
-        progress: 1,
-        sourceAction: 'title_collection_safety_check',
-        retroactive: false,
-        metadata: {
-          unlockContext: `Safety check during addTitleToCollection, Time: ${new Date().toISOString()}`
-        }
-      };
-      
-      userAchievements.push(unlockRecord);
-      await kv.set(`user_achievements:${userId}`, userAchievements);
-      console.log(`👑 [Titles] ✅ Added achievement ${achievementId} to user_achievements array`);
-    } else {
-      console.log(`👑 [Titles] ✅ Achievement ${achievementId} exists in user_achievements (horizon will be available)`);
-    }
-    
-    const profile = await getUserTitleProfile(userId);
-    console.log(`👑 [Titles] Retrieved profile, current unlocked titles: ${profile.unlocked_titles?.length || 0}`);
-    
-    if (!profile.unlocked_titles) {
-      profile.unlocked_titles = [];
-      console.log(`👑 [Titles] Initialized empty unlocked_titles array`);
-    }
-    
-    // Check if already in collection
-    const alreadyHas = profile.unlocked_titles.some((t: any) => t.achievementId === achievementId);
-    if (alreadyHas) {
-      console.log(`👑 [Titles] ⏭️ User already has title from ${achievementId}, skipping`);
-      return;
-    }
-    
-    // Add to collection
-    const titleData = {
-      title: achievement.rewards.title,
-      achievementId: achievementId,
-      rarity: achievement.rarity,
-      unlockedAt: new Date().toISOString()
-    };
-    
-    profile.unlocked_titles.push(titleData);
-    console.log(`👑 [Titles] Added title to profile. New count: ${profile.unlocked_titles.length}`);
-    
-    await kv.set(`user_title_profile:${userId}`, profile);
-    console.log(`👑 [Titles] ✅ Saved profile to KV store`);
-    
-    // Verify it was saved
-    const verifyProfile = await kv.get(`user_title_profile:${userId}`);
-    console.log(`👑 [Titles] 🔍 Verification: Profile has ${verifyProfile?.unlocked_titles?.length || 0} titles after save`);
-    
-    console.log(`👑 [Titles] ✅✅✅ Successfully added title "${achievement.rewards.title}" to ${userId}'s collection`);
-  } catch (error) {
-    console.error(`👑 [Titles] ❌❌❌ Error adding title to collection:`, error);
-    console.error(`👑 [Titles] Error details:`, {
-      userId,
-      achievementId,
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
-    });
-  }
-}
-
-/**
- * Initialize new user with "Time Novice" title as a freebie (already unlocked and equipped)
- */
-export async function initializeUserTitles(userId: string): Promise<void> {
-  console.log(`[Titles] 🎁 Initializing new user ${userId} with Time Novice title`);
-  
-  try {
-    const profile = await getUserTitleProfile(userId);
-    
-    // Only initialize if user has no equipped title (brand new user)
-    if (profile.equipped_title) {
-      console.log(`[Titles] User already has a title, skipping initialization`);
-      return;
-    }
-    
-    const firstStepAchievement = ACHIEVEMENT_DEFINITIONS['A001'];
-    if (!firstStepAchievement || !firstStepAchievement.rewards.title) {
-      console.error(`[Titles] ❌ First Step achievement not found or has no title`);
-      return;
-    }
-    
-    // Check if user already has this achievement unlocked
-    let userAchievements = await kv.get<any[]>(`user_achievements:${userId}`) || [];
-    const alreadyUnlocked = userAchievements.some(a => a.achievementId === 'A001');
-    
-    if (!alreadyUnlocked) {
-      // Unlock the achievement properly (this will create the notification)
-      const unlockRecord = {
-        achievementId: 'A001',
-        unlockedAt: new Date().toISOString(),
-        notificationShown: false,
-        shared: false,
-        progress: 1,
-        sourceAction: 'signup',
-        retroactive: false,
-        metadata: {
-          unlockContext: `Action: signup, Time: ${new Date().toISOString()}`
-        }
-      };
-      
-      userAchievements.push(unlockRecord);
-      await kv.set(`user_achievements:${userId}`, userAchievements);
-      
-      // Queue the notification so the modal will show
-      await queueAchievementNotifications(userId, [firstStepAchievement]);
-      
-      console.log(`[Titles] ✅ Achievement "A001" (First Step) unlocked for user ${userId}`);
-    }
-    
-    // Add "Time Novice" to collection (this is still needed for the title system)
-    const titleData = {
-      title: firstStepAchievement.rewards.title,
-      achievementId: 'A001',
-      rarity: firstStepAchievement.rarity,
-      unlockedAt: new Date().toISOString()
-    };
-    
-    profile.unlocked_titles = [titleData];
-    profile.equipped_title = titleData.title;
-    profile.equipped_achievement_id = 'A001';
-    
-    await kv.set(`user_title_profile:${userId}`, profile);
-    
-    console.log(`[Titles] ✅ User ${userId} initialized with Time Novice title (unlocked, equipped, & notification queued)`);
-  } catch (error) {
-    console.error(`[Titles] ❌ Error initializing user titles:`, error);
-  }
-}
-
-/**
- * Get all available titles (locked and unlocked) for a user
- */
-export async function getAvailableTitles(userId: string): Promise<any> {
-  console.log(`[Titles] Getting available titles for: ${userId}`);
-  
-  try {
-    const profile = await getUserTitleProfile(userId);
-    const userAchievements = await kv.get<any[]>(`user_achievements:${userId}`) || [];
-    const unlockedIds = userAchievements.map(a => a.achievementId);
-    
-    // Get all achievements with titles
-    const allTitles = Object.values(ACHIEVEMENT_DEFINITIONS)
-      .filter(a => a.rewards.title)
-      .map(achievement => {
-        const isUnlocked = unlockedIds.includes(achievement.id);
-        const unlockRecord = userAchievements.find(a => a.achievementId === achievement.id);
-        
-        return {
-          achievementId: achievement.id,
-          title: achievement.rewards.title,
-          rarity: achievement.rarity,
-          category: achievement.category,
-          description: achievement.description,
-          icon: achievement.icon,
-          isUnlocked,
-          unlockedAt: unlockRecord?.unlockedAt,
-          isEquipped: profile.equipped_achievement_id === achievement.id,
-          visual: achievement.visual
-        };
-      })
-      .sort((a, b) => {
-        // Sort: Equipped first, then by unlock status, then by rarity (low to high)
-        
-        // 1. Equipped title always first
-        if (a.isEquipped && !b.isEquipped) return -1;
-        if (!a.isEquipped && b.isEquipped) return 1;
-        
-        // 2. Unlocked titles before locked titles
-        if (a.isUnlocked && !b.isUnlocked) return -1;
-        if (!a.isUnlocked && b.isUnlocked) return 1;
-        
-        // 3. Within same unlock status, sort by rarity (Common → Legendary)
-        const rarityOrder: Record<string, number> = {
-          common: 1,
-          uncommon: 2,
-          rare: 3,
-          epic: 4,
-          legendary: 5
-        };
-        
-        const rarityDiff = (rarityOrder[a.rarity] || 0) - (rarityOrder[b.rarity] || 0);
-        if (rarityDiff !== 0) return rarityDiff;
-        
-        // 4. If same rarity and status, sort alphabetically by title name
-        return a.title.localeCompare(b.title);
-      });
-    
-    console.log(`[Titles] ✅ Found ${allTitles.length} total titles (${allTitles.filter(t => t.isUnlocked).length} unlocked)`);
-    
-    return {
-      titles: allTitles,
-      equipped: profile.equipped_title,
-      equippedAchievementId: profile.equipped_achievement_id,
-      unlockedCount: allTitles.filter(t => t.isUnlocked).length,
-      totalCount: allTitles.length
-    };
-  } catch (error) {
-    console.error(`[Titles] ❌ Error getting available titles:`, error);
-    return {
-      titles: [],
-      equipped: null,
-      equippedAchievementId: null,
-      unlockedCount: 0,
-      totalCount: 0
-    };
-  }
-}
-
-
+console.log('🏆 Achievement Service loaded successfully');
+console.log(`📊 Total achievements: ${Object.keys(ACHIEVEMENT_DEFINITIONS).length}`);
+console.log('✅ A007 (Enhanced Memory) removed');
+console.log('✅ E007 (Master Curator) removed');

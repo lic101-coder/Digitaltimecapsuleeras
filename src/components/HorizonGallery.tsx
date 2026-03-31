@@ -56,13 +56,13 @@ export function HorizonGallery({ titles, equippedAchievementId, onActivate, acti
     }
   }, [equippedAchievementId, titles]);
 
-  // Group titles by rarity
+  // Group titles by rarity, with unlocked first
   const titlesByRarity: TitlesByRarity = {
-    legendary: titles.filter(t => t.rarity === 'legendary'),
-    epic: titles.filter(t => t.rarity === 'epic'),
-    rare: titles.filter(t => t.rarity === 'rare'),
-    uncommon: titles.filter(t => t.rarity === 'uncommon'),
-    common: titles.filter(t => t.rarity === 'common'),
+    legendary: titles.filter(t => t.rarity === 'legendary').sort((a, b) => (b.isUnlocked ? 1 : 0) - (a.isUnlocked ? 1 : 0)),
+    epic: titles.filter(t => t.rarity === 'epic').sort((a, b) => (b.isUnlocked ? 1 : 0) - (a.isUnlocked ? 1 : 0)),
+    rare: titles.filter(t => t.rarity === 'rare').sort((a, b) => (b.isUnlocked ? 1 : 0) - (a.isUnlocked ? 1 : 0)),
+    uncommon: titles.filter(t => t.rarity === 'uncommon').sort((a, b) => (b.isUnlocked ? 1 : 0) - (a.isUnlocked ? 1 : 0)),
+    common: titles.filter(t => t.rarity === 'common').sort((a, b) => (b.isUnlocked ? 1 : 0) - (a.isUnlocked ? 1 : 0)),
   };
 
   // Display order: Common first, then up to Legendary
@@ -339,14 +339,14 @@ export function HorizonGallery({ titles, equippedAchievementId, onActivate, acti
                           onClick={() => title.isUnlocked && setSelectedTitle(title)}
                           onMouseEnter={() => setHoveredTitle(title.achievementId)}
                           onMouseLeave={() => setHoveredTitle(null)}
-                          className={`flex-shrink-0 w-40 sm:w-48 rounded-xl overflow-hidden cursor-pointer relative transition-all duration-300 ${
+                          className={`flex-shrink-0 w-40 sm:w-48 rounded-xl overflow-hidden relative transition-all duration-300 ${
                             isSelected ? 'ring-4 ring-purple-500' : ''
                           } ${
-                            !title.isUnlocked ? 'opacity-50' : ''
+                            !title.isUnlocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'
                           }`}
                           style={{
                             background: title.isUnlocked
-                              ? `linear-gradient(135deg, ${titleConfig.colors[0]}, ${titleConfig.colors[1]})`
+                              ? `linear-gradient(135deg, ${titleConfig?.colors?.[0] || title.visual.gradientStart}, ${titleConfig?.colors?.[1] || title.visual.gradientEnd})`
                               : 'linear-gradient(135deg, #2a2a2a, #1a1a1a)'
                           }}
                         >

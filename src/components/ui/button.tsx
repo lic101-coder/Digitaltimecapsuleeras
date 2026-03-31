@@ -43,12 +43,15 @@ const Button = React.forwardRef<
 >(({ className, variant, size, asChild = false, ...props }, ref) => {
   const Comp = asChild ? Slot : "button";
 
+  // Filter out Figma inspector props to prevent React warnings
+  const { _fgT, _fgt, _fgS, _fgs, _fgB, _fgb, ...cleanProps } = props as any;
+
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       ref={ref}
-      {...props}
+      {...cleanProps}
     />
   );
 });

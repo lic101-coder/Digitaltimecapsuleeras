@@ -179,167 +179,171 @@ export function DiscoverMore({ onContinue }: DiscoverMoreProps) {
   const FeatureIcon = feature.icon;
 
   return (
-    <div className="relative flex flex-col items-center justify-between min-h-full px-6 md:px-12 py-8 pb-24 md:pb-8 overflow-y-auto">
-      {/* Continue button - Top Right */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.8 }}
-        onClick={onContinue}
-        className="fixed top-4 right-4 z-50 px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 text-sm font-medium shadow-xl"
-        style={{ top: 'max(1rem, env(safe-area-inset-top, 1rem))' }}
-      >
-        Continue
-      </motion.button>
-
-      {/* Title */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8 md:mb-12"
-      >
-        <h2 className="text-3xl md:text-4xl text-white mb-3">
-          Discover More
-        </h2>
-        <p className="text-white/60 text-sm md:text-base max-w-md">
-          Eras grows with you
-        </p>
-      </motion.div>
-
-      {/* Feature carousel */}
-      <div className="relative w-full max-w-2xl mb-8">
-        {/* Navigation arrows - desktop */}
-        <button
-          onClick={handlePrev}
-          disabled={currentFeature === 0}
-          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-16 w-12 h-12 items-center justify-center rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all z-10"
+    <div className="relative w-full h-full flex flex-col">
+      {/* Main scrollable content */}
+      <div className="flex-1 overflow-y-auto px-6 md:px-12 pt-8 pb-32">
+        {/* Title */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8 md:mb-12"
         >
-          <ChevronLeft className="w-6 h-6 text-white" />
-        </button>
+          <h2 className="text-3xl md:text-4xl text-white mb-3">
+            Discover More
+          </h2>
+          <p className="text-white/60 text-sm md:text-base max-w-md mx-auto">
+            Eras grows with you
+          </p>
+        </motion.div>
 
-        <button
-          onClick={handleNext}
-          disabled={currentFeature === features.length - 1}
-          className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-16 w-12 h-12 items-center justify-center rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all z-10"
-        >
-          <ChevronRight className="w-6 h-6 text-white" />
-        </button>
-
-        {/* Feature card with animation */}
-        <div className="relative min-h-[400px] md:min-h-[450px]">
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={currentFeature}
-              custom={direction}
-              initial={{
-                opacity: 0,
-                x: direction === 'forward' ? 100 : -100,
-                scale: 0.95
-              }}
-              animate={{
-                opacity: 1,
-                x: 0,
-                scale: 1
-              }}
-              exit={{
-                opacity: 0,
-                x: direction === 'forward' ? -100 : 100,
-                scale: 0.95
-              }}
-              transition={{ duration: 0.4 }}
-              className="absolute inset-0"
-            >
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-white/10 h-full flex flex-col">
-                {/* Icon and title */}
-                <div className="flex items-center gap-4 mb-6">
-                  <div className={`
-                    w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br ${feature.color}
-                    flex items-center justify-center shadow-lg
-                  `}>
-                    <FeatureIcon className="w-7 h-7 md:w-8 md:h-8 text-white" strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl md:text-3xl text-white font-medium mb-1">
-                      {feature.name}
-                    </h3>
-                    <p className="text-white/60 text-sm md:text-base">
-                      {feature.tagline}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Visual preview */}
-                <div className="flex-1 flex items-center justify-center mb-6 py-4">
-                  {feature.visual}
-                </div>
-
-                {/* Description */}
-                <p className="text-white/70 text-sm md:text-base text-center">
-                  {feature.description}
-                </p>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Mobile navigation - bottom */}
-        <div className="flex md:hidden justify-center gap-4 mt-6">
+        {/* Feature carousel */}
+        <div className="relative w-full max-w-2xl mx-auto mb-8">
+          {/* Navigation arrows - desktop */}
           <button
             onClick={handlePrev}
             disabled={currentFeature === 0}
-            className="w-12 h-12 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
+            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-16 w-12 h-12 items-center justify-center rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all z-10"
           >
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
+
           <button
             onClick={handleNext}
             disabled={currentFeature === features.length - 1}
-            className="w-12 h-12 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
+            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-16 w-12 h-12 items-center justify-center rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all z-10"
           >
             <ChevronRight className="w-6 h-6 text-white" />
           </button>
+
+          {/* Feature card with animation */}
+          <div className="relative min-h-[400px] md:min-h-[450px]">
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={currentFeature}
+                custom={direction}
+                initial={{
+                  opacity: 0,
+                  x: direction === 'forward' ? 100 : -100,
+                  scale: 0.95
+                }}
+                animate={{
+                  opacity: 1,
+                  x: 0,
+                  scale: 1
+                }}
+                exit={{
+                  opacity: 0,
+                  x: direction === 'forward' ? -100 : 100,
+                  scale: 0.95
+                }}
+                transition={{ duration: 0.4 }}
+                className="absolute inset-0"
+              >
+                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-white/10 h-full flex flex-col">
+                  {/* Icon and title */}
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className={`
+                      w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br ${feature.color}
+                      flex items-center justify-center shadow-lg
+                    `}>
+                      <FeatureIcon className="w-7 h-7 md:w-8 md:h-8 text-white" strokeWidth={1.5} />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl md:text-3xl text-white font-medium mb-1">
+                        {feature.name}
+                      </h3>
+                      <p className="text-white/60 text-sm md:text-base">
+                        {feature.tagline}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Visual preview */}
+                  <div className="flex-1 flex items-center justify-center mb-6 py-4">
+                    {feature.visual}
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-white/70 text-sm md:text-base text-center">
+                    {feature.description}
+                  </p>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Mobile navigation - bottom */}
+          <div className="flex md:hidden justify-center gap-4 mt-6">
+            <button
+              onClick={handlePrev}
+              disabled={currentFeature === 0}
+              className="w-12 h-12 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
+            >
+              <ChevronLeft className="w-6 h-6 text-white" />
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={currentFeature === features.length - 1}
+              className="w-12 h-12 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
+            >
+              <ChevronRight className="w-6 h-6 text-white" />
+            </button>
+          </div>
         </div>
+
+        {/* Progress dots */}
+        <div className="flex gap-2 mb-6 justify-center">
+          {features.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setAutoAdvance(false);
+                setDirection(i > currentFeature ? 'forward' : 'backward');
+                setCurrentFeature(i);
+              }}
+              className="group"
+            >
+              <motion.div
+                className={
+                  currentFeature === i 
+                    ? 'h-2 w-8 rounded-full transition-all'
+                    : 'h-2 w-2 rounded-full transition-all bg-white/20 group-hover:bg-white/40'
+                }
+                style={currentFeature === i ? {
+                  background: i === 0 ? 'linear-gradient(to right, #f59e0b, #eab308)' :
+                             i === 1 ? 'linear-gradient(to right, #3b82f6, #06b6d4)' :
+                             'linear-gradient(to right, #ec4899, #f43f5e)'
+                } : undefined}
+                animate={currentFeature === i ? { scale: [1, 1.1, 1] } : {}}
+                transition={{ duration: 0.5 }}
+              />
+            </button>
+          ))}
+        </div>
+
+        {/* Hint text */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="text-white/40 text-xs md:text-sm text-center mb-20 max-w-md mx-auto"
+        >
+          {autoAdvance ? 'Auto-advancing...' : 'Discover these features as you explore'}
+        </motion.p>
       </div>
 
-      {/* Progress dots */}
-      <div className="flex gap-2 mb-8">
-        {features.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => {
-              setAutoAdvance(false);
-              setDirection(i > currentFeature ? 'forward' : 'backward');
-              setCurrentFeature(i);
-            }}
-            className="group"
-          >
-            <motion.div
-              className={
-                currentFeature === i 
-                  ? 'h-2 w-8 rounded-full transition-all'
-                  : 'h-2 w-2 rounded-full transition-all bg-white/20 group-hover:bg-white/40'
-              }
-              style={currentFeature === i ? {
-                background: i === 0 ? 'linear-gradient(to right, #f59e0b, #eab308)' :
-                           i === 1 ? 'linear-gradient(to right, #3b82f6, #06b6d4)' :
-                           'linear-gradient(to right, #ec4899, #f43f5e)'
-              } : undefined}
-              animate={currentFeature === i ? { scale: [1, 1.1, 1] } : {}}
-              transition={{ duration: 0.5 }}
-            />
-          </button>
-        ))}
+      {/* Continue button - ALWAYS visible, sticky bottom */}
+      <div className="sticky bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent pointer-events-none z-50">
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          onClick={onContinue}
+          className="w-full max-w-xs mx-auto block px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 text-base font-semibold shadow-xl pointer-events-auto"
+        >
+          Continue →
+        </motion.button>
       </div>
-
-      {/* Hint text */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="text-white/40 text-xs md:text-sm text-center mb-8 max-w-md"
-      >
-        {autoAdvance ? 'Auto-advancing...' : 'Discover these features as you explore'}
-      </motion.p>
     </div>
   );
 }

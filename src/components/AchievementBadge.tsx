@@ -12,7 +12,11 @@ import {
   AudioWaveform, Shapes, Compass, Flame, Sunrise, Stars,
   Cloud, Heart, PartyPopper, Gem, ImagePlay, MoonStar,
   Radio, Satellite, Gauge, Timer, Clover, Sparkle,
-  BookOpen, Music, Copy, Share2, FolderTree, MessageCircle, Waves
+  BookOpen, Music, Copy, Share2, FolderTree, MessageCircle, Waves,
+  // Additional Icons
+  Award, Calendar, FileEdit, FolderOpen, Database, PenTool,
+  Grid3x3, Cpu, HardDrive, ShieldCheck, Mountain, 
+  Bolt, CircleDot, Sigma, Radar, BookText, Hash, Building2
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -131,7 +135,11 @@ export function AchievementBadge({
     AudioWaveform, Shapes, Compass, Flame, Sunrise, Stars,
     Cloud, Heart, PartyPopper, Gem, ImagePlay, MoonStar,
     Radio, Satellite, Gauge, Timer, Clover, Sparkle,
-    BookOpen, Music, Copy, Share2, FolderTree, MessageCircle, Waves
+    BookOpen, Music, Copy, Share2, FolderTree, MessageCircle, Waves,
+    // Additional Icons
+    Award, Calendar, FileEdit, FolderOpen, Database, PenTool,
+    Grid3x3, Cpu, HardDrive, ShieldCheck, Mountain, 
+    Bolt, CircleDot, Sigma, Radar, BookText, Hash, Building2
   };
 
   const IconComponent = iconMap[achievement.icon];
@@ -276,26 +284,12 @@ export function AchievementBadge({
       };
     }
 
-    // Desktop: Gradients and special effects
-    switch (achievement.rarity) {
-      case 'rare':
-        return {
-          background: `linear-gradient(135deg, ${theme.gradient![0]} 0%, ${theme.gradient![1]} 100%)`,
-        };
-      case 'epic':
-        return {
-          background: `linear-gradient(135deg, ${achievement.visual.gradientStart} 0%, ${achievement.visual.gradientEnd} 100%)`,
-          backdropFilter: 'blur(10px)',
-        };
-      case 'legendary':
-        return {
-          background: `linear-gradient(135deg, ${theme.gradient![0]} 0%, ${theme.gradient![1]} 50%, ${theme.gradient![2]} 100%)`,
-        };
-      default:
-        return {
-          background: `linear-gradient(135deg, ${achievement.visual.gradientStart} 0%, ${achievement.visual.gradientEnd} 100%)`,
-        };
-    }
+    // Desktop: Use achievement-specific custom gradient colors
+    // All rarities now use their unique visual.gradientStart and visual.gradientEnd
+    return {
+      background: `linear-gradient(135deg, ${achievement.visual.gradientStart} 0%, ${achievement.visual.gradientEnd} 100%)`,
+      backdropFilter: (achievement.rarity === 'epic' || achievement.rarity === 'legendary') ? 'blur(10px)' : undefined,
+    };
   };
 
   return (

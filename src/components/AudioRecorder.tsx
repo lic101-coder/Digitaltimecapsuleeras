@@ -37,7 +37,6 @@ export function AudioRecorder({
   onPauseRecording,
   onMediaRecorded,
   recordedMedia,
-  autoEnhance,
   recordingTime
 }) {
   const audioContextRef = useRef(null);
@@ -282,7 +281,6 @@ export function AudioRecorder({
           blob: blob,
           duration: Date.now() - recordingStartTime,
           settings: audioSettings,
-          enhanced: autoEnhance,
           maxLevel: maxAudioLevel
         });
       };
@@ -311,7 +309,6 @@ export function AudioRecorder({
             blob: blob,
             duration: Date.now() - recordingStartTime,
             settings: audioSettings,
-            enhanced: autoEnhance,
             maxLevel: maxAudioLevel
           });
         };

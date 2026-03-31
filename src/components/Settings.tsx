@@ -52,7 +52,7 @@ import {
   X
 } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { projectId } from '../utils/supabase/info';
 import { DatabaseService } from '../utils/supabase/database';
 import { motion, AnimatePresence } from 'motion/react';
@@ -154,10 +154,52 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
 
   // Load user metadata on mount
   useEffect(() => {
-    loadUserMetadata();
-    check2FAStatus();
-    loadNotificationPreferences();
-    loadAccessToken();
+    // Run initialization functions sequentially to prevent overwhelming the system
+    const initializeSettings = async () => {
+      try {
+        checkPurchaseStatus(); // Synchronous, runs first
+        await loadAccessToken(); // Quick auth call
+        await loadUserMetadata(); // Load profile data
+        await loadNotificationPreferences(); // Load notification settings
+        await check2FAStatus(); // Check 2FA last (can be slow)
+      } catch (error) {
+        console.error('[Settings] Error during initialization:', error);
+        // Silently fail - settings will still be usable with defaults
+      }
+    };
+    
+    initializeSettings();
+  }, []);
+
+  // Check for purchase success/cancel in URL (runs on mount)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const purchaseStatus = urlParams.get('purchase');
+    const beneficiaryPurchase = urlParams.get('beneficiary_purchase');
+    const product = urlParams.get('product');
+
+    if (purchaseStatus === 'success') {
+      toast.success(
+        product 
+          ? `Successfully purchased ${product}! 🎉`
+          : 'Purchase completed successfully! 🎉',
+        { duration: 5000 }
+      );
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (purchaseStatus === 'canceled') {
+      toast.info('Purchase was canceled.');
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (beneficiaryPurchase === 'success') {
+      toast.success('Beneficiary access purchased successfully! 🎉', { duration: 5000 });
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (beneficiaryPurchase === 'canceled') {
+      toast.info('Beneficiary purchase was canceled.');
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, []);
   
   // Load access token for TrashManager
@@ -1052,7 +1094,7 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
+        transition={{ delay: 0.7 }}
       >
         <Card className="border-red-500/30 bg-slate-900/40 backdrop-blur-xl shadow-2xl shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/40 transition-all duration-300">
           <CardHeader>

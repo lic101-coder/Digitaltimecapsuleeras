@@ -12,7 +12,15 @@ CREATE TABLE kv_store_f9be53a7 (
 // This file provides a simple key-value interface for storing Figma Make data. It should be adequate for most small-scale use cases.
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 
+// ✅ SINGLETON PATTERN - Create ONE client and reuse it
+let supabaseClient: ReturnType<typeof createClient> | null = null;
+
 const client = () => {
+  // Return existing client if already created
+  if (supabaseClient) {
+    return supabaseClient;
+  }
+  
   const url = Deno.env.get("SUPABASE_URL");
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   
@@ -25,7 +33,8 @@ const client = () => {
   }
   
   try {
-    return createClient(url, key);
+    supabaseClient = createClient(url, key);
+    return supabaseClient;
   } catch (error) {
     throw new Error(`Failed to create Supabase client: ${error.message}`);
   }
@@ -34,6 +43,7 @@ const client = () => {
 // Set stores a key-value pair in the database.
 export const set = async (key: string, value: any): Promise<void> => {
   try {
+    console.log(`💾 KV Store: Setting key "${key}"...`);
     const supabase = client();
     const { error } = await supabase.from("kv_store_f9be53a7").upsert({
       key,
@@ -41,33 +51,26 @@ export const set = async (key: string, value: any): Promise<void> => {
     });
     
     if (error) {
-      // Detect Cloudflare HTML errors to avoid verbose logging
+      // Log the error with full details
       const errorMsg = error.message || String(error);
-      const isCloudflareError = errorMsg.includes('<html>') || 
-                                errorMsg.includes('cloudflare') || 
-                                errorMsg.includes('Internal Server Error');
+      console.error(`❌ KV Store: Failed to set key "${key}"`);
+      console.error(`   Error message:`, errorMsg);
+      console.error(`   Error code:`, error.code);
+      console.error(`   Error details:`, error.details);
+      console.error(`   Full error:`, JSON.stringify(error, null, 2));
       
-      if (isCloudflareError) {
-        console.warn(`⚠️ KV Store: Database timeout/error setting key "${key}" (Cloudflare 500)`);
-        // Don't throw for Cloudflare errors - they're often transient
-        return;
-      }
-      
-      throw new Error(error.message);
+      // ALWAYS throw errors for set operations - they're critical!
+      throw new Error(`Failed to set key "${key}": ${errorMsg}`);
     }
+    
+    console.log(`✅ KV Store: Successfully set key "${key}"`);
   } catch (error) {
-    // Detect Cloudflare HTML errors
+    // Log the full exception
     const errorMsg = error?.message || String(error);
-    const isCloudflareError = errorMsg.includes('<html>') || 
-                              errorMsg.includes('cloudflare') || 
-                              errorMsg.includes('Internal Server Error');
+    console.error(`❌ KV Store: Exception setting key "${key}":`, errorMsg);
+    console.error(`   Stack:`, error?.stack);
     
-    if (isCloudflareError) {
-      console.warn(`⚠️ KV Store: Transient error setting key "${key}" - ignoring`);
-      // Don't throw for Cloudflare errors - they're often transient
-      return;
-    }
-    
+    // ALWAYS throw - caller needs to know about failures
     throw error;
   }
 };
@@ -134,8 +137,15 @@ export const get = async (key: string): Promise<any> => {
                               errorMsg === 'undefined' || 
                               errorMsg === '[object Object]';
       
+      // PostgreSQL statement timeout (57014)
+      const isStatementTimeout = errorCode === '57014' || 
+                                fullErrorText.includes('statement timeout') ||
+                                fullErrorText.includes('canceling statement');
+      
       // Log appropriately based on error type
-      if (isCloudflareError) {
+      if (isStatementTimeout) {
+        console.warn(`⏱️ KV Store: Database statement timeout for key "${key}" (Code: 57014) - query took too long`);
+      } else if (isCloudflareError) {
         console.warn(`⚠️ KV Store: Database timeout/error for key "${key}" (Cloudflare 500)`);
       } else if (isNetworkError) {
         console.warn(`⚠️ KV Store: Network/HTTP2 error for key "${key}" (transient infrastructure issue)`);
@@ -146,7 +156,9 @@ export const get = async (key: string): Promise<any> => {
       }
       
       // Throw appropriate error messages
-      if (isNetworkError || isUndefinedError) {
+      if (isStatementTimeout) {
+        throw new Error(`Database statement timeout: Query took too long (Code: 57014)`);
+      } else if (isNetworkError || isUndefinedError) {
         throw new Error(`Network connection lost${errorDetails ? ': ' + errorDetails : ''}`);
       } else {
         throw new Error(`Database error: ${errorMsg} (Code: ${errorCode})`);
@@ -237,7 +249,7 @@ export const getByPrefix = async (prefix: string, timeoutMs: number = 15000): Pr
       setTimeout(() => {
         const elapsed = Date.now() - startTime;
         console.error(`❌ KV Store: Query timed out after ${elapsed}ms for prefix "${prefix}"`);
-        reject(new Error(`Database query timeout after ${timeoutMs / 1000} seconds - server not responding`));
+        reject(new Error(`TIMEOUT:${timeoutMs}`));
       }, timeoutMs);
     });
     
@@ -267,16 +279,19 @@ export const getByPrefix = async (prefix: string, timeoutMs: number = 15000): Pr
     console.log(`✅ KV Store: Successfully retrieved ${data?.length || 0} items with prefix "${prefix}" in ${elapsed}ms`);
     return data?.map((d: any) => d.value) ?? [];
   } catch (error) {
-    console.error(`💥 KV Store: Exception for prefix "${prefix}":`, error.message || error);
+    const errorMsg = error.message || String(error);
+    console.error(`💥 KV Store: Exception for prefix "${prefix}":`, errorMsg);
     
-    // Check if it's a timeout or connection error
-    if (error.message?.includes('timeout') || 
-        error.message?.includes('fetch') || 
-        error.message?.includes('network') ||
-        error.message?.includes('502') ||
-        error.message?.includes('Bad Gateway') ||
-        error.message?.includes('not responding')) {
-      throw new Error(`Database connection issue: ${error.message}`);
+    // Check if it's a timeout - return empty array instead of failing
+    if (errorMsg.includes('TIMEOUT:') || 
+        errorMsg.includes('timeout') || 
+        errorMsg.includes('fetch') || 
+        errorMsg.includes('network') ||
+        errorMsg.includes('502') ||
+        errorMsg.includes('Bad Gateway') ||
+        errorMsg.includes('not responding')) {
+      console.warn(`⚠️ KV Store: Timeout occurred for prefix "${prefix}" - returning empty array (purchases may not show until database responds)`);
+      return []; // Return empty array on timeout instead of crashing
     }
     
     throw error;

@@ -115,13 +115,14 @@ export function EclipseLogo({ size = 40, className = "", showSubtitle = true, fo
           
           <div className="relative">
             <p 
-              className="logo-subtitle-enhanced text-slate-600 dark:text-slate-400 font-medium tracking-wide leading-tight animate-fade-in-glow"
+              className="logo-subtitle-enhanced text-slate-600 dark:text-slate-400 font-light tracking-wide leading-tight animate-fade-in-glow"
               style={{ 
                 fontSize: `${logoSubSize}px`,
                 fontFamily: '"SF Pro Text", "Inter", system-ui, sans-serif',
                 letterSpacing: '0.05em',
                 animation: 'fadeInWithGlow 0.8s ease-out 0.5s both',
-                textShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(255, 255, 255, 0.3)'
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                fontWeight: '300'
               }}
             >
               {forceAuthLayout ? (

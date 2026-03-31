@@ -6,7 +6,7 @@ export function useTabNavigation() {
     try {
       // Check URL hash first (e.g., #home, #create, #vault)
       const hash = window.location.hash.slice(1); // Remove the # symbol
-      const validTabs = ['home', 'create', 'record', 'vault', 'received', 'settings', 'notifications', 'legacy-access', 'terms', 'privacy', 'achievements', 'calendar'];
+      const validTabs = ['home', 'create', 'record', 'vault', 'received', 'settings', 'notifications', 'legacy-access', 'terms', 'privacy', 'achievements', 'calendar', 'store'];
       
       if (hash && validTabs.includes(hash)) {
         console.log(`✅ [TAB INIT] Restoring active tab from URL hash: "${hash}"`);
@@ -82,7 +82,7 @@ export function useTabNavigation() {
       
       // Get tab from URL hash
       const hash = window.location.hash.slice(1);
-      const validTabs = ['home', 'create', 'record', 'vault', 'received', 'settings', 'notifications', 'legacy-access', 'terms', 'privacy', 'achievements', 'calendar'];
+      const validTabs = ['home', 'create', 'record', 'vault', 'received', 'settings', 'notifications', 'legacy-access', 'terms', 'privacy', 'achievements', 'calendar', 'store'];
       
       if (hash && validTabs.includes(hash)) {
         console.log(`✅ Navigating to tab from browser history: "${hash}"`);
@@ -159,7 +159,7 @@ export function useTabNavigation() {
     
     // Log stack trace to identify who's calling this
     if (newTab === 'home' && activeTab !== 'home') {
-      console.warn('⚠️ NAVIGATING TO HOME - Stack trace:', new Error().stack);
+      console.log('📍 Navigating to home from:', activeTab);
     }
     
     // Ignore if trying to set to the same tab

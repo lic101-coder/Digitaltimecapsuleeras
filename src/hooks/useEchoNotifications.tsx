@@ -63,21 +63,17 @@ export function useEchoNotifications(userId: string | null, accessToken: string 
       return;
     }
 
-    console.log(`📡 [Echo Notifications] Fetching notifications for user: ${userId}`);
+    // Silently fetch - reduce log noise
     
-    // Retry logic with exponential backoff
+    // Retry logic with exponential backoff (max 2 retries to reduce network noise)
     const maxRetries = 2;
     let lastError: any = null;
     
     try {
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
-          // Exponential timeout increase for retries
-          const timeout = 30000 * Math.pow(1.2, attempt); // 30s, 36s, 43s
-          
-          if (attempt > 0) {
-            console.log(`🔄 [Echo Notifications] Retry ${attempt}/${maxRetries} (timeout: ${Math.round(timeout/1000)}s)`);
-          }
+          // Shorter timeouts - server has 28s global timeout
+          const timeout = 10000 * Math.pow(1.5, attempt); // 10s, 15s, 22.5s
           
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -93,8 +89,6 @@ export function useEchoNotifications(userId: string | null, accessToken: string 
             }
           ).finally(() => clearTimeout(timeoutId));
 
-          console.log(`📡 [Echo Notifications] Fetch response status: ${response.status}`);
-
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
             
@@ -105,43 +99,34 @@ export function useEchoNotifications(userId: string | null, accessToken: string 
               return;
             }
             
-            console.error('❌ [Echo Notifications] Server returned error:', errorData);
             throw new Error(`Failed to fetch notifications: ${response.status} - ${errorData.error || 'Unknown error'}`);
           }
 
           const data = await response.json();
-          console.log(`📦 [Echo Notifications] Received ${data.notifications?.length || 0} notifications from server`);
-          
-          if (data.notifications && data.notifications.length > 0) {
-            console.log('📬 [Echo Notifications] Latest notification:', data.notifications[0]);
-          }
-          
           setNotifications(data.notifications || []);
           break; // Exit loop on success
         } catch (error) {
           const isLastAttempt = attempt === maxRetries;
           
-          // Handle timeout or network errors gracefully
-          if (error.name === 'AbortError') {
-            console.warn(`⏱️ [Echo Notifications] Request timed out (attempt ${attempt + 1}/${maxRetries + 1}) - server may be cold-starting`);
-          } else if (error.message?.includes('Failed to fetch')) {
-            console.warn(`⚠️ [Echo Notifications] Network error (attempt ${attempt + 1}/${maxRetries + 1}) - will retry${!isLastAttempt ? '' : ' on next poll'}`);
-          } else {
-            console.warn('⚠️ [Echo Notifications] Error fetching notifications:', error.message);
+          // Only log on last attempt to reduce noise
+          if (isLastAttempt) {
+            if (error.name === 'AbortError') {
+              console.warn(`⚠️ [Echo Notifications] Network timeout (will retry in 30s)`);
+            } else if (error.message?.includes('Failed to fetch')) {
+              console.warn(`⚠️ [Echo Notifications] Network error (attempt ${attempt + 1}/${maxRetries + 1}) - will retry`);
+            }
           }
           
           lastError = error;
           
           // Wait before retry with exponential backoff
           if (!isLastAttempt) {
-            const backoffDelay = 1000 * Math.pow(2, attempt); // 1s, 2s
-            console.log(`⏳ [Echo Notifications] Waiting ${backoffDelay}ms before retry...`);
-            await new Promise(resolve => setTimeout(resolve, backoffDelay));
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
           }
         }
       }
     } catch (error) {
-      console.error('Error in fetchNotifications:', error);
+      // Silently handle errors - they'll be retried on next poll
     } finally {
       setLoading(false);
     }

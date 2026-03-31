@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, Share2, Sparkles, Facebook, Twitter, Linkedin, MessageCircle, Send, Copy, Check,
@@ -14,10 +14,14 @@ import {
   RefreshCcw, Users, Hourglass, Target,
   Mailbox, Medal, Library, ScrollText, Rocket,
   AudioWaveform, Shapes, Compass, Flame, Sunrise, Stars,
-  Cloud, Heart, PartyPopper, Gem, ImagePlay, MoonStar
+  Cloud, Heart, PartyPopper, Gem, ImagePlay, MoonStar,
+  // Additional Icons
+  Award, Calendar, FileEdit, FolderOpen, Database, PenTool,
+  Grid3x3, Cpu, HardDrive, ShieldCheck, Mountain, Radio, Waves,
+  Bolt, Sparkle, CircleDot, Sigma, Radar, BookText, Hash, Building2, Gauge
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 
 interface AchievementUnlockModalProps {
@@ -209,7 +213,11 @@ export function AchievementUnlockModal({
     RefreshCcw, Users, Hourglass, Crown, Trophy, Target,
     Lock, Mailbox, Medal, Library, ScrollText, Rocket, Zap,
     AudioWaveform, Shapes, Compass, Flame, Sunrise, Stars,
-    Cloud, Heart, PartyPopper, Gem, ImagePlay, MoonStar
+    Cloud, Heart, PartyPopper, Gem, ImagePlay, MoonStar,
+    // Additional Icons
+    Award, Calendar, FileEdit, FolderOpen, Database, PenTool,
+    Grid3x3, Cpu, HardDrive, ShieldCheck, Mountain, Radio, Waves,
+    Bolt, Sparkle, CircleDot, Sigma, Radar, BookText, Hash, Building2, Gauge
   };
 
   const IconComponent = iconMap[achievement.icon] || Trophy;

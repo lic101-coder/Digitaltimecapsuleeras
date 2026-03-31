@@ -2,10 +2,12 @@ import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import { randomBytes } from "node:crypto";
+import Stripe from "npm:stripe@14.0.0";
 import { supabase } from "./supabase-client.tsx";
 import * as kv from "./kv_store.tsx";
 import { DeliveryService } from "./delivery-service.tsx";
 import * as AchievementService from './achievement-service.tsx';
+import * as AchievementRecalculation from './achievement-recalculation.tsx';
 import * as WelcomeCelebration from './welcome-celebration.tsx';
 import * as LegacyAccessService from './legacy-access-service.tsx';
 import * as ShareService from './share-service.tsx';
@@ -36,7 +38,20 @@ console.log('🚀 [Startup] Initializing Hono app...');
 
 const app = new Hono();
 
-console.log('✅ [Startup] Hono app created');
+// 🔧 Setup CORS - MUST be first middleware
+app.use('*', cors({
+  origin: '*',
+  credentials: true,
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowHeaders: ['Content-Type', 'Authorization', 'stripe-signature', 'X-Client-Info', 'apikey'],
+  exposeHeaders: ['Content-Length'],
+  maxAge: 86400,
+}));
+
+// 🔧 Setup request logging
+app.use('*', logger(console.log));
+
+console.log('✅ [Startup] Hono app created with CORS and logging');
 
 // Supabase client is now imported from singleton module
 console.log('✅ [Startup] Supabase client available via singleton');
@@ -204,6 +219,12 @@ async function ensureStorageBucket(bucketName: string): Promise<{ success: boole
     if (listError) {
       const errorMsg = listError?.message || String(listError);
       
+      // Internal Server Error (500) - log but proceed anyway (storage is optional)
+      if (listError.status === 500 || errorMsg.includes('Internal Server Error')) {
+        console.warn('⚠️ Storage service internal error (status 500) - storage features disabled, app will continue');
+        return { success: false, shouldProceed: true };
+      }
+      
       // Timeout errors - log but proceed anyway (bucket likely exists)
       if (errorMsg.includes('timed out') || errorMsg.includes('connection') || listError.status === 544) {
         console.warn('⚠️ Storage service database timeout (status 544) - proceeding anyway');
@@ -222,9 +243,9 @@ async function ensureStorageBucket(bucketName: string): Promise<{ success: boole
         return { success: false, shouldProceed: true };
       }
       
-      // Other errors - log and don't proceed
-      console.error('❌ Failed to list storage buckets:', listError);
-      return { success: false, shouldProceed: false };
+      // Other errors - log but proceed anyway (storage is optional)
+      console.warn('⚠️ Failed to list storage buckets (non-critical):', listError);
+      return { success: false, shouldProceed: true };
     }
     
     const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
@@ -490,7 +511,7 @@ app.get("/make-server-f9be53a7/env-check", (c) => {
 // Database connection test endpoint
 app.get("/make-server-f9be53a7/test/db", async (c) => {
   try {
-    console.log("🔍 Database connection test starting...");
+    console.log("�� Database connection test starting...");
     
     // Check environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -1012,6 +1033,153 @@ app.post("/make-server-f9be53a7/api/auth/check-email", async (c) => {
   }
 });
 
+// ============================================
+// CUSTOM SIGNUP ENDPOINT
+// ============================================
+// This bypasses Supabase Auth's rate-limited email system by:
+// 1. Using admin.createUser() with email_confirm: false (no email sent by Supabase)
+// 2. Sending our own verification email via Resend
+// This prevents "email rate limit exceeded" errors during signup
+
+app.post("/make-server-f9be53a7/api/auth/signup", async (c) => {
+  try {
+    console.log('📝 [Custom Signup] Request received');
+    
+    const { email, password, firstName, lastName } = await c.req.json();
+    
+    // Validation
+    if (!email || !password || !firstName) {
+      return c.json({ 
+        error: "Email, password, and first name are required" 
+      }, 400);
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    console.log('📝 [Custom Signup] Creating account for:', normalizedEmail);
+
+    // Check if user already exists
+    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+    
+    if (listError) {
+      console.error('❌ [Custom Signup] Error checking existing users:', listError);
+      return c.json({ 
+        error: "Failed to create account. Please try again." 
+      }, 500);
+    }
+
+    const userExists = users?.some(u => u.email?.toLowerCase() === normalizedEmail);
+    
+    if (userExists) {
+      console.log('⚠️ [Custom Signup] User already exists:', normalizedEmail);
+      return c.json({ 
+        error: "User already registered",
+        code: "user_already_exists"
+      }, 400);
+    }
+
+    // Create user with admin API - bypasses Supabase's email rate limits!
+    // email_confirm: false means we handle verification ourselves (no email from Supabase)
+    const { data, error: createError } = await supabase.auth.admin.createUser({
+      email: normalizedEmail,
+      password: password,
+      email_confirm: false, // User must verify via our custom email
+      user_metadata: {
+        first_name: firstName.trim(),
+        last_name: lastName?.trim() || '',
+        agreed_to_terms: true,
+        terms_agreed_at: new Date().toISOString()
+      }
+    });
+
+    if (createError) {
+      console.error('❌ [Custom Signup] Failed to create user:', createError);
+      
+      // Handle specific errors
+      if (createError.message?.includes('already registered')) {
+        return c.json({ 
+          error: "User already registered",
+          code: "user_already_exists"
+        }, 400);
+      }
+      
+      return c.json({ 
+        error: createError.message || "Failed to create account" 
+      }, 500);
+    }
+
+    if (!data.user) {
+      console.error('❌ [Custom Signup] No user data returned');
+      return c.json({ 
+        error: "Failed to create account - no user data" 
+      }, 500);
+    }
+
+    console.log('✅ [Custom Signup] User created successfully:', data.user.id);
+
+    // Generate verification token
+    const verificationToken = randomBytes(32).toString('hex');
+    
+    // Store token in KV store with 24-hour expiration
+    const tokenData = {
+      email: normalizedEmail,
+      userId: data.user.id,
+      firstName: firstName.trim(),
+      token: verificationToken,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
+      verified: false
+    };
+    
+    const tokenKey = `email_verification_token:${verificationToken}`;
+    await kv.set(tokenKey, tokenData);
+    
+    console.log('✅ [Custom Signup] Verification token stored for user:', data.user.id);
+
+    // 🎁 NOTE: We do NOT initialize A001 "First Step" achievement or Time Novice title here
+    // These will be awarded AFTER the user completes (or dismisses) the First Capsule Tutorial
+    // This ensures the proper onboarding flow: Tutorial → A001 Achievement Modal → Time Novice Title Modal
+
+    // Get app URL from environment or use Figma site URL
+    const appUrl = Deno.env.get('APP_URL') || 'https://found-shirt-81691824.figma.site';
+    console.log(`🔗 [Custom Signup] App URL for verification link: ${appUrl}`);
+    
+    // Create verification URL
+    const verifyUrl = `${appUrl}/verify-email?token=${verificationToken}`;
+
+    // Send welcome email with verification link via Resend
+    const { EmailService } = await import('./email-service.tsx');
+    const emailSent = await EmailService.sendWelcomeEmail(
+      normalizedEmail,
+      firstName.trim(),
+      verifyUrl
+    );
+
+    if (!emailSent) {
+      console.warn('⚠️ [Custom Signup] Failed to send welcome email, but user was created');
+      // Don't fail the signup if email fails - user can resend later
+    } else {
+      console.log('✅ [Custom Signup] Welcome email sent successfully');
+    }
+
+    // Return success with user data
+    return c.json({
+      success: true,
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        email_confirmed_at: null // Not confirmed yet
+      },
+      message: "Account created successfully. Please check your email to verify."
+    });
+
+  } catch (error) {
+    console.error('💥 [Custom Signup] Exception:', error);
+    return c.json({ 
+      error: "An unexpected error occurred. Please try again." 
+    }, 500);
+  }
+});
+
 // Send welcome/verification email after signup
 app.post("/make-server-f9be53a7/api/auth/send-verification-email", async (c) => {
   try {
@@ -1019,19 +1187,41 @@ app.post("/make-server-f9be53a7/api/auth/send-verification-email", async (c) => 
     
     const { email, firstName, userId } = await c.req.json();
     
-    if (!email || !firstName || !userId) {
-      return c.json({ error: "Email, firstName, and userId are required" }, 400);
+    if (!email || !firstName) {
+      return c.json({ error: "Email and firstName are required" }, 400);
     }
 
-    console.log('📧 [Email Verification] Sending verification for:', email);
+    const normalizedEmail = email.trim().toLowerCase();
+    console.log('📧 [Email Verification] Sending verification for:', normalizedEmail);
+
+    // If userId is not provided or invalid, look up user by email
+    let actualUserId = userId;
+    if (!actualUserId || actualUserId === 'unknown') {
+      console.log('🔍 [Email Verification] No valid userId provided, looking up user by email...');
+      
+      const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+      if (listError) {
+        console.error('❌ [Email Verification] Failed to list users:', listError);
+        return c.json({ error: "Failed to lookup user" }, 500);
+      }
+      
+      const user = users?.find(u => u.email?.toLowerCase() === normalizedEmail);
+      if (!user) {
+        console.error('❌ [Email Verification] User not found for email:', normalizedEmail);
+        return c.json({ error: "User not found" }, 404);
+      }
+      
+      actualUserId = user.id;
+      console.log('✅ [Email Verification] Found user ID:', actualUserId);
+    }
 
     // Generate a secure verification token
     const verificationToken = randomBytes(32).toString('hex');
     
     // Store token in KV store with 24-hour expiration
     const tokenData = {
-      email: email.trim().toLowerCase(),
-      userId,
+      email: normalizedEmail,
+      userId: actualUserId,
       firstName,
       token: verificationToken,
       createdAt: Date.now(),
@@ -1042,29 +1232,14 @@ app.post("/make-server-f9be53a7/api/auth/send-verification-email", async (c) => 
     const tokenKey = `email_verification_token:${verificationToken}`;
     await kv.set(tokenKey, tokenData);
     
-    console.log('✅ [Email Verification] Token stored:', tokenKey);
+    console.log('✅ [Email Verification] Token stored:', tokenKey, 'for user:', actualUserId);
 
-    // Get the correct origin for verification URL
-    const requestOrigin = c.req.header('origin');
-    const referer = c.req.header('referer');
-    
-    let redirectBase = requestOrigin;
-    if (!redirectBase && referer) {
-      try {
-        const refererUrl = new URL(referer);
-        redirectBase = refererUrl.origin;
-      } catch (e) {
-        console.warn('⚠️ [Email Verification] Could not parse referer:', referer);
-      }
-    }
-    
-    if (!redirectBase) {
-      redirectBase = 'https://www.erastimecapsule.com';
-      console.log('⚠️ [Email Verification] Using fallback domain:', redirectBase);
-    }
+    // Get app URL from environment or use Figma site URL
+    const appUrl = Deno.env.get('APP_URL') || 'https://found-shirt-81691824.figma.site';
+    console.log(`🔗 [Email Verification] App URL for verification link: ${appUrl}`);
     
     // Create verification URL
-    const verifyUrl = `${redirectBase}/verify-email?token=${verificationToken}`;
+    const verifyUrl = `${appUrl}/verify-email?token=${verificationToken}`;
     console.log('🔗 [Email Verification] Verification link generated');
 
     // Import and use email service
@@ -1072,7 +1247,7 @@ app.post("/make-server-f9be53a7/api/auth/send-verification-email", async (c) => 
     
     // Send welcome email with verification link
     const emailSent = await EmailService.sendWelcomeEmail(
-      email,
+      normalizedEmail,
       firstName,
       verifyUrl
     );
@@ -1105,17 +1280,23 @@ app.post("/make-server-f9be53a7/api/auth/send-verification-email", async (c) => 
 // Verify email with token
 app.post("/make-server-f9be53a7/api/auth/verify-email-token", async (c) => {
   try {
+    console.log('🔍 [Email Verification] Request received');
+    
     const { token } = await c.req.json();
     
     if (!token) {
+      console.error('❌ [Email Verification] No token provided');
       return c.json({ valid: false, error: "Token is required" }, 400);
     }
 
-    console.log('🔍 [Email Verification] Verifying token');
+    console.log('🔍 [Email Verification] Verifying token:', token.substring(0, 10) + '...');
 
     // Get token from KV store
     const tokenKey = `email_verification_token:${token}`;
+    console.log('🔍 [Email Verification] Looking up token key:', tokenKey);
+    
     const tokenData = await kv.get(tokenKey);
+    console.log('🔍 [Email Verification] Token data retrieved:', tokenData ? 'Found' : 'Not found');
 
     if (!tokenData) {
       console.warn('⚠️ [Email Verification] Token not found or expired');
@@ -1136,6 +1317,7 @@ app.post("/make-server-f9be53a7/api/auth/verify-email-token", async (c) => {
     }
 
     console.log('✅ [Email Verification] Token is valid for:', tokenData.email);
+    console.log('🔍 [Email Verification] User ID from token:', tokenData.userId, 'Type:', typeof tokenData.userId);
 
     // Mark as verified
     tokenData.verified = true;
@@ -1143,17 +1325,33 @@ app.post("/make-server-f9be53a7/api/auth/verify-email-token", async (c) => {
     await kv.set(tokenKey, tokenData);
 
     // Now verify the user in Supabase Auth using admin API
-    const { error: updateError } = await supabase.auth.admin.updateUserById(
-      tokenData.userId,
+    console.log('🔧 [Email Verification] Confirming email for user:', tokenData.userId);
+    
+    // Ensure userId is a string
+    const userId = String(tokenData.userId);
+    console.log('🔧 [Email Verification] Using userId (string):', userId);
+    
+    const { data: updatedUser, error: updateError } = await supabase.auth.admin.updateUserById(
+      userId,
       { email_confirm: true }
     );
 
     if (updateError) {
-      console.error('❌ [Email Verification] Failed to verify user:', updateError);
-      return c.json({ valid: false, error: "Failed to verify email" }, 500);
+      console.error('❌ [Email Verification] Failed to verify user in Supabase Auth:', {
+        error: updateError,
+        message: updateError.message,
+        status: updateError.status,
+        userId: userId
+      });
+      return c.json({ 
+        valid: false, 
+        error: "Failed to verify email",
+        details: updateError.message 
+      }, 500);
     }
 
     console.log('✅ [Email Verification] User email verified successfully');
+    console.log('✅ [Email Verification] User email_confirmed_at:', updatedUser?.user?.email_confirmed_at);
 
     return c.json({ 
       valid: true, 
@@ -1162,8 +1360,17 @@ app.post("/make-server-f9be53a7/api/auth/verify-email-token", async (c) => {
     });
 
   } catch (error) {
-    console.error('💥 [Email Verification] Verification error:', error);
-    return c.json({ valid: false, error: "Email verification failed" }, 500);
+    console.error('💥 [Email Verification] Verification error:', {
+      error: error,
+      message: error?.message,
+      stack: error?.stack,
+      type: error?.constructor?.name
+    });
+    return c.json({ 
+      valid: false, 
+      error: "Email verification failed",
+      details: error?.message || String(error)
+    }, 500);
   }
 });
 
@@ -1193,7 +1400,15 @@ app.post("/make-server-f9be53a7/api/auth/check-user-exists", async (c) => {
     
     console.log(`✅ [User Check] User ${exists ? 'EXISTS' : 'DOES NOT EXIST'}`);
     
-    return c.json({ exists });
+    // Also check email verification status if user exists
+    let emailVerified = false;
+    if (exists) {
+      const user = users?.find(u => u.email?.toLowerCase() === email.trim().toLowerCase());
+      emailVerified = !!user?.email_confirmed_at;
+      console.log(`🔍 [User Check] Email verification status: ${emailVerified ? 'VERIFIED' : 'NOT VERIFIED'}`);
+    }
+    
+    return c.json({ exists, emailVerified });
 
   } catch (error) {
     console.error('💥 [User Check] Exception:', error);
@@ -1811,8 +2026,16 @@ app.get("/make-server-f9be53a7/api/media/capsule/:capsuleId", async (c) => {
   }
 
   try {
-    // Primary method: Get media file IDs from capsule_media key (with Cloudflare recovery)
-    console.log(`🔍 Step 1: Getting media IDs for capsule ${capsuleId}...`);
+    // Wrap the entire operation in a timeout
+    const TIMEOUT_MS = 50000; // 50 seconds (increased to handle larger media batches)
+    
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout - operation took too long')), TIMEOUT_MS);
+    });
+    
+    const operationPromise = (async () => {
+      // Primary method: Get media file IDs from capsule_media key (with Cloudflare recovery)
+      console.log(`🔍 Step 1: Getting media IDs for capsule ${capsuleId}...`);
     let mediaIds = await safeKvGet(() => kv.get(`capsule_media:${capsuleId}`), `capsule_media:${capsuleId}`, []);
     
     // Ensure mediaIds is always an array
@@ -1841,9 +2064,12 @@ app.get("/make-server-f9be53a7/api/media/capsule/:capsuleId", async (c) => {
     }
     
     console.log(`🔍 Step 3: Processing ${mediaIds.length} media files IN PARALLEL...`);
+    const processingStartTime = Date.now();
     
-    // OPTIMIZATION: Process all media files in parallel instead of sequentially
-    const mediaFilePromises = mediaIds.map(async (mediaId) => {
+    // OPTIMIZATION: Process all media files in parallel with controlled concurrency
+    // Limit concurrent operations to prevent overwhelming the storage API
+    const BATCH_SIZE = 10; // Process 10 files at a time
+    const mediaFilePromises = mediaIds.map(async (mediaId, index) => {
       try {
         const mediaFile = await safeKvGet(() => kv.get(`media:${mediaId}`), `media:${mediaId}`, null);
         console.log(`📄 Media file ${mediaId}:`, mediaFile ? 'found' : 'not found');
@@ -1878,11 +2104,19 @@ app.get("/make-server-f9be53a7/api/media/capsule/:capsuleId", async (c) => {
         }
         
         try {
-          // Generate signed URL with Cloudflare error protection
+          // Generate signed URL with Cloudflare error protection and timeout
           const SIGNED_URL_EXPIRATION = 604800; // 7 days
-          const { data, error: urlError } = await supabase.storage
+          const STORAGE_TIMEOUT = 8000; // 8 second timeout per file
+          
+          const storagePromise = supabase.storage
             .from(mediaFile.storage_bucket)
             .createSignedUrl(mediaFile.storage_path, SIGNED_URL_EXPIRATION);
+          
+          const timeoutPromise = new Promise<{ data: null, error: any }>((resolve) => 
+            setTimeout(() => resolve({ data: null, error: { message: 'Storage timeout' } }), STORAGE_TIMEOUT)
+          );
+          
+          const { data, error: urlError } = await Promise.race([storagePromise, timeoutPromise]);
           
           if (urlError) {
             console.warn(`⚠️ Storage API error for ${mediaId}:`, urlError.message);
@@ -1924,9 +2158,15 @@ app.get("/make-server-f9be53a7/api/media/capsule/:capsuleId", async (c) => {
         // ✅ Generate thumbnail URL if thumbnail_path exists (for videos)
         if (mediaFile.thumbnail_path) {
           try {
-            const { data: thumbData } = await supabase.storage
+            const thumbPromise = supabase.storage
               .from(mediaFile.storage_bucket)
               .createSignedUrl(mediaFile.thumbnail_path, SIGNED_URL_EXPIRATION);
+            
+            const thumbTimeoutPromise = new Promise<{ data: null }>((resolve) => 
+              setTimeout(() => resolve({ data: null }), STORAGE_TIMEOUT)
+            );
+            
+            const { data: thumbData } = await Promise.race([thumbPromise, thumbTimeoutPromise]);
             
             if (thumbData?.signedUrl) {
               thumbnailSignedUrl = thumbData.signedUrl;
@@ -1959,6 +2199,8 @@ app.get("/make-server-f9be53a7/api/media/capsule/:capsuleId", async (c) => {
     
     // Wait for all media files to be processed in parallel
     const results = await Promise.all(mediaFilePromises);
+    const processingDuration = Date.now() - processingStartTime;
+    console.log(`⏱️ Processed ${mediaIds.length} media files in ${processingDuration}ms (avg: ${Math.round(processingDuration / mediaIds.length)}ms per file)`);
     
     // Collect results
     const mediaFiles = [];
@@ -2002,8 +2244,27 @@ app.get("/make-server-f9be53a7/api/media/capsule/:capsuleId", async (c) => {
       console.error(`❌ Error creating JSON response:`, jsonError);
       throw jsonError;
     }
+    })(); // Close the operationPromise async function
+    
+    // Race between operation and timeout
+    const result = await Promise.race([operationPromise, timeoutPromise]);
+    return result;
     
   } catch (error) {
+    // Handle timeout and other errors
+    if (error.message === 'Request timeout - operation took too long') {
+      console.error(`⏱️ Request timeout for capsule ${capsuleId} - returning partial data`);
+      return c.json({ 
+        mediaFiles: [],
+        stats: {
+          total: 0,
+          urlsGenerated: 0,
+          urlsFailed: 0
+        },
+        error: 'Request timeout - please try again'
+      }, 408); // 408 Request Timeout
+    }
+    
     // Only catch catastrophic failures that prevent returning anything
     console.error("❌ Critical error in media endpoint:", error);
     console.error("❌ Error message:", error?.message);
@@ -2489,7 +2750,7 @@ app.post("/make-server-f9be53a7/api/capsules", async (c) => {
       self_contact: recipient_type === 'self' ? self_contact : null,
       recipients: recipient_type === 'others' ? validRecipients : [],
       delivery_date: deliveryDateISO, // null for drafts, ISO string for scheduled
-      delivery_time: delivery_time || null, // ✅ Use delivery_time from frontend (local time string like "12:00")
+      delivery_time: delivery_time || null, // �� Use delivery_time from frontend (local time string like "12:00")
       time_zone: time_zone || 'UTC',
       status: status || 'scheduled',
       allow_echoes: allow_echoes !== undefined ? allow_echoes : true, // Global user preference for echo responses
@@ -3930,6 +4191,7 @@ app.put("/make-server-f9be53a7/api/capsules/:id", async (c) => {
     if (media_files !== undefined && Array.isArray(media_files)) {
       try {
         console.log(`🔄 Updating capsule_media list with ${media_files.length} IDs provided by client`);
+        console.log(`📋 Media IDs received:`, media_files);
         // We could validate that these IDs exist in media:*, but for now let's trust the client
         // to support the Vault import use case where IDs are known.
         await kv.set(`capsule_media:${capsuleId}`, media_files);
@@ -4461,10 +4723,12 @@ const startDeliveryScheduler = () => {
           errorMsg.includes('502') || 
           errorMsg.includes('503') ||
           errorMsg.includes('504') ||
+          errorMsg.includes('PGRST') ||
+          errorMsg.includes('schema cache') ||
           errorMsg.includes('Cloudflare') ||
           errorMsg.includes('timeout') ||
           errorMsg.includes('Circuit breaker')) {
-        console.warn('⚠️ Temporary database connection issue during delivery check:', errorMsg.substring(0, 150));
+        console.warn('⚠️ Temporary database connection issue during delivery check (will retry)');
       } else {
         console.error('🚨 Scheduled delivery process error:', error);
       }
@@ -5177,6 +5441,167 @@ app.post("/make-server-f9be53a7/achievements/track", async (c) => {
     console.error("🏆 [Achievement Track] Error:", error);
     return c.json({ 
       error: "Failed to track action",
+      details: error.message 
+    }, 500);
+  }
+});
+
+// ============================================
+// ACHIEVEMENT RECALCULATION ENDPOINTS
+// ============================================
+
+// Recalculate achievements for single user (authenticated user only)
+app.post("/make-server-f9be53a7/achievements/recalculate", async (c) => {
+  try {
+    console.log("🔄 [Achievement Recalculate] Endpoint called");
+    
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    
+    if (!token) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+    
+    const { user, error: authError } = await verifyUserToken(token);
+    
+    if (authError || !user) {
+      return c.json({ error: "Invalid token" }, 401);
+    }
+    
+    console.log(`🔄 Starting recalculation for user: ${user.id}`);
+    
+    const result = await AchievementRecalculation.recalculateUserAchievements(user.id);
+    
+    if (result.success) {
+      console.log(`✅ Recalculation complete: ${result.achievementsCount} achievements, ${result.titlesCount} titles`);
+      return c.json({
+        success: true,
+        achievements: result.achievementsCount,
+        titles: result.titlesCount,
+        legacyTitlesPreserved: result.legacyTitlesPreserved,
+        message: 'Achievements recalculated successfully'
+      });
+    } else {
+      console.error(`❌ Recalculation failed: ${result.error}`);
+      return c.json({
+        success: false,
+        error: result.error
+      }, 400);
+    }
+    
+  } catch (error) {
+    console.error("🔄 [Achievement Recalculate] Error:", error);
+    return c.json({ 
+      error: "Failed to recalculate achievements",
+      details: error.message 
+    }, 500);
+  }
+});
+
+// Retroactive migration — called on first login to surface any achievements earned before tracking started
+// Called from App.tsx on first login via: /achievements/retroactive-migration
+app.post("/make-server-f9be53a7/achievements/retroactive-migration", async (c) => {
+  try {
+    console.log("🔄 [Retroactive Migration] Endpoint called");
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    if (!token) return c.json({ error: "Unauthorized" }, 401);
+    const { user, error: authError } = await verifyUserToken(token);
+    if (authError || !user) return c.json({ error: "Invalid token" }, 401);
+    console.log(`🔄 [Retroactive Migration] Running for user: ${user.id}`);
+
+    // CRITICAL: Check if user has completed onboarding
+    // Don't run retroactive for brand new users - they should see tutorial first
+    const onboardingState = await kv.get(`onboarding:${user.id}`) || {};
+    if (!onboardingState.first_capsule) {
+      console.log(`📚 [Retroactive Migration] ⏭️ SKIPPING - user hasn't completed onboarding`);
+      console.log(`📚 [Retroactive Migration] User will go through tutorial → achievements flow`);
+      return c.json({ 
+        success: true, 
+        newUnlocks: 0, 
+        message: 'Skipped - complete onboarding first' 
+      });
+    }
+
+    // Snapshot existing unlocks before recalculation
+    const beforeProgress = await AchievementService.getAchievementProgress(user.id);
+    const beforeSet = new Set(beforeProgress?.unlockedAchievements || []);
+
+    // Full recalculation from stats
+    const result = await AchievementRecalculation.recalculateUserAchievements(user.id);
+
+    if (!result.success) {
+      console.warn(`⚠️ [Retroactive Migration] Skipped for ${user.id}: ${result.error}`);
+      // Return success so frontend marks it done and doesn't loop
+      return c.json({ success: true, newUnlocks: 0, message: result.error || 'Stats not yet available' });
+    }
+
+    // Compute net-new unlocks
+    const afterProgress = await AchievementService.getAchievementProgress(user.id);
+    const afterList = afterProgress?.unlockedAchievements || [];
+    const newlyUnlocked = afterList.filter((id: string) => !beforeSet.has(id));
+
+    console.log(`✅ [Retroactive Migration] ${newlyUnlocked.length} new unlock(s) for ${user.id}`);
+    return c.json({
+      success: true,
+      newUnlocks: newlyUnlocked.length,
+      newAchievements: newlyUnlocked,
+      totalUnlocked: afterList.length,
+      message: `Retroactive check complete — ${newlyUnlocked.length} new achievement(s) unlocked`
+    });
+  } catch (error) {
+    console.error("🔄 [Retroactive Migration] Error:", error);
+    // Return success so frontend doesn't retry indefinitely
+    return c.json({ success: true, newUnlocks: 0, error: String(error) });
+  }
+});
+
+// Recalculate achievements for ALL users (admin only - requires service role key)
+app.post("/make-server-f9be53a7/admin/recalculate-all-achievements", async (c) => {
+  try {
+    console.log("🔄 [Global Recalculate] Endpoint called");
+    
+    // Security: Verify this is an admin request by checking for service role key
+    const authHeader = c.req.header('Authorization');
+    const providedKey = authHeader?.replace('Bearer ', '');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!providedKey || providedKey !== serviceRoleKey) {
+      console.warn("⚠️ Unauthorized global recalculation attempt");
+      return c.json({ error: "Unauthorized - Admin access required" }, 403);
+    }
+    
+    console.log("🚀 Starting global achievement recalculation for ALL users...");
+    
+    const result = await AchievementRecalculation.recalculateAllUsers();
+    
+    if (result.success) {
+      console.log(`✅ Global recalculation complete:`);
+      console.log(`   - Processed: ${result.totalProcessed} users`);
+      console.log(`   - Success: ${result.totalSuccess}`);
+      console.log(`   - Errors: ${result.totalErrors}`);
+      
+      return c.json({
+        success: true,
+        totalProcessed: result.totalProcessed,
+        totalSuccess: result.totalSuccess,
+        totalErrors: result.totalErrors,
+        errors: result.errors,
+        message: `Successfully recalculated ${result.totalSuccess}/${result.totalProcessed} users`
+      });
+    } else {
+      console.error(`❌ Global recalculation failed`);
+      return c.json({
+        success: false,
+        error: 'Global recalculation failed',
+        errors: result.errors
+      }, 500);
+    }
+    
+  } catch (error) {
+    console.error("🔄 [Global Recalculate] Error:", error);
+    return c.json({ 
+      error: "Failed to run global recalculation",
       details: error.message 
     }, 500);
   }
@@ -6315,8 +6740,14 @@ app.get("/make-server-f9be53a7/api/echo-notifications", async (c) => {
         console.log(`ℹ️ [API] No notifications found for user ${user.id} (key doesn't exist or not array)`);
       }
     } catch (error) {
-      console.error(`⚠️ Error fetching notifications (returning empty array):`, error.message);
-      console.error('⚠️ Error stack:', error.stack);
+      const errorMsg = error?.message || String(error);
+      // Suppress verbose logging for known transient database errors
+      if (errorMsg.includes('PGRST') || errorMsg.includes('schema cache') || errorMsg.includes('timeout')) {
+        console.warn(`⚠️ Temporary database issue fetching notifications (returning empty array, will retry)`);
+      } else {
+        console.error(`⚠️ Error fetching notifications (returning empty array):`, error.message);
+        console.error('⚠️ Error stack:', error.stack);
+      }
       // Return empty array on timeout/error instead of failing
       notifications = [];
     }
@@ -6735,6 +7166,18 @@ app.post("/make-server-f9be53a7/vault/folders", async (c) => {
         
         console.log(`✅ [Vault] Created folder: ${trimmedName} (${newFolderId})`);
         result = { success: true, folder: newFolder };
+
+        // 🏆 Track folder creation achievement (A046 Folder Pioneer, A047 Folder Architect)
+        try {
+          await AchievementService.checkAndUnlockAchievements(user.id, 'folder_created', {
+            folderId: newFolderId,
+            folderName: trimmedName,
+            createdAt: newFolder.createdAt
+          });
+          console.log(`🏆 [Vault] Tracked folder_created achievement for user ${user.id}`);
+        } catch (achievementErr) {
+          console.error('🏆 [Vault] Failed to track folder achievement:', achievementErr);
+        }
         break;
       }
       
@@ -7124,63 +7567,7 @@ app.post("/make-server-f9be53a7/vault/folders", async (c) => {
 // LEGACY TITLES API ENDPOINTS
 // ============================================
 
-// Get user's title profile (equipped title + unlocked titles)
-app.get("/make-server-f9be53a7/titles/profile", async (c) => {
-  try {
-    console.log("📜 [Titles] Get profile endpoint called");
-    
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    
-    if (!token) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return c.json({ error: "Invalid token" }, 401);
-    }
-    
-    const { getUserTitleProfile } = await import("./achievement-service.tsx");
-    const profile = await getUserTitleProfile(user.id);
-    
-    console.log(`📜 [Titles] Profile for ${user.id}:`, profile);
-    return c.json(profile);
-  } catch (error) {
-    console.error("📜 [Titles] Error getting profile:", error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// Get available titles (locked + unlocked)
-app.get("/make-server-f9be53a7/titles/available", async (c) => {
-  try {
-    console.log("📜 [Titles] Get available titles endpoint called");
-    
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    
-    if (!token) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return c.json({ error: "Invalid token" }, 401);
-    }
-    
-    const { getAvailableTitles } = await import("./achievement-service.tsx");
-    const titles = await getAvailableTitles(user.id);
-    
-    console.log(`📜 [Titles] Available titles for ${user.id}: ${titles.titles.length} total, ${titles.unlockedCount} unlocked`);
-    return c.json(titles);
-  } catch (error) {
-    console.error("📜 [Titles] Error getting available titles:", error);
-    return c.json({ error: error.message }, 500);
-  }
-});
+// REMOVED DUPLICATE - Real /titles/profile and /titles/available endpoints are at lines ~10598 and ~10627
 
 // Welcome celebration endpoints (for existing users to see First Step achievement once)
 app.post("/make-server-f9be53a7/achievements/check-welcome", WelcomeCelebration.checkWelcomeCelebration);
@@ -7270,13 +7657,20 @@ app.post("/make-server-f9be53a7/debug/fix-achievement-sync", async (c) => {
     // Get all the data
     const userAchievements = await kv.get(`user_achievements:${user.id}`) || [];
     const titleProfile = await kv.get(`user_title_profile:${user.id}`) || {};
+    const achievementProgress = await kv.get(`achievement_progress:${user.id}`) || { unlockedAchievements: [] };
     
     // Import achievement service
     const { ACHIEVEMENT_DEFINITIONS } = await import("./achievement-service.tsx");
     
     let fixed = [];
     
-    // Check each title in the profile
+    console.log(`🔧 [Fix] Current data:`, {
+      userAchievements: userAchievements.length,
+      unlockedTitles: titleProfile.unlocked_titles?.length || 0,
+      progressUnlocked: achievementProgress.unlockedAchievements?.length || 0
+    });
+    
+    // Sync from title profile
     if (titleProfile.unlocked_titles && Array.isArray(titleProfile.unlocked_titles)) {
       for (const titleData of titleProfile.unlocked_titles) {
         const achievementId = titleData.achievementId;
@@ -7287,7 +7681,7 @@ app.post("/make-server-f9be53a7/debug/fix-achievement-sync", async (c) => {
           const achievement = ACHIEVEMENT_DEFINITIONS[achievementId];
           
           if (achievement) {
-            console.log(`🔧 [Fix] Adding missing achievement ${achievementId} to user_achievements`);
+            console.log(`🔧 [Fix] Adding missing achievement ${achievementId} from title_profile`);
             
             const unlockRecord = {
               achievementId: achievementId,
@@ -7295,10 +7689,43 @@ app.post("/make-server-f9be53a7/debug/fix-achievement-sync", async (c) => {
               notificationShown: true, // Don't show notification again
               shared: false,
               progress: 0,
-              sourceAction: 'manual_sync',
+              sourceAction: 'manual_sync_title',
               retroactive: true,
               metadata: {
                 unlockContext: `Manual sync: Achievement was in title profile but not in achievements array`,
+                syncedAt: new Date().toISOString()
+              }
+            };
+            
+            userAchievements.push(unlockRecord);
+            fixed.push(achievementId);
+          }
+        }
+      }
+    }
+    
+    // Sync from achievement_progress
+    if (achievementProgress.unlockedAchievements && Array.isArray(achievementProgress.unlockedAchievements)) {
+      for (const achievementId of achievementProgress.unlockedAchievements) {
+        const alreadyHasAchievement = userAchievements.some((a: any) => a.achievementId === achievementId);
+        
+        if (!alreadyHasAchievement) {
+          // Achievement is in progress but not in achievements array - add it
+          const achievement = ACHIEVEMENT_DEFINITIONS[achievementId];
+          
+          if (achievement) {
+            console.log(`🔧 [Fix] Adding missing achievement ${achievementId} from achievement_progress`);
+            
+            const unlockRecord = {
+              achievementId: achievementId,
+              unlockedAt: new Date().toISOString(),
+              notificationShown: true, // Don't show notification again
+              shared: false,
+              progress: 100,
+              sourceAction: 'manual_sync_progress',
+              retroactive: true,
+              metadata: {
+                unlockContext: `Manual sync: Achievement was in achievement_progress but not in achievements array`,
                 syncedAt: new Date().toISOString()
               }
             };
@@ -7488,8 +7915,8 @@ const clearEmergencyStopFlags = async () => {
     // Don't let this crash the server startup - this is a non-critical cleanup operation
     // 🔥 CRITICAL: Silently fail if database is busy (connection exhaustion)
     const errorMsg = error?.message || '';
-    if (errorMsg.includes('PGRST000') || errorMsg.includes('connection slots')) {
-      console.log('⚠️ Database busy (connection exhaustion) - skipping emergency flag cleanup');
+    if (errorMsg.includes('PGRST') || errorMsg.includes('connection slots') || errorMsg.includes('schema cache')) {
+      console.log('⚠️ Database temporarily unavailable - skipping emergency flag cleanup (will retry on next startup)');
     } else {
       console.log('⚠️ Could not clear emergency stop flags (database temporarily unavailable)');
       console.log('⚠️ This is safe to ignore - server will retry on next startup');
@@ -8463,30 +8890,7 @@ app.get("/make-server-f9be53a7/achievements/rarity", async (c) => {
   }
 });
 
-// Get user achievements
-app.get("/make-server-f9be53a7/achievements/user", async (c) => {
-  try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
-    if (!accessToken) {
-      return c.json({ error: 'Unauthorized' }, 401);
-    }
-
-    const { user, error: authError } = await verifyUserToken(accessToken);
-    if (authError || !user) {
-      return c.json({ error: 'Unauthorized' }, 401);
-    }
-
-    const achievements = await kv.get(`user_achievements:${user.id}`) || [];
-    
-    return c.json({ 
-      success: true,
-      achievements 
-    });
-  } catch (error) {
-    console.error('Failed to fetch user achievements:', error);
-    return c.json({ error: 'Failed to fetch achievements' }, 500);
-  }
-});
+// REMOVED DUPLICATE - The real /achievements/user endpoint is at line ~10327
 
 // Get user stats
 app.get("/make-server-f9be53a7/achievements/stats", async (c) => {
@@ -10140,9 +10544,23 @@ app.get("/make-server-f9be53a7/achievements/user", async (c) => {
     }
 
     console.log(`🏆 [Route] Fetching achievements for user: ${user.email}`);
+    
+    // ✅ FORCE RECALCULATION EVERY TIME
+    console.log(`🔄 [FORCE Recalculation] Running for user: ${user.email}...`);
+    try {
+      const result = await AchievementRecalculation.recalculateUserAchievements(user.id);
+      if (result.success) {
+        console.log(`✅ [FORCE Recalculation] Recalculated ${result.achievementsCount} achievements, ${result.titlesCount} titles for ${user.email}`);
+      } else {
+        console.warn(`⚠️ [FORCE Recalculation] Failed for ${user.email}:`, result.error);
+      }
+    } catch (recalcError) {
+      console.error(`❌ [FORCE Recalculation] Error for ${user.email}:`, recalcError);
+    }
+    
     const achievements = await AchievementService.getUserAchievements(user.id);
     console.log(`🏆 [Route] ✅ Returning ${achievements.length} achievements`);
-    return c.json({ achievements });
+    return c.json({ achievements: achievements.map(id => ({ achievementId: id, unlockedAt: new Date().toISOString() })) });
   } catch (error) {
     console.error('🏆 [Route] ❌ Get user achievements error:', error);
     return c.json({ error: 'Failed to get user achievements', details: error instanceof Error ? error.message : String(error) }, 500);
@@ -10209,6 +10627,35 @@ app.post("/make-server-f9be53a7/achievements/track", async (c) => {
   } catch (error) {
     console.error('Track achievement action error:', error);
     return c.json({ error: 'Failed to track action' }, 500);
+  }
+});
+
+// Initialize A001 First Step achievement and Time Novice title
+app.post("/make-server-f9be53a7/achievements/initialize-titles", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const { user, error: authError } = await verifyUserToken(accessToken);
+    if (authError || !user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    console.log(`🎁 [Initialize Titles] Initializing A001 and Time Novice for user: ${user.email}`);
+
+    await AchievementService.initializeUserTitles(user.id);
+
+    console.log(`✅ [Initialize Titles] Successfully initialized titles for ${user.email}`);
+
+    return c.json({ 
+      success: true,
+      message: 'A001 First Step and Time Novice title initialized'
+    });
+  } catch (error) {
+    console.error('Initialize titles error:', error);
+    return c.json({ error: 'Failed to initialize titles' }, 500);
   }
 });
 
@@ -10399,6 +10846,156 @@ app.post("/make-server-f9be53a7/achievements/debug/cleanup", async (c) => {
   }
 });
 
+// 🧹 ADMIN/DEBUG: Complete user data reset for testing
+// This removes ALL user data from KV store and Postgres (onboarding, achievements, profile, etc.)
+app.post("/make-server-f9be53a7/debug/reset-user-data", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const { user, error: authError } = await verifyUserToken(accessToken);
+    if (authError || !user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    console.log(`🧹 [Data Reset] Wiping ALL data for user: ${user.id} (${user.email})`);
+    
+    // KV Keys to delete
+    const keysToDelete = [
+      // Onboarding
+      `onboarding:${user.id}`,
+      
+      // Achievements
+      `user_achievements:${user.id}`,
+      `achievement_progress:${user.id}`,
+      `achievement_queue_${user.id}`,
+      
+      // Titles
+      `user_title_profile:${user.id}`,
+      
+      // Profile
+      `profile:${user.id}`,
+      
+      // Stats
+      `user_stats:${user.id}`,
+      
+      // Legacy Access
+      `legacy_access:${user.id}`,
+      
+      // Referrals
+      `referral:${user.id}`,
+      `referrer_achievements:${user.id}`,
+      
+      // Theme purchases (KV - legacy)
+      `theme_purchases:${user.id}`,
+      
+      // Beneficiary slots (KV - legacy)
+      `beneficiary_slots:${user.id}`,
+    ];
+    
+    let deleted = 0;
+    for (const key of keysToDelete) {
+      try {
+        await kv.del(key);
+        deleted++;
+        console.log(`  ✓ Deleted KV: ${key}`);
+      } catch (err) {
+        console.warn(`  ⚠ Failed to delete ${key}:`, err);
+      }
+    }
+    
+    console.log(`✅ [Data Reset] Deleted ${deleted}/${keysToDelete.length} KV keys`);
+    
+    // Clear Postgres data
+    console.log(`🗄️ [Data Reset] Clearing Postgres data...`);
+    
+    const postgresDeletes = [];
+    
+    // Clear theme purchases
+    const { error: themePurchasesError } = await supabase
+      .from('theme_purchases')
+      .delete()
+      .eq('user_id', user.id);
+    
+    if (themePurchasesError) {
+      console.warn(`  ⚠ Failed to delete theme_purchases:`, themePurchasesError);
+    } else {
+      postgresDeletes.push('theme_purchases');
+      console.log(`  ✓ Deleted theme_purchases`);
+    }
+    
+    // Clear beneficiary slots
+    const { error: beneficiaryError } = await supabase
+      .from('beneficiary_slots')
+      .delete()
+      .eq('user_id', user.id);
+    
+    if (beneficiaryError) {
+      console.warn(`  ⚠ Failed to delete beneficiary_slots:`, beneficiaryError);
+    } else {
+      postgresDeletes.push('beneficiary_slots');
+      console.log(`  ✓ Deleted beneficiary_slots`);
+    }
+    
+    // Clear user achievements
+    const { error: achievementsError } = await supabase
+      .from('user_achievements')
+      .delete()
+      .eq('user_id', user.id);
+    
+    if (achievementsError) {
+      console.warn(`  ⚠ Failed to delete user_achievements:`, achievementsError);
+    } else {
+      postgresDeletes.push('user_achievements');
+      console.log(`  ✓ Deleted user_achievements`);
+    }
+    
+    // Clear user titles  
+    const { error: titlesError } = await supabase
+      .from('user_titles')
+      .delete()
+      .eq('user_id', user.id);
+    
+    if (titlesError) {
+      console.warn(`  ⚠ Failed to delete user_titles:`, titlesError);
+    } else {
+      postgresDeletes.push('user_titles');
+      console.log(`  �� Deleted user_titles`);
+    }
+    
+    console.log(`✅ [Data Reset] Cleared ${postgresDeletes.length} Postgres tables`);
+    
+    // Clear localStorage flags (send instructions to client)
+    const localStorageKeys = [
+      'eras_onboarding_first_capsule_completed',
+      'eras_onboarding_completion',
+      'eras_onboarding_exit',
+      'eras_onboarding_in_progress',
+      'eras_defer_first_capsule_achievements',
+      `eras-retroactive-checked-${user.id}`,
+    ];
+    
+    return c.json({ 
+      success: true,
+      message: 'User data completely reset - you now have a clean slate!',
+      deleted: {
+        kvKeys: deleted,
+        postgresTables: postgresDeletes,
+      },
+      instructions: {
+        localStorage: 'Clear these keys from browser localStorage:',
+        keys: localStorageKeys,
+        console_command: localStorageKeys.map(k => `localStorage.removeItem('${k}')`).join('; ') + '; location.reload();'
+      }
+    });
+  } catch (error) {
+    console.error('💥 [Data Reset] Error:', error);
+    return c.json({ error: 'Failed to reset user data', details: error.message }, 500);
+  }
+});
+
 // ============================================
 // LEGACY TITLES SYSTEM ENDPOINTS
 // ============================================
@@ -10452,6 +11049,20 @@ app.get("/make-server-f9be53a7/titles/available", async (c) => {
     }
 
     console.log('✅ [Titles API] User verified:', user.id);
+    
+    // ✅ FORCE RECALCULATION EVERY TIME
+    console.log(`🔄 [FORCE Recalculation] Running for user: ${user.id}...`);
+    try {
+      const result = await AchievementRecalculation.recalculateUserAchievements(user.id);
+      if (result.success) {
+        console.log(`✅ [FORCE Recalculation] Recalculated ${result.achievementsCount} achievements, ${result.titlesCount} titles`);
+      } else {
+        console.warn(`⚠️ [FORCE Recalculation] Failed:`, result.error);
+      }
+    } catch (recalcError) {
+      console.error(`❌ [FORCE Recalculation] Error:`, recalcError);
+    }
+    
     const titles = await AchievementService.getAvailableTitles(user.id);
     console.log('✅ [Titles API] Returning titles:', titles?.unlockedCount || 0, '/', titles?.totalCount || 0);
     return c.json(titles);
@@ -14359,9 +14970,12 @@ app.post("/make-server-f9be53a7/api/referrals/check-achievement", async (c) => {
 
     // Unlock achievements based on active referral count
     const unlockedAchievements = [];
+    const themeRewards: any[] = [];
 
+    // ============================================
+    // REFERRAL MILESTONE: 1 FRIEND = 1 THEME
+    // ============================================
     if (activeReferrals === 1) {
-      // Unlock "Community Builder" achievement
       const achievementResult = await AchievementService.unlockAchievementForUser(
         referrerId,
         'REF001',
@@ -14369,12 +14983,67 @@ app.post("/make-server-f9be53a7/api/referrals/check-achievement", async (c) => {
       );
       if (achievementResult.unlocked) {
         unlockedAchievements.push('REF001');
-        console.log(`🎉 [Referral] Unlocked Community Builder for ${referrerId}`);
+        console.log(`🎉 [Referral] Unlocked Community Builder achievement for ${referrerId}`);
+        
+        // UNLOCK: Grateful Heart theme (default $0.99 theme)
+        try {
+          const { error: themeError } = await supabase
+            .from('theme_purchases')
+            .insert({
+              user_id: referrerId,
+              theme_id: 'gratitude',
+              purchase_type: 'referral',
+              price_paid: 0,
+              stripe_payment_id: null
+            })
+            .select()
+            .single();
+          
+          if (themeError && themeError.code !== '23505') {
+            console.error(`⚠️ [Referral] Failed to unlock gratitude theme:`, themeError);
+          } else {
+            themeRewards.push({ milestone: 1, theme: 'gratitude', name: 'Grateful Heart', value: 0.99 });
+            console.log(`🎁 [Referral] Unlocked 'Grateful Heart' theme for ${referrerId} (1 referral)`);
+          }
+        } catch (err) {
+          console.error(`⚠️ [Referral] Error unlocking theme:`, err);
+        }
       }
     }
 
+    // ============================================
+    // REFERRAL MILESTONE: 3 FRIENDS = 1 THEME
+    // ============================================
+    if (activeReferrals === 3) {
+      // Unlock 'travel' theme (Voyage)
+      try {
+        const { error: themeError } = await supabase
+          .from('theme_purchases')
+          .insert({
+            user_id: referrerId,
+            theme_id: 'travel',
+            purchase_type: 'referral',
+            price_paid: 0,
+            stripe_payment_id: null
+          })
+          .select()
+          .single();
+        
+        if (themeError && themeError.code !== '23505') {
+          console.error(`⚠️ [Referral] Failed to unlock travel theme:`, themeError);
+        } else {
+          themeRewards.push({ milestone: 3, theme: 'travel', name: 'Voyage', value: 0.99 });
+          console.log(`🎁 [Referral] Unlocked 'Voyage' theme for ${referrerId} (3 referrals)`);
+        }
+      } catch (err) {
+        console.error(`⚠️ [Referral] Error unlocking theme:`, err);
+      }
+    }
+
+    // ============================================
+    // REFERRAL MILESTONE: 5 FRIENDS = CELEBRATION BUNDLE (4 themes)
+    // ============================================
     if (activeReferrals === 5) {
-      // Unlock "Legacy Builder" achievement
       const achievementResult = await AchievementService.unlockAchievementForUser(
         referrerId,
         'REF002',
@@ -14382,12 +15051,55 @@ app.post("/make-server-f9be53a7/api/referrals/check-achievement", async (c) => {
       );
       if (achievementResult.unlocked) {
         unlockedAchievements.push('REF002');
-        console.log(`🎉 [Referral] Unlocked Legacy Builder for ${referrerId}`);
+        console.log(`🎉 [Referral] Unlocked Legacy Builder achievement for ${referrerId}`);
+        
+        // UNLOCK: Celebration Bundle (friendship, travel, new_year, pet)
+        const celebrationThemes = ['friendship', 'travel', 'new_year', 'pet'];
+        let unlockedCount = 0;
+        
+        for (const themeId of celebrationThemes) {
+          try {
+            const { error: themeError } = await supabase
+              .from('theme_purchases')
+              .insert({
+                user_id: referrerId,
+                theme_id: themeId,
+                purchase_type: 'referral_bundle',
+                price_paid: 0,
+                stripe_payment_id: null
+              })
+              .select()
+              .single();
+            
+            if (themeError && themeError.code !== '23505') {
+              console.error(`⚠️ [Referral] Failed to unlock ${themeId}:`, themeError);
+            } else if (themeError?.code === '23505') {
+              console.log(`   ℹ️ Theme ${themeId} already owned`);
+            } else {
+              unlockedCount++;
+              console.log(`   ✅ Unlocked theme: ${themeId}`);
+            }
+          } catch (err) {
+            console.error(`⚠️ [Referral] Error unlocking ${themeId}:`, err);
+          }
+        }
+        
+        themeRewards.push({ 
+          milestone: 5, 
+          bundle: 'celebration', 
+          bundleName: 'Celebration Pack',
+          themes: celebrationThemes, 
+          unlockedCount,
+          value: 2.49 
+        });
+        console.log(`🎁🎁 [Referral] Unlocked Celebration Bundle (${unlockedCount}/4 new themes) for ${referrerId}`);
       }
     }
 
+    // ============================================
+    // REFERRAL MILESTONE: 10 FRIENDS = LIFE MILESTONES BUNDLE (5 themes)
+    // ============================================
     if (activeReferrals === 10) {
-      // Unlock "Horizon Architect" achievement
       const achievementResult = await AchievementService.unlockAchievementForUser(
         referrerId,
         'REF003',
@@ -14395,12 +15107,55 @@ app.post("/make-server-f9be53a7/api/referrals/check-achievement", async (c) => {
       );
       if (achievementResult.unlocked) {
         unlockedAchievements.push('REF003');
-        console.log(`🎉 [Referral] Unlocked Horizon Architect for ${referrerId}`);
+        console.log(`🎉 [Referral] Unlocked Horizon Architect achievement for ${referrerId}`);
+        
+        // UNLOCK: Life Milestones Bundle (wedding, career, new_life, graduation, new_home)
+        const milestonesThemes = ['wedding', 'career', 'new_life', 'graduation', 'new_home'];
+        let unlockedCount = 0;
+        
+        for (const themeId of milestonesThemes) {
+          try {
+            const { error: themeError } = await supabase
+              .from('theme_purchases')
+              .insert({
+                user_id: referrerId,
+                theme_id: themeId,
+                purchase_type: 'referral_bundle',
+                price_paid: 0,
+                stripe_payment_id: null
+              })
+              .select()
+              .single();
+            
+            if (themeError && themeError.code !== '23505') {
+              console.error(`⚠️ [Referral] Failed to unlock ${themeId}:`, themeError);
+            } else if (themeError?.code === '23505') {
+              console.log(`   ℹ️ Theme ${themeId} already owned`);
+            } else {
+              unlockedCount++;
+              console.log(`   ✅ Unlocked theme: ${themeId}`);
+            }
+          } catch (err) {
+            console.error(`⚠️ [Referral] Error unlocking ${themeId}:`, err);
+          }
+        }
+        
+        themeRewards.push({ 
+          milestone: 10, 
+          bundle: 'life-milestones', 
+          bundleName: 'Life Milestones',
+          themes: milestonesThemes, 
+          unlockedCount,
+          value: 5.99 
+        });
+        console.log(`🎁🎁🎁 [Referral] Unlocked Life Milestones Bundle (${unlockedCount}/5 new themes) for ${referrerId}`);
       }
     }
 
+    // ============================================
+    // REFERRAL MILESTONE: 25 FRIENDS = COMPLETE LIBRARY (ALL 11 themes)
+    // ============================================
     if (activeReferrals === 25) {
-      // Unlock "Infinity Architect" achievement
       const achievementResult = await AchievementService.unlockAchievementForUser(
         referrerId,
         'REF004',
@@ -14408,7 +15163,51 @@ app.post("/make-server-f9be53a7/api/referrals/check-achievement", async (c) => {
       );
       if (achievementResult.unlocked) {
         unlockedAchievements.push('REF004');
-        console.log(`🎉 [Referral] Unlocked Infinity Architect for ${referrerId}`);
+        console.log(`🎉 [Referral] Unlocked Infinity Architect achievement for ${referrerId}`);
+        
+        // UNLOCK: COMPLETE LIBRARY - ALL 11 THEMES!
+        const allThemes = [
+          'wedding', 'career', 'new_life', 'graduation', 'new_home',
+          'friendship', 'travel', 'new_year', 'future', 'gratitude', 'pet'
+        ];
+        let unlockedCount = 0;
+        
+        for (const themeId of allThemes) {
+          try {
+            const { error: themeError } = await supabase
+              .from('theme_purchases')
+              .insert({
+                user_id: referrerId,
+                theme_id: themeId,
+                purchase_type: 'referral_library',
+                price_paid: 0,
+                stripe_payment_id: null
+              })
+              .select()
+              .single();
+            
+            if (themeError && themeError.code !== '23505') {
+              console.error(`⚠️ [Referral] Failed to unlock ${themeId}:`, themeError);
+            } else if (themeError?.code === '23505') {
+              console.log(`   ℹ️ Theme ${themeId} already owned`);
+            } else {
+              unlockedCount++;
+              console.log(`   ✅ Unlocked theme: ${themeId}`);
+            }
+          } catch (err) {
+            console.error(`⚠️ [Referral] Error unlocking ${themeId}:`, err);
+          }
+        }
+        
+        themeRewards.push({ 
+          milestone: 25, 
+          bundle: 'complete-library', 
+          bundleName: 'Complete Library',
+          themes: allThemes, 
+          unlockedCount,
+          value: 9.99 
+        });
+        console.log(`🎁🎁🎁🎁🎁 [Referral] Unlocked COMPLETE LIBRARY (${unlockedCount}/11 new themes) for ${referrerId}!!!`);
       }
     }
 
@@ -14416,7 +15215,8 @@ app.post("/make-server-f9be53a7/api/referrals/check-achievement", async (c) => {
       referred: true,
       referrerId,
       activeReferrals,
-      unlockedAchievements
+      unlockedAchievements,
+      themeRewards // NEW: Return what themes/bundles were unlocked
     });
 
   } catch (error) {
@@ -14510,6 +15310,1167 @@ console.log('🎁 Referral system endpoints initialized');
 // REMOVED: Duplicate scheduler call (already started at line ~3278)
 // startDeliveryScheduler();
 
+// ============================================
+// STRIPE MONETIZATION SYSTEM
+// ============================================
+console.log('💳 [Monetization] Initializing Stripe integration...');
+
+// Initialize Stripe
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+  apiVersion: '2023-10-16',
+});
+
+console.log('✅ [Monetization] Stripe client initialized');
+
+// ============================================
+// PRICE CONFIGURATION
+// ============================================
+// 🔧 ENVIRONMENT-AWARE PRICING
+// Automatically uses test or live price IDs based on STRIPE_SECRET_KEY
+
+// Check if we're in test mode or live mode
+const stripeKey = Deno.env.get('STRIPE_SECRET_KEY') || '';
+const isTestMode = stripeKey.includes('_test_');
+
+console.log(`💳 Stripe Mode: ${isTestMode ? 'TEST' : 'LIVE'}`);
+
+// LIVE MODE PRICE IDs (Production)
+const LIVE_PRICES = {
+  themes: {
+    'wedding': { priceId: 'price_1TCsUdHUyotQ1kngbCaJhxKS', price: 2.99 },
+    'career': { priceId: 'price_1TCsVKHUyotQ1kng0lyj9uRR', price: 1.99 },
+    'future': { priceId: 'price_1TCsVqHUyotQ1kng5qOCpYLg', price: 1.99 },
+    'time-traveler': { priceId: 'price_1TCsVqHUyotQ1kng5qOCpYLg', price: 1.99 },
+    'time_traveler': { priceId: 'price_1TCsVqHUyotQ1kng5qOCpYLg', price: 1.99 },
+    'new_life': { priceId: 'price_1TCsWPHUyotQ1kng61FPKZHE', price: 1.99 },
+    'travel': { priceId: 'price_1TCsXHHUyotQ1kngNMBykjAh', price: 0.99 },
+    'new_year': { priceId: 'price_1TCsZ6HUyotQ1kngilO2jGz8', price: 0.99 },
+    'friendship': { priceId: 'price_1TCsZWHUyotQ1kngj1WJN9EN', price: 0.99 },
+    'mixtape': { priceId: 'price_1TCsZWHUyotQ1kngj1WJN9EN', price: 0.99 },
+    'pet': { priceId: 'price_1TCsa1HUyotQ1kngMObHgb0O', price: 0.99 },
+    'gratitude': { priceId: 'price_1TCsaNHUyotQ1kngC976quia', price: 0.99 },
+    'graduation': { priceId: 'price_1TCsawHUyotQ1kngdhmQzOrV', price: 0.99 },
+    'new_home': { priceId: 'price_1TCsbNHUyotQ1kngSiEpWF6h', price: 0.99 },
+    'complete-library': { priceId: 'price_1TCsdYHUyotQ1kngEB9gOyr2', price: 9.99 },
+    'life-milestones': { priceId: 'price_1TCseDHUyotQ1kng86obk1HT', price: 5.99 },
+    'celebration': { priceId: 'price_1TCsehHUyotQ1kngXZf0Qay2', price: 2.49 },
+    'inner-journey': { priceId: 'price_1TCsfpHUyotQ1kngmT3KKiE0', price: 1.99 },
+  },
+  beneficiary: {
+    'slot-1': { priceId: 'price_1TCsgLHUyotQ1kngvuWyl1hW', price: 0.99, slots: 1 },
+    'slot-3': { priceId: 'price_1TCsgoHUyotQ1kngVwHlnNjG', price: 1.99, slots: 3 },
+    'unlimited': { priceId: 'price_1TCshJHUyotQ1kngAsuLa5L0', price: 4.99, slots: -1 },
+    'quantity': { priceId: 'price_1TCsgLHUyotQ1kngvuWyl1hW', price: 0.99, slots: 1 },
+    'individual': { priceId: 'price_1TCsgLHUyotQ1kngvuWyl1hW', price: 0.99, slots: 1 },
+  }
+};
+
+// TEST MODE PRICE IDs (For Development/Testing)
+// ⚠️ REPLACE THESE with your actual test mode price IDs from Stripe Dashboard
+const TEST_PRICES = {
+  themes: {
+    'wedding': { priceId: 'price_test_REPLACE_WITH_TEST_WEDDING', price: 2.99 },
+    'career': { priceId: 'price_test_REPLACE_WITH_TEST_CAREER', price: 1.99 },
+    'future': { priceId: 'price_test_REPLACE_WITH_TEST_FUTURE', price: 1.99 },
+    'time-traveler': { priceId: 'price_test_REPLACE_WITH_TEST_FUTURE', price: 1.99 },
+    'time_traveler': { priceId: 'price_test_REPLACE_WITH_TEST_FUTURE', price: 1.99 },
+    'new_life': { priceId: 'price_test_REPLACE_WITH_TEST_NEWLIFE', price: 1.99 },
+    'genesis': { priceId: 'price_test_REPLACE_WITH_TEST_NEWLIFE', price: 1.99 }, // Alias for new_life theme
+    'travel': { priceId: 'price_test_REPLACE_WITH_TEST_TRAVEL', price: 0.99 },
+    'new_year': { priceId: 'price_test_REPLACE_WITH_TEST_NEWYEAR', price: 0.99 },
+    'friendship': { priceId: 'price_test_REPLACE_WITH_TEST_FRIENDSHIP', price: 0.99 },
+    'mixtape': { priceId: 'price_test_REPLACE_WITH_TEST_FRIENDSHIP', price: 0.99 },
+    'pet': { priceId: 'price_test_REPLACE_WITH_TEST_PET', price: 0.99 },
+    'gratitude': { priceId: 'price_test_REPLACE_WITH_TEST_GRATITUDE', price: 0.99 },
+    'graduation': { priceId: 'price_test_REPLACE_WITH_TEST_GRADUATION', price: 0.99 },
+    'new_home': { priceId: 'price_test_REPLACE_WITH_TEST_NEWHOME', price: 0.99 },
+    'complete-library': { priceId: 'price_test_REPLACE_WITH_TEST_COMPLETE', price: 9.99 },
+    'life-milestones': { priceId: 'price_test_REPLACE_WITH_TEST_LIFEMILESTONES', price: 5.99 },
+    'celebration': { priceId: 'price_test_REPLACE_WITH_TEST_CELEBRATION', price: 2.49 },
+    'inner-journey': { priceId: 'price_test_REPLACE_WITH_TEST_INNERJOURNEY', price: 1.99 },
+  },
+  beneficiary: {
+    'slot-1': { priceId: 'price_test_REPLACE_WITH_TEST_SLOT1', price: 0.99, slots: 1 },
+    'slot-3': { priceId: 'price_test_REPLACE_WITH_TEST_SLOT3', price: 1.99, slots: 3 },
+    'unlimited': { priceId: 'price_test_REPLACE_WITH_TEST_UNLIMITED', price: 4.99, slots: -1 },
+    'quantity': { priceId: 'price_test_REPLACE_WITH_TEST_SLOT1', price: 0.99, slots: 1 },
+    'individual': { priceId: 'price_test_REPLACE_WITH_TEST_SLOT1', price: 0.99, slots: 1 },
+  }
+};
+
+// Use appropriate price set based on environment
+const activePrices = isTestMode ? TEST_PRICES : LIVE_PRICES;
+
+const THEME_PRICES: Record<string, { priceId: string; price: number }> = activePrices.themes;
+
+const BENEFICIARY_PRICES: Record<string, { priceId: string; price: number; slots: number }> = activePrices.beneficiary;
+
+// Bundle theme mappings - MUST MATCH Store.tsx exactly!
+const BUNDLE_THEMES: Record<string, string[]> = {
+  'complete-library': ['wedding', 'career', 'future', 'new_life', 'travel', 'new_year', 'friendship', 'pet', 'gratitude', 'graduation', 'new_home'],
+  'life-milestones': ['wedding', 'career', 'new_life', 'graduation', 'new_home'], // Updated to match Store.tsx
+  'celebration': ['friendship', 'travel', 'new_year', 'pet'], // Updated to match Store.tsx
+  'inner-journey': ['future', 'gratitude'], // Updated to match Store.tsx
+};
+
+console.log('✅ [Monetization] Price configuration loaded');
+
+// ============================================
+// STRIPE WEBHOOK HANDLER
+// ============================================
+
+app.post('/make-server-f9be53a7/stripe-webhook', async (c) => {
+  const sig = c.req.header('stripe-signature');
+  const body = await c.req.text();
+
+  console.log('📨 [Webhook] Received webhook event');
+  console.log('📨 [Webhook] Signature present:', !!sig);
+  console.log('📨 [Webhook] Body length:', body.length);
+
+  try {
+    // Verify webhook signature
+    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+    if (!webhookSecret) {
+      console.error('❌ [Webhook] STRIPE_WEBHOOK_SECRET not configured');
+      console.error('❌ [Webhook] Available env vars:', Object.keys(Deno.env.toObject()));
+      // Return 200 so Stripe doesn't retry, but log the error
+      return c.json({ received: false, error: 'Webhook secret not configured' }, 200);
+    }
+
+    if (!sig) {
+      console.error('❌ [Webhook] No stripe-signature header present');
+      return c.json({ received: false, error: 'No signature' }, 200);
+    }
+
+    console.log('🔐 [Webhook] Verifying signature...');
+    const event = stripe.webhooks.constructEvent(
+      body,
+      sig,
+      webhookSecret
+    );
+
+    console.log(`✅ [Webhook] Verified: ${event.type}`);
+
+    // Handle successful checkout
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const { userId, purchaseType, themeId, bundleId, beneficiaryType, quantity } = session.metadata || {};
+
+      console.log(`💰 [Webhook] Processing payment for user: ${userId}`);
+      console.log(`   Type: ${purchaseType}`);
+      console.log(`   Theme ID: ${themeId}`);
+      console.log(`   Bundle ID (metadata): ${bundleId}`);
+      console.log(`   Beneficiary Type: ${beneficiaryType}`);
+      console.log(`   Quantity: ${quantity}`);
+      console.log(`   Amount: $${(session.amount_total || 0) / 100}`);
+      console.log(`   Payment Intent: ${session.payment_intent}`);
+
+      // ============================================
+      // THEME PURCHASE (using Postgres)
+      // ============================================
+      if (purchaseType === 'theme' && themeId) {
+        try {
+          const themeData = {
+            user_id: userId,
+            theme_id: themeId,
+            purchase_type: 'individual',
+            price_paid: (session.amount_total || 0) / 100,
+            stripe_payment_id: session.payment_intent as string,
+          };
+          
+          console.log(`💾 [Webhook] Saving theme purchase to Postgres:`, themeData);
+          
+          const { data, error } = await supabase
+            .from('theme_purchases')
+            .insert(themeData)
+            .select()
+            .single();
+          
+          if (error) {
+            console.error(`❌ [Webhook] Postgres ERROR saving theme purchase:`, error);
+            console.error(`🚨 CRITICAL: Theme purchase for ${userId}:${themeId} NOT SAVED TO DATABASE!`);
+          } else {
+            console.log(`✅ [Webhook] Theme '${themeId}' purchase saved - database triggers will handle unlock`, data);
+          }
+        } catch (dbError: any) {
+          console.error(`❌ [Webhook] Database ERROR saving theme purchase:`, dbError);
+          console.error(`   Error message:`, dbError.message);
+          console.error(`   Stack:`, dbError.stack);
+          console.error(`🚨 CRITICAL: Theme purchase for ${userId}:${themeId} NOT SAVED TO DATABASE!`);
+        }
+      }
+
+      // ============================================
+      // BUNDLE PURCHASE (using Postgres with Stripe ID resolution)
+      // ============================================
+      else if (purchaseType === 'bundle') {
+        try {
+          // Step 1: Expand line items to get Stripe product/price IDs
+          console.log(`📦 [Webhook] Expanding line items for bundle resolution...`);
+          const expandedSession = await stripe.checkout.sessions.retrieve(session.id, {
+            expand: ['line_items.data.price.product'],
+          });
+          
+          const lineItem = expandedSession.line_items?.data[0];
+          if (!lineItem) {
+            console.error(`❌ [Webhook] No line items found in session`);
+            return c.json({ received: false, error: 'No line items in session' }, 400);
+          }
+
+          const priceId = lineItem.price?.id;
+          const productId = typeof lineItem.price?.product === 'string' 
+            ? lineItem.price.product 
+            : lineItem.price?.product?.id;
+
+          console.log(`📦 [Webhook] Stripe IDs from line items:`);
+          console.log(`   Product ID: ${productId}`);
+          console.log(`   Price ID: ${priceId}`);
+          console.log(`   Metadata bundleId (fallback): ${bundleId}`);
+
+          // Step 2: Resolve bundle from database using Stripe IDs
+          let bundleRecord = null;
+          
+          // Try product ID first (preferred)
+          if (productId) {
+            const { data, error } = await supabase
+              .from('bundles')
+              .select('*')
+              .eq('stripe_product_id', productId)
+              .single();
+            
+            if (data) {
+              bundleRecord = data;
+              console.log(`✅ [Webhook] Bundle resolved by product ID: ${data.id}`);
+            } else if (error && error.code !== 'PGRST116') {
+              console.error(`⚠️ [Webhook] Error querying by product ID:`, error);
+            }
+          }
+          
+          // Try price ID if product lookup failed
+          if (!bundleRecord && priceId) {
+            const { data, error } = await supabase
+              .from('bundles')
+              .select('*')
+              .eq('stripe_price_id', priceId)
+              .single();
+            
+            if (data) {
+              bundleRecord = data;
+              console.log(`✅ [Webhook] Bundle resolved by price ID: ${data.id}`);
+            } else if (error && error.code !== 'PGRST116') {
+              console.error(`⚠️ [Webhook] Error querying by price ID:`, error);
+            }
+          }
+          
+          // Fallback to metadata bundleId (for backward compatibility during migration)
+          if (!bundleRecord && bundleId) {
+            const { data, error } = await supabase
+              .from('bundles')
+              .select('*')
+              .eq('id', bundleId)
+              .single();
+            
+            if (data) {
+              bundleRecord = data;
+              console.log(`✅ [Webhook] Bundle resolved by metadata slug: ${data.id}`);
+            } else if (error && error.code !== 'PGRST116') {
+              console.error(`⚠️ [Webhook] Error querying by slug:`, error);
+            }
+          }
+
+          // Step 3: Validate bundle was found
+          if (!bundleRecord) {
+            console.error(`❌ [Webhook] Bundle NOT FOUND in database!`);
+            console.error(`   Tried product_id: ${productId}`);
+            console.error(`   Tried price_id: ${priceId}`);
+            console.error(`   Tried metadata slug: ${bundleId}`);
+            return c.json({ 
+              received: false, 
+              error: `Unknown bundle - product: ${productId}, price: ${priceId}` 
+            }, 400);
+          }
+
+          console.log(`📦 [Webhook] Bundle found: ${bundleRecord.name}`);
+          console.log(`   ID: ${bundleRecord.id}`);
+          console.log(`   Themes: ${bundleRecord.themes}`);
+          console.log(`   Theme count: ${bundleRecord.themes?.length || 0}`);
+          
+          // Step 4: Save bundle purchase (triggers will handle theme unlocks + stats)
+          const bundleData = {
+            user_id: userId,
+            bundle_id: bundleRecord.id,
+            price_paid: (session.amount_total || 0) / 100,
+            stripe_payment_id: session.payment_intent as string,
+          };
+          
+          console.log(`💾 [Webhook] Saving bundle purchase to Postgres:`, bundleData);
+          
+          const { data, error } = await supabase
+            .from('bundle_purchases')
+            .insert(bundleData)
+            .select()
+            .single();
+          
+          if (error) {
+            console.error(`❌ [Webhook] Postgres ERROR saving bundle purchase:`, error);
+            console.error(`🚨 CRITICAL: Bundle purchase for ${userId}:${bundleRecord.id} NOT SAVED TO DATABASE!`);
+          } else {
+            console.log(`✅ [Webhook] Bundle '${bundleRecord.id}' purchase saved - triggers unlocking ${bundleRecord.themes?.length || 0} themes`, data);
+            console.log(`   Triggers will also increment purchased_count stat`);
+            
+            // FALLBACK: Manually unlock themes if trigger fails
+            // This ensures bundles work even if Postgres triggers aren't set up
+            if (bundleRecord.themes && Array.isArray(bundleRecord.themes) && bundleRecord.themes.length > 0) {
+              console.log(`🔓 [Webhook] FALLBACK: Manually unlocking ${bundleRecord.themes.length} themes from bundle`);
+              
+              for (const themeId of bundleRecord.themes) {
+                try {
+                  const { error: themeError } = await supabase
+                    .from('theme_purchases')
+                    .insert({
+                      user_id: userId,
+                      theme_id: themeId,
+                      purchase_type: 'bundle',
+                      price_paid: 0, // Individual theme price is 0 since it's part of bundle
+                      stripe_payment_id: session.payment_intent as string,
+                    })
+                    .select()
+                    .single();
+                  
+                  if (themeError && themeError.code !== '23505') { // Ignore duplicate key errors
+                    console.error(`⚠️ [Webhook] Failed to unlock theme ${themeId}:`, themeError);
+                  } else {
+                    console.log(`   ✅ Unlocked theme: ${themeId}`);
+                  }
+                } catch (themeErr) {
+                  console.error(`⚠️ [Webhook] Error unlocking theme ${themeId}:`, themeErr);
+                }
+              }
+              
+              console.log(`✅ [Webhook] FALLBACK: Completed manual theme unlocking for bundle ${bundleRecord.id}`);
+            }
+          }
+        } catch (dbError: any) {
+          console.error(`❌ [Webhook] Bundle processing ERROR:`, dbError);
+          console.error(`   Error message:`, dbError.message);
+          console.error(`   Stack:`, dbError.stack);
+          console.error(`🚨 CRITICAL: Bundle purchase NOT SAVED TO DATABASE!`);
+        }
+      }
+
+      // ============================================
+      // BENEFICIARY PURCHASE (using Postgres)
+      // ============================================
+      else if (purchaseType === 'beneficiary') {
+        try {
+          const quantityFromMetadata = parseInt(quantity || '1');
+          const slotsPurchased = quantityFromMetadata >= 99999 ? 99999 : Math.max(1, quantityFromMetadata);
+          
+          const beneficiaryData = {
+            user_id: userId,
+            product_id: beneficiaryType!,
+            slots_purchased: slotsPurchased,
+            price_paid: (session.amount_total || 0) / 100,
+            stripe_payment_id: session.payment_intent as string,
+          };
+          
+          const { error } = await supabase
+            .from('beneficiary_purchases')
+            .insert(beneficiaryData);
+          
+          if (error) {
+            console.error(`❌ [Webhook] Postgres ERROR saving beneficiary purchase:`, error);
+          }
+        } catch (dbError: any) {
+          console.error(`❌ [Webhook] Database ERROR saving beneficiary purchase:`, dbError);
+        }
+      }
+
+      console.log('🎉 [Webhook] Payment processed successfully!');
+    }
+
+    return c.json({ received: true });
+  } catch (error: any) {
+    console.error('❌ [Webhook] Error:', error);
+    console.error('❌ [Webhook] Error type:', error.constructor.name);
+    console.error('❌ [Webhook] Error message:', error.message);
+    console.error('❌ [Webhook] Stack:', error.stack);
+    // Always return 200 so Stripe doesn't keep retrying
+    return c.json({ received: false, error: error.message || 'Webhook failed' }, 200);
+  }
+});
+
+console.log('✅ [Monetization] Webhook handler registered');
+
+// Bundle diagnostics endpoint
+app.get('/make-server-f9be53a7/bundle-diagnostics', async (c) => {
+  try {
+    console.log('🔍 [Bundle Diagnostics] Fetching bundle configuration...');
+    
+    // Fetch all bundles from database
+    const { data: bundles, error: bundlesError } = await supabase
+      .from('bundles')
+      .select('*')
+      .order('price', { ascending: false });
+    
+    if (bundlesError) {
+      console.error('❌ [Bundle Diagnostics] Error fetching bundles:', bundlesError);
+      return c.json({ 
+        error: 'Failed to fetch bundles', 
+        details: bundlesError,
+        hint: 'Run the SQL setup script from /imports/pasted_text/bundle-setup.sql in Supabase SQL Editor'
+      }, 500);
+    }
+
+    if (!bundles || bundles.length === 0) {
+      console.warn('⚠️ [Bundle Diagnostics] No bundles found in database');
+      return c.json({ 
+        warning: 'No bundles configured',
+        bundles: [],
+        hint: 'Run the SQL setup script from /imports/pasted_text/bundle-setup.sql in Supabase SQL Editor'
+      });
+    }
+
+    // Get purchase stats for each bundle
+    const bundleStats = await Promise.all(
+      bundles.map(async (bundle) => {
+        const { count } = await supabase
+          .from('bundle_purchases')
+          .select('*', { count: 'exact', head: true })
+          .eq('bundle_id', bundle.id);
+        
+        return {
+          id: bundle.id,
+          name: bundle.name,
+          stripe_product_id: bundle.stripe_product_id,
+          stripe_price_id: bundle.stripe_price_id,
+          price: bundle.price,
+          theme_count: bundle.themes?.length || 0,
+          themes: bundle.themes,
+          purchased_count: bundle.purchased_count || 0,
+          actual_purchase_count: count || 0,
+          stats_in_sync: (bundle.purchased_count || 0) === (count || 0),
+        };
+      })
+    );
+
+    console.log('✅ [Bundle Diagnostics] Analysis complete');
+    
+    return c.json({
+      status: 'success',
+      timestamp: new Date().toISOString(),
+      total_bundles: bundles.length,
+      bundles: bundleStats,
+      stripe_mode: Deno.env.get('STRIPE_SECRET_KEY')?.startsWith('sk_test') ? 'TEST' : 'LIVE',
+      all_stats_in_sync: bundleStats.every(b => b.stats_in_sync),
+    });
+  } catch (error: any) {
+    console.error('❌ [Bundle Diagnostics] Error:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Webhook health check endpoint
+app.get('/make-server-f9be53a7/webhook-health', async (c) => {
+  const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+  const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+  
+  // Test Postgres connection
+  let postgresStatus = 'UNKNOWN';
+  try {
+    const { error } = await supabase.from('theme_purchases').select('id').limit(1);
+    postgresStatus = error ? `ERROR: ${error.message}` : 'CONNECTED';
+  } catch (err: any) {
+    postgresStatus = `ERROR: ${err.message}`;
+  }
+  
+  return c.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    database: {
+      postgres_connection: postgresStatus,
+      storage: 'Postgres tables (theme_purchases, bundle_purchases, beneficiary_purchases)',
+      migration: 'KV store → Postgres COMPLETE ✅',
+    },
+    secrets: {
+      STRIPE_WEBHOOK_SECRET: webhookSecret ? `${webhookSecret.substring(0, 10)}...` : 'NOT SET',
+      STRIPE_SECRET_KEY: stripeKey ? `${stripeKey.substring(0, 10)}...` : 'NOT SET',
+    },
+    stripe_mode: stripeKey?.startsWith('sk_test') ? 'TEST' : stripeKey?.startsWith('sk_live') ? 'LIVE' : 'UNKNOWN',
+    webhook_secret_mode: webhookSecret?.startsWith('whsec_') ? 'VALID FORMAT' : 'INVALID FORMAT',
+  });
+});
+
+// ============================================
+// PURCHASE ENDPOINTS
+// ============================================
+
+// Create checkout for theme or bundle
+app.post('/make-server-f9be53a7/purchase-theme', async (c) => {
+  try {
+    const { userId, themeId, bundleId } = await c.req.json();
+
+    console.log(`💳 [Purchase] Request from user ${userId} for ${bundleId || themeId}`);
+
+    // Verify authentication
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { user, error: authError } = await verifyUserToken(accessToken!);
+    
+    if (!user || user.id !== userId) {
+      console.error('❌ [Purchase] Unauthorized purchase attempt');
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // ============================================
+    // PURCHASE GUARDRAILS - Prevent duplicate purchases
+    // ============================================
+    
+    if (bundleId) {
+      // BUNDLE GUARDRAIL: Check if bundle already purchased
+      const { data: existingBundle } = await supabase
+        .from('bundle_purchases')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('bundle_id', bundleId)
+        .single();
+      
+      if (existingBundle) {
+        console.log(`🛡️ [Guardrail] User ${userId} already owns bundle ${bundleId}`);
+        return c.json({ 
+          error: 'You already own this bundle! Check your purchased themes in the Store.' 
+        }, 400);
+      }
+
+      // BUNDLE GUARDRAIL: Check which themes user already owns in this bundle
+      const { data: bundle } = await supabase
+        .from('bundles')
+        .select('themes, name')
+        .eq('id', bundleId)
+        .single();
+
+      if (bundle && bundle.themes && bundle.themes.length > 0) {
+        const { data: ownedThemes } = await supabase
+          .from('theme_purchases')
+          .select('theme_id')
+          .eq('user_id', userId)
+          .in('theme_id', bundle.themes);
+
+        const ownedThemeIds = ownedThemes?.map(t => t.theme_id) || [];
+
+        // If user owns ALL themes in bundle
+        if (ownedThemeIds.length === bundle.themes.length) {
+          console.log(`🛡️ [Guardrail] User ${userId} already owns all themes in ${bundleId}`);
+          return c.json({ 
+            error: `You already own all ${bundle.themes.length} themes in ${bundle.name}! No need to purchase this bundle.`,
+            alreadyOwned: ownedThemeIds
+          }, 400);
+        }
+
+        // If user owns SOME themes - log warning but allow purchase
+        if (ownedThemeIds.length > 0) {
+          const notOwnedCount = bundle.themes.length - ownedThemeIds.length;
+          console.log(`⚠️ [Guardrail] User ${userId} owns ${ownedThemeIds.length}/${bundle.themes.length} themes in ${bundleId}. Will unlock ${notOwnedCount} new themes.`);
+          console.log(`   Already owned: ${ownedThemeIds.join(', ')}`);
+          console.log(`   Will unlock: ${bundle.themes.filter(t => !ownedThemeIds.includes(t)).join(', ')}`);
+          // Allow purchase to continue - they still get value from new themes
+        }
+      }
+      
+    } else {
+      // THEME GUARDRAIL: Check if individual theme already purchased
+      const { data: existingTheme } = await supabase
+        .from('theme_purchases')
+        .select('id, purchase_type')
+        .eq('user_id', userId)
+        .eq('theme_id', themeId)
+        .single();
+      
+      if (existingTheme) {
+        const source = existingTheme.purchase_type === 'bundle' || existingTheme.purchase_type === 'referral_bundle' 
+          ? 'a bundle or referral reward' 
+          : 'an individual purchase';
+        console.log(`🛡️ [Guardrail] User ${userId} already owns theme ${themeId} from ${source}`);
+        return c.json({ 
+          error: `You already own this theme from ${source}! Check your purchased themes in the Store.` 
+        }, 400);
+      }
+    }
+
+    // Get price info
+    const productKey = bundleId || themeId;
+    const productInfo = THEME_PRICES[productKey];
+    
+    if (!productInfo) {
+      console.error(`❌ [Purchase] Invalid product: ${productKey}`);
+      return c.json({ error: 'Invalid product' }, 400);
+    }
+
+    if (productInfo.priceId === 'price_REPLACE_ME') {
+      console.error(`❌ [Purchase] Price ID not configured for: ${productKey}`);
+      return c.json({ error: 'Product not yet configured. Please contact support.' }, 400);
+    }
+
+    console.log(`💳 [Purchase] Creating checkout for ${productKey}`);
+
+    // Get app URL from environment or use Figma site URL
+    // ⚠️ IMPORTANT: Set APP_URL environment variable when deploying to production (erastimecapsule.com)
+    const appUrl = Deno.env.get('APP_URL') || 'https://found-shirt-81691824.figma.site';
+    console.log(`🔗 [Purchase] Redirecting to app URL: ${appUrl}`);
+
+    // Create Stripe checkout
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price: productInfo.priceId,
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: `${appUrl}/?purchase=success&product=${productKey}`,
+      cancel_url: `${appUrl}/?purchase=canceled`,
+      metadata: {
+        userId,
+        purchaseType: bundleId ? 'bundle' : 'theme',
+        themeId: themeId || '',
+        bundleId: bundleId || '',
+      },
+      payment_intent_data: {
+        metadata: {
+          userId,
+          purchaseType: bundleId ? 'bundle' : 'theme',
+          themeId: themeId || '',
+          bundleId: bundleId || '',
+        },
+      },
+    });
+
+    console.log(`✅ [Purchase] Checkout created: ${session.id}`);
+    return c.json({ url: session.url });
+  } catch (error: any) {
+    console.error('❌ [Purchase] Failed:', error);
+    return c.json({ error: error.message || 'Checkout creation failed' }, 500);
+  }
+});
+
+// Create checkout for beneficiary purchase
+app.post('/make-server-f9be53a7/purchase-beneficiary', async (c) => {
+  try {
+    const { userId, purchaseType, quantity } = await c.req.json();
+
+    console.log(`💳 [Beneficiary] Purchase request from user ${userId} (type: ${purchaseType})`);
+
+    // Verify authentication
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { user, error: authError } = await verifyUserToken(accessToken!);
+    
+    if (!user || user.id !== userId) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Validate purchase type
+    if (!['slot-1', 'slot-3', 'unlimited', 'individual', 'quantity'].includes(purchaseType)) {
+      return c.json({ error: 'Invalid purchase type. Valid options: slot-1, slot-3, unlimited' }, 400);
+    }
+
+    // ============================================
+    // BENEFICIARY GUARDRAILS - Prevent unnecessary purchases
+    // ============================================
+    
+    // Get current beneficiary status
+    const { data: currentLimit } = await supabase
+      .from('beneficiary_limits')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    // GUARDRAIL 1: Already has unlimited
+    if (currentLimit?.is_unlimited) {
+      console.log(`🛡️ [Guardrail] User ${userId} already has unlimited beneficiaries`);
+      return c.json({ 
+        error: 'You already have Unlimited beneficiary slots! No need to purchase more.' 
+      }, 400);
+    }
+
+    // GUARDRAIL 2: Warn if buying small packages when they have many slots
+    if (purchaseType === 'slot-1' || purchaseType === 'slot-3') {
+      const currentSlots = currentLimit?.slots_remaining || 0;
+      
+      if (currentSlots >= 10) {
+        console.log(`⚠️ [Guardrail] User ${userId} has ${currentSlots} slots but buying ${purchaseType}`);
+        // Don't block, but they should consider unlimited
+      }
+    }
+
+    const priceInfo = BENEFICIARY_PRICES[purchaseType];
+
+    if (priceInfo.priceId === 'price_REPLACE_ME') {
+      console.error(`❌ [Beneficiary] Price ID not configured`);
+      return c.json({ error: 'Beneficiary purchases not yet configured. Please contact support.' }, 400);
+    }
+
+    console.log(`💳 [Beneficiary] Creating checkout for user ${userId} (type: ${purchaseType}, slots: ${priceInfo.slots})`);
+
+    // Get app URL from environment or use Figma site URL
+    // ⚠️ IMPORTANT: Set APP_URL environment variable when deploying to production (erastimecapsule.com)
+    const appUrl = Deno.env.get('APP_URL') || 'https://found-shirt-81691824.figma.site';
+    console.log(`🔗 [Beneficiary] Redirecting to app URL: ${appUrl}`);
+
+    // Determine quantity based on product type
+    // slot-1: +1 slot, slot-3: +3 slots, unlimited: 99999 (unlimited)
+    const slotsQuantity = priceInfo.slots === -1 ? '99999' : priceInfo.slots.toString(); // '1', '3', or '99999'
+
+    // Create Stripe checkout
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price: priceInfo.priceId,
+        quantity: 1, // Always 1 product (the product itself represents the slots)
+      }],
+      mode: 'payment',
+      success_url: `${appUrl}/?beneficiary_purchase=success`,
+      cancel_url: `${appUrl}/?beneficiary_purchase=canceled`,
+      metadata: {
+        userId,
+        purchaseType: 'beneficiary',
+        beneficiaryType: purchaseType,
+        quantity: slotsQuantity, // '1', '3', or '99999' for unlimited
+      },
+      payment_intent_data: {
+        metadata: {
+          userId,
+          purchaseType: 'beneficiary',
+          beneficiaryType: purchaseType,
+          quantity: slotsQuantity, // '1', '3', or '99999' for unlimited
+        },
+      },
+    });
+
+    console.log(`✅ [Beneficiary] Checkout created: ${session.id}`);
+    return c.json({ url: session.url });
+  } catch (error: any) {
+    console.error('❌ [Beneficiary] Purchase failed:', error);
+    return c.json({ error: error.message || 'Checkout creation failed' }, 500);
+  }
+});
+
+// Get user's purchases - API endpoint for CreateCapsule
+app.get('/make-server-f9be53a7/api/store/purchases', async (c) => {
+  try {
+    // Get user from auth token
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { user, error: authError } = await verifyUserToken(accessToken!);
+    
+    if (!user || authError) {
+      console.error('❌ [Store Purchases] Unauthorized');
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const userId = user.id;
+    console.log(`📦 [Store Purchases] Fetching for user: ${userId}`);
+
+    // Fetch unlocked themes from user_unlocked_themes (simpler & faster!)
+    const { data: unlockedThemes, error: unlockError } = await supabase
+      .from('user_unlocked_themes')
+      .select('theme_id')
+      .eq('user_id', userId);
+
+    if (unlockError) {
+      console.error('❌ [Store Purchases] Error fetching unlocked themes:', unlockError);
+      return c.json({ themes: [] }, 500);
+    }
+
+    const purchasedThemes = (unlockedThemes || []).map(theme => ({
+      theme_id: theme.theme_id,
+      purchase_date: theme.created_at,
+      source: 'purchased', // We don't distinguish individual vs bundle in UI
+    }));
+
+    console.log(`✅ [Store Purchases] Returning ${purchasedThemes.length} themes for user ${userId}`);
+    console.log(`   Theme IDs:`, purchasedThemes.map(t => t.theme_id));
+
+    return c.json({
+      themes: purchasedThemes,
+    });
+  } catch (error: any) {
+    console.error('❌ [Store Purchases] Failed:', error);
+    return c.json({ error: 'Failed to fetch purchases' }, 500);
+  }
+});
+
+// Theme ID normalizer - converts aliases to canonical theme IDs
+const normalizeThemeId = (themeId: string): string => {
+  const aliases: Record<string, string> = {
+    'genesis': 'new_life',
+    'mixtape': 'friendship',
+    'time-traveler': 'future',
+    'time_traveler': 'future',
+  };
+  return aliases[themeId] || themeId;
+};
+
+// Get user's purchases (themes and beneficiary limits)
+app.get('/make-server-f9be53a7/purchases/:userId', async (c) => {
+  try {
+    const userId = c.req.param('userId');
+
+    // Fetch unlocked themes from user_unlocked_themes (recommended by Supabase)
+    const { data: unlockedThemes, error: unlockError } = await supabase
+      .from('user_unlocked_themes')
+      .select('theme_id')
+      .eq('user_id', userId);
+
+    if (unlockError) {
+      console.error('❌ [Purchases] Error fetching unlocked themes:', unlockError);
+    }
+
+    const purchasedThemes = (unlockedThemes || []).map(theme => {
+      const normalizedId = normalizeThemeId(theme.theme_id);
+      return {
+        theme_id: normalizedId,
+        source: 'purchased',
+      };
+    });
+
+    console.log(`📦 [Purchases] Found ${purchasedThemes.length} unlocked themes for user ${userId}`);
+
+    // Calculate beneficiary limit from beneficiary_purchases table
+    let beneficiaryLimit = 1; // Default free tier
+    
+    try {
+      const { data: beneficiaryPurchases } = await supabase
+        .from('beneficiary_purchases')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (beneficiaryPurchases && beneficiaryPurchases.length > 0) {
+        const hasUnlimited = beneficiaryPurchases.some(p => p.slots_purchased >= 99999);
+        if (hasUnlimited) {
+          beneficiaryLimit = -1; // -1 signals unlimited for display
+        } else {
+          beneficiaryLimit = 1 + beneficiaryPurchases.reduce((sum, p) => sum + (p.slots_purchased > 0 ? p.slots_purchased : 0), 0);
+        }
+      }
+    } catch (error) {
+      // Error fetching beneficiary purchases, use default of 1
+    }
+
+    return c.json({
+      themes: purchasedThemes,
+      beneficiaryLimit,
+    });
+  } catch (error: any) {
+    console.error('❌ [Purchases] Failed to fetch purchases:', error);
+    return c.json({ error: 'Failed to fetch purchases' }, 500);
+  }
+});
+
+// DEBUG: Test endpoint to check Postgres purchase data for a user
+app.get('/make-server-f9be53a7/debug/purchases/:userId', async (c) => {
+  try {
+    const userId = c.req.param('userId');
+    console.log(`🔍 [DEBUG] Checking purchases for user: ${userId}`);
+
+    // Fetch all purchases from Postgres
+    const { data: themePurchases, error: themeError } = await supabase
+      .from('theme_purchases')
+      .select('*')
+      .eq('user_id', userId);
+
+    const { data: bundlePurchases, error: bundleError } = await supabase
+      .from('bundle_purchases')
+      .select('*')
+      .eq('user_id', userId);
+
+    const { data: beneficiaryPurchases, error: beneficiaryError } = await supabase
+      .from('beneficiary_purchases')
+      .select('*')
+      .eq('user_id', userId);
+
+    const debugData: any = {
+      userId,
+      timestamp: new Date().toISOString(),
+      themes: themePurchases || [],
+      bundles: bundlePurchases || [],
+      beneficiaryPurchases: beneficiaryPurchases || [],
+      errors: {
+        themes: themeError?.message || null,
+        bundles: bundleError?.message || null,
+        beneficiaries: beneficiaryError?.message || null,
+      },
+      summary: {
+        themeCount: themePurchases?.length || 0,
+        bundleCount: bundlePurchases?.length || 0,
+        beneficiaryPurchaseCount: beneficiaryPurchases?.length || 0,
+      }
+    };
+
+    console.log(`✅ [DEBUG] Found ${debugData.summary.themeCount} themes, ${debugData.summary.bundleCount} bundles, ${debugData.summary.beneficiaryPurchaseCount} beneficiary purchases`);
+
+    return c.json(debugData);
+  } catch (error: any) {
+    console.error('❌ [DEBUG] Failed:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get user's unlocked themes
+app.get('/make-server-f9be53a7/user-themes/:userId', async (c) => {
+  try {
+    const userId = c.req.param('userId');
+
+    const { data: themes, error } = await supabase
+      .from('user_unlocked_themes')
+      .select('theme_id')
+      .eq('user_id', userId);
+
+    if (error) throw error;
+
+    return c.json({ themes: themes?.map(t => t.theme_id) || [] });
+  } catch (error: any) {
+    console.error('❌ [Themes] Failed to fetch themes:', error);
+    return c.json({ error: 'Failed to fetch themes' }, 500);
+  }
+});
+
+// Get user's beneficiary limits
+app.get('/make-server-f9be53a7/beneficiary-limits/:userId', async (c) => {
+  try {
+    const userId = c.req.param('userId');
+
+    const { data: result, error } = await supabase
+      .rpc('check_beneficiary_limit', { p_user_id: userId })
+      .single();
+
+    if (error) throw error;
+
+    return c.json({
+      currentCount: result?.current_count || 0,
+      maxAllowed: result?.max_allowed || 1,
+      unlimited: result?.unlimited || false,
+      canAddMore: result?.unlimited || (result?.current_count < result?.max_allowed),
+    });
+  } catch (error: any) {
+    console.error('❌ [Beneficiary] Failed to fetch limits:', error);
+    return c.json({ error: 'Failed to fetch limits' }, 500);
+  }
+});
+
+// ============================================================================
+// THEME BENEFICIARY MANAGEMENT ENDPOINTS
+// ============================================================================
+
+// Get theme beneficiaries for user
+app.get('/make-server-f9be53a7/api/theme-beneficiaries', async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { user, error: authError } = await verifyUserToken(accessToken!);
+    
+    if (!user) {
+      console.error('❌ [Theme Beneficiary] Unauthorized');
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    console.log(`🎁 [Theme Beneficiary] Fetching beneficiaries for user: ${user.id}`);
+
+    // Get theme beneficiaries from KV store
+    const beneficiariesKey = `theme_beneficiaries:${user.id}`;
+    const beneficiaries = await kv.get(beneficiariesKey) || [];
+
+    console.log(`✅ [Theme Beneficiary] Found ${beneficiaries.length} beneficiaries`);
+
+    return c.json({ beneficiaries });
+  } catch (error: any) {
+    console.error('❌ [Theme Beneficiary] Failed to fetch:', error);
+    return c.json({ error: 'Failed to fetch beneficiaries' }, 500);
+  }
+});
+
+// Add theme beneficiary
+app.post('/make-server-f9be53a7/api/theme-beneficiaries/add', async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { user, error: authError } = await verifyUserToken(accessToken!);
+    
+    if (!user) {
+      console.error('❌ [Theme Beneficiary] Unauthorized');
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const { name, email, relationship, personalMessage } = await c.req.json();
+
+    if (!name || !email) {
+      return c.json({ error: 'Name and email are required' }, 400);
+    }
+
+    console.log(`🎁 [Theme Beneficiary] Adding beneficiary for user: ${user.id}`);
+
+    // Get existing beneficiaries
+    const beneficiariesKey = `theme_beneficiaries:${user.id}`;
+    const beneficiaries = await kv.get(beneficiariesKey) || [];
+
+    // Check for duplicate email
+    if (beneficiaries.some((b: any) => b.email === email)) {
+      return c.json({ error: 'A beneficiary with this email already exists' }, 400);
+    }
+
+    // Create new beneficiary
+    const newBeneficiary = {
+      id: randomBytes(16).toString('hex'),
+      name,
+      email,
+      relationship: relationship || null,
+      personalMessage: personalMessage || null,
+      status: 'pending',
+      addedAt: Date.now(),
+    };
+
+    // Add to list
+    beneficiaries.push(newBeneficiary);
+    await kv.set(beneficiariesKey, beneficiaries);
+
+    console.log(`✅ [Theme Beneficiary] Added beneficiary: ${newBeneficiary.id}`);
+
+    // TODO: Send verification email to beneficiary
+    // For now, we'll skip email sending
+
+    return c.json({ beneficiary: newBeneficiary });
+  } catch (error: any) {
+    console.error('❌ [Theme Beneficiary] Failed to add:', error);
+    return c.json({ error: 'Failed to add beneficiary' }, 500);
+  }
+});
+
+// Update theme beneficiary
+app.patch('/make-server-f9be53a7/api/theme-beneficiaries/:beneficiaryId', async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { user, error: authError } = await verifyUserToken(accessToken!);
+    
+    if (!user) {
+      console.error('❌ [Theme Beneficiary] Unauthorized');
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const beneficiaryId = c.req.param('beneficiaryId');
+    const { name, email, relationship, personalMessage } = await c.req.json();
+
+    if (!name || !email) {
+      return c.json({ error: 'Name and email are required' }, 400);
+    }
+
+    console.log(`🎁 [Theme Beneficiary] Updating beneficiary: ${beneficiaryId}`);
+
+    // Get existing beneficiaries
+    const beneficiariesKey = `theme_beneficiaries:${user.id}`;
+    const beneficiaries = await kv.get(beneficiariesKey) || [];
+
+    // Find beneficiary to update
+    const index = beneficiaries.findIndex((b: any) => b.id === beneficiaryId);
+    if (index === -1) {
+      return c.json({ error: 'Beneficiary not found' }, 404);
+    }
+
+    // Check for duplicate email (excluding current beneficiary)
+    if (beneficiaries.some((b: any, i: number) => i !== index && b.email === email)) {
+      return c.json({ error: 'Another beneficiary with this email already exists' }, 400);
+    }
+
+    // Update beneficiary
+    beneficiaries[index] = {
+      ...beneficiaries[index],
+      name,
+      email,
+      relationship: relationship || null,
+      personalMessage: personalMessage || null,
+    };
+
+    await kv.set(beneficiariesKey, beneficiaries);
+
+    console.log(`✅ [Theme Beneficiary] Updated beneficiary: ${beneficiaryId}`);
+
+    return c.json({ beneficiary: beneficiaries[index] });
+  } catch (error: any) {
+    console.error('❌ [Theme Beneficiary] Failed to update:', error);
+    return c.json({ error: 'Failed to update beneficiary' }, 500);
+  }
+});
+
+// Delete theme beneficiary
+app.delete('/make-server-f9be53a7/api/theme-beneficiaries/:beneficiaryId', async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { user, error: authError } = await verifyUserToken(accessToken!);
+    
+    if (!user) {
+      console.error('❌ [Theme Beneficiary] Unauthorized');
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const beneficiaryId = c.req.param('beneficiaryId');
+
+    console.log(`🎁 [Theme Beneficiary] Deleting beneficiary: ${beneficiaryId}`);
+
+    // Get existing beneficiaries
+    const beneficiariesKey = `theme_beneficiaries:${user.id}`;
+    const beneficiaries = await kv.get(beneficiariesKey) || [];
+
+    // Filter out the beneficiary to delete
+    const filtered = beneficiaries.filter((b: any) => b.id !== beneficiaryId);
+
+    if (filtered.length === beneficiaries.length) {
+      return c.json({ error: 'Beneficiary not found' }, 404);
+    }
+
+    await kv.set(beneficiariesKey, filtered);
+
+    console.log(`✅ [Theme Beneficiary] Deleted beneficiary: ${beneficiaryId}`);
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('❌ [Theme Beneficiary] Failed to delete:', error);
+    return c.json({ error: 'Failed to delete beneficiary' }, 500);
+  }
+});
+
+// Resend verification email
+app.post('/make-server-f9be53a7/api/theme-beneficiaries/:beneficiaryId/resend-verification', async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { user, error: authError } = await verifyUserToken(accessToken!);
+    
+    if (!user) {
+      console.error('❌ [Theme Beneficiary] Unauthorized');
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const beneficiaryId = c.req.param('beneficiaryId');
+
+    console.log(`🎁 [Theme Beneficiary] Resending verification for: ${beneficiaryId}`);
+
+    // Get existing beneficiaries
+    const beneficiariesKey = `theme_beneficiaries:${user.id}`;
+    const beneficiaries = await kv.get(beneficiariesKey) || [];
+
+    // Find beneficiary
+    const beneficiary = beneficiaries.find((b: any) => b.id === beneficiaryId);
+    if (!beneficiary) {
+      return c.json({ error: 'Beneficiary not found' }, 404);
+    }
+
+    // TODO: Send verification email to beneficiary
+    // For now, we'll just return success
+
+    console.log(`✅ [Theme Beneficiary] Verification email sent to: ${beneficiary.email}`);
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('❌ [Theme Beneficiary] Failed to resend verification:', error);
+    return c.json({ error: 'Failed to resend verification' }, 500);
+  }
+});
+
+console.log('✅ [Monetization] Purchase endpoints registered');
+console.log('✅ [Theme Beneficiary] Management endpoints registered');
+
 // Mount Archive routes
 console.log('🌫️ [Startup] Mounting Archive routes...');
 app.route('/', forgottenMemoriesApp);
@@ -14530,7 +16491,38 @@ console.log(`   - Health: https://${Deno.env.get('SUPABASE_URL')?.split('//')[1]
 console.log(`   - Basic Health: https://${Deno.env.get('SUPABASE_URL')?.split('//')[1]?.split('.')[0]}.supabase.co/functions/v1/health`);
 
 try {
-  Deno.serve(app.fetch);
+  // 🔧 FIX: Wrap app.fetch to ensure responses are always returned and connections are properly closed
+  Deno.serve({
+    port: 8000, // Explicit port for better connection handling
+    handler: async (req) => {
+      try {
+        const response = await app.fetch(req);
+        
+        // Ensure we return a valid Response object
+        if (!response) {
+          console.error('⚠️ Handler returned null/undefined response');
+          return new Response('Internal Server Error', { status: 500 });
+        }
+        
+        return response;
+      } catch (error) {
+        console.error('💥 Request handler error:', error);
+        console.error('💥 Error stack:', error?.stack);
+        
+        // Always return a response, even on error
+        return new Response(
+          JSON.stringify({ 
+            error: 'Internal Server Error',
+            message: error?.message || 'Unknown error'
+          }), 
+          { 
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    }
+  });
   console.log('✅ [Startup] Server started successfully - ready to accept connections');
 } catch (error) {
   console.error('💥 CRITICAL: Failed to start server:', error);

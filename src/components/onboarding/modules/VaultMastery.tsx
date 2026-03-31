@@ -169,15 +169,46 @@ function WelcomeScreen({ onNext }: { onNext: () => void }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.7 }}
-        className="text-lg text-white/80 mb-12 max-w-md"
+        className="text-lg text-white/80 mb-8 max-w-md"
       >
         protected and organized
       </motion.p>
-      
+
+      {/* Home vs Vault Explainer */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.9 }}
+        className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-8 max-w-md border border-white/20"
+      >
+        <div className="flex items-start gap-4 mb-4">
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-3xl">🏡</span>
+            <span className="text-xs text-white/60 font-semibold">Home</span>
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm text-white/80">
+              <span className="font-semibold text-white">Home</span> shows capsules arriving soon
+            </p>
+          </div>
+        </div>
+        <div className="flex items-start gap-4">
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-3xl">🏛️</span>
+            <span className="text-xs text-purple-400 font-semibold">Vault</span>
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm text-white/80">
+              <span className="font-semibold text-purple-300">Vault</span> stores ALL your capsules—past, future, and opened
+            </p>
+          </div>
+        </div>
+      </motion.div>
+      
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 1.1 }}
       >
         <Button
           onClick={onNext}
@@ -410,10 +441,42 @@ function LegacyScreen({ examples, onNext }: {
           ))}
         </div>
         
+        {/* Pricing Info */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6 }}
+          className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-blue-500/20 border-2 border-emerald-400/30 mb-6"
+        >
+          <div className="flex items-start gap-3 mb-4">
+            <span className="text-3xl">💎</span>
+            <div className="flex-1">
+              <h3 className="font-bold text-lg mb-2 text-emerald-300">Beneficiary Slot Pricing</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-white/80">+1 Slot</span>
+                  <span className="font-bold text-white">$0.99</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-white/80">+3 Slots</span>
+                  <span className="font-bold text-white">$1.99</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-white/80">Unlimited Slots</span>
+                  <span className="font-bold text-emerald-300">$4.99</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-white/60 text-center">
+            Visit the Store (⚙️ Settings → Store) to purchase slots
+          </p>
+        </motion.div>
+        
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.8 }}
           className="p-4 rounded-xl bg-white/5 border border-white/10 text-center mb-6"
         >
           <p className="text-sm text-white/70">
@@ -453,7 +516,7 @@ function SuccessScreen({ onNext }: { onNext: () => void }) {
         🏛️
       </motion.div>
       
-      <h2 className="text-3xl font-bold mb-4">You're now a<br />Vault Guardian</h2>
+      <h2 className="text-3xl font-bold mb-4">You're now a<br />Folder Architect</h2>
       
       <div className="space-y-2 mb-8">
         {[

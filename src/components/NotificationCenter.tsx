@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Check, Heart, Package, Eye, Trophy, AlertCircle, Sparkles, MessageCircle, Mail, Shield, ThumbsUp } from 'lucide-react';
-import { formatDistanceToNow, format } from 'date-fns@4.1.0';
+import { formatDistanceToNow, format } from 'date-fns';
 import '../styles/notification-center.css';
 
 interface Notification {
@@ -527,42 +527,83 @@ function renderNotificationContent(
 
   // For received notifications (self-sent capsules - yellow/gold theme)
   if (notification.type === 'received' && metadata?.capsuleName) {
-    return (
-      <>
-        {'Your time capsule '}
-        {metadata.capsuleId && onNotificationClick ? (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onNotificationClick(metadata.capsuleId!);
-            }}
-            className="font-medium text-yellow-300 italic hover:text-yellow-200 underline decoration-yellow-400/50 hover:decoration-yellow-300 transition-colors"
-            style={{
-              display: 'inline',
-              wordWrap: 'break-word',
-              overflowWrap: 'break-word'
-            }}
-          >
-            "{metadata.capsuleName}"
-          </button>
-        ) : (
-          <span 
-            className="font-medium text-yellow-300 italic"
-            style={{
-              display: 'inline',
-              wordWrap: 'break-word',
-              overflowWrap: 'break-word'
-            }}
-          >
-            "{metadata.capsuleName}"
-          </span>
-        )}
-        {' has been delivered!'}
-        {metadata.senderName && metadata.senderName.includes('Past Self') && (
-          <span className="block mt-1 text-slate-400 text-xs">From {metadata.senderName}</span>
-        )}
-      </>
-    );
+    // Check if this is from someone else (senderName exists and is NOT "You (Past Self)")
+    const isFromOthers = metadata.senderName && !metadata.senderName.includes('Past Self');
+    
+    if (isFromOthers) {
+      // Capsule from someone else: "[Sender] sent you a time capsule: [name]"
+      return (
+        <>
+          <span className="font-medium text-white">{metadata.senderName}</span>
+          {' sent you a time capsule: '}
+          {metadata.capsuleId && onNotificationClick ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onNotificationClick(metadata.capsuleId!);
+              }}
+              className="font-medium text-yellow-300 italic hover:text-yellow-200 underline decoration-yellow-400/50 hover:decoration-yellow-300 transition-colors"
+              style={{
+                display: 'inline',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word'
+              }}
+            >
+              "{metadata.capsuleName}"
+            </button>
+          ) : (
+            <span 
+              className="font-medium text-yellow-300 italic"
+              style={{
+                display: 'inline',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word'
+              }}
+            >
+              "{metadata.capsuleName}"
+            </span>
+          )}
+        </>
+      );
+    } else {
+      // Self-delivery: "Your time capsule [name] has been delivered!"
+      return (
+        <>
+          {'Your time capsule '}
+          {metadata.capsuleId && onNotificationClick ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onNotificationClick(metadata.capsuleId!);
+              }}
+              className="font-medium text-yellow-300 italic hover:text-yellow-200 underline decoration-yellow-400/50 hover:decoration-yellow-300 transition-colors"
+              style={{
+                display: 'inline',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word'
+              }}
+            >
+              "{metadata.capsuleName}"
+            </button>
+          ) : (
+            <span 
+              className="font-medium text-yellow-300 italic"
+              style={{
+                display: 'inline',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word'
+              }}
+            >
+              "{metadata.capsuleName}"
+            </span>
+          )}
+          {' has been delivered!'}
+          {metadata.senderName && metadata.senderName.includes('Past Self') && (
+            <span className="block mt-1 text-slate-400 text-xs">From {metadata.senderName}</span>
+          )}
+        </>
+      );
+    }
   }
 
   // For delivery FAILED notifications

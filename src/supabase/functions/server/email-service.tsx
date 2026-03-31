@@ -5,10 +5,23 @@ import * as kv from './kv_store.tsx';
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
 // Get verified "from" email from environment variable
-// Default to Resend test domain for development
-const FROM_EMAIL = Deno.env.get('FROM_EMAIL') || 'Eras <onboarding@resend.dev>';
+// IMPORTANT: Use Resend's test domain (onboarding@resend.dev) unless you have verified your own domain
+// To use a custom domain:
+// 1. Go to https://resend.com/domains
+// 2. Add and verify your domain (e.g., erastimecapsule.com)
+// 3. Set FROM_EMAIL environment variable to something like "Eras <noreply@yourdomain.com>"
+const envFromEmail = Deno.env.get('FROM_EMAIL');
+const FROM_EMAIL = envFromEmail || 'Eras <onboarding@resend.dev>';
 
+// Log configuration and warn if using unverified domain
+console.log(`📧 [Email Service] FROM_EMAIL environment variable: ${envFromEmail || '(not set - using default)'}`);
 console.log(`📧 [Email Service] Using FROM_EMAIL: ${FROM_EMAIL}`);
+if (envFromEmail && envFromEmail.includes('erastimecapsule.com')) {
+  console.warn(`⚠️ [Email Service] WARNING: erastimecapsule.com domain may not be verified in Resend`);
+  console.warn(`⚠️ [Email Service] If you see domain verification errors, either:`);
+  console.warn(`⚠️ [Email Service]   1. Verify erastimecapsule.com at https://resend.com/domains`);
+  console.warn(`⚠️ [Email Service]   2. Or unset FROM_EMAIL to use the default onboarding@resend.dev`);
+}
 
 // Email template renderers
 async function renderInactivityWarning(vars: any): Promise<string> {
@@ -990,9 +1003,10 @@ export async function sendEmail(params: {
     // ✅ FIXED: Proper RFC 8058 compliant headers for inbox placement
     const unsubscribeUrl = `https://www.erastimecapsule.com/unsubscribe?email=${encodeURIComponent(params.to)}&type=system`;
     
-    // Send email via Resend
-    const result = await resend.emails.send({
-      from: FROM_EMAIL,
+    // Send email via Resend (with automatic fallback to test domain on verification errors)
+    let fromEmail = FROM_EMAIL;
+    let result = await resend.emails.send({
+      from: fromEmail,
       to: params.to,
       subject: params.subject,
       html: html,
@@ -1016,17 +1030,56 @@ export async function sendEmail(params: {
     // Resend returns { data: {...}, error: null } on success
     // or { data: null, error: {...} } on failure
     if (result.error) {
-      console.error(`❌ [Email Service] Resend API returned an error!`);
-      console.error(`❌ [Email Service] Error:`, JSON.stringify(result.error, null, 2));
-      console.error(`❌ [Email Service] Error message:`, result.error.message);
-      console.error(`❌ [Email Service] Error name:`, result.error.name);
-      console.error(`❌ [Email Service] FROM_EMAIL used:`, FROM_EMAIL);
-      console.error(`❌ [Email Service] TO email:`, params.to);
-      return {
-        success: false,
-        error: result.error.message || 'Resend API error',
-        errorDetails: result.error,
-      };
+      // 🔄 AUTO-RETRY with fallback domain if we get a domain verification error
+      if (result.error.message?.includes('domain is not verified') && fromEmail !== 'Eras <onboarding@resend.dev>') {
+        console.warn(`⚠️ [Email Service] Domain verification failed for ${fromEmail}`);
+        console.warn(`⚠️ [Email Service] Auto-retrying with Resend test domain: onboarding@resend.dev`);
+        
+        // Retry with the default Resend test domain
+        fromEmail = 'Eras <onboarding@resend.dev>';
+        result = await resend.emails.send({
+          from: fromEmail,
+          to: params.to,
+          subject: params.subject,
+          html: html,
+          text: plainText,
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            'Precedence': 'bulk',
+            'X-Entity-Ref-ID': `${params.template}-${Date.now()}`,
+          }
+        });
+        
+        console.log(`📧 [Email Service] Retry result:`, JSON.stringify(result, null, 2));
+        
+        // If retry also failed, log and return error
+        if (result.error) {
+          console.error(`❌ [Email Service] Retry also failed!`);
+          console.error(`❌ [Email Service] Error:`, JSON.stringify(result.error, null, 2));
+          return {
+            success: false,
+            error: result.error.message || 'Resend API error',
+            errorDetails: result.error,
+          };
+        }
+        
+        // Retry succeeded!
+        console.log(`✅ [Email Service] Retry successful with fallback domain!`);
+      } else {
+        // Not a domain verification error, or already using fallback - just fail
+        console.error(`❌ [Email Service] Resend API returned an error!`);
+        console.error(`❌ [Email Service] Error:`, JSON.stringify(result.error, null, 2));
+        console.error(`❌ [Email Service] Error message:`, result.error.message);
+        console.error(`❌ [Email Service] Error name:`, result.error.name);
+        console.error(`❌ [Email Service] FROM_EMAIL used:`, fromEmail);
+        console.error(`❌ [Email Service] TO email:`, params.to);
+        return {
+          success: false,
+          error: result.error.message || 'Resend API error',
+          errorDetails: result.error,
+        };
+      }
     }
 
     console.log(`✅ Email sent successfully to ${params.to}. Message ID: ${result.data?.id}`);
@@ -1275,8 +1328,9 @@ export class EmailService {
       const plainIntroText = introText.replace(/<br\s*\/?>/g, '\n').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
       const plainText = `${headline}\n\n${plainIntroText}\n\nCapsule: ${capsuleTitle}${!isSelf ? `\nFrom: ${senderName}` : ''}\nDelivery Date: ${dateString}\n\nOpen your capsule:\n${capsuleData.viewUrl || capsuleData.viewingUrl || '#'}`;
       
-      const result = await resend.emails.send({
-        from: FROM_EMAIL,
+      let fromEmail = FROM_EMAIL;
+      let result = await resend.emails.send({
+        from: fromEmail,
         to: recipientEmail,
         subject: subject,
         html: html,
@@ -1298,18 +1352,54 @@ export class EmailService {
       // Resend returns { data: {...}, error: null } on success
       // or { data: null, error: {...} } on failure
       if (result.error) {
-        console.error(`❌ [EMAIL SERVICE] Resend API returned an error!`);
-        console.error(`❌ [EMAIL SERVICE] Error:`, JSON.stringify(result.error, null, 2));
-        console.error(`❌ [EMAIL SERVICE] Error message: ${result.error.message}`);
-        
-        // Special handling for domain verification errors
-        if (result.error.message?.includes('domain is not verified')) {
-          console.error(`❌ [EMAIL SERVICE] DOMAIN VERIFICATION ERROR!`);
-          console.error(`❌ [EMAIL SERVICE] You need to verify eras.app domain at https://resend.com/domains`);
-          console.error(`❌ [EMAIL SERVICE] Or use a different "from" email domain`);
+        // 🔄 AUTO-RETRY with fallback domain if we get a domain verification error
+        if (result.error.message?.includes('domain is not verified') && fromEmail !== 'Eras <onboarding@resend.dev>') {
+          console.warn(`⚠️ [EMAIL SERVICE] Domain verification failed for ${fromEmail}`);
+          console.warn(`⚠️ [EMAIL SERVICE] Auto-retrying with Resend test domain: onboarding@resend.dev`);
+          
+          // Retry with the default Resend test domain
+          fromEmail = 'Eras <onboarding@resend.dev>';
+          result = await resend.emails.send({
+            from: fromEmail,
+            to: recipientEmail,
+            subject: subject,
+            html: html,
+            text: plainText,
+            headers: {
+              'X-Priority': '1',
+              'X-MSMail-Priority': 'High',
+              'Importance': 'high',
+              'List-Unsubscribe': '<mailto:unsubscribe@yourdomain.com>',
+              'X-Entity-Ref-ID': capsuleData.capsule_id || capsuleData.id || ''
+            }
+          });
+          
+          console.log(`📧 [EMAIL SERVICE] Retry result:`, JSON.stringify(result, null, 2));
+          
+          // If retry also failed, log and return error
+          if (result.error) {
+            console.error(`❌ [EMAIL SERVICE] Retry also failed!`);
+            console.error(`❌ [EMAIL SERVICE] Error:`, JSON.stringify(result.error, null, 2));
+            return { success: false, error: result.error.message || 'Resend API error' };
+          }
+          
+          // Retry succeeded!
+          console.log(`✅ [EMAIL SERVICE] Retry successful with fallback domain!`);
+        } else {
+          // Not a domain verification error, or already using fallback - just fail
+          console.error(`❌ [EMAIL SERVICE] Resend API returned an error!`);
+          console.error(`❌ [EMAIL SERVICE] Error:`, JSON.stringify(result.error, null, 2));
+          console.error(`❌ [EMAIL SERVICE] Error message: ${result.error.message}`);
+          
+          // Special handling for domain verification errors
+          if (result.error.message?.includes('domain is not verified')) {
+            console.error(`❌ [EMAIL SERVICE] DOMAIN VERIFICATION ERROR!`);
+            console.error(`❌ [EMAIL SERVICE] You need to verify domain at https://resend.com/domains`);
+            console.error(`❌ [EMAIL SERVICE] Or use a different "from" email domain`);
+          }
+          
+          return { success: false, error: result.error.message || 'Resend API error' };
         }
-        
-        return { success: false, error: result.error.message || 'Resend API error' };
       }
       
       console.log(`✅ [EMAIL SERVICE] Capsule delivery email sent successfully!`);
@@ -1568,23 +1658,76 @@ export class EmailService {
       // ✅ Create plain text version
       const plainText = `Reset Your Password\n\nHi ${name},\n\nYou requested a password reset for your Eras account.\n\nReset your password:\n${resetUrl}\n\nIf you didn't request this, you can safely ignore this email.\n\n— The Eras Team`;
       
-      const result = await resend.emails.send({
-        from: FROM_EMAIL,
+      // 🧪 TESTING MODE CHECK: Resend only allows sending to verified email in testing
+      const VERIFIED_TEST_EMAIL = 'lenny.cohen1@gmail.com';
+      let fromEmail = FROM_EMAIL;
+      const isTestingMode = fromEmail === 'Eras <onboarding@resend.dev>' || fromEmail.includes('@resend.dev');
+      
+      // If in testing mode and recipient is not the verified test email, log and skip
+      if (isTestingMode && email.toLowerCase() !== VERIFIED_TEST_EMAIL) {
+        console.log(`🧪 [Password Reset] Testing mode detected. Skipping email to ${email} (only ${VERIFIED_TEST_EMAIL} allowed in testing).`);
+        console.log(`✅ [Password Reset] Reset URL would be: ${resetUrl}`);
+        console.log(`💡 To send to real users, verify a domain at resend.com/domains`);
+        return true; // Return success to not block password reset flow
+      }
+      
+      // 🔄 AUTO-RETRY with fallback domain on verification errors
+      let result = await resend.emails.send({
+        from: fromEmail,
         to: email,
-        subject: 'Reset your Eras password', // ✅ Already good
+        subject: 'Reset your Eras password',
         html: html,
-        text: plainText, // ✅ Plain text added
+        text: plainText,
         headers: {
           'List-Unsubscribe': '<mailto:unsubscribe@yourdomain.com>'
         }
       });
 
+      // Check for domain verification error and retry with fallback
       if (result.error) {
-        console.error('❌ [Password Reset] Resend API error:', result.error);
-        return false;
+        // 🔄 AUTO-RETRY with fallback domain if domain verification fails
+        if (result.error.message?.includes('domain is not verified') && fromEmail !== 'Eras <onboarding@resend.dev>') {
+          console.log(`🔄 [Password Reset] Domain ${fromEmail} not verified, checking if fallback is allowed...`);
+          
+          // 🧪 Check if fallback domain can send to this recipient
+          if (email.toLowerCase() !== VERIFIED_TEST_EMAIL) {
+            console.log(`🧪 [Password Reset] Fallback domain is also in testing mode. Skipping email to ${email} (only ${VERIFIED_TEST_EMAIL} allowed).`);
+            console.log(`✅ [Password Reset] Reset URL would be: ${resetUrl}`);
+            console.log(`💡 To send to real users, verify a domain at resend.com/domains`);
+            return true; // Return success to not block password reset flow
+          }
+          
+          console.log(`🔄 [Password Reset] Retrying with Resend test domain...`);
+          
+          // Retry with the default Resend test domain
+          fromEmail = 'Eras <onboarding@resend.dev>';
+          result = await resend.emails.send({
+            from: fromEmail,
+            to: email,
+            subject: 'Reset your Eras password',
+            html: html,
+            text: plainText,
+            headers: {
+              'List-Unsubscribe': '<mailto:unsubscribe@yourdomain.com>'
+            }
+          });
+          
+          // If retry also failed, log and return error
+          if (result.error) {
+            console.error(`❌ [Password Reset] Fallback also failed:`, result.error);
+            return false;
+          }
+          
+          // Retry succeeded!
+          console.log(`✅ [Password Reset] Email sent successfully with fallback domain (onboarding@resend.dev)`);
+        } else {
+          // Not a domain error or already using fallback
+          console.error('❌ [Password Reset] Resend API error:', result.error);
+          return false;
+        }
       }
 
-      console.log(`✅ [Password Reset] Email sent via Resend. ID: ${result.data?.id}`);
+      console.log(`✅ [Password Reset] Email sent via Resend. ID: ${result.data?.id}, From: ${fromEmail}`);
       return true;
     } catch (error) {
       console.error('❌ [Password Reset] Failed to send email:', error);
@@ -1675,6 +1818,18 @@ export class EmailService {
       // ✅ Create plain text version
       const plainText = `Welcome to Eras!\n\nHi ${firstName}!\n\nThank you for joining Eras — where today's moments become tomorrow's treasures.\n\nTo get started, please verify your email:\n${verifyUrl}\n\n(This link will expire in 24 hours)\n\nWhat you can do with Eras:\n• Create time capsules to your future self\n• Send messages that unlock on special dates\n• Preserve memories with photos, videos & audio\n• Share moments with loved ones across time\n\nIf you didn't create this account, you can safely ignore this email.\n\n— The Eras Team`;
       
+      // 🧪 TESTING MODE CHECK: Resend only allows sending to verified email in testing
+      const VERIFIED_TEST_EMAIL = 'lenny.cohen1@gmail.com';
+      const isTestingMode = FROM_EMAIL === 'Eras <onboarding@resend.dev>' || FROM_EMAIL.includes('@resend.dev');
+      
+      // If in testing mode and recipient is not the verified test email, log and skip
+      if (isTestingMode && email.toLowerCase() !== VERIFIED_TEST_EMAIL) {
+        console.log(`🧪 [Welcome Email] Testing mode detected. Skipping email to ${email} (only ${VERIFIED_TEST_EMAIL} allowed in testing).`);
+        console.log(`✅ [Welcome Email] Verification URL would be: ${verifyUrl}`);
+        console.log(`💡 To send to real users, verify a domain at resend.com/domains`);
+        return true; // Return success to not block signup
+      }
+      
       const result = await resend.emails.send({
         from: FROM_EMAIL,
         to: email,
@@ -1686,13 +1841,48 @@ export class EmailService {
         }
       });
 
-      console.log(`📧 [Welcome Email] Resend API response:`, JSON.stringify(result, null, 2));
-
+      // Check for domain verification error and retry with fallback
       if (result.error) {
-        console.error('❌ [Welcome Email] Resend API error:', result.error);
-        console.error('❌ [Welcome Email] FROM_EMAIL used:', FROM_EMAIL);
-        console.error('❌ [Welcome Email] TO email:', email);
-        return false;
+        // 🔄 AUTO-RETRY with fallback domain if domain verification fails
+        if (result.error.message?.includes('domain is not verified') && FROM_EMAIL !== 'Eras <onboarding@resend.dev>') {
+          console.log(`🔄 [Welcome Email] Domain ${FROM_EMAIL} not verified, checking if fallback is allowed...`);
+          
+          // 🧪 Check if fallback domain can send to this recipient
+          if (email.toLowerCase() !== VERIFIED_TEST_EMAIL) {
+            console.log(`🧪 [Welcome Email] Fallback domain is also in testing mode. Skipping email to ${email} (only ${VERIFIED_TEST_EMAIL} allowed).`);
+            console.log(`✅ [Welcome Email] Verification URL would be: ${verifyUrl}`);
+            console.log(`💡 To send to real users, verify a domain at resend.com/domains`);
+            return true; // Return success to not block signup
+          }
+          
+          console.log(`🔄 [Welcome Email] Retrying with Resend test domain...`);
+          
+          // Retry with the default Resend test domain
+          const fallbackResult = await resend.emails.send({
+            from: 'Eras <onboarding@resend.dev>',
+            to: email,
+            subject: 'Welcome to Eras! Please verify your email',
+            html: html,
+            text: plainText,
+            headers: {
+              'List-Unsubscribe': '<mailto:unsubscribe@yourdomain.com>'
+            }
+          });
+          
+          // If retry also failed, log and return error
+          if (fallbackResult.error) {
+            console.error(`❌ [Welcome Email] Fallback also failed:`, fallbackResult.error);
+            return false;
+          }
+          
+          // Retry succeeded!
+          console.log(`✅ [Welcome Email] Email sent successfully with fallback domain! ID: ${fallbackResult.data?.id}`);
+          return true;
+        } else {
+          // Not a domain error or already using fallback
+          console.error('❌ [Welcome Email] Resend API error:', result.error);
+          return false;
+        }
       }
 
       console.log(`✅ [Welcome Email] Email sent successfully! ID: ${result.data?.id}`);

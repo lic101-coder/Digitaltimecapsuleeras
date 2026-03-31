@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { CheckCircle, X, Loader2 } from 'lucide-react';
 import { MomentPrismLogo } from './MomentPrismLogo';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 
 export function VerifyEmail({ onSuccess }: { onSuccess?: () => void }) {
@@ -49,6 +49,8 @@ export function VerifyEmail({ onSuccess }: { onSuccess?: () => void }) {
         const result = await response.json();
         
         console.log('🔍 [EMAIL VERIFICATION] Verification result:', result);
+        console.log('🔍 [EMAIL VERIFICATION] Response status:', response.status);
+        console.log('🔍 [EMAIL VERIFICATION] Response details:', JSON.stringify(result, null, 2));
         
         if (result.valid) {
           console.log('✅ [EMAIL VERIFICATION] Email verified successfully!');

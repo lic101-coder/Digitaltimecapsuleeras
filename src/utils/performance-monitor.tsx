@@ -11,9 +11,9 @@ interface PerformanceMetric {
 
 class PerformanceMonitor {
   private metrics: PerformanceMetric[] = [];
-  private readonly MAX_METRICS = 100; // Keep last 100 measurements
-  private readonly SLOW_THRESHOLD = 3500; // Warn if operation takes > 3.5 seconds (adjusted for database queries with 20+ capsules)
-
+  private readonly MAX_METRICS = 100;
+  private readonly SLOW_THRESHOLD = 5000;
+  
   /**
    * Measure the duration of an operation
    */

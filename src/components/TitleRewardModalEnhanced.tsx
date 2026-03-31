@@ -4,7 +4,7 @@ import { X, Share2, Crown, Sparkles, Star, Zap, Sunrise, Link2, Check } from 'lu
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { TitleDisplay } from './TitleDisplay';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { getTitleIcon, getTitleConfig } from '../utils/titleConfigs';
 
 interface TitleRewardModalEnhancedProps {
@@ -598,10 +598,12 @@ export function TitleRewardModalEnhanced({
               }}
               exit={{ scale: 0.8, opacity: 0, y: 50 }}
               transition={{ 
-                type: 'spring',
-                damping: 20,
-                stiffness: 150,
-                duration: 0.8
+                // Per-property: spring for initial entry, tween for multi-keyframe burst/shake
+                opacity:  { type: 'spring', damping: 20, stiffness: 150, duration: 0.8 },
+                y:        { type: 'spring', damping: 20, stiffness: 150, duration: 0.8 },
+                rotateX:  { type: 'spring', damping: 20, stiffness: 150, duration: 0.8 },
+                scale:    { type: 'tween', duration: 1.0, ease: 'easeInOut', repeat: animationPhase === 'burst' ? Infinity : 0 },
+                x:        { type: 'tween', duration: 0.4, ease: 'easeInOut' }
               }}
               className={`relative w-full max-w-lg md:max-w-2xl rounded-[2.5rem] overflow-hidden pointer-events-auto bg-gradient-to-br ${config.bgGradient} ${config.glow}`}
               style={{
@@ -669,10 +671,10 @@ export function TitleRewardModalEnhanced({
                     y: 0
                   }}
                   transition={{ 
-                    delay: 0.2,
-                    duration: 0.5,
-                    type: 'spring',
-                    stiffness: 200
+                    // Per-property transitions: spring for opacity/y, tween for scale (spring can't handle 3 keyframes)
+                    opacity: { delay: 0.2, duration: 0.5, type: 'spring', stiffness: 200 },
+                    y:       { delay: 0.2, duration: 0.5, type: 'spring', stiffness: 200 },
+                    scale:   { duration: 1.2, repeat: animationPhase === 'burst' ? Infinity : 0, ease: 'easeInOut', type: 'tween' }
                   }}
                   className="mb-8"
                 >
@@ -709,8 +711,8 @@ export function TitleRewardModalEnhanced({
                     opacity: 1
                   }}
                   transition={{ 
-                    scale: { duration: 0.6, delay: 0.4 },
-                    rotate: { duration: 1, delay: 0.3, ease: [0.34, 1.56, 0.64, 1] },
+                    scale:   { type: 'tween', duration: animationPhase === 'burst' ? 1.0 : 0.6, delay: 0.4, ease: 'easeInOut', repeat: animationPhase === 'burst' ? Infinity : 0 },
+                    rotate:  { duration: 1, delay: 0.3, ease: [0.34, 1.56, 0.64, 1] },
                     opacity: { duration: 0.5, delay: 0.3 }
                   }}
                   className="relative mb-10"
@@ -851,7 +853,9 @@ export function TitleRewardModalEnhanced({
                           className="absolute w-1.5 h-1.5 md:w-2 md:h-2 rounded-full"
                           style={{
                             backgroundColor: i % 2 === 0 ? titleColors[i % titleColors.length] : config.colors[i % config.colors.length],
-                            opacity: 0.8
+                            opacity: 0.8,
+                            left: '50%',
+                            top: '50%'
                           }}
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{
@@ -865,10 +869,6 @@ export function TitleRewardModalEnhanced({
                             delay: Math.random() * 0.5,
                             repeat: Infinity,
                             repeatDelay: Math.random() * 1.5
-                          }}
-                          style={{
-                            left: '50%',
-                            top: '50%'
                           }}
                         />
                       ))}
@@ -884,7 +884,7 @@ export function TitleRewardModalEnhanced({
                     y: 0,
                     scale: animationPhase === 'burst' ? [1, 1.1, 1] : 1
                   }}
-                  transition={{ delay: 0.8, duration: 0.6 }}
+                  transition={{ delay: 0.8, duration: 0.6, type: 'tween', ease: 'easeOut' }}
                   className="mb-6"
                 >
                   <TitleDisplay 

@@ -32,18 +32,18 @@ export function YourVault({ onContinue }: YourVaultProps) {
 
   return (
     <div className="relative flex flex-col items-center justify-center h-full px-6 md:px-12 py-8 pb-28 md:pb-8">
-      {/* Continue button - Top Right (only show on final phase) */}
+      {/* Continue button - Bottom Center (only show on final phase) */}
       <AnimatePresence>
         {phase === 3 && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
             onClick={onContinue}
-            className="fixed top-4 right-4 z-50 px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 text-sm font-medium shadow-xl"
-            style={{ top: 'max(1rem, env(safe-area-inset-top, 1rem))' }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 text-base font-semibold shadow-xl"
+            style={{ bottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))' }}
           >
-            Continue
+            Continue →
           </motion.button>
         )}
       </AnimatePresence>

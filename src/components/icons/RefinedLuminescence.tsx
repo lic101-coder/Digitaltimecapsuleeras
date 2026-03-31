@@ -1,48 +1,89 @@
 /**
- * REFINED LUMINESCENCE ICONS
- * 
- * Emoji icons with luminescence effects matching Home and Vault icons
+ * Refined icon components for the Eras app
+ * These icons provide a consistent, polished visual language
  */
 
-interface RefinedLuminescenceProps {
+import React from 'react';
+
+interface IconProps {
   className?: string;
   size?: number;
 }
 
 /**
- * CREATE TAB ICON - Sparkle Emoji ✨ with Luminescence
+ * RefinedSparkles - Icon for enhancement/AI features
  */
-export function RefinedSparkles({ className = "", size = 58 }: RefinedLuminescenceProps) {
+export const RefinedSparkles: React.FC<IconProps> = ({ className = '', size = 20 }) => {
   return (
-    <span 
-      className={`transition-all duration-300 ${className}`}
-      style={{
-        fontSize: `${size}px`,
-        lineHeight: 1,
-        filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.8))',
-        textShadow: '0 0 8px rgba(255, 255, 255, 0.9), 0 0 12px rgba(255, 255, 255, 0.7), 0 0 16px rgba(255, 255, 255, 0.5)'
-      }}
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
     >
-      ✨
-    </span>
+      <path
+        d="M12 2L13.09 7.26L18 8.27L13.09 9.28L12 14.54L10.91 9.28L6 8.27L10.91 7.26L12 2Z"
+        fill="currentColor"
+        fillOpacity="0.9"
+      />
+      <path
+        d="M19 9L19.63 11.37L22 12L19.63 12.63L19 15L18.37 12.63L16 12L18.37 11.37L19 9Z"
+        fill="currentColor"
+        fillOpacity="0.7"
+      />
+      <path
+        d="M19 19L19.63 21.37L22 22L19.63 22.63L19 25L18.37 22.63L16 22L18.37 21.37L19 19Z"
+        fill="currentColor"
+        fillOpacity="0.7"
+      />
+      <path
+        d="M5 9L5.63 11.37L8 12L5.63 12.63L5 15L4.37 12.63L2 12L4.37 11.37L5 9Z"
+        fill="currentColor"
+        fillOpacity="0.5"
+      />
+    </svg>
   );
-}
+};
 
 /**
- * RECORD TAB ICON - Video Camera Emoji 🎥 with Luminescence
+ * RefinedVideoCamera - Icon for video/media features
  */
-export function RefinedVideoCamera({ className = "", size = 58 }: RefinedLuminescenceProps) {
+export const RefinedVideoCamera: React.FC<IconProps> = ({ className = '', size = 20 }) => {
   return (
-    <span 
-      className={`transition-all duration-300 ${className}`}
-      style={{
-        fontSize: `${size}px`,
-        lineHeight: 1,
-        filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.8))',
-        textShadow: '0 0 8px rgba(255, 255, 255, 0.9), 0 0 12px rgba(255, 255, 255, 0.7), 0 0 16px rgba(255, 255, 255, 0.5)'
-      }}
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
     >
-      🎥
-    </span>
+      <rect
+        x="2"
+        y="6"
+        width="15"
+        height="12"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+      <path
+        d="M17 9L22 6V18L17 15V9Z"
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx="9"
+        cy="12"
+        r="2"
+        fill="currentColor"
+        fillOpacity="0.3"
+      />
+    </svg>
   );
-}
+};

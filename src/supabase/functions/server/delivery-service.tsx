@@ -1,7 +1,7 @@
 import { supabase } from "./supabase-client.tsx";
 import * as kv from "./kv_store.tsx";
 import { EmailService } from "./email-service.tsx";
-import { checkAndUnlockAchievements } from "./achievement-service.tsx";
+import { triggerAchievement } from "./achievement-service.tsx";
 import { safeKvGet, safeKvSet, safeKvDel } from './cloudflare-recovery.tsx';
 
 interface TimeCapsule {
@@ -60,17 +60,17 @@ export class DeliveryService {
     
     try {
       // Try to acquire the lock (with Cloudflare recovery) - Use quiet mode to reduce log spam during outages
-      // TIMEOUT PROTECTION: Use shorter timeout (5 seconds) for lock acquisition to fail fast
-      const lockCheckPromise = safeKvGet(() => kv.get(deliveryLockKey), deliveryLockKey, null, { quiet: true, maxRetries: 2 });
+      // TIMEOUT PROTECTION: Use shorter timeout (3 seconds) for lock acquisition to fail fast
+      const lockCheckPromise = safeKvGet(() => kv.get(deliveryLockKey), deliveryLockKey, null, { quiet: true, maxRetries: 1 });
       const lockCheckTimeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Lock check timeout')), 5000)
+        setTimeout(() => reject(new Error('Lock check timeout')), 3000)
       );
       
       let existingLock;
       try {
         existingLock = await Promise.race([lockCheckPromise, lockCheckTimeout]);
       } catch (timeoutError) {
-        console.warn('⏱️ Lock check timed out after 5s - database may be slow, skipping this delivery cycle');
+        console.warn('⏱️ Lock check timed out after 3s - database may be slow, skipping this delivery cycle');
         return { processed: 0, successful: 0, failed: 0 };
       }
       
@@ -88,9 +88,9 @@ export class DeliveryService {
       }
       
       // Acquire the lock (with Cloudflare recovery) - Use quiet mode and fewer retries with timeout
-      const lockSetPromise = safeKvSet(() => kv.set(deliveryLockKey, { timestamp: Date.now(), holder: instanceId }), deliveryLockKey, { quiet: true, maxRetries: 2 });
+      const lockSetPromise = safeKvSet(() => kv.set(deliveryLockKey, { timestamp: Date.now(), holder: instanceId }), deliveryLockKey, { quiet: true, maxRetries: 1 });
       const lockSetTimeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Lock set timeout')), 5000)
+        setTimeout(() => reject(new Error('Lock set timeout')), 3000)
       );
       
       try {
@@ -98,18 +98,22 @@ export class DeliveryService {
         lockAcquired = true;
         console.log(`🔒 Delivery processing lock acquired by ${instanceId}`);
       } catch (timeoutError) {
-        console.warn('⏱️ Lock acquisition timed out after 5s - database may be slow, skipping this delivery cycle');
+        console.warn('⏱️ Lock acquisition timed out after 3s - database may be slow, skipping this delivery cycle');
         return { processed: 0, successful: 0, failed: 0 };
       }
     } catch (lockError) {
       // Check if this is a temporary network/database error
       const errorMsg = lockError?.message || String(lockError);
+      const errorCode = lockError?.code || '';
       
       // Suppress verbose HTML errors from Cloudflare
       const isHtmlError = errorMsg.includes('<!DOCTYPE html>') || errorMsg.length > 500;
       
-      // Check if it's a retryable network/database error or timeout
-      if (errorMsg.includes('500') ||
+      // Check if it's a PostgreSQL statement timeout (57014) or other retryable errors
+      if (errorCode === '57014' ||
+          errorMsg.includes('statement timeout') ||
+          errorMsg.includes('canceling statement') ||
+          errorMsg.includes('500') ||
           errorMsg.includes('502') || 
           errorMsg.includes('503') ||
           errorMsg.includes('504') ||
@@ -134,7 +138,7 @@ export class DeliveryService {
           errorMsg.includes('undefined') ||
           errorMsg.includes('network') ||
           isHtmlError) {
-        console.warn('⚠️ Temporary Cloudflare/database issue acquiring delivery lock, will retry next interval');
+        console.warn('⚠️ Temporary database/Cloudflare issue acquiring delivery lock, will retry next interval');
         // Don't log HTML error details to avoid console spam
         if (!isHtmlError) {
           console.warn('   Error:', errorMsg.substring(0, 150));
@@ -1054,7 +1058,11 @@ export class DeliveryService {
       status: 'delivered' as const,
       delivered_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      media_files: mediaIds // Store media IDs for easier access when fetching received capsules
+      media_files: mediaIds, // Store media IDs for easier access when fetching received capsules
+      // ✅ CRITICAL: Clear failure fields when capsule is successfully delivered after a previous failure
+      failure_reason: undefined,
+      failed_at: undefined,
+      original_delivery_date: undefined
     };
     
     await kv.set(`capsule:${capsule.id}`, updatedCapsule);
@@ -1092,7 +1100,7 @@ export class DeliveryService {
             console.log(`🎯 [Achievement] Tracking capsule_received for user ${userId}`);
 
 
-            await checkAndUnlockAchievements(userId, 'capsule_received', {
+            await triggerAchievement(userId, 'capsule_received', {
               capsuleId: capsule.id,
               deliveryType: 'self',
               deliveredAt: new Date().toISOString()
@@ -1186,7 +1194,7 @@ export class DeliveryService {
                   // Track achievement for existing user
                   try {
                     console.log(`🎯 [Achievement] Tracking capsule_received for existing user ${matchingUser.id}`);
-                    await checkAndUnlockAchievements(matchingUser.id, 'capsule_received', {
+                    await triggerAchievement(matchingUser.id, 'capsule_received', {
                       capsuleId: capsule.id,
                       deliveryType: 'received',
                       deliveredAt: new Date().toISOString()

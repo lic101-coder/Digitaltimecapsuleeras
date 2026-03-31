@@ -33,7 +33,7 @@ export function TermsOfService() {
             </div>
             <div>
               <CardTitle className="text-2xl">Terms of Service</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">Last Updated: February 19, 2026</p>
+              <p className="text-sm text-muted-foreground mt-1">Last Updated: March 19, 2026</p>
             </div>
           </div>
         </CardHeader>
@@ -114,57 +114,25 @@ export function TermsOfService() {
 
               <Separator />
 
-              {/* Social Features */}
+              {/* Themed Capsules Store and Payments */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">5. Social Features and Community</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">8. Theme Store, Payments, and Beneficiary Slots</h2>
                 <div className="space-y-3 text-muted-foreground">
-                  <p><strong className="text-foreground">5.1 Echo System:</strong> The Service includes social features called "Capsule Echoes" that allow you to react to, comment on, and share delivered capsules. All Echoes are visible to you and may be shared with capsule recipients as configured.</p>
+                  <p><strong className="text-foreground">8.1 Premium Theme Purchases:</strong> The Service offers premium themed capsules and bundles for purchase through our integrated Store. The Store includes 11 premium themes across 14 total themed capsules, with various pricing tiers: flagship themes ($2.99), premium themes ($1.99), standard themes ($0.99), theme bundles ($1.99–$9.99), and Complete Library access ($9.99).</p>
                   
-                  <p><strong className="text-foreground">5.2 Reactions and Comments:</strong> When you add reactions or comments to capsules, you represent that your content complies with these Terms and community standards.</p>
+                  <p><strong className="text-foreground">8.2 Beneficiary Slot Purchases:</strong> You may purchase additional beneficiary slots to expand Legacy Access capabilities. Pricing tiers include: +1 Beneficiary Slot ($0.99), +3 Beneficiary Slots ($1.99), and Unlimited Beneficiary Slots ($4.99). The Beneficiaries feature allows you to protect your memories for those who matter most.</p>
                   
-                  <p><strong className="text-foreground">5.3 Sharing:</strong> You may share capsules through the Service's sharing features. When sharing, you agree to respect the original creator's intent and content ownership.</p>
+                  <p><strong className="text-foreground">8.3 Payment Processing:</strong> All payments are securely processed through Stripe, our third-party payment processor. We do not store your complete credit card information. By making a purchase, you agree to Stripe's Terms of Service and Privacy Policy.</p>
                   
-                  <p><strong className="text-foreground">5.4 Legacy Titles:</strong> You may assign legacy titles and beneficiaries to your account. These designations do not create legal obligations or transfer ownership of your account.</p>
+                  <p><strong className="text-foreground">8.4 Purchase Tracking:</strong> Theme purchases are tracked in our database with Row Level Security policies to ensure your purchase history is private and secure. Your purchased themes are permanently associated with your account.</p>
                   
-                  <p><strong className="text-foreground">5.5 Community Conduct:</strong> You agree to interact respectfully with other users and not to harass, abuse, or spam others through social features.</p>
-                </div>
-              </section>
-
-              <Separator />
-
-              {/* Achievements and Gamification */}
-              <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">6. Achievements and Gamification</h2>
-                <div className="space-y-3 text-muted-foreground">
-                  <p><strong className="text-foreground">6.1 Achievement System:</strong> The Service includes a comprehensive achievement system with 57 unique achievements across multiple tiers (Common, Uncommon, Rare, Epic, Legendary) that track your usage milestones, creative activities, and engagement patterns. Achievements have no monetary value and cannot be transferred, sold, or redeemed for cash or prizes.</p>
+                  <p><strong className="text-foreground">8.5 Pricing Changes:</strong> We reserve the right to modify pricing at any time. Price changes will not affect themes or slots you have already purchased.</p>
                   
-                  <p><strong className="text-foreground">6.2 Title Rewards:</strong> Unlocking achievements may grant special titles that you can equip and display throughout the Service. Titles are cosmetic badges of honor and have no functional impact on your account capabilities. You may only display one title at a time.</p>
+                  <p><strong className="text-foreground">8.6 No Refunds:</strong> All theme and beneficiary slot purchases are final and non-refundable except as required by law. Digital content is delivered immediately upon purchase.</p>
                   
-                  <p><strong className="text-foreground">6.3 Horizon Visual Effects:</strong> Unlocking achievements may grant access to special visual effects called "Horizons" that enhance your experience. These are cosmetic features provided at our discretion.</p>
+                  <p><strong className="text-foreground">8.7 License Grant:</strong> Purchased themes grant you a personal, non-transferable, non-exclusive license to use the theme for your capsules. You may not resell, redistribute, or share purchased themes with others.</p>
                   
-                  <p><strong className="text-foreground">6.4 No Guarantees:</strong> We reserve the right to modify, remove, add, or recategorize achievements at any time without notice. Achievement progress may reset if we determine improper usage.</p>
-                  
-                  <p><strong className="text-foreground">6.5 Fair Use:</strong> Attempting to game or exploit the achievement system through automated means, account sharing, or other forms of abuse may result in achievement revocation, account suspension, or termination.</p>
-                </div>
-              </section>
-
-              <Separator />
-
-              {/* Referral Program and Rewards */}
-              <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">7. Referral Program and Horizon Gallery Rewards</h2>
-                <div className="space-y-3 text-muted-foreground">
-                  <p><strong className="text-foreground">7.1 Referral System:</strong> The Service includes a referral program that allows you to invite others to join Eras. You will receive a unique referral link and tracking code. Referral rewards are provided at our sole discretion and have no monetary value.</p>
-                  
-                  <p><strong className="text-foreground">7.2 Horizon Gallery Rewards:</strong> Successful referrals unlock exclusive visual horizons at milestone tiers (1, 5, 10, and 25 successful referrals). These are cosmetic visual enhancements for your account and are non-transferable.</p>
-                  
-                  <p><strong className="text-foreground">7.3 Referral Requirements:</strong> A successful referral occurs when someone creates an account using your referral link, verifies their email, and creates at least one time capsule. We reserve the right to determine referral validity and may reject referrals that appear fraudulent or created through automated means.</p>
-                  
-                  <p><strong className="text-foreground">7.4 Anti-Fraud Protection:</strong> Creating fake accounts, using automated bots, incentivizing referrals with unauthorized offers, or attempting to manipulate the referral system is strictly prohibited and will result in immediate account suspension and forfeiture of all referral rewards.</p>
-                  
-                  <p><strong className="text-foreground">7.5 Program Changes:</strong> We reserve the right to modify, suspend, or terminate the referral program at any time without notice. Earned rewards may be revoked if we determine program abuse or Terms violations.</p>
-                  
-                  <p><strong className="text-foreground">7.6 Email Invitations:</strong> When sending referral invitations, you agree to comply with anti-spam laws (CAN-SPAM Act, GDPR) and only contact individuals who have consented to receive communications from you. You are solely responsible for your referral invitation practices.</p>
+                  <p><strong className="text-foreground">8.8 Store Access:</strong> The Store is accessible through the Settings dropdown (gear icon) in the main navigation with epic gradient styling to enhance the shopping experience.</p>
                 </div>
               </section>
 
@@ -172,19 +140,37 @@ export function TermsOfService() {
 
               {/* Themed Capsules and Visual Features */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">8. Themed Capsules and Visual Features</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">9. Themed Capsules and Visual Features</h2>
                 <div className="space-y-3 text-muted-foreground">
-                  <p><strong className="text-foreground">8.1 Theme System:</strong> The Service offers 15+ themed capsule experiences (including Birthday, Wedding, Graduation, Travel, and others) with custom visual ceremonies for sealing and opening capsules. Themes are provided for creative expression and user experience enhancement.</p>
+                  <p><strong className="text-foreground">9.1 Theme System:</strong> The Service offers 14 themed capsule experiences (including Birthday, Wedding, Graduation, Travel, and others) with custom visual ceremonies for sealing and opening capsules. Themes are provided for creative expression and user experience enhancement. Some themes are included free with your account, while premium themes require purchase.</p>
                   
-                  <p><strong className="text-foreground">8.2 Opening and Closing Ceremonies:</strong> Themed capsules include interactive animations and visual effects during creation and viewing. These ceremonies may use device resources (CPU, GPU) and are optimized for performance but may vary based on your device capabilities.</p>
+                  <p><strong className="text-foreground">9.2 42 Unique Ceremonies:</strong> Each themed capsule features VFX-quality opening and closing ceremonies with interactive animations and visual effects. These ceremonies may use device resources (CPU, GPU) and are optimized for performance but may vary based on your device capabilities.</p>
                   
-                  <p><strong className="text-foreground">8.3 Mobile Optimization:</strong> Visual effects are automatically optimized for mobile devices using solid colors instead of gradients to ensure performance and battery efficiency.</p>
+                  <p><strong className="text-foreground">9.3 Mobile Optimization:</strong> Visual effects are automatically optimized for mobile devices using solid colors instead of gradients to ensure performance and battery efficiency.</p>
                   
-                  <p><strong className="text-foreground">8.4 Session Persistence:</strong> Opening ceremonies are shown once per browser session per capsule. Ceremony state is stored locally in your browser's sessionStorage and clears when you close your browser.</p>
+                  <p><strong className="text-foreground">9.4 Session Persistence:</strong> Opening ceremonies are shown once per browser session per capsule. Ceremony state is stored locally in your browser's sessionStorage and clears when you close your browser.</p>
                   
-                  <p><strong className="text-foreground">8.5 Performance Considerations:</strong> Complex visual effects (such as particle systems, canvas animations, and special ceremonies) may impact device performance. You can skip ceremonies or use reduced motion settings in your device preferences.</p>
+                  <p><strong className="text-foreground">9.5 Performance Considerations:</strong> Complex visual effects (such as particle systems, canvas animations, and special ceremonies) may impact device performance. You can skip ceremonies or use reduced motion settings in your device preferences.</p>
                   
-                  <p><strong className="text-foreground">8.6 Browser Compatibility:</strong> Some visual features require modern browser capabilities (Canvas API, CSS animations, WebGL). We make reasonable efforts to provide fallback experiences, but full functionality may not be available on all devices or browsers.</p>
+                  <p><strong className="text-foreground">9.6 Browser Compatibility:</strong> Some visual features require modern browser capabilities (Canvas API, CSS animations, WebGL). We make reasonable efforts to provide fallback experiences, but full functionality may not be available on all devices or browsers.</p>
+                </div>
+              </section>
+
+              <Separator />
+
+              {/* Navigation and Views */}
+              <section>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">10. Navigation and Viewing Options</h2>
+                <div className="space-y-3 text-muted-foreground">
+                  <p><strong className="text-foreground">10.1 Main Navigation:</strong> The Service features four primary navigation buttons: Home, Compose, Record, and Vault. These tabs provide quick access to core functionality and are designed for intuitive user experience.</p>
+                  
+                  <p><strong className="text-foreground">10.2 Home Views:</strong> The Home tab includes three distinct viewing modes accessible via segmented control: Timeline (activity stream), Calendar (month/week calendar view), and Classic (grid with folders and stats). Your view preference is saved locally for persistent experience across sessions.</p>
+                  
+                  <p><strong className="text-foreground">10.3 Smart Routing:</strong> Capsules are intelligently routed based on their status: draft capsules open in edit mode for completion, while scheduled, delivered, and received capsules open in detail view with full ceremony experiences.</p>
+                  
+                  <p><strong className="text-foreground">10.4 Folder Organization:</strong> You may organize capsules into custom folders within your Vault. Folder structures are stored privately and accessible only to you.</p>
+                  
+                  <p><strong className="text-foreground">10.5 Tutorial System:</strong> The Service includes an comprehensive onboarding and tutorial system (Eras Odyssey) with three tutorial flows that guide new users through key features. Tutorial progress is tracked locally and may reset if you clear browser data.</p>
                 </div>
               </section>
 
@@ -192,13 +178,13 @@ export function TermsOfService() {
 
               {/* Notifications */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">9. Notifications and Communications</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">11. Notifications and Communications</h2>
                 <div className="space-y-3 text-muted-foreground">
-                  <p><strong className="text-foreground">9.1 Service Notifications:</strong> We may send you notifications about your capsules, deliveries, achievements, and other Service activities. You can control notification preferences in your account settings.</p>
+                  <p><strong className="text-foreground">11.1 Service Notifications:</strong> We may send you notifications about your capsules, deliveries, achievements, and other Service activities. You can control notification preferences in your account settings.</p>
                   
-                  <p><strong className="text-foreground">9.2 Email Communications:</strong> By creating an account, you agree to receive transactional emails necessary for the Service, including delivery confirmations and security alerts. You cannot opt out of critical service emails.</p>
+                  <p><strong className="text-foreground">11.2 Email Communications:</strong> By creating an account, you agree to receive transactional emails necessary for the Service, including delivery confirmations and security alerts. You cannot opt out of critical service emails.</p>
                   
-                  <p><strong className="text-foreground">9.3 Real-Time Features:</strong> The Service uses WebSocket connections for real-time notifications and updates. Your use of the Service constitutes consent to these connections.</p>
+                  <p><strong className="text-foreground">11.3 Real-Time Features:</strong> The Service uses WebSocket connections for real-time notifications and updates. Your use of the Service constitutes consent to these connections.</p>
                 </div>
               </section>
 
@@ -206,7 +192,7 @@ export function TermsOfService() {
 
               {/* Service Availability */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">10. Service Availability and Changes</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">12. Service Availability and Changes</h2>
                 <div className="space-y-3 text-muted-foreground">
                   <p><strong className="text-foreground">10.1 "As Is" Service:</strong> The Service is provided "as is" without warranties of any kind. We do not guarantee uninterrupted, error-free, or secure operation.</p>
                   
@@ -222,7 +208,7 @@ export function TermsOfService() {
 
               {/* Data and Privacy */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">11. Data and Privacy</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">13. Data and Privacy</h2>
                 <div className="space-y-3 text-muted-foreground">
                   <p><strong className="text-foreground">11.1 Privacy Policy:</strong> Our collection and use of personal information is governed by our Privacy Policy, which is incorporated into these Terms by reference.</p>
                   
@@ -238,7 +224,7 @@ export function TermsOfService() {
 
               {/* Limitation of Liability */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">12. Limitation of Liability</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">14. Limitation of Liability</h2>
                 <div className="space-y-3 text-muted-foreground">
                   <p><strong className="text-foreground">12.1 No Liability:</strong> TO THE MAXIMUM EXTENT PERMITTED BY LAW, ERAS AND ITS AFFILIATES, OFFICERS, EMPLOYEES, AGENTS, AND LICENSORS WILL NOT BE LIABLE FOR:</p>
                   <ul className="list-disc list-inside ml-4 space-y-2">
@@ -260,7 +246,7 @@ export function TermsOfService() {
 
               {/* Termination */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">13. Termination</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">15. Termination</h2>
                 <div className="space-y-3 text-muted-foreground">
                   <p><strong className="text-foreground">13.1 Termination by You:</strong> You may terminate your account at any time through the Settings page. Upon termination, your scheduled capsules will still be delivered unless you cancel them first.</p>
                   
@@ -281,7 +267,7 @@ export function TermsOfService() {
 
               {/* Dispute Resolution */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">14. Dispute Resolution</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">16. Dispute Resolution</h2>
                 <div className="space-y-3 text-muted-foreground">
                   <p><strong className="text-foreground">14.1 Informal Resolution:</strong> If you have a dispute with us, please contact us first to attempt to resolve it informally.</p>
                   
@@ -295,7 +281,7 @@ export function TermsOfService() {
 
               {/* Miscellaneous */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">15. Miscellaneous</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">17. Miscellaneous</h2>
                 <div className="space-y-3 text-muted-foreground">
                   <p><strong className="text-foreground">15.1 Entire Agreement:</strong> These Terms constitute the entire agreement between you and Eras regarding the Service.</p>
                   
@@ -315,7 +301,7 @@ export function TermsOfService() {
 
               {/* Contact */}
               <section>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">16. Contact Information</h2>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">18. Contact Information</h2>
                 <div className="space-y-3 text-muted-foreground">
                   <p>If you have any questions about these Terms, please contact us through the Settings page or by email.</p>
                   
@@ -337,8 +323,12 @@ export function TermsOfService() {
                 </h2>
                 <div className="space-y-2 text-muted-foreground">
                   <div className="p-3 bg-blue-500/10 rounded-md border border-blue-500/20">
+                    <p className="font-medium text-foreground">Version 7.0 - March 19, 2026</p>
+                    <p className="text-xs mt-1">Major monetization and navigation enhancements: Added Stripe payment integration with comprehensive theme store featuring 11 premium themes (flagship $2.99, premium $1.99, standard $0.99, bundles $1.99–$9.99, Complete Library $9.99); implemented beneficiary slot purchases (+1 Slot $0.99, +3 Slots $1.99, Unlimited $4.99); added database purchase tracking with Row Level Security policies; specified 42 VFX-quality ceremonies across 14 themed capsules; clarified 4-button main navigation (Home | Compose | Record | Vault); added comprehensive Unified Home with 3 viewing modes (Timeline/Calendar/Classic with segmented control); implemented smart capsule routing (drafts to edit mode, others to detail modal with ceremony); enhanced tutorial system (Eras Odyssey) with 3 comprehensive tutorial flows; updated Store access via Settings dropdown with epic gradient styling; and expanded refund, license grant, and third-party payment processor disclosures</p>
+                  </div>
+                  <div className="p-3 bg-blue-500/10 rounded-md border border-blue-500/20">
                     <p className="font-medium text-foreground">Version 6.0 - February 19, 2026</p>
-                    <p className="text-xs mt-1">Major referral program and notification enhancements: Added comprehensive referral program with tiered Horizon Gallery rewards (milestones at 1, 5, 10, and 25 referrals); implemented anti-fraud protection measures; added CAN-SPAM and GDPR compliance requirements for referral invitations; enhanced notification system with 6-color coding scheme (purple for received from others, blue for self-delivered, green for echoes, gold for achievements, red for urgent alerts, slate for system messages); improved dashboard performance with 83% faster capsule loading; and updated email invitation tracking with reward mechanics</p>
+                    <p className="text-xs mt-1">Major referral program and notification enhancements: Added comprehensive referral program with tiered Premium Theme rewards (milestones at 1, 3, 5, 10, and 25 referrals unlocking individual themes and bundle rewards including Celebration Bundle at 5 referrals, Life Milestones Bundle at 10 referrals, and Complete Library at 25 referrals); implemented anti-fraud protection measures; added CAN-SPAM and GDPR compliance requirements for referral invitations; enhanced notification system with 6-color coding scheme (purple for received from others, blue for self-delivered, green for echoes, gold for achievements, red for urgent alerts, slate for system messages); improved dashboard performance with 83% faster capsule loading; and updated email invitation tracking with reward mechanics</p>
                   </div>
                   <div className="p-3 bg-blue-500/10 rounded-md border border-blue-500/20">
                     <p className="font-medium text-foreground">Version 5.0 - January 8, 2026</p>
