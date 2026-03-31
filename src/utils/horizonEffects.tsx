@@ -1711,7 +1711,7 @@ export function ShieldPulses({ colorTheme }: { colorTheme: string[] }) {
 }
 
 /**
- * 🎬 Film Strip Scroll - For Cinematographer
+ * ��� Film Strip Scroll - For Cinematographer
  */
 export function FilmStripScroll({ colorTheme }: { colorTheme: string[] }) {
   const strips = useMemo(() => [0, 1], []);
@@ -2452,12 +2452,6 @@ export function getHorizonEffects(
       effects.museumPedestals = <MuseumPedestals key="pedestals" colorTheme={colorTheme} />;
       effects.theaterCurtains = <TheaterCurtains key="curtains" colorTheme={colorTheme} />;
       effects.filmReels = <FilmReels key="reels" colorTheme={colorTheme} />;
-      break;
-
-    case 'Chronicler':
-      effects.inkSpills = <InkSpills key="ink" colorTheme={colorTheme} />;
-      effects.pageTurning = <PageTurning key="pages" colorTheme={colorTheme} />;
-      effects.quillFeathers = <QuillFeathers key="feathers" colorTheme={colorTheme} />;
       break;
 
     case 'Moment Harvester':

@@ -766,7 +766,6 @@ export function GoldenWeddingDanceCeremony({
                     delay: 1.8 + Math.random() * 2,
                     repeat: Infinity,
                     ease: [0.43, 0.13, 0.23, 0.96]
-                  }}
                   style={{
                     filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))'
                   }}
