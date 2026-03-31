@@ -1711,7 +1711,7 @@ export function ShieldPulses({ colorTheme }: { colorTheme: string[] }) {
 }
 
 /**
- * 🎬 Film Strip Scroll - For Cinematographer
+ * ��� Film Strip Scroll - For Cinematographer
  */
 export function FilmStripScroll({ colorTheme }: { colorTheme: string[] }) {
   const strips = useMemo(() => [0, 1], []);
@@ -2503,13 +2503,6 @@ export function getHorizonEffects(
 
     case 'Chronicle Weaver':
       effects.chronicleWeaverLandscape = <ChronicleWeaverLandscape key="chronicle-weaver-landscape" colorTheme={colorTheme} />;
-      break;
-
-    case 'Chronicler':
-      effects.inkSpills = <InkSpills key="ink" colorTheme={colorTheme} />;
-      effects.pageTurning = <PageTurning key="pages" colorTheme={colorTheme} />;
-      effects.quillFeathers = <QuillFeathers key="feathers" colorTheme={colorTheme} />;
-      effects.chroniclerLandscape = <ChroniquerLandscape key="chronicler-landscape" colorTheme={colorTheme} />;
       break;
 
     case 'Circle Builder':
