@@ -672,16 +672,6 @@ export const titleConfigs: Record<string, TitleConfig> = {
     particleType: 'comment',
     intensity: 'medium'
   },
-  'Master Curator': {
-    icon: '🖼️',
-    flavorText: 'Arranging Perfection',
-    colors: ['#FDE047', '#FACC15'],
-    bgPattern: 'archive-files',
-    animation: 'file-organize',
-    particleCount: 18,
-    particleType: 'document',
-    intensity: 'high'
-  },
   'Archive Master': {
     icon: '📦',
     flavorText: 'Ruler of 750 Capsule Orbs',
