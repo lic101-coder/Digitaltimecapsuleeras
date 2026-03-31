@@ -751,7 +751,8 @@ export function GoldenWeddingDanceCeremony({
                   className="absolute text-3xl z-15"
                   style={{
                     left: `${startX}%`,
-                    top: `${startY}%`
+                    top: `${startY}%`,
+                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))'
                   }}
                   initial={{ opacity: 0, scale: 0, rotate: 0 }}
                   animate={{
@@ -766,9 +767,6 @@ export function GoldenWeddingDanceCeremony({
                     delay: 1.8 + Math.random() * 2,
                     repeat: Infinity,
                     ease: [0.43, 0.13, 0.23, 0.96]
-                  }}
-                  style={{
-                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))'
                   }}
                 >
                   🌸
