@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { Button } from "./components/ui/button";
 import {
   DropdownMenu,
@@ -838,15 +839,18 @@ function MainApp() {
 
   // Now that animation is done, continue with normal app logic
   return (
-    <MainAppContent
-      onAuthenticationSuccess={onAuthenticationSuccess}
-      pendingAuthData={pendingAuthData}
-      gateAuthData={gateAuthData}
-      onAuthDataProcessed={onAuthDataProcessed}
-      isTransitioning={isTransitioningRef.current}
-      triggerSlideAnimation={triggerSlideAnimation}
-      triggerSlideAnimationRef={triggerSlideAnimationRef}
-    />
+    <>
+      <MainAppContent
+        onAuthenticationSuccess={onAuthenticationSuccess}
+        pendingAuthData={pendingAuthData}
+        gateAuthData={gateAuthData}
+        onAuthDataProcessed={onAuthDataProcessed}
+        isTransitioning={isTransitioningRef.current}
+        triggerSlideAnimation={triggerSlideAnimation}
+        triggerSlideAnimationRef={triggerSlideAnimationRef}
+      />
+      <Analytics />
+    </>
   );
 }
 
