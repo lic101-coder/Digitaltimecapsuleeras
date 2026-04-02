@@ -1824,7 +1824,20 @@ export function CreateCapsule({
       // Handle both message and text_message fields
       setMessage(editingCapsule.message || editingCapsule.text_message || '');
       
-      setRecipientType(editingCapsule.recipient_type || null);
+      // ✅ FIX: Infer recipientType if not set (for older capsules)
+      let inferredRecipientType = editingCapsule.recipient_type || null;
+      
+      // If recipientType is null but recipients exist, infer it
+      if (!inferredRecipientType && editingCapsule.recipients && editingCapsule.recipients.length > 0) {
+        inferredRecipientType = 'others';
+        console.log('✅ Inferred recipientType=others from existing recipients');
+      } else if (!inferredRecipientType && (!editingCapsule.recipients || editingCapsule.recipients.length === 0)) {
+        // If no recipientType and no recipients, assume self
+        inferredRecipientType = 'self';
+        console.log('✅ Inferred recipientType=self (no recipients)');
+      }
+      
+      setRecipientType(inferredRecipientType);
       
       // ❌ REMOVED: Don't set delivery_time here - we'll calculate it from the zonedDate below
       // setDeliveryTime(editingCapsule.delivery_time || '');

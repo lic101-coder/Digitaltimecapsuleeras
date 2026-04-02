@@ -226,7 +226,7 @@ export function GoldenWeddingDanceCeremony({
               exit={{ opacity: 0 }}
             >
               <h2 className="text-3xl font-bold text-rose-200 drop-shadow-lg">
-                Two Souls, One Moment 💑
+                Two Souls, One Moment 🤵👰
               </h2>
             </motion.div>
           </>
@@ -246,7 +246,10 @@ export function GoldenWeddingDanceCeremony({
               transition={{ duration: 0.5 }}
             >
               <div className="relative">
-                <div className="text-8xl">💑</div>
+                <div className="text-8xl flex gap-1">
+                  <span>🤵</span>
+                  <span>👰</span>
+                </div>
                 
                 {/* Golden spark at connection point */}
                 <motion.div
@@ -457,7 +460,10 @@ export function GoldenWeddingDanceCeremony({
                 y: { duration: 10, repeat: Infinity, ease: [0.43, 0.13, 0.23, 0.96] }
               }}
             >
-              💑
+              <div className="flex gap-2">
+                <span>🤵</span>
+                <span>👰</span>
+              </div>
               
               {/* Glowing dance aura - SMOOTHER COLOR TRANSITIONS */}
               <motion.div
@@ -531,7 +537,10 @@ export function GoldenWeddingDanceCeremony({
                     filter: 'blur(8px)'
                   }}
                 >
-                  💑
+                  <div className="flex gap-2">
+                    <span>🤵</span>
+                    <span>👰</span>
+                  </div>
                 </motion.div>
               ))}
 

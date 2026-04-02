@@ -402,6 +402,7 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
 
   const statsRef = useRef(null);
   const folderBeforeActionRef = useRef(null); // Store folder state during delete/view operations
+  const scrollPositionsRef = useRef<Record<string, number>>({}); // Store scroll positions per folder
   
   // ULTIMATE NUCLEAR FIX: Force clear hover states during scroll - targets ALL scroll containers
   useEffect(() => {
@@ -683,6 +684,49 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
       sessionStorage.removeItem(`dashboard_folder_before_edit_${user.id}`);
     }
   }, [user?.id, activeTab]);
+
+  // ========================================
+  // SCROLL POSITION PRESERVATION SYSTEM
+  // ========================================
+  // Preserves scroll position when:
+  // 1. Opening capsule detail modal → saves position → restores on close
+  // 2. Switching between folders → saves old folder position → restores when returning
+  // 3. Deleting capsules → maintains position in folder view
+  // Uses scrollPositionsRef to store positions per folder (all/scheduled/delivered/received/draft)
+  // ========================================
+
+  // Restore scroll position when returning to a folder view
+  useEffect(() => {
+    if (!activeTab || !user?.id || !scrollViewportRef.current) return;
+    
+    // Small delay to ensure DOM is rendered before restoring scroll
+    const timer = setTimeout(() => {
+      const savedPosition = scrollPositionsRef.current[activeTab];
+      if (savedPosition !== undefined && scrollViewportRef.current) {
+        console.log(`📜 Restoring scroll position for ${activeTab}:`, savedPosition);
+        scrollViewportRef.current.scrollTop = savedPosition;
+      }
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [activeTab, user?.id, viewingCapsule]); // Also trigger when viewingCapsule closes
+
+  // Save scroll position when folder is about to change
+  useEffect(() => {
+    // Save current scroll position before activeTab changes
+    const currentTab = activeTab;
+    
+    return () => {
+      // This cleanup runs BEFORE activeTab changes
+      if (currentTab && scrollViewportRef.current) {
+        const scrollPos = scrollViewportRef.current.scrollTop;
+        if (scrollPos > 0) {
+          scrollPositionsRef.current[currentTab] = scrollPos;
+          console.log(`💾 Saved scroll position on folder change for ${currentTab}:`, scrollPos);
+        }
+      }
+    };
+  }, [activeTab]);
 
   // Hydrate media for specific capsules (lazy loading)
   const hydrateMedia = async (capsulesToHydrate) => {
@@ -3246,7 +3290,14 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
                 <FolderHeader 
                   folderType={activeTab}
                   count={activeTab === 'received' ? stats.received : (activeTab === 'all' ? stats.total : filteredCapsules.length)}
-                  onClose={() => setActiveTab(null)}
+                  onClose={() => {
+                    // Clear scroll position when closing folder
+                    if (activeTab && scrollPositionsRef.current[activeTab] !== undefined) {
+                      delete scrollPositionsRef.current[activeTab];
+                      console.log(`🗑️ Cleared scroll position for ${activeTab}`);
+                    }
+                    setActiveTab(null);
+                  }}
                 />
                 
                 {/* Hidden accessibility elements */}
@@ -3419,8 +3470,13 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
                         isReceived: capsule.isReceived,
                         capsuleObject: capsule
                       });
-                      // Store current folder before viewing capsule
+                      // Store current folder and scroll position before viewing capsule
                       folderBeforeActionRef.current = activeTab;
+                      if (activeTab && scrollViewportRef.current) {
+                        const scrollPos = scrollViewportRef.current.scrollTop;
+                        scrollPositionsRef.current[activeTab] = scrollPos;
+                        console.log(`📌 Saved scroll position for ${activeTab}:`, scrollPos);
+                      }
                       setViewingCapsule(capsule);
                       console.log('✅ setViewingCapsule called with capsule');
                     }}

@@ -1362,15 +1362,15 @@ export const ACHIEVEMENT_DEFINITIONS: Record<string, Achievement> = {
   A046: {
     id: 'A046',
     title: 'Folder Pioneer',
-    description: 'Create your first memory folder',
-    detailedDescription: 'Organization is the key to a great archive. You\'ve created your first memory folder to keep your capsules neatly arranged.',
+    description: 'Create your first custom folder',
+    detailedDescription: 'Organization is the key to a great archive. You\'ve created your first custom folder to keep your capsules neatly arranged.',
     category: 'special',
     rarity: 'common',
     icon: 'FolderOpen',
     unlockCriteria: {
       type: 'count',
       stat: 'folders_created',
-      threshold: 1,
+      threshold: 5, // 5th folder = first custom folder (after Photos, Videos, Audio, Documents)
       operator: '>='
     },
     rewards: { 
@@ -1391,15 +1391,15 @@ export const ACHIEVEMENT_DEFINITIONS: Record<string, Achievement> = {
   A047: {
     id: 'A047',
     title: 'Folder Architect',
-    description: 'Create 5 memory folders',
-    detailedDescription: 'Five folders, each holding a chapter of your life. You\'re building a beautifully structured memory archive.',
+    description: 'Create 5 custom folders',
+    detailedDescription: 'Five custom folders, each holding a chapter of your life. You\'re building a beautifully structured memory archive.',
     category: 'special',
     rarity: 'rare',
     icon: 'FolderOpen',
     unlockCriteria: {
       type: 'count',
       stat: 'folders_created',
-      threshold: 5,
+      threshold: 9, // 9th folder = 5 custom folders (after 4 default)
       operator: '>='
     },
     rewards: { 

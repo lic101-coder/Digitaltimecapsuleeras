@@ -2072,7 +2072,54 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
           console.log(`  📁 ${folder.name}: ${folder.mediaIds?.length || 0} items`, folder.mediaIds || []);
         });
         
-        setFolders(loadedFolders);
+        // PHASE 3: Load inherited folders from KV store
+        console.log('📦 [Phase 3] Loading inherited folders...');
+        let inheritedFolders = [];
+        try {
+          const inheritedResponse = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/legacy-access/inherited-folders`,
+            {
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`
+              }
+            }
+          );
+          
+          if (inheritedResponse.ok) {
+            const inheritedData = await inheritedResponse.json();
+            inheritedFolders = inheritedData.folders || [];
+            console.log('📦 [Phase 3] Loaded inherited folders:', inheritedFolders.length);
+            inheritedFolders.forEach(folder => {
+              console.log(`  📦 ${folder.name}: ${folder.capsuleIds?.length || 0} capsules (from ${folder.originalUserId})`);
+            });
+          } else {
+            console.log('📦 [Phase 3] No inherited folders or error loading:', inheritedResponse.status);
+          }
+        } catch (inheritErr) {
+          console.error('📦 [Phase 3] Error loading inherited folders:', inheritErr);
+          // Continue without inherited folders
+        }
+        
+        // Merge regular and inherited folders
+        // Mark inherited folders with special flag for UI
+        const allFolders = [
+          ...loadedFolders,
+          ...inheritedFolders.map(f => ({
+            id: f.id,
+            name: f.name,
+            icon: f.icon || '📦',
+            color: f.color || '#8b5cf6',
+            isInherited: true,
+            isReadOnly: true,
+            originalUserId: f.originalUserId,
+            originalFolderId: f.originalFolderId,
+            mediaIds: f.capsuleIds || [], // Map capsuleIds to mediaIds for compatibility
+            importedAt: f.importedAt
+          }))
+        ];
+        
+        console.log('✅ Total folders (regular + inherited):', allFolders.length);
+        setFolders(allFolders);
         
         // Auto-create permanent system folders if they don't exist
         const foldersCreated = await ensurePermanentFolders(loadedFolders);
@@ -2094,8 +2141,26 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
           if (reloadResponse.ok) {
             const reloadResult = await reloadResponse.json();
             const reloadedFolders = reloadResult.metadata?.folders || [];
-            setFolders(reloadedFolders);
-            console.log('✅ Folders reloaded:', reloadedFolders.length);
+            
+            // Re-merge with inherited folders
+            const remergedFolders = [
+              ...reloadedFolders,
+              ...inheritedFolders.map(f => ({
+                id: f.id,
+                name: f.name,
+                icon: f.icon || '📦',
+                color: f.color || '#8b5cf6',
+                isInherited: true,
+                isReadOnly: true,
+                originalUserId: f.originalUserId,
+                originalFolderId: f.originalFolderId,
+                mediaIds: f.capsuleIds || [],
+                importedAt: f.importedAt
+              }))
+            ];
+            
+            setFolders(remergedFolders);
+            console.log('✅ Folders reloaded:', remergedFolders.length);
           }
         }
         
@@ -3712,7 +3777,7 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
     const canDrop = false;
     const drop = useRef(null);
 
-    const handleFolderClick = useCallback(() => {
+    const handleFolderClick = useCallback(async () => {
       console.log('📂 FolderCard onClick called for:', folder.name, folder.id);
       
       // Check if folder is private and locked
@@ -3722,9 +3787,77 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
         return;
       }
 
-      console.log('📂 Setting mobileOpenFolder to:', folder);
-      setMobileOpenFolder(folder);
-    }, [folder, mobileOpenFolder, previewItem, folders, unlockedFolders]);
+      // PHASE 4: Load inherited folder capsules
+      if (folder.isInherited) {
+        console.log('📦 [Phase 4] Loading inherited folder capsules...');
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            console.error('❌ No session for inherited folder load');
+            return;
+          }
+          
+          // Extract inheritance ID from folder ID
+          const inheritanceId = folder.id.replace('inherited_', '');
+          
+          const response = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/legacy-access/inherited-folder/${inheritanceId}/capsules`,
+            {
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`
+              }
+            }
+          );
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log(`📦 [Phase 4] Loaded ${data.capsules?.length || 0} inherited capsules`);
+            
+            // Add inherited capsules to vaultItems temporarily
+            // They'll be filtered out when switching folders
+            if (data.capsules && data.capsules.length > 0) {
+              // Map capsules to vault item format
+              const inheritedItems = data.capsules.map((cap: any) => ({
+                id: cap.id,
+                name: cap.title || cap.message?.substring(0, 50) || 'Untitled',
+                type: cap.theme_id || 'classic',
+                timestamp: cap.delivery_date || cap.created_at,
+                file_name: cap.title,
+                isInherited: true,
+                isReadOnly: true,
+                originalData: cap // Store full capsule data
+              }));
+              
+              // Merge with existing vault items
+              setVaultItems(prev => {
+                // Remove old inherited items for this folder
+                const filtered = prev.filter(item => !item.isInherited || item.folder_id !== folder.id);
+                return [...filtered, ...inheritedItems.map(item => ({ ...item, folder_id: folder.id }))];
+              });
+              
+              console.log('✅ [Phase 4] Inherited capsules added to vault');
+            }
+          } else {
+            console.error('❌ [Phase 4] Failed to load inherited capsules:', response.status);
+          }
+        } catch (err) {
+          console.error('❌ [Phase 4] Error loading inherited capsules:', err);
+        }
+      }
+
+      // 🔧 FIX ISSUE #3: Support BOTH mobile and desktop folder selection
+      console.log('📱 isMobile:', isMobile);
+      
+      if (isMobile) {
+        // Mobile: Use overlay system
+        console.log('📱 Mobile: Setting mobileOpenFolder');
+        setMobileOpenFolder(folder);
+      } else {
+        // Desktop: Use filtered grid system
+        console.log('💻 Desktop: Setting selectedFolderId');
+        setSelectedFolderId(folder.id);
+      }
+    }, [folder, mobileOpenFolder, previewItem, folders, unlockedFolders, isMobile, supabase, projectId]);
 
     // Calculate ACTUAL item count (only items that exist in vaultItems)
     const actualMediaCount = useMemo(() => {
@@ -3782,6 +3915,8 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
           onMenuOpenChange={(open) => {
             setOpenFolderMenuId(open ? folder.id : null);
           }}
+          isInherited={folder.isInherited || false}
+          isReadOnly={folder.isReadOnly || false}
         />
       </div>
     );

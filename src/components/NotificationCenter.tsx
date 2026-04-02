@@ -566,10 +566,9 @@ function renderNotificationContent(
         </>
       );
     } else {
-      // Self-delivery: "Your time capsule [name] has been delivered!"
+      // Self-delivery: Show capsule name button and sender info only (title already says "delivered")
       return (
         <>
-          {'Your time capsule '}
           {metadata.capsuleId && onNotificationClick ? (
             <button
               onClick={(e) => {
@@ -597,7 +596,6 @@ function renderNotificationContent(
               "{metadata.capsuleName}"
             </span>
           )}
-          {' has been delivered!'}
           {metadata.senderName && metadata.senderName.includes('Past Self') && (
             <span className="block mt-1 text-slate-400 text-xs">From {metadata.senderName}</span>
           )}

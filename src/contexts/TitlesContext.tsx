@@ -1,6 +1,7 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useTitles as useTitlesHook } from '../hooks/useTitles';
 import type { TitleProfile, AvailableTitles } from '../hooks/useTitles';
+import { useAuth } from './AuthContext';
 
 interface TitlesContextValue {
   titleProfile: TitleProfile | null;

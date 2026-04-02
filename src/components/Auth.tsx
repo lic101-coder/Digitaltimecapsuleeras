@@ -1409,6 +1409,39 @@ export function Auth({ onAuthenticated }) {
           console.log('ℹ️ [Referral] No referral code found - user signed up directly');
         }
         
+        // PHASE 5: Check for pending import token
+        const pendingImportToken = sessionStorage.getItem('pending_import_token');
+        if (pendingImportToken && result.accessToken) {
+          console.log('📦 [Phase 5] Found pending import token, auto-importing folders...');
+          try {
+            const importResponse = await fetch(
+              `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/legacy-access/import`,
+              {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${result.accessToken}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ token: pendingImportToken })
+              }
+            );
+            
+            if (importResponse.ok) {
+              const importData = await importResponse.json();
+              console.log('✅ [Phase 5] Auto-import successful:', importData.importedCount, 'folders');
+              toast.success(`${importData.importedCount} folders imported to your vault!`, {
+                duration: 4000
+              });
+              sessionStorage.removeItem('pending_import_token');
+            } else {
+              console.error('❌ [Phase 5] Auto-import failed:', importResponse.status);
+            }
+          } catch (importErr) {
+            console.error('❌ [Phase 5] Error during auto-import:', importErr);
+            // Don't block signup flow on import failure
+          }
+        }
+        
         // Custom signup always requires email verification
         console.log('📨 Verification email was sent automatically by backend');
         

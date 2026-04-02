@@ -37,6 +37,9 @@ interface VaultFolderProps {
   // Menu state
   isMenuOpen?: boolean; // Track if this folder's menu is open
   onMenuOpenChange?: (open: boolean) => void; // Callback when menu opens/closes
+  // PHASE 3: Inherited folder flag
+  isInherited?: boolean; // Whether this folder was inherited from someone
+  isReadOnly?: boolean; // Whether this folder is read-only
 }
 
 const COLOR_SCHEMES = {
@@ -69,7 +72,9 @@ export function VaultFolder({
   legacyAccessBeneficiaryCount,
   isPrivate = false,
   isMenuOpen = false,
-  onMenuOpenChange
+  onMenuOpenChange,
+  isInherited = false,
+  isReadOnly = false
 }: VaultFolderProps) {
   const colorScheme = COLOR_SCHEMES[color as keyof typeof COLOR_SCHEMES] || COLOR_SCHEMES.blue;
   
@@ -389,6 +394,18 @@ export function VaultFolder({
                 className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 border-purple-400/40 bg-purple-500/10 text-purple-400 backdrop-blur-sm flex items-center gap-1`}
               >
                 <><Lock className="w-2.5 h-2.5" /> Private</>
+              </Badge>
+            </div>
+          )}
+          
+          {/* PHASE 3: Inherited badge */}
+          {isInherited && (
+            <div className="mt-1">
+              <Badge 
+                variant="outline" 
+                className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 border-cyan-400/40 bg-cyan-500/10 text-cyan-400 backdrop-blur-sm flex items-center gap-1`}
+              >
+                <>📦 Inherited</>
               </Badge>
             </div>
           )}

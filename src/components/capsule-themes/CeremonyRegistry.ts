@@ -496,7 +496,7 @@ export const CEREMONY_REGISTRY: Record<string, CeremonyConfig[]> = {
       preview: {
         primaryColor: '#fbbf24',
         secondaryColor: '#ec4899',
-        icon: '💑'
+        icon: '🤵👰'
       }
     }
   ],

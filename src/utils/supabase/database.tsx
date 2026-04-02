@@ -135,6 +135,26 @@ export class DatabaseService {
           const errorMessage = errorDetails.error || errorDetails.message || `Database request failed: ${response.status} ${response.statusText}`;
           console.error(`❌ Database request failed:`, errorMessage);
           
+          // ✅ AUTH ERROR DETECTION: Handle expired/invalid JWT tokens
+          if (response.status === 401 || 
+              errorMessage.includes('Invalid JWT') || 
+              errorMessage.includes('jwt expired') ||
+              errorMessage.includes('Invalid Refresh Token')) {
+            console.error('🔐 Authentication error detected - session expired');
+            
+            // Clear the invalid session
+            try {
+              await supabase.auth.signOut();
+              console.log('🚪 Logged out due to invalid session');
+            } catch (signOutError) {
+              console.error('Failed to sign out:', signOutError);
+            }
+            
+            // Reload to trigger auth redirect
+            window.location.reload();
+            throw new Error('Your session has expired. Please sign in again.');
+          }
+          
           // Special handling for 502 errors
           if (response.status === 502) {
             throw new Error(`Server temporarily unavailable (502). Please try again in a moment.`);

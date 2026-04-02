@@ -41,7 +41,9 @@ export interface AvailableTitles {
 }
 
 export function useTitles() {
-  const { session } = useAuth();
+  const auth = useAuth();
+  const session = auth?.session || null;
+  
   const [titleProfile, setTitleProfile] = useState<TitleProfile | null>(null);
   const [availableTitles, setAvailableTitles] = useState<AvailableTitles | null>(null);
   const [loading, setLoading] = useState(true);

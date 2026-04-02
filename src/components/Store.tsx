@@ -84,7 +84,7 @@ const PREMIUM_THEMES: ThemeConfig[] = [
     ceremonies: [
       { icon: '🏆', name: 'Photo Finish Victory', description: 'Triumphant & Explosive', color: '#fbbf24' },
       { icon: '🎓', name: 'Graduation Cap Toss', description: 'Inspiring & Celestial', color: '#a78bfa' },
-      { icon: '💑', name: 'Wedding First Dance', description: 'Romantic & Magical', color: '#ec4899' },
+      { icon: '🤵👰', name: 'Wedding First Dance', description: 'Romantic & Magical', color: '#ec4899' },
     ],
     features: ['150+ particle effects', 'Cinema-quality VFX', 'Lifetime access']
   },
@@ -370,9 +370,17 @@ export function Store({ onClose, userId, onOpenLegacyAccess }: StoreProps) {
       const url = `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/purchases/${userId}`;
       console.log('📡 [Store] Fetch URL:', url);
       
+      const token = await getAccessToken();
+      if (!token) {
+        console.error('❌ [Store] No access token available');
+        toast.error('Please sign in to view purchases');
+        onClose();
+        return;
+      }
+      
       const response = await fetch(
         url,
-        { headers: { 'Authorization': `Bearer ${publicAnonKey}` } }
+        { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
       console.log('📡 [Store] Response status:', response.status, response.statusText);
@@ -382,11 +390,23 @@ export function Store({ onClose, userId, onOpenLegacyAccess }: StoreProps) {
         console.log('✅ [Store] Purchases loaded:', data);
         setPurchasedThemes(data.themes || []);
         setBeneficiaryLimit(data.beneficiaryLimit ?? 1);
+      } else if (response.status === 401) {
+        console.error('❌ [Store] Authentication error - session expired');
+        toast.error('Your session has expired. Please sign in again.');
+        onClose();
+        // Trigger logout
+        window.location.reload();
+      } else if (response.status === 404) {
+        console.log('ℹ️ [Store] No purchases found for user (404) - treating as empty');
+        setPurchasedThemes([]);
+        setBeneficiaryLimit(1);
       } else {
         console.error('❌ [Store] Failed to fetch purchases:', response.status, response.statusText);
+        toast.error('Failed to load purchases');
       }
     } catch (error) {
       console.error('❌ [Store] Error fetching purchases:', error);
+      toast.error('Failed to load purchases');
     } finally {
       setLoading(false);
     }
@@ -394,6 +414,12 @@ export function Store({ onClose, userId, onOpenLegacyAccess }: StoreProps) {
 
   const handlePurchase = async (themeId: string) => {
     try {
+      // ✅ VALIDATION: Prevent repurchasing already owned themes
+      if (isThemePurchased(themeId)) {
+        toast.error('You already own this theme!');
+        return;
+      }
+
       setPurchasing(themeId);
       const token = await getAccessToken();
       if (!token) { toast.error('Please sign in to make purchases'); setPurchasing(null); return; }
@@ -413,6 +439,32 @@ export function Store({ onClose, userId, onOpenLegacyAccess }: StoreProps) {
 
   const handleBundlePurchase = async (bundleId: string) => {
     try {
+      // ✅ VALIDATION: Prevent repurchasing bundles
+      // Special case: 'complete-library' is not in BUNDLES array
+      if (bundleId !== 'complete-library') {
+        const bundle = BUNDLES.find(b => b.id === bundleId);
+        if (!bundle) {
+          toast.error('Bundle not found');
+          return;
+        }
+
+        // Check if user owns all themes in this bundle
+        const themesInBundle = bundle.themeIds;
+        const allThemesOwned = themesInBundle.every(tid => isThemePurchased(tid));
+        
+        if (allThemesOwned) {
+          toast.error(`You already own all themes in the ${bundle.name}!`);
+          return;
+        }
+      } else {
+        // For complete-library, check if user owns all premium themes
+        const allPremiumThemesOwned = PREMIUM_THEMES.every(t => isThemePurchased(t.id));
+        if (allPremiumThemesOwned) {
+          toast.error('You already own all premium themes!');
+          return;
+        }
+      }
+
       setPurchasing(bundleId);
       const token = await getAccessToken();
       if (!token) { toast.error('Please sign in to make purchases'); setPurchasing(null); return; }
@@ -432,6 +484,18 @@ export function Store({ onClose, userId, onOpenLegacyAccess }: StoreProps) {
 
   const handleSlotPurchase = async (slotType: string) => {
     try {
+      // ✅ VALIDATION: Prevent purchasing slots after buying unlimited
+      if (beneficiaryLimit === -1 && slotType !== 'unlimited') {
+        toast.error('You already have unlimited beneficiary slots!');
+        return;
+      }
+
+      // ✅ VALIDATION: Prevent purchasing unlimited if already purchased
+      if (slotType === 'unlimited' && beneficiaryLimit === -1) {
+        toast.error('You already have unlimited beneficiary slots!');
+        return;
+      }
+
       setPurchasing(`slot-${slotType}`);
       const token = await getAccessToken();
       if (!token) { toast.error('Please sign in to make purchases'); setPurchasing(null); return; }
@@ -458,6 +522,7 @@ export function Store({ onClose, userId, onOpenLegacyAccess }: StoreProps) {
   const completeLibrarySavings = totalIndividualPrice - completeLibraryPrice;
   const isUnlimited = beneficiaryLimit === -1;
   const slotLabel = isUnlimited ? '∞ Unlimited' : `${beneficiaryLimit} slot${beneficiaryLimit !== 1 ? 's' : ''}`;
+  const allPremiumThemesOwned = PREMIUM_THEMES.every(t => isThemePurchased(t.id));
 
   if (loading) {
     return (
@@ -565,14 +630,20 @@ export function Store({ onClose, userId, onOpenLegacyAccess }: StoreProps) {
                   💰 Save ${completeLibrarySavings.toFixed(2)}
                 </motion.div>
               </div>
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleBundlePurchase('complete-library')}
-                disabled={purchasing === 'complete-library'}
-                className="w-full h-14 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-black font-bold rounded-xl shadow-lg hover:shadow-amber-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {purchasing === 'complete-library' ? <><Loader2 className="w-5 h-5 animate-spin" />Processing...</> : <><Lock className="w-5 h-5" />Unlock Everything</>}
-              </motion.button>
+              {allPremiumThemesOwned ? (
+                <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/50 px-6 py-3 text-base">
+                  <Check className="w-5 h-5 mr-2" />Owned
+                </Badge>
+              ) : (
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleBundlePurchase('complete-library')}
+                  disabled={purchasing === 'complete-library'}
+                  className="w-full h-14 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-black font-bold rounded-xl shadow-lg hover:shadow-amber-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {purchasing === 'complete-library' ? <><Loader2 className="w-5 h-5 animate-spin" />Processing...</> : <><Lock className="w-5 h-5" />Unlock Everything</>}
+                </motion.button>
+              )}
             </div>
           </motion.div>
         </motion.div>

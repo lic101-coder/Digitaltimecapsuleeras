@@ -1183,3 +1183,160 @@ async function sendInactivityWarningEmail(config: LegacyAccessConfig): Promise<v
     console.error(`❌ Error sending warning email:`, error);
   }
 }
+
+/**
+ * ✅ PHASE 1: Import inherited folders to recipient's vault
+ * Creates read-only folder references in recipient's account
+ */
+export async function importInheritedFolders(
+  tokenId: string,
+  recipientUserId: string
+): Promise<{ success: boolean; importedCount: number; error?: string }> {
+  try {
+    console.log(`📦 [Import] Starting import for recipient ${recipientUserId} with token ${tokenId}`);
+    
+    // 1. Validate token
+    const token = await kv.get<UnlockToken>(getUnlockTokenKey(tokenId));
+    if (!token) {
+      console.error('❌ [Import] Token not found');
+      return { success: false, importedCount: 0, error: 'Invalid token' };
+    }
+    
+    if (token.usedAt) {
+      console.error('❌ [Import] Token already used');
+      return { success: false, importedCount: 0, error: 'This inheritance has already been imported' };
+    }
+    
+    // Check token expiration
+    if (Date.now() > token.expiresAt) {
+      console.error('❌ [Import] Token expired');
+      return { success: false, importedCount: 0, error: 'Token has expired' };
+    }
+    
+    console.log(`✅ [Import] Token validated for owner ${token.userId}`);
+    
+    // 2. Get owner's legacy config
+    const ownerConfig = await getLegacyAccessConfig(token.userId);
+    const beneficiary = ownerConfig.beneficiaries.find(b => b.id === token.beneficiaryId);
+    
+    if (!beneficiary) {
+      console.error('❌ [Import] Beneficiary not found in config');
+      return { success: false, importedCount: 0, error: 'Beneficiary not found' };
+    }
+    
+    console.log(`✅ [Import] Found beneficiary ${beneficiary.email}`);
+    
+    // 3. Get folders this beneficiary has access to
+    const allFolders = await kv.getByPrefix<any>(`folder:${token.userId}:`);
+    console.log(`📁 [Import] Found ${allFolders.length} total folders for owner`);
+    
+    const foldersToImport = allFolders.filter(folder => {
+      // Check folder-specific permissions first
+      if (token.folderPermissions && token.folderPermissions[folder.id]) {
+        console.log(`✅ [Import] Folder ${folder.name} has token permission`);
+        return true;
+      }
+      
+      // Check if beneficiary has permission for this folder
+      if (beneficiary.folderPermissions && beneficiary.folderPermissions[folder.id]) {
+        console.log(`✅ [Import] Folder ${folder.name} has beneficiary permission`);
+        return true;
+      }
+      
+      // Check if folder has global legacy access
+      if (folder.legacyAccess?.mode === 'global') {
+        console.log(`✅ [Import] Folder ${folder.name} has global access`);
+        return true;
+      }
+      
+      console.log(`⊘ [Import] Folder ${folder.name} - no access`);
+      return false;
+    });
+    
+    console.log(`📦 [Import] ${foldersToImport.length} folders to import`);
+    
+    if (foldersToImport.length === 0) {
+      return { success: false, importedCount: 0, error: 'No folders available to import' };
+    }
+    
+    let importedCount = 0;
+    
+    // 4. Create inherited folder references
+    for (const originalFolder of foldersToImport) {
+      const inheritanceId = `${token.userId}_${originalFolder.id}`;
+      
+      // Get permission level (default to 'view')
+      const permission = 
+        token.folderPermissions?.[originalFolder.id] || 
+        beneficiary.folderPermissions?.[originalFolder.id] || 
+        'view';
+      
+      // Get capsule IDs from folder - support both mediaIds and capsule_ids
+      const capsuleIds = originalFolder.mediaIds || originalFolder.capsule_ids || [];
+      
+      const inheritedFolder = {
+        id: `inherited_${inheritanceId}`,
+        recipientUserId,
+        originalUserId: token.userId,
+        originalFolderId: originalFolder.id,
+        name: originalFolder.name,
+        icon: originalFolder.icon || '📦',
+        color: originalFolder.color || '#8b5cf6',
+        capsuleIds,
+        importedAt: Date.now(),
+        inheritanceToken: tokenId,
+        permission,
+        isInherited: true,
+        isReadOnly: true
+      };
+      
+      await kv.set(
+        `inherited_folder:${recipientUserId}:${inheritanceId}`,
+        inheritedFolder
+      );
+      
+      console.log(`✅ [Import] Created inherited folder: ${originalFolder.name} (${capsuleIds.length} capsules)`);
+      importedCount++;
+    }
+    
+    // 5. Mark token as used
+    token.usedAt = Date.now();
+    token.usedBy = recipientUserId;
+    await kv.set(getUnlockTokenKey(tokenId), token);
+    
+    console.log(`✅ [Import] Token marked as used`);
+    
+    // 6. Send confirmation email
+    try {
+      const ownerProfile = await kv.get(`profile:${token.userId}`);
+      const ownerSettings = await kv.get(`user_settings:${token.userId}`);
+      const ownerName = ownerProfile?.name || ownerProfile?.displayName || ownerSettings?.displayName || 'a loved one';
+      
+      const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://found-shirt-81691824.figma.site';
+      
+      await sendEmail({
+        to: beneficiary.email,
+        subject: '✅ Legacy Folders Imported to Your Vault - Eras',
+        template: 'legacy-import-confirmation',
+        variables: {
+          beneficiaryName: beneficiary.name,
+          ownerName: ownerName,
+          folderCount: importedCount,
+          vaultUrl: `${frontendUrl}/vault`
+        }
+      });
+      
+      console.log(`📧 [Import] Confirmation email sent to ${beneficiary.email}`);
+    } catch (emailError) {
+      console.error('❌ [Import] Failed to send confirmation email:', emailError);
+      // Don't fail import if email fails
+    }
+    
+    console.log(`✅ [Import] Import complete: ${importedCount} folders`);
+    return { success: true, importedCount };
+    
+  } catch (error) {
+    console.error('❌ [Import] Import error:', error);
+    return { success: false, importedCount: 0, error: error.message || 'Import failed' };
+  }
+}

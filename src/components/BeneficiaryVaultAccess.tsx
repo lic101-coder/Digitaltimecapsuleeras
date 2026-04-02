@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Lock, Unlock, FolderOpen, Download, Eye, AlertCircle, Shield, Calendar, Clock, ArrowLeft, Image as ImageIcon, Video, Music, FileText, X } from 'lucide-react';
+import { Loader2, Lock, Unlock, FolderOpen, Download, Eye, AlertCircle, Shield, Calendar, Clock, ArrowLeft, Image as ImageIcon, Video, Music, FileText, X, CheckCircle2 } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface BeneficiaryVaultAccessProps {
   accessToken?: string;
@@ -40,12 +42,17 @@ interface VaultData {
 type AccessState = 'loading' | 'unlocked' | 'expired' | 'invalid' | 'error';
 
 export function BeneficiaryVaultAccess({ accessToken, onBack }: BeneficiaryVaultAccessProps) {
+  const { session } = useAuth();
   const [state, setState] = useState<AccessState>('loading');
   const [vaultData, setVaultData] = useState<VaultData | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<VaultFolder | null>(null);
   const [selectedItem, setSelectedItem] = useState<VaultItem | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoadingFolder, setIsLoadingFolder] = useState(false);
+  
+  // PHASE 2: Import state
+  const [isImporting, setIsImporting] = useState(false);
+  const [importComplete, setImportComplete] = useState(false);
 
   useEffect(() => {
     if (accessToken) {
@@ -129,6 +136,58 @@ export function BeneficiaryVaultAccess({ accessToken, onBack }: BeneficiaryVault
     // Fallback: if items aren't pre-loaded, show empty folder  
     console.warn('⚠️ No items found in folder:', folder.name);
     setSelectedFolder({ ...folder, items: [] });
+  };
+
+  // PHASE 2: Import to Vault Handler
+  const handleImportToVault = async () => {
+    if (!session?.access_token) {
+      // User not logged in - redirect to signup with return URL
+      sessionStorage.setItem('pending_import_token', accessToken!);
+      window.location.href = '/signup?source=inheritance';
+      return;
+    }
+    
+    try {
+      setIsImporting(true);
+      console.log('📦 [Import] Starting import process...');
+      
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/legacy-access/import`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ token: accessToken })
+        }
+      );
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Import failed');
+      }
+      
+      console.log('✅ [Import] Import successful:', data);
+      setImportComplete(true);
+      
+      // Show success message
+      toast.success(`${data.importedCount} folders imported to your vault!`, {
+        duration: 4000
+      });
+      
+      // Redirect to vault after 2 seconds
+      setTimeout(() => {
+        window.location.href = '/vault';
+      }, 2000);
+      
+    } catch (error) {
+      console.error('❌ [Import] Import error:', error);
+      toast.error('Failed to import folders. Please try again.');
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   const handleDownload = async (item: VaultItem) => {
@@ -517,6 +576,64 @@ export function BeneficiaryVaultAccess({ accessToken, onBack }: BeneficiaryVault
               <p className="text-slate-300 italic">
                 "{vaultData.personalMessage}"
               </p>
+            </div>
+          )}
+
+          {/* PHASE 2: Import CTA Banner */}
+          {!importComplete && (
+            <div className="mb-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-purple-500/20 rounded-xl">
+                  <Download className="w-6 h-6 text-purple-300" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl text-white font-semibold mb-2">
+                    Import to Your Vault
+                  </h3>
+                  <p className="text-slate-300 text-sm mb-4">
+                    Save these folders to your Eras vault for permanent access. You'll be able to view, 
+                    search, and organize them alongside your own capsules.
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleImportToVault}
+                      disabled={isImporting}
+                      className="px-6 py-3 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 transition-all shadow-lg hover:shadow-purple-500/50 disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {isImporting ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Importing...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-5 h-5" />
+                          Import {vaultData.folders.length} Folders
+                        </>
+                      )}
+                    </button>
+                    <span className="text-slate-400 text-sm">
+                      {session ? 'Ready to import' : 'Sign in required'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {importComplete && (
+            <div className="mb-6 bg-green-500/10 border border-green-500/30 rounded-xl p-6">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="w-6 h-6 text-green-400" />
+                <div>
+                  <h3 className="text-lg text-white font-semibold mb-1">
+                    Import Complete!
+                  </h3>
+                  <p className="text-slate-300 text-sm">
+                    Folders have been added to your vault. Redirecting...
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 

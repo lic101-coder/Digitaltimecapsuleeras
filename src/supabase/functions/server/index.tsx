@@ -7000,15 +7000,94 @@ app.get("/make-server-f9be53a7/vault/metadata", async (c) => {
       return c.json({ error: "Invalid token" }, 401);
     }
     
-    const metadata = await kv.get(`vault_metadata_${user.id}`);
+    let metadata = await kv.get(`vault_metadata_${user.id}`);
     
-    // Initialize if doesn't exist
+    // Initialize if doesn't exist - WITH DEFAULT FOLDERS
     if (!metadata) {
+      console.log("🗂️ [Vault] First-time vault access - creating default folders");
+      
+      // Create the 4 permanent system folders immediately
+      const now = new Date().toISOString();
+      const defaultFolders = [
+        {
+          id: `fldr_${Date.now()}_photos`,
+          name: 'Photos',
+          color: 'blue',
+          icon: '🖼️',
+          description: 'Your photo collection',
+          createdAt: now,
+          updatedAt: now,
+          order: 0,
+          mediaIds: [],
+          isTemplateFolder: false,
+          isPrivate: false,
+          passwordHash: null
+        },
+        {
+          id: `fldr_${Date.now() + 1}_videos`,
+          name: 'Videos',
+          color: 'purple',
+          icon: '📹',
+          description: 'Video recordings and clips',
+          createdAt: now,
+          updatedAt: now,
+          order: 1,
+          mediaIds: [],
+          isTemplateFolder: false,
+          isPrivate: false,
+          passwordHash: null
+        },
+        {
+          id: `fldr_${Date.now() + 2}_audio`,
+          name: 'Audio',
+          color: 'green',
+          icon: '🎧',
+          description: 'Voice memos and audio files',
+          createdAt: now,
+          updatedAt: now,
+          order: 2,
+          mediaIds: [],
+          isTemplateFolder: false,
+          isPrivate: false,
+          passwordHash: null
+        },
+        {
+          id: `fldr_${Date.now() + 3}_documents`,
+          name: 'Documents',
+          color: 'orange',
+          icon: '📄',
+          description: 'Important documents and files',
+          createdAt: now,
+          updatedAt: now,
+          order: 3,
+          mediaIds: [],
+          isTemplateFolder: false,
+          isPrivate: false,
+          passwordHash: null
+        }
+      ];
+      
       const initialMetadata = {
-        folders: [],
+        folders: defaultFolders,
         media: []
       };
+      
       await kv.set(`vault_metadata_${user.id}`, initialMetadata);
+      console.log("✅ [Vault] Created 4 default folders:", defaultFolders.map(f => f.name).join(', '));
+      
+      // 🏆 Track creation of 4 default folders for achievement stats
+      // This ensures folders_created stat accurately reflects total folder count
+      // Folder Pioneer (A046) will unlock at 5+ folders (first custom folder)
+      try {
+        const stats = await AchievementService.getUserStats(user.id) || await AchievementService.initializeUserStats(user.id);
+        await AchievementService.updateUserStats(user.id, {
+          folders_created: 4 // Initialize with 4 default folders
+        });
+        console.log(`🏆 [Vault] Initialized folders_created stat to 4 for user ${user.id}`);
+      } catch (achievementErr) {
+        console.error('🏆 [Vault] Failed to initialize folder stats:', achievementErr);
+      }
+      
       return c.json({ success: true, metadata: initialMetadata });
     }
     
@@ -12779,6 +12858,175 @@ app.post("/make-server-f9be53a7/api/legacy-access/unlock/validate-full", async (
       success: false, 
       error: 'Failed to validate vault access' 
     }, 500);
+  }
+});
+
+// ============================================
+// PHASE 1: IMPORT INHERITED FOLDERS ENDPOINT
+// ============================================
+
+app.post("/make-server-f9be53a7/api/legacy-access/import", async (c) => {
+  try {
+    console.log('📦 [Import API] Import request received');
+    
+    const { token } = await c.req.json();
+    
+    if (!token) {
+      console.error('❌ [Import API] No token provided');
+      return c.json({ error: 'Token is required' }, 400);
+    }
+    
+    // Extract user from auth header
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader) {
+      console.error('❌ [Import API] No authorization header');
+      return c.json({ error: 'Authentication required' }, 401);
+    }
+    
+    const accessToken = authHeader.split(' ')[1];
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    
+    if (error || !user) {
+      console.error('❌ [Import API] Invalid authentication:', error?.message);
+      return c.json({ error: 'Invalid authentication' }, 401);
+    }
+    
+    console.log(`✅ [Import API] Authenticated user: ${user.id}`);
+    
+    // Import folders
+    const result = await LegacyAccessService.importInheritedFolders(token, user.id);
+    
+    if (!result.success) {
+      console.error('❌ [Import API] Import failed:', result.error);
+      return c.json({ error: result.error }, 400);
+    }
+    
+    console.log(`✅ [Import API] Import successful: ${result.importedCount} folders`);
+    
+    return c.json({ 
+      success: true, 
+      importedCount: result.importedCount,
+      message: `${result.importedCount} folders imported to your vault`
+    });
+  } catch (error) {
+    console.error('❌ [Import API] Unexpected error:', error);
+    return c.json({ error: 'Import failed' }, 500);
+  }
+});
+
+// ============================================
+// PHASE 3: GET INHERITED FOLDERS ENDPOINT
+// ============================================
+
+app.get("/make-server-f9be53a7/api/legacy-access/inherited-folders", async (c) => {
+  try {
+    console.log('📦 [Inherited Folders] Request received');
+    
+    // Extract user from auth header
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader) {
+      console.error('❌ [Inherited Folders] No authorization header');
+      return c.json({ error: 'Authentication required' }, 401);
+    }
+    
+    const accessToken = authHeader.split(' ')[1];
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    
+    if (error || !user) {
+      console.error('❌ [Inherited Folders] Invalid authentication:', error?.message);
+      return c.json({ error: 'Invalid authentication' }, 401);
+    }
+    
+    console.log(`✅ [Inherited Folders] Authenticated user: ${user.id}`);
+    
+    // Get all inherited folders for this user
+    const inheritedFolders = await kv.getByPrefix(`inherited_folder:${user.id}:`);
+    
+    console.log(`📦 [Inherited Folders] Found ${inheritedFolders.length} inherited folders`);
+    
+    return c.json({ 
+      success: true, 
+      folders: inheritedFolders 
+    });
+  } catch (error) {
+    console.error('❌ [Inherited Folders] Error:', error);
+    return c.json({ error: 'Failed to load inherited folders' }, 500);
+  }
+});
+
+// ============================================
+// PHASE 4: GET CAPSULES FROM INHERITED FOLDER
+// ============================================
+
+app.get("/make-server-f9be53a7/api/legacy-access/inherited-folder/:inheritedFolderId/capsules", async (c) => {
+  try {
+    const inheritedFolderId = c.req.param('inheritedFolderId');
+    console.log('📦 [Inherited Capsules] Request for folder:', inheritedFolderId);
+    
+    // Extract user from auth header
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader) {
+      console.error('❌ [Inherited Capsules] No authorization header');
+      return c.json({ error: 'Authentication required' }, 401);
+    }
+    
+    const accessToken = authHeader.split(' ')[1];
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    
+    if (error || !user) {
+      console.error('❌ [Inherited Capsules] Invalid authentication:', error?.message);
+      return c.json({ error: 'Invalid authentication' }, 401);
+    }
+    
+    console.log(`✅ [Inherited Capsules] Authenticated user: ${user.id}`);
+    
+    // Get the inherited folder
+    const inheritedFolder = await kv.get(`inherited_folder:${user.id}:${inheritedFolderId}`);
+    
+    if (!inheritedFolder) {
+      console.error('❌ [Inherited Capsules] Folder not found or not owned by user');
+      return c.json({ error: 'Folder not found' }, 404);
+    }
+    
+    console.log(`📦 [Inherited Capsules] Loading ${inheritedFolder.capsuleIds?.length || 0} capsules from original owner ${inheritedFolder.originalUserId}`);
+    
+    // Load capsules from original owner's vault
+    const capsuleIds = inheritedFolder.capsuleIds || [];
+    const capsules = [];
+    
+    for (const capsuleId of capsuleIds) {
+      try {
+        // Capsules are stored as capsule:${capsuleId} (no user prefix)
+        const capsule = await kv.get(`capsule:${capsuleId}`);
+        if (capsule) {
+          // Verify capsule belongs to original owner for security
+          if (capsule.user_id === inheritedFolder.originalUserId) {
+            // Mark as read-only and inherited
+            capsules.push({
+              ...capsule,
+              isInherited: true,
+              isReadOnly: true,
+              originalUserId: inheritedFolder.originalUserId
+            });
+          } else {
+            console.warn(`⚠️ Capsule ${capsuleId} belongs to different user, skipping for security`);
+          }
+        }
+      } catch (err) {
+        console.error(`❌ Error loading capsule ${capsuleId}:`, err);
+      }
+    }
+    
+    console.log(`✅ [Inherited Capsules] Loaded ${capsules.length} capsules`);
+    
+    return c.json({ 
+      success: true, 
+      capsules,
+      folder: inheritedFolder
+    });
+  } catch (error) {
+    console.error('❌ [Inherited Capsules] Error:', error);
+    return c.json({ error: 'Failed to load capsules' }, 500);
   }
 });
 
