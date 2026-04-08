@@ -1,0 +1,592 @@
+💡 Performance monitor available at window.__performanceMonitor
+index-WeODsiLy.js:1035 [2026-04-08T21:42:16.180Z] [INFO] App.tsx loaded successfully
+index-WeODsiLy.js:1601 🔐 AuthProvider rendering (ID: 3hgtjx, Render #1)
+index-WeODsiLy.js:2031 🔄 TitlesProvider rendering (ID: y79xg1i, Render #1)
+index-WeODsiLy.js:2116 🚪 [ERAS GATE] Not showing - showErasGate: false hasGateData: false
+2index-WeODsiLy.js:2116 ✅ [TAB INIT] Restoring active tab from URL hash: "home"
+index-WeODsiLy.js:2116 🔗 Initialized browser history with tab: home
+index-WeODsiLy.js:2116 💾 Persisted active tab to sessionStorage: home
+index-WeODsiLy.js:1601 🔍 Checking for existing session...
+index-WeODsiLy.js:1601 🔐 [SESSION CHECK] User explicitly logged out recently - blocking auto-login
+index-WeODsiLy.js:1601 ⏱️ Logout was 9 seconds ago
+index-WeODsiLy.js:2116 ⏭️ [Echo Notifications] Skipping fetch - no userId or accessToken
+index-WeODsiLy.js:2116 ✅ Component transition complete (visible)
+index-WeODsiLy.js:2116 📊 [AUTH EFFECT] State check: Object
+index-WeODsiLy.js:2118 🧹 [AUTH EFFECT] pendingAuthData cleared, resetting ref
+index-WeODsiLy.js:2118 📊 Active tab changed: null → home Object
+index-WeODsiLy.js:2120 📋 Tab validation check: Object
+index-WeODsiLy.js:2120 🔔 [Notifications] Using unified Notification Center for all echo notifications
+index-WeODsiLy.js:2120 📊 [Notifications] Current notification count: 0, Unread: 0
+index-WeODsiLy.js:2120 📊 [Notifications] UNIFIED unreadCount: 0
+index-WeODsiLy.js:2120 📊 [Notifications] UNIFIED notifications: 0
+index-WeODsiLy.js:2120 🔔 [BADGE CHECK] Should show badge: NO
+index-WeODsiLy.js:2116 🎬 [STATE CHANGE] triggerSlideAnimation: false
+index-WeODsiLy.js:2116 ✅ Transition complete
+index-WeODsiLy.js:2031 🔑 [useTitles] accessToken changed: Object
+index-WeODsiLy.js:2031 📊 [useTitles] titleProfile state changed: null
+index-WeODsiLy.js:2031 📊 [useTitles] availableTitles state changed: Object
+index-WeODsiLy.js:2031 🔄 [useTitles] Effect triggered - session: Object
+index-WeODsiLy.js:2031 ⏭️ [useTitles] No token available yet, clearing state
+index-WeODsiLy.js:2031 ⚠️ HMR: TitlesProvider remounted (2370ms since last mount)
+index-WeODsiLy.js:2031 📋 Previous ID: 8c70yp, Current ID: y79xg1i
+index-WeODsiLy.js:2031 🎬 TitlesProvider mounted (ID: y79xg1i)
+index-WeODsiLy.js:2031 📊 TitlesProvider value updated: Object
+index-WeODsiLy.js:1601 🔍 Checking for existing session...
+index-WeODsiLy.js:1601 🔐 [SESSION CHECK] User explicitly logged out recently - blocking auto-login
+index-WeODsiLy.js:1601 ⏱️ Logout was 9 seconds ago
+index-WeODsiLy.js:1601 🔐 AuthProvider mounted (ID: 3hgtjx)
+index-WeODsiLy.js:1035 [2026-04-08T21:42:16.200Z] [INFO] ✅ Google Analytics initialized
+index-WeODsiLy.js:1601 🚀 Initializing CacheService...
+index-WeODsiLy.js:1601 📊 Cache Stats: Object
+index-WeODsiLy.js:1601 🔐 AuthProvider rendering (ID: 3hgtjx, Render #2)
+index-WeODsiLy.js:2031 🔄 TitlesProvider rendering (ID: y79xg1i, Render #2)
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:1035 🔍 [AUTH MOUNT] ========================================
+index-WeODsiLy.js:1035 🔍 [AUTH MOUNT] Auth component mounted - checking for callbacks
+index-WeODsiLy.js:1035 🔍 [AUTH MOUNT] Current URL: https://erastimecapsule.com/#home
+index-WeODsiLy.js:1035 🔍 [AUTH MOUNT] URL Hash: #home
+index-WeODsiLy.js:1035 🔍 [AUTH MOUNT] ========================================
+index-WeODsiLy.js:1035 🔍 [AUTH MOUNT] Callback detection: Object
+index-WeODsiLy.js:1035 ℹ️ [AUTH MOUNT] Not an auth callback - skipping session check
+index-WeODsiLy.js:1035 ℹ️ [AUTH MOUNT] User should sign in manually via the form
+index-WeODsiLy.js:2120 📋 Tab validation check: Object
+index-WeODsiLy.js:2120 🔔 [Notifications] Using unified Notification Center for all echo notifications
+index-WeODsiLy.js:2120 📊 [Notifications] Current notification count: 0, Unread: 0
+index-WeODsiLy.js:2120 📊 [Notifications] UNIFIED unreadCount: 0
+index-WeODsiLy.js:2120 📊 [Notifications] UNIFIED notifications: 0
+index-WeODsiLy.js:2120 🔔 [BADGE CHECK] Should show badge: NO
+index-WeODsiLy.js:2031 📊 TitlesProvider value updated: Object
+index-WeODsiLy.js:1601 🔐 Auth state change: SIGNED_IN Session exists: true
+index-WeODsiLy.js:1601 ✅ User signed in
+index-WeODsiLy.js:1601 ✅ User authenticated via google
+index-WeODsiLy.js:1601 🔓 Cleared logout flag - auto-login now enabled
+index-WeODsiLy.js:1601 🔑 Using access token from active session
+index-WeODsiLy.js:1035 🔍 Checking for pending capsules...
+index-WeODsiLy.js:1035 ✅ Using provided access token
+index-WeODsiLy.js:1032 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/claim-pending
+index-WeODsiLy.js:1032 🌐 Request options: Object
+index-WeODsiLy.js:1032 🔓 Using public request
+index-WeODsiLy.js:1601 🔐 Auth state change: SIGNED_IN Session exists: true
+index-WeODsiLy.js:1601 ✅ User signed in
+index-WeODsiLy.js:1601 ✅ User authenticated via google
+index-WeODsiLy.js:1601 🔓 Cleared logout flag - auto-login now enabled
+index-WeODsiLy.js:1601 🔑 Using access token from active session
+index-WeODsiLy.js:1035 🔍 Checking for pending capsules...
+index-WeODsiLy.js:1035 ✅ Using provided access token
+index-WeODsiLy.js:1032 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/claim-pending
+index-WeODsiLy.js:1032 🌐 Request options: Object
+index-WeODsiLy.js:1032 🔓 Using public request
+index-WeODsiLy.js:1601 🔐 AuthProvider rendering (ID: 3hgtjx, Render #3)
+index-WeODsiLy.js:2031 🔄 TitlesProvider rendering (ID: y79xg1i, Render #3)
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1486 ⏳ Waiting for server stats to load (using cached/previous values)...
+index-WeODsiLy.js:2116 ✅ Meta tags set dynamically
+index-WeODsiLy.js:1486 🔄 Dashboard initialization attempt 1/3
+index-WeODsiLy.js:1486 ✨ Loading cached capsules for instant display (cache age: 54 seconds)
+index-WeODsiLy.js:1486 🔄 Fetching fresh data in background...
+index-WeODsiLy.js:1486 📡 Fetching capsules from database...
+index-WeODsiLy.js:1486 ⚡ [INSTANT] Using cached received data (age: 53s): 0
+index-WeODsiLy.js:1486 🔄 Fetching fresh data in background to ensure accuracy...
+index-WeODsiLy.js:1486 🔄 [AUTO-CLAIM] Starting auto-claim pending capsules...
+index-WeODsiLy.js:1486 📡 [Dashboard] Setting up real-time listener for received capsules: 8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389
+index-WeODsiLy.js:1045 📰 [Memory Feed] Loading activity stream...
+index-WeODsiLy.js:2120 🎬 Home motion.div animation STARTED, shouldAnimate: false
+index-WeODsiLy.js:1601 🏆 Fetching achievement definitions...
+index-WeODsiLy.js:1601 🏆 Loading state: Object
+index-WeODsiLy.js:2089 👂 [Achievement Manager] Event listener registered for achievementUnlocked
+index-WeODsiLy.js:2089 👂 [Title Sequence] Event listener registered for achievementClosed
+index-WeODsiLy.js:1601 🔍 Checking for existing session...
+index-WeODsiLy.js:1601 📦 Found cached auth state (age: 0 minutes)
+index-WeODsiLy.js:2116 🔄 [Echo Notifications] Setting up real-time updates for user: 8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389
+index-WeODsiLy.js:2116 📡 [Echo Notifications] Subscribing to channel: echo_notifications:8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389
+index-WeODsiLy.js:2116 🔔 [Echo Notifications] Setting up broadcast listener for user: 8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389
+index-WeODsiLy.js:2116 📊 [AUTH EFFECT] State check: Object
+index-WeODsiLy.js:2118 🧹 [AUTH EFFECT] pendingAuthData cleared, resetting ref
+index-WeODsiLy.js:2118 🔄 [Retroactive] First login detected, checking for retroactive unlocks...
+index-WeODsiLy.js:2118 🔔 [Referral] Checking for pending referral achievements...
+index-WeODsiLy.js:2120 📋 Tab validation check: Object
+index-WeODsiLy.js:2120 ✅ Tab validation passed on initial load: home
+index-WeODsiLy.js:2120 🧹 Running redirect cleanup logic (one-time only)
+index-WeODsiLy.js:2031 🔑 [useTitles] accessToken changed: Object
+index-WeODsiLy.js:2031 🔄 [useTitles] Effect triggered - session: Object
+index-WeODsiLy.js:2031 ✅ [useTitles] Token available, fetching titles immediately...
+/#home:1  <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+index-WeODsiLy.js:2120 🎬 Home motion.div animation COMPLETED
+index-WeODsiLy.js:2031 🔄 TitlesProvider rendering (ID: y79xg1i, Render #4)
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1486 ⏳ Waiting for server stats to load (using cached/previous values)...
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2031 📊 TitlesProvider value updated: Object
+2index-WeODsiLy.js:1601 🔐 Auth state change: INITIAL_SESSION Session exists: true
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1035 📡 Fetching capsules for user 8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389 via REST API...
+index-WeODsiLy.js:1032 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+index-WeODsiLy.js:1032 🌐 Request options: Object
+index-WeODsiLy.js:1486 🔄 [AUTO-CLAIM] Session check: Has session
+index-WeODsiLy.js:1486 🔄 [AUTO-CLAIM] Calling claim-pending endpoint...
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1035 📡 Fetching capsules for user 8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389 via REST API...
+index-WeODsiLy.js:1032 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+index-WeODsiLy.js:1032 🌐 Request options: Object
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1035 📨 Fetching received capsules from server endpoint...
+index-WeODsiLy.js:1032 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+index-WeODsiLy.js:1032 🌐 Request options: Object
+index-WeODsiLy.js:1535 📅 CalendarView: Component mounting with user: 8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389
+index-WeODsiLy.js:1535 📅 CalendarView: useEffect triggered with userId: 8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389
+index-WeODsiLy.js:1535 📅 CalendarView: Starting to load capsules...
+index-WeODsiLy.js:1535 📅 CalendarView: Fetching capsules via DatabaseService...
+index-WeODsiLy.js:1601 ✅ Found existing session from Supabase
+index-WeODsiLy.js:1601 ✅ User authenticated via google
+index-WeODsiLy.js:1601 🔓 Cleared logout flag - auto-login now enabled
+index-WeODsiLy.js:1601 🔑 Using access token from active session
+index-WeODsiLy.js:1035 🔍 Checking for pending capsules...
+index-WeODsiLy.js:1035 ✅ Using provided access token
+index-WeODsiLy.js:1032 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/claim-pending
+index-WeODsiLy.js:1032 🌐 Request options: Object
+index-WeODsiLy.js:1032 🔓 Using public request
+index-WeODsiLy.js:1601 🔐 Auth state change: INITIAL_SESSION Session exists: true
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1032 ✅ Using authenticated request
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1032 ✅ Using authenticated request
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1032 ✅ Using authenticated request
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1035 📡 Fetching capsules for user 8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389 via REST API...
+index-WeODsiLy.js:1032 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+index-WeODsiLy.js:1032 🌐 Request options: Object
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1035 📨 Fetching received capsules from server endpoint...
+index-WeODsiLy.js:1032 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+index-WeODsiLy.js:1032 🌐 Request options: Object
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1035 📊 Fetching capsule stats from server for user 8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389...
+index-WeODsiLy.js:1032 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/stats
+index-WeODsiLy.js:1032 🌐 Request options: Object
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1032 ✅ Using authenticated request
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1032 ✅ Using authenticated request
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1032 ✅ Using authenticated request
+index-WeODsiLy.js:1601 ✅ Achievement definitions loaded: 57
+index-WeODsiLy.js:2089 🧹 [Achievement Manager] achievementUnlocked listener cleaned up
+index-WeODsiLy.js:1601 🏆 Loading state: Object
+index-WeODsiLy.js:2089 ▶️ [Achievement Polling] Active (checks every 5s)
+index-WeODsiLy.js:2089 👂 [Achievement Manager] Event listener registered for achievementUnlocked
+index-WeODsiLy.js:1486 📡 [Dashboard] Channel subscription status: SUBSCRIBED
+index-WeODsiLy.js:2116 ✅ [Echo Notifications] Real-time updates active
+index-WeODsiLy.js:2031 [Titles] Profile fetched: Object
+index-WeODsiLy.js:2031 [Titles] Setting titleProfile state...
+index-WeODsiLy.js:2031 [Titles] State setter called
+index-WeODsiLy.js:2031 🔄 TitlesProvider rendering (ID: y79xg1i, Render #5)
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔔 [Notifications] Using unified Notification Center for all echo notifications
+index-WeODsiLy.js:2120 📊 [Notifications] Current notification count: 0, Unread: 0
+index-WeODsiLy.js:2120 📊 [Notifications] UNIFIED unreadCount: 0
+index-WeODsiLy.js:2120 📊 [Notifications] UNIFIED notifications: 0
+index-WeODsiLy.js:2120 🔔 [BADGE CHECK] Should show badge: NO
+index-WeODsiLy.js:2031 📊 [useTitles] titleProfile state changed: Object
+index-WeODsiLy.js:2031 📊 TitlesProvider value updated: Object
+index-WeODsiLy.js:2116 🔔 [NOTIFICATION] Loaded 0 notifications from backend
+index-WeODsiLy.js:2116 🔍 [DEDUP] Starting deduplication with 0 backend + 0 local = 0 total
+index-WeODsiLy.js:2116 🔔 [NOTIFICATION] Total notifications after merge: 0
+index-WeODsiLy.js:2116 📊 [NOTIFICATION] Unread count: 0
+index-WeODsiLy.js:1032 🌐 Response status (attempt 1): 200 
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2116 🔔 [Echo Notifications] Cleaning up broadcast listener
+index-WeODsiLy.js:2116 🔔 [Echo Notifications] Setting up broadcast listener for user: 8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389
+index-WeODsiLy.js:2120 🔔 [Notifications] Using unified Notification Center for all echo notifications
+index-WeODsiLy.js:2120 📊 [Notifications] Current notification count: 0, Unread: 0
+index-WeODsiLy.js:2120 📊 [Notifications] UNIFIED unreadCount: 0
+index-WeODsiLy.js:2120 📊 [Notifications] UNIFIED notifications: 0
+index-WeODsiLy.js:2120 🔔 [BADGE CHECK] Should show badge: NO
+index-WeODsiLy.js:1032 ✅ Database request successful on attempt 1/2 (took 485ms)
+index-WeODsiLy.js:2116 🔔 [Echo Notifications] Channel status: SUBSCRIBED
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:1032 🌐 Response status (attempt 1): 200 
+index-WeODsiLy.js:1032 ✅ Database request successful on attempt 1/2 (took 304ms)
+index-WeODsiLy.js:1032 🌐 Response status (attempt 1): 200 
+index-WeODsiLy.js:1032 ✅ Database request successful on attempt 1/1 (took 303ms)
+index-WeODsiLy.js:1035 📊 Raw stats response: Object
+index-WeODsiLy.js:1035 ✅ Server stats loaded successfully: Object
+index-WeODsiLy.js:1486 🔄 [AUTO-CLAIM] Response status: 200
+index-WeODsiLy.js:1486 🔄 [AUTO-CLAIM] Response data: Object
+index-WeODsiLy.js:1486 ℹ️ [AUTO-CLAIM] No pending capsules to claim
+index-WeODsiLy.js:1486 📡 Fetching received capsules from server...
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1035 📨 Fetching received capsules from server endpoint...
+index-WeODsiLy.js:1032 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+index-WeODsiLy.js:1032 🌐 Request options: Object
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1032 ✅ Using authenticated request
+index-WeODsiLy.js:1032 🌐 Response status (attempt 1): 200 
+index-WeODsiLy.js:1032 ✅ Database request successful on attempt 1/2 (took 605ms)
+index-WeODsiLy.js:1032 🌐 Response status (attempt 1): 200 
+index-WeODsiLy.js:1032 ✅ Database request successful on attempt 1/1 (took 419ms)
+index-WeODsiLy.js:1035 ✅ Fetched 0 capsules from API
+index-WeODsiLy.js:1486 ⏱️ Dashboard: Load Capsules: 598.10ms | {"capsulesLoaded":0,"totalInDB":0}
+index-WeODsiLy.js:1486 ✅ Successfully fetched all capsules (metadata): 0 of 0
+index-WeODsiLy.js:1486 📊 Fetch result details: Object
+index-WeODsiLy.js:1486 🎬 Hydrating media for initial visible capsules...
+index-WeODsiLy.js:1486 ✅ Initial media hydration complete
+index-WeODsiLy.js:1486 📝 Dashboard state updated - capsules in state: 0
+index-WeODsiLy.js:1486 📊 Fetching accurate stats from server...
+index-WeODsiLy.js:1486 ⏳ Waiting for server stats to load (using cached/previous values)...
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1035 📊 Fetching capsule stats from server for user 8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389...
+index-WeODsiLy.js:1032 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/stats
+index-WeODsiLy.js:1032 🌐 Request options: Object
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1032 ✅ Using authenticated request
+index-WeODsiLy.js:2031 [Titles] Available titles fetched: Object
+index-WeODsiLy.js:2031 🔄 TitlesProvider rendering (ID: y79xg1i, Render #6)
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2031 📊 [useTitles] availableTitles state changed: Object
+index-WeODsiLy.js:2031 📊 TitlesProvider value updated: Object
+index-WeODsiLy.js:1032 🌐 Response status (attempt 1): 200 
+index-WeODsiLy.js:1032 ✅ Database request successful on attempt 1/2 (took 656ms)
+index-WeODsiLy.js:1035 ✅ Fetched 0 received capsules with sender names from server
+index-WeODsiLy.js:1032 🌐 Response status (attempt 1): 200 
+index-WeODsiLy.js:1032 ✅ Database request successful on attempt 1/1 (took 726ms)
+index-WeODsiLy.js:1035 ✅ Fetched 0 capsules from API
+index-WeODsiLy.js:1035 📎 Loading media files for capsules...
+index-WeODsiLy.js:1035 ✅ Media files loaded for all capsules
+index-WeODsiLy.js:1045 📰 [Memory Feed] Loaded capsules: Object
+index-WeODsiLy.js:1045 📊 [Feed Processing] Processing 0 created + 0 received capsules
+index-WeODsiLy.js:1032 🌐 Response status (attempt 1): 200 
+index-WeODsiLy.js:1032 ✅ Database request successful on attempt 1/2 (took 787ms)
+index-WeODsiLy.js:1035 ✅ Fetched 0 received capsules with sender names from server
+index-WeODsiLy.js:1032 🌐 Response status (attempt 1): 200 
+index-WeODsiLy.js:1032 ✅ Database request successful on attempt 1/1 (took 491ms)
+index-WeODsiLy.js:1035 📊 Raw stats response: Object
+index-WeODsiLy.js:1035 ✅ Server stats loaded successfully: Object
+index-WeODsiLy.js:1486 ✅ Server stats loaded: Object
+index-WeODsiLy.js:1486 📊 Using accurate server stats (not affected by pagination)
+index-WeODsiLy.js:1486 📊 Server-based Dashboard Stats:
+index-WeODsiLy.js:1486    ⏰ Scheduled: 0
+index-WeODsiLy.js:1486    ✅ Delivered: 0
+index-WeODsiLy.js:1486    📨 Received: 0
+index-WeODsiLy.js:1486    💭 Drafts: 0
+index-WeODsiLy.js:1486    ❌ Failed: 0
+index-WeODsiLy.js:1486    🌌 All Capsules (total): 0 = 0 + 0 + 0 + 0 + 0
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:1032 🌐 Response status (attempt 1): 200 
+index-WeODsiLy.js:1032 ✅ Database request successful on attempt 1/2 (took 835ms)
+index-WeODsiLy.js:1035 ✅ Fetched 0 received capsules with sender names from server
+index-WeODsiLy.js:1486 ✅ Received capsules loaded: 0
+index-WeODsiLy.js:1486 📊 Using accurate server stats (not affected by pagination)
+index-WeODsiLy.js:1486 📊 Server-based Dashboard Stats:
+index-WeODsiLy.js:1486    ⏰ Scheduled: 0
+index-WeODsiLy.js:1486    ✅ Delivered: 0
+index-WeODsiLy.js:1486    📨 Received: 0
+index-WeODsiLy.js:1486    💭 Drafts: 0
+index-WeODsiLy.js:1486    ❌ Failed: 0
+index-WeODsiLy.js:1486    🌌 All Capsules (total): 0 = 0 + 0 + 0 + 0 + 0
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:1032 🌐 Response status (attempt 1): 200 
+index-WeODsiLy.js:1032 ✅ Database request successful on attempt 1/1 (took 1250ms)
+index-WeODsiLy.js:1035 ✅ Fetched 0 capsules from API
+index-WeODsiLy.js:1035 📎 Loading media files for capsules...
+index-WeODsiLy.js:1035 ✅ Media files loaded for all capsules
+index-WeODsiLy.js:1535 📅 CalendarView: Received sent capsules: Object
+index-WeODsiLy.js:1535 📅 CalendarView: Received received capsules: Array(0)
+index-WeODsiLy.js:1535 📅 Using Server Stats: Object
+index-WeODsiLy.js:2118 📚 [ONBOARDING CHECK] Checking onboarding state for authenticated user: 8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2089 🎉 [Welcome Manager] Checking welcome celebration status
+index-WeODsiLy.js:2118 📚 [ONBOARDING CHECK] User has completed onboarding
+index-WeODsiLy.js:2089 🎉 [Welcome Manager] Response: Object
+index-WeODsiLy.js:2089 🎉 [Welcome Manager] Showing welcome celebration!
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+3index-WeODsiLy.js:1601 ⏱️ Initial auth check completed - ready for login
+index-WeODsiLy.js:2023 🔓 [AU Modal] Modal opened, reset close guard
+index-WeODsiLy.js:2023  [Intervention] Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216.
+(anonymous) @ index-WeODsiLy.js:2023
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:2031 🔒 [AU Modal] User initiated close for: A001
+index-WeODsiLy.js:2089 🎉 [Welcome Manager] Marking welcome celebration as seen
+index-WeODsiLy.js:2031 📡 [AU Modal] Dispatching achievementClosed event: Object
+index-WeODsiLy.js:2089 🎯 [Title Sequence] achievementClosed event received: Object
+index-WeODsiLy.js:2089 ✅ [Title Sequence] Title reward detected: Time Novice
+index-WeODsiLy.js:2089 ⏳ [Title Sequence] Waiting 2s for visual breathing space...
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2089 🎉 [Welcome Manager] ✅ Welcome celebration marked as seen
+index-WeODsiLy.js:2089 🎬 [Title Sequence] Triggering Title Unlock Modal for: Time Novice
+index-WeODsiLy.js:2089 👑 [Title Queue] Processing queue, titles remaining: 1
+index-WeODsiLy.js:2089 👑 [Title Queue] Showing title: Time Novice
+index-WeODsiLy.js:2089 🌅 [Horizon Chromatic Fusion v4.0] Celebration: Time Novice common
+index-WeODsiLy.js:2089 🎨 [Title Colors]: Array(2)
+index-WeODsiLy.js:2089 ✨ [Flavor Text]: Just Beginning the Journey
+index-WeODsiLy.js:2118 📚 [Retroactive] Checking if user has completed onboarding...
+index-WeODsiLy.js:1486 🔄 Polling for real-time updates...
+index-WeODsiLy.js:1486 📊 Polling for ALL capsules to maintain consistency...
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1035 📡 Fetching capsules for user 8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389 via REST API...
+index-WeODsiLy.js:1032 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules
+index-WeODsiLy.js:1032 🌐 Request options: Object
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1032 ✅ Using authenticated request
+index-WeODsiLy.js:2118 🔄 [Retroactive] ✅ User has completed onboarding, running migration...
+index-WeODsiLy.js:1032 🌐 Response status (attempt 1): 200 
+index-WeODsiLy.js:1032 ✅ Database request successful on attempt 1/1 (took 328ms)
+index-WeODsiLy.js:1035 ✅ Fetched 0 capsules from API
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1035 📨 Fetching received capsules from server endpoint...
+index-WeODsiLy.js:1032 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+index-WeODsiLy.js:1032 🌐 Request options: Object
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1032 ✅ Using authenticated request
+index-WeODsiLy.js:1032 🌐 Response status (attempt 1): 200 
+index-WeODsiLy.js:1032 ✅ Database request successful on attempt 1/2 (took 321ms)
+index-WeODsiLy.js:1035 ✅ Fetched 0 received capsules with sender names from server
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1035 📊 Fetching capsule stats from server for user 8b5fad81-e4c1-47ca-bbf6-1ea3d1aa2389...
+index-WeODsiLy.js:1032 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/stats
+index-WeODsiLy.js:1032 🌐 Request options: Object
+index-WeODsiLy.js:1032 ✅ Access token retrieved
+index-WeODsiLy.js:1032 ✅ Using authenticated request
+index-WeODsiLy.js:1032 🌐 Response status (attempt 1): 200 
+index-WeODsiLy.js:1032 ✅ Database request successful on attempt 1/1 (took 507ms)
+index-WeODsiLy.js:1035 📊 Raw stats response: Object
+index-WeODsiLy.js:1035 ✅ Server stats loaded successfully: Object
+index-WeODsiLy.js:1486 📊 Real-time stats update: Object
+index-WeODsiLy.js:1486 📊 Using accurate server stats (not affected by pagination)
+index-WeODsiLy.js:1486 📊 Server-based Dashboard Stats:
+index-WeODsiLy.js:1486    ⏰ Scheduled: 0
+index-WeODsiLy.js:1486    ✅ Delivered: 0
+index-WeODsiLy.js:1486    📨 Received: 0
+index-WeODsiLy.js:1486    💭 Drafts: 0
+index-WeODsiLy.js:1486    ❌ Failed: 0
+index-WeODsiLy.js:1486    🌌 All Capsules (total): 0 = 0 + 0 + 0 + 0 + 0
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2056 👑 [Title Modal] Closing - emitting titleModalClosed event Object
+index-WeODsiLy.js:2116 👑 [Title Modal Event] Received titleModalClosed event Object
+index-WeODsiLy.js:2116 👑 [Title Modal Event] Time Novice modal closed
+index-WeODsiLy.js:2116 👑 [Title Modal Event] First Capsule already completed, skipping trigger
+index-WeODsiLy.js:2089 👑 [Title Reward Manager] Closing title modal
+index-WeODsiLy.js:2089 🔄 [Title Reward Manager] Refreshing titles for immediate horizon availability
+index-WeODsiLy.js:2031 🔄 [useTitles] refresh() called
+index-WeODsiLy.js:2031 🔄 [useTitles] refresh() - token available: true
+index-WeODsiLy.js:2031 [Titles] ✅ Refresh complete
+index-WeODsiLy.js:2031 🔄 TitlesProvider rendering (ID: y79xg1i, Render #7)
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2031 📊 TitlesProvider value updated: Object
+index-WeODsiLy.js:2031 [Titles] Available titles fetched: Object
+index-WeODsiLy.js:2031 🔄 TitlesProvider rendering (ID: y79xg1i, Render #8)
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2031 📊 [useTitles] availableTitles state changed: Object
+index-WeODsiLy.js:2031 📊 TitlesProvider value updated: Object
+index-WeODsiLy.js:2031 [Titles] Profile fetched: Object
+index-WeODsiLy.js:2031 [Titles] Setting titleProfile state...
+index-WeODsiLy.js:2031 [Titles] State setter called
+index-WeODsiLy.js:2031 🔄 TitlesProvider rendering (ID: y79xg1i, Render #9)
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2031 📊 [useTitles] titleProfile state changed: Object
+index-WeODsiLy.js:2031 📊 TitlesProvider value updated: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2089 🔄 [Horizon Gallery] Modal opened - refreshing titles
+index-WeODsiLy.js:2089 📊 [Horizon Gallery] Current state: Object
+index-WeODsiLy.js:2031 🔄 [useTitles] refresh() called
+index-WeODsiLy.js:2031 🔄 [useTitles] refresh() - token available: true
+index-WeODsiLy.js:2031 [Titles] ✅ Refresh complete
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2031 🔄 TitlesProvider rendering (ID: y79xg1i, Render #10)
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2031 📊 TitlesProvider value updated: Object
+index-WeODsiLy.js:2031 [Titles] Profile fetched: Object
+index-WeODsiLy.js:2031 [Titles] Setting titleProfile state...
+index-WeODsiLy.js:2031 [Titles] State setter called
+index-WeODsiLy.js:2031 🔄 TitlesProvider rendering (ID: y79xg1i, Render #11)
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2031 📊 [useTitles] titleProfile state changed: Object
+index-WeODsiLy.js:2031 📊 TitlesProvider value updated: Object
+index-WeODsiLy.js:2031 [Titles] Available titles fetched: Object
+index-WeODsiLy.js:2031 🔄 TitlesProvider rendering (ID: y79xg1i, Render #12)
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2031 📊 [useTitles] availableTitles state changed: Object
+index-WeODsiLy.js:2031 📊 TitlesProvider value updated: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 ⚙️ [GEAR CLICK] Toggling dropdown
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 ⚙️ [DROPDOWN] Achievements clicked
+index-WeODsiLy.js:2120 📄 No draft found in localStorage
+index-WeODsiLy.js:2120 🔄 TAB CHANGE: Object
+index-WeODsiLy.js:2116 🔄 Tab change requested: home → achievements
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:2120 🎬 Rendering Home (Unified: Timeline + Classic) with triggerSlideAnimation: false (ref: false state: false )
+index-WeODsiLy.js:1525 🔍 Modal render check: Object
+index-WeODsiLy.js:2116 ✅ Tab changed to: achievements
+index-WeODsiLy.js:2120 📜 Scrolling to top for new tab: achievements
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: Object
+index-WeODsiLy.js:1486 📡 [Dashboard] Cleaning up real-time listener
+index-WeODsiLy.js:1486 📡 [Dashboard] Channel subscription status: CLOSED
+index-WeODsiLy.js:2116 🎬 MainAppContent unmounting (ID: p0qzsj)
+index-WeODsiLy.js:1601 🏆 Fetching achievement definitions...
+index-WeODsiLy.js:1601 🏆 Loading state: Object
+index-WeODsiLy.js:1601 🏆 Fetching user achievements...
+index-WeODsiLy.js:1601 🌐 Fetching rarity from: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/achievements/rarity
+index-WeODsiLy.js:2116 💾 Persisted active tab to sessionStorage: achievements
+index-WeODsiLy.js:2116 🔗 Updated URL hash and browser history: #achievements
+index-WeODsiLy.js:2118 📊 Active tab changed: home → achievements Object
+index-WeODsiLy.js:2120 📋 Tab validation check: Object
+index-WeODsiLy.js:1601 🏆 Loading state: Object
+index-WeODsiLy.js:1601 ✅ Achievement definitions loaded: 57
+index-WeODsiLy.js:2031 Rarity sort: Object
+index-WeODsiLy.js:2031 Rarity sort: Object
+index-WeODsiLy.js:1601 🏆 Loading state: Object
+index-WeODsiLy.js:1601 ✅ User achievements loaded: 0
+index-WeODsiLy.js:2031 Rarity sort: Object
+index-WeODsiLy.js:2031 Rarity sort: Object
+index-WeODsiLy.js:1601 🏆 Loading state: Object
+index-WeODsiLy.js:1601 📡 Response status: 200 
+index-WeODsiLy.js:1601 📦 Full backend response: Object
+index-WeODsiLy.js:1601 🎯 Extracted rarity object: Object
+index-WeODsiLy.js:1601 📊 Total users: 11
+index-WeODsiLy.js:1601 📊 Total achievements: 28
+index-WeODsiLy.js:2031 🎯 Fetched rarity percentages: Object
+index-WeODsiLy.js:2031 🎯 Type: object Keys: Array(28)
+index-WeODsiLy.js:2031 ✅ Rarity percentages set: 28 achievements
+index-WeODsiLy.js:2031 📊 Sample percentages: Array(3)
+index-WeODsiLy.js:2031 Rarity sort: Object
+index-WeODsiLy.js:2031 Rarity sort: Object
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+index-WeODsiLy.js:2120 🔔 [Notifications] Using unified Notification Center for all echo notifications
+index-WeODsiLy.js:2120 📊 [Notifications] Current notification count: 0, Unread: 0
+index-WeODsiLy.js:2120 📊 [Notifications] UNIFIED unreadCount: 0
+index-WeODsiLy.js:2120 📊 [Notifications] UNIFIED notifications: 0
+index-WeODsiLy.js:2120 🔔 [BADGE CHECK] Should show badge: NO
+index-WeODsiLy.js:2120 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}

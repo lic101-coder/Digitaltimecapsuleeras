@@ -4800,8 +4800,8 @@ app.get("/make-server-f9be53a7/api/test/last-delivery-logs", async (c) => {
   try {
     console.log("🔍 Fetching last delivery attempt logs...");
     
-    // Get the most recent delivered capsule
-    const allCapsules = await kv.getByPrefix('capsule:');
+    // Get the most recent delivered capsule (10s timeout for admin query)
+    const allCapsules = await kv.getByPrefix('capsule:', 10000);
     const deliveredCapsules = allCapsules
       .map(item => item.value)
       .filter(cap => cap.status === 'delivered')
@@ -5540,6 +5540,14 @@ app.post("/make-server-f9be53a7/achievements/retroactive-migration", async (c) =
     const afterProgress = await AchievementService.getAchievementProgress(user.id);
     const afterList = afterProgress?.unlockedAchievements || [];
     const newlyUnlocked = afterList.filter((id: string) => !beforeSet.has(id));
+
+    // Set flag that retroactive has run for this user
+    // This is used by welcome celebration to know if user is new vs existing
+    await kv.set(`retroactive-checked:${user.id}`, {
+      checked: true,
+      timestamp: new Date().toISOString(),
+      newUnlocks: newlyUnlocked.length
+    });
 
     console.log(`✅ [Retroactive Migration] ${newlyUnlocked.length} new unlock(s) for ${user.id}`);
     return c.json({
@@ -11899,7 +11907,7 @@ app.post("/make-server-f9be53a7/api/legacy-access/verify", async (c) => {
 // DEBUG: List all beneficiaries (no auth required for debugging)
 app.get("/make-server-f9be53a7/api/legacy-access/debug/all-beneficiaries", async (c) => {
   try {
-    const allConfigs = await kv.getByPrefix('legacy_access_');
+    const allConfigs = await kv.getByPrefix('legacy_access_', 10000);
     const results = [];
     
     for (const config of allConfigs) {
@@ -11975,7 +11983,7 @@ app.get("/make-server-f9be53a7/api/legacy-access/beneficiary/verify", async (c) 
 
     // Get owner information for success response
     // The token is cleared after verification, so we need to search for recently verified beneficiaries
-    const allConfigs = await kv.getByPrefix('legacy_access_');
+    const allConfigs = await kv.getByPrefix('legacy_access_', 10000);
     let ownerName = 'the account owner';
     let beneficiaryEmail = '';
     
@@ -12026,7 +12034,7 @@ app.get("/make-server-f9be53a7/api/legacy-access/beneficiary/decline", async (c)
     console.log(`❌ [Phase 2] GET Declining beneficiary with token: ${token.substring(0, 8)}...`);
 
     // Get the beneficiary record using the verification token - getByPrefix returns an array of values
-    const beneficiaryData = await kv.getByPrefix(`legacy_beneficiary:`);
+    const beneficiaryData = await kv.getByPrefix(`legacy_beneficiary:`, 10000);
     
     let matchingBeneficiary = null;
     let matchingBeneficiaryId = null;
@@ -12940,8 +12948,10 @@ app.get("/make-server-f9be53a7/api/legacy-access/inherited-folders", async (c) =
     console.log(`✅ [Inherited Folders] Authenticated user: ${user.id}`);
     
     // Get all inherited folders for this user with timeout protection
+    // Pass explicit 5-second timeout to getByPrefix to match withFallback timeout
+    console.log('📥 [Inherited Folders] Querying inherited folders with 5s timeout...');
     const inheritedFolders = await withFallback(
-      kv.getByPrefix(`inherited_folder:${user.id}:`),
+      kv.getByPrefix(`inherited_folder:${user.id}:`, 5000),
       [],
       5000 // 5 second timeout, fallback to empty array
     );
@@ -13457,7 +13467,7 @@ app.post("/make-server-f9be53a7/api/legacy-access/revoke-unlock", async (c) => {
     // Find and revoke all unlock tokens for this beneficiary
     // ⚠️ NOTE: This uses getByPrefix which may timeout with many tokens
     // TODO: Consider storing tokens under beneficiary-specific keys for faster revocation
-    const allTokens = await kv.getByPrefix(`unlock_token_`);
+    const allTokens = await kv.getByPrefix(`unlock_token_`, 10000);
     let revokedCount = 0;
     
     // ✅ FIX: getByPrefix returns an array of VALUES, not {key, value} objects

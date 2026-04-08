@@ -237,7 +237,7 @@ export const mdel = async (keys: string[]): Promise<void> => {
 };
 
 // Search for key-value pairs by prefix.
-export const getByPrefix = async (prefix: string, timeoutMs: number = 15000): Promise<any[]> => {
+export const getByPrefix = async (prefix: string, timeoutMs: number = 10000): Promise<any[]> => {
   try {
     console.log(`📥 KV Store: Getting by prefix "${prefix}" (timeout: ${timeoutMs}ms)...`);
     const startTime = Date.now();
@@ -248,7 +248,7 @@ export const getByPrefix = async (prefix: string, timeoutMs: number = 15000): Pr
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => {
         const elapsed = Date.now() - startTime;
-        console.error(`❌ KV Store: Query timed out after ${elapsed}ms for prefix "${prefix}"`);
+        console.warn(`⏱️ KV Store: Query timed out after ${elapsed}ms for prefix "${prefix}" - will return empty array`);
         reject(new Error(`TIMEOUT:${timeoutMs}`));
       }, timeoutMs);
     });
@@ -280,7 +280,6 @@ export const getByPrefix = async (prefix: string, timeoutMs: number = 15000): Pr
     return data?.map((d: any) => d.value) ?? [];
   } catch (error) {
     const errorMsg = error.message || String(error);
-    console.error(`💥 KV Store: Exception for prefix "${prefix}":`, errorMsg);
     
     // Check if it's a timeout - return empty array instead of failing
     if (errorMsg.includes('TIMEOUT:') || 
@@ -290,10 +289,11 @@ export const getByPrefix = async (prefix: string, timeoutMs: number = 15000): Pr
         errorMsg.includes('502') ||
         errorMsg.includes('Bad Gateway') ||
         errorMsg.includes('not responding')) {
-      console.warn(`⚠️ KV Store: Timeout occurred for prefix "${prefix}" - returning empty array (purchases may not show until database responds)`);
+      console.warn(`⚠️ KV Store: Query timeout for prefix "${prefix}" - gracefully returning empty array (data will appear when database responds)`);
       return []; // Return empty array on timeout instead of crashing
     }
     
+    console.error(`💥 KV Store: Exception for prefix "${prefix}":`, errorMsg);
     throw error;
   }
 };

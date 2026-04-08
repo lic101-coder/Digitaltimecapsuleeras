@@ -21,6 +21,22 @@ export const checkWelcomeCelebration = async (c: any) => {
       return c.json({ shouldShowCelebration: false });
     }
     
+    // 🔥 CRITICAL FIX: Don't show welcome celebration if user just completed onboarding
+    // The retroactive migration will handle their achievements properly
+    // Check if user has the retroactive-checked flag - if not, they're brand new
+    // In this case, skip welcome celebration and let retroactive handle it
+    const hasRetroactiveRun = await kv.get(`retroactive-checked:${user.id}`);
+    if (!hasRetroactiveRun) {
+      console.log(`🎉 [Welcome] ⏭️ Skipping - user hasn't had retroactive migration yet (new user)`);
+      // Mark as seen to prevent future checks
+      await kv.set(`user_seen_welcome_celebration:${user.id}`, {
+        seen: true,
+        timestamp: new Date().toISOString(),
+        reason: 'new_user_skipped'
+      });
+      return c.json({ shouldShowCelebration: false });
+    }
+    
     const userAchievements = await kv.get(`user_achievements:${user.id}`) || [];
     const hasFirstStep = userAchievements.some((a: any) => a.achievementId === 'A001');
     

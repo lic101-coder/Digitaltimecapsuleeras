@@ -1959,6 +1959,138 @@ const MainAppContent = React.memo(
                 "🔄 [Retroactive] ✅ User has completed onboarding, running migration...",
               );
 
+              // 🔥 CRITICAL FIX: Process any pending onboarding completion data FIRST
+              // This handles the case where user completed tutorial, logged out, then logged back in
+              const completionData = localStorage.getItem("eras_onboarding_completion");
+              const exitData = localStorage.getItem("eras_onboarding_exit");
+
+              if (completionData) {
+                try {
+                  const { firstCapsuleCompleted, vaultMasteryCompleted } = JSON.parse(completionData);
+                  console.log("📚 [Retroactive] Found pending completion data:", {
+                    firstCapsuleCompleted,
+                    vaultMasteryCompleted,
+                  });
+
+                  if (firstCapsuleCompleted) {
+                    // Initialize A001 "First Step" achievement + Time Novice title
+                    console.log(
+                      "🎁 [Retroactive] Initializing A001 First Step and Time Novice title...",
+                    );
+                    try {
+                      await fetch(
+                        `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/achievements/initialize-titles`,
+                        {
+                          headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json",
+                          },
+                          method: "POST",
+                        },
+                      );
+                      console.log(
+                        "✅ [Retroactive] A001 and Time Novice initialized successfully",
+                      );
+                    } catch (err) {
+                      console.error(
+                        "❌ [Retroactive] Failed to initialize A001 and Time Novice:",
+                        err,
+                      );
+                    }
+
+                    // Award Time Keeper for completing the tutorial
+                    const achievementsToAward = ["time_keeper"]; // Time Keeper → Chrono Apprentice
+
+                    if (vaultMasteryCompleted) {
+                      achievementsToAward.push("vault_guardian"); // Vault Guardian → Legacy Architect
+                    }
+
+                    if (achievementsToAward.length > 0) {
+                      console.log(
+                        "🏆 [Retroactive] Awarding achievements:",
+                        achievementsToAward,
+                      );
+
+                      for (const achievementId of achievementsToAward) {
+                        try {
+                          const actionMap: Record<string, string> = {
+                            time_keeper: "onboarding_first_capsule_complete",
+                            vault_guardian: "onboarding_vault_mastery_complete",
+                          };
+
+                          const action = actionMap[achievementId] || "onboarding_module_complete";
+
+                          await fetch(
+                            `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/achievements/track`,
+                            {
+                              headers: {
+                                Authorization: `Bearer ${accessToken}`,
+                                "Content-Type": "application/json",
+                              },
+                              method: "POST",
+                              body: JSON.stringify({
+                                action,
+                                metadata: {},
+                              }),
+                            },
+                          );
+                        } catch (err) {
+                          console.error(
+                            "❌ [Retroactive] Failed to award achievement:",
+                            achievementId,
+                            err,
+                          );
+                        }
+                      }
+                    }
+                  }
+
+                  // Clear the completion data after processing
+                  localStorage.removeItem("eras_onboarding_completion");
+                  console.log("🧹 [Retroactive] Cleared completion data");
+                } catch (err) {
+                  console.error("❌ [Retroactive] Error processing completion data:", err);
+                }
+              } else if (exitData) {
+                try {
+                  const { moduleId } = JSON.parse(exitData);
+                  console.log("📚 [Retroactive] Found exit data for module:", moduleId);
+
+                  if (moduleId === "first_capsule") {
+                    console.log(
+                      "🏆 [Retroactive] First Capsule dismissed - initializing A001 First Step and Time Novice",
+                    );
+                    try {
+                      await fetch(
+                        `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/achievements/initialize-titles`,
+                        {
+                          headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json",
+                          },
+                          method: "POST",
+                        },
+                      );
+                      console.log(
+                        "✅ [Retroactive] A001 and Time Novice initialized successfully",
+                      );
+                    } catch (err) {
+                      console.error(
+                        "❌ [Retroactive] Failed to initialize A001 and Time Novice:",
+                        err,
+                      );
+                    }
+                  }
+
+                  // Clear the exit data after processing
+                  localStorage.removeItem("eras_onboarding_exit");
+                  console.log("🧹 [Retroactive] Cleared exit data");
+                } catch (err) {
+                  console.error("❌ [Retroactive] Error processing exit data:", err);
+                }
+              }
+
+              // Now run the normal retroactive migration
               const response = await fetch(
                 `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/achievements/retroactive-migration`,
                 {
