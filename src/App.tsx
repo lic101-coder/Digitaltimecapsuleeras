@@ -4748,18 +4748,11 @@ const MainAppContent = React.memo(
           {/* Quick Recorder Modal - Now replaced by Record tab */}
 
           {/* Eras Odyssey Tutorial */}
-          {auth.showOnboarding && (
-            <>
-              {/* HIDE ENTIRE APP CONTENT WHEN TUTORIAL IS SHOWING */}
-              <style>{`
-            body > div:first-child { display: none !important; }
-            .tutorial-mobile-fullscreen ~ * { display: none !important; }
-          `}</style>
-              <ErasOdyssey
-                onComplete={handleOnboardingComplete}
-                onSkip={handleOnboardingComplete}
-              />
-            </>
+          {auth.showOnboarding && !showOnboarding && (
+            <ErasOdyssey
+              onComplete={handleOnboardingComplete}
+              onSkip={handleOnboardingComplete}
+            />
           )}
 
           {/* Session Warning Dialog */}

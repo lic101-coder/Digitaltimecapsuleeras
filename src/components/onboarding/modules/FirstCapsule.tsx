@@ -90,7 +90,7 @@ export default function FirstCapsule({ onComplete, onSkip }: OnboardingModulePro
 
   return (
     <div 
-      className="relative w-full h-full min-h-screen bg-black text-white overflow-hidden flex flex-col"
+      className="relative w-full h-full min-h-screen bg-black text-white overflow-y-auto flex flex-col"
       style={{
         paddingTop: 'max(24px, env(safe-area-inset-top))',
         paddingBottom: 'max(24px, env(safe-area-inset-bottom))',

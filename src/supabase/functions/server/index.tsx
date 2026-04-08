@@ -12939,8 +12939,12 @@ app.get("/make-server-f9be53a7/api/legacy-access/inherited-folders", async (c) =
     
     console.log(`✅ [Inherited Folders] Authenticated user: ${user.id}`);
     
-    // Get all inherited folders for this user
-    const inheritedFolders = await kv.getByPrefix(`inherited_folder:${user.id}:`);
+    // Get all inherited folders for this user with timeout protection
+    const inheritedFolders = await withFallback(
+      kv.getByPrefix(`inherited_folder:${user.id}:`),
+      [],
+      5000 // 5 second timeout, fallback to empty array
+    );
     
     console.log(`📦 [Inherited Folders] Found ${inheritedFolders.length} inherited folders`);
     
@@ -14605,6 +14609,7 @@ app.post("/make-server-f9be53a7/api/support-request", async (c) => {
     const { resendRateLimiter } = await import('./rate-limiter.tsx');
     const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
     const FROM_EMAIL = Deno.env.get('FROM_EMAIL') || 'Eras <onboarding@resend.dev>';
+    const SUPPORT_EMAIL = Deno.env.get('SUPPORT_EMAIL') || 'erastimecapsule@gmail.com';
 
     // RATE LIMIT: Wait for rate limiter before sending
     await resendRateLimiter.waitForNextSlot();
@@ -14612,7 +14617,7 @@ app.post("/make-server-f9be53a7/api/support-request", async (c) => {
     // Send email
     const result = await resend.emails.send({
       from: FROM_EMAIL,
-      to: 'Eras@erastimecapsule.com',
+      to: SUPPORT_EMAIL,
       subject: `Support Request: ${subject}`,
       html: html,
       reply_to: userEmail, // Allow easy reply to user

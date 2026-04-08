@@ -75,7 +75,7 @@ export function DashboardTour({ onContinue }: DashboardTourProps) {
         </motion.div>
 
         {/* View mode visualizations */}
-        <div className="relative w-full max-w-2xl h-80 md:h-96 mb-8">
+        <div className="relative w-full max-w-2xl mx-auto h-80 md:h-96 mb-8">
           <AnimatePresence mode="wait">
             {/* Calendar View */}
             {currentView === 'calendar' && (
@@ -282,7 +282,7 @@ export function DashboardTour({ onContinue }: DashboardTourProps) {
         </div>
 
         {/* View mode selector */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-8 w-full max-w-2xl px-4">
+        <div className="flex flex-col sm:flex-row gap-3 mb-8 w-full max-w-2xl mx-auto px-4">
           {viewModes.map((view) => (
             <motion.button
               key={view.id}

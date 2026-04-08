@@ -189,6 +189,30 @@ export function RecordInterface({ onMediaCaptured, onOpenVault, onClose, onRegis
     loadLastThumbnail();
   }, []);
 
+  // Refresh thumbnail when user returns to camera (e.g., after closing vault)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('📸 Camera visible again - refreshing thumbnail');
+        loadLastThumbnail();
+      }
+    };
+
+    const handleFocus = () => {
+      console.log('📸 Window focused - refreshing thumbnail');
+      loadLastThumbnail();
+    };
+
+    // Listen for visibility changes and focus events
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
   // Auto-scroll to center camera on screen when component mounts
   useEffect(() => {
     const scrollToCamera = () => {
@@ -224,12 +248,20 @@ export function RecordInterface({ onMediaCaptured, onOpenVault, onClose, onRegis
         if (response.ok) {
           const data = await response.json();
           if (data.records && data.records.length > 0) {
-            // Find the most recent video or image (skip audio)
-            const lastMediaRecord = data.records.find(
-              (record: any) => record.type === 'video' || record.type === 'photo'
-            );
-            if (lastMediaRecord) {
-              setLastThumbnail(lastMediaRecord.thumbnail || lastMediaRecord.url);
+            // Get the MOST RECENT video or image (skip audio)
+            // Sort by timestamp DESC to get most recent first
+            const sortedMediaRecords = data.records
+              .filter((record: any) => record.type === 'video' || record.type === 'photo')
+              .sort((a: any, b: any) => {
+                const timeA = new Date(a.timestamp || a.created_at).getTime();
+                const timeB = new Date(b.timestamp || b.created_at).getTime();
+                return timeB - timeA; // Most recent first
+              });
+            
+            if (sortedMediaRecords.length > 0) {
+              const mostRecent = sortedMediaRecords[0];
+              setLastThumbnail(mostRecent.thumbnail || mostRecent.url);
+              console.log('📸 Loaded most recent media thumbnail from backend:', mostRecent.id);
               return;
             }
           }
@@ -240,14 +272,26 @@ export function RecordInterface({ onMediaCaptured, onOpenVault, onClose, onRegis
       const stored = localStorage.getItem('legacyVault');
       if (stored) {
         const vault = JSON.parse(stored);
-        // Find the most recent video or image (skip audio)
-        const lastMediaItem = vault.slice().reverse().find(
-          (item: any) => item.type === 'video' || item.type === 'photo'
-        );
-        if (lastMediaItem) {
-          setLastThumbnail(lastMediaItem.thumbnail || lastMediaItem.base64Data);
+        // Get the MOST RECENT video or image (skip audio)
+        const mediaItems = vault
+          .filter((item: any) => item.type === 'video' || item.type === 'photo')
+          .sort((a: any, b: any) => {
+            const timeA = new Date(a.timestamp).getTime();
+            const timeB = new Date(b.timestamp).getTime();
+            return timeB - timeA; // Most recent first
+          });
+          
+        if (mediaItems.length > 0) {
+          const mostRecent = mediaItems[0];
+          setLastThumbnail(mostRecent.thumbnail || mostRecent.base64Data);
+          console.log('📸 Loaded most recent media thumbnail from localStorage');
+          return;
         }
       }
+      
+      // No media found - clear thumbnail
+      setLastThumbnail(null);
+      console.log('📸 No media found in vault');
     } catch (err) {
       console.error('Failed to load last thumbnail:', err);
     }

@@ -2076,14 +2076,21 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
         console.log('📦 [Phase 3] Loading inherited folders...');
         let inheritedFolders = [];
         try {
+          // Add timeout to prevent hanging on KV store issues
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+          
           const inheritedResponse = await fetch(
             `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/legacy-access/inherited-folders`,
             {
               headers: {
                 'Authorization': `Bearer ${session.access_token}`
-              }
+              },
+              signal: controller.signal
             }
           );
+          
+          clearTimeout(timeoutId);
           
           if (inheritedResponse.ok) {
             const inheritedData = await inheritedResponse.json();
@@ -2096,8 +2103,12 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
             console.log('📦 [Phase 3] No inherited folders or error loading:', inheritedResponse.status);
           }
         } catch (inheritErr) {
-          console.error('📦 [Phase 3] Error loading inherited folders:', inheritErr);
-          // Continue without inherited folders
+          if (inheritErr.name === 'AbortError') {
+            console.error('📦 [Phase 3] Inherited folders request timed out - continuing without them');
+          } else {
+            console.error('📦 [Phase 3] Error loading inherited folders:', inheritErr);
+          }
+          // Continue without inherited folders - don't block vault loading
         }
         
         // Merge regular and inherited folders
