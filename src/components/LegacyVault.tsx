@@ -3864,9 +3864,9 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
         console.log('📱 Mobile: Setting mobileOpenFolder');
         setMobileOpenFolder(folder);
       } else {
-        // Desktop: Use filtered grid system
-        console.log('💻 Desktop: Setting selectedFolderId');
-        setSelectedFolderId(folder.id);
+        // Desktop: Use overlay system (FIXED - was using filtered grid system)
+        console.log('💻 Desktop: Setting mobileOpenFolder for modal view');
+        setMobileOpenFolder(folder);
       }
     }, [folder, mobileOpenFolder, previewItem, folders, unlockedFolders, isMobile, supabase, projectId]);
 
