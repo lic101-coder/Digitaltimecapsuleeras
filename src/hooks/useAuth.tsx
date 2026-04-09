@@ -145,8 +145,10 @@ export function useAuth() {
       }
     };
     
-    // Run immediately since we already have the access token
-    claimPendingCapsules();
+    // Delay slightly to let the Edge Function server warm up (cold start protection)
+    setTimeout(() => {
+      claimPendingCapsules();
+    }, 500);
     
     // Onboarding disabled
     // const checkOnboarding = () => {
@@ -425,11 +427,11 @@ export function useAuth() {
       }
     };
     
-    // Run immediately if we have access token, otherwise wait
+    // Add delay to allow Edge Function server to warm up (cold start protection)
     if (accessToken) {
-      claimPendingCapsules();
+      setTimeout(claimPendingCapsules, 500);
     } else {
-      setTimeout(claimPendingCapsules, 1500);
+      setTimeout(claimPendingCapsules, 2000);
     }
     
     // Onboarding disabled

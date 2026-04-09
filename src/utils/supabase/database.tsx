@@ -9,7 +9,7 @@ export class DatabaseService {
   private static REQUEST_TIMEOUT = 60000; // 60 seconds - reduced from 120s
   private static QUICK_TIMEOUT = 15000; // 15 seconds - reduced to fail fast
   private static MEDIUM_TIMEOUT = 30000; // 30 seconds - reduced from 45s
-  private static CLAIM_TIMEOUT = 10000; // 10 seconds for claim-pending (returns immediately now)
+  private static CLAIM_TIMEOUT = 30000; // 30 seconds for claim-pending (increased from 10s to handle cold starts)
   
   // In-memory cache for media file requests to prevent duplicate parallel requests
   private static mediaFileCache = new Map<string, Promise<MediaFile[]>>();
@@ -215,7 +215,9 @@ export class DatabaseService {
         }
         
         // Wait before retry with exponential backoff
-        const delay = Math.min(attempt * 1000, 5000);
+        // For network errors (potential cold start), use longer delays
+        const baseDelay = isNetworkError ? 2000 : 1000;
+        const delay = Math.min(attempt * baseDelay, isNetworkError ? 10000 : 5000);
         console.log(`⏳ Waiting ${delay}ms before retry (attempt ${attempt}/${totalAttempts})...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
@@ -867,7 +869,7 @@ export class DatabaseService {
           headers: {
             'Authorization': `Bearer ${accessToken}`
           }
-        }, 2, false, this.CLAIM_TIMEOUT); // 2 retries, 30s timeout
+        }, 3, false, this.CLAIM_TIMEOUT); // 3 retries, 30s timeout
 
         if (response.claimed > 0) {
           console.log(`✅ Claimed ${response.claimed} pending capsule(s)`);
@@ -881,7 +883,7 @@ export class DatabaseService {
         // Fallback to getting token from session
         const response = await this.makeRequest('/api/capsules/claim-pending', {
           method: 'POST'
-        }, 2, true, this.CLAIM_TIMEOUT); // 2 retries, 30s timeout
+        }, 3, true, this.CLAIM_TIMEOUT); // 3 retries, 30s timeout
 
         if (response.claimed > 0) {
           console.log(`✅ Claimed ${response.claimed} pending capsule(s)`);
@@ -893,7 +895,13 @@ export class DatabaseService {
         };
       }
     } catch (error) {
-      console.error('Error claiming pending capsules:', error);
+      console.error('❌ Error claiming pending capsules:', error);
+      console.error('❌ Error details:', {
+        message: error?.message,
+        name: error?.name,
+        stack: error?.stack?.split('\n').slice(0, 3).join('\n')
+      });
+      
       // Return partial success if available in error response
       if (error.response?.claimed) {
         console.log('⚠️ Partial claim success despite error');
@@ -902,6 +910,9 @@ export class DatabaseService {
           capsuleIds: error.response.capsuleIds || []
         };
       }
+      
+      // Silently fail and return empty - don't block app startup
+      console.log('⚠️ Returning empty result - pending capsules will be checked again later');
       return { claimed: 0, capsuleIds: [] };
     }
   }

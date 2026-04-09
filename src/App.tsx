@@ -226,6 +226,18 @@ export default function App() {
       logger.warn("Cache initialization failed:", error);
     }
 
+    // 🔥 PRE-WARM: Ping the Edge Function server to reduce cold start impact
+    // This runs in the background and doesn't block app initialization
+    if (projectId) {
+      fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/health-basic`, {
+        method: 'GET',
+      }).then(() => {
+        logger.debug("✅ Edge Function server pre-warmed");
+      }).catch((err) => {
+        logger.debug("⚠️ Edge Function pre-warm failed (non-critical):", err.message);
+      });
+    }
+
     // Monitor for URL changes during this component's lifetime
     const handlePopState = (e: PopStateEvent) => {
       logger.debug(
