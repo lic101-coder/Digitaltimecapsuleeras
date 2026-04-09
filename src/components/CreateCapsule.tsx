@@ -2497,6 +2497,16 @@ export function CreateCapsule({
       setDirection(1);
       setCurrentStep(3);
       
+      // Debug log for step 3 navigation (helps diagnose blank page issues)
+      console.log('📍 Navigating to Step 3 with state:', {
+        deliveryDate: deliveryDate ? deliveryDate.toISOString() : 'undefined',
+        deliveryTime,
+        recipientType,
+        recipientsCount: recipients.length,
+        themeId,
+        editingCapsule: editingCapsule ? editingCapsule.id : 'new'
+      });
+      
       // Scroll to top of the container
       setTimeout(() => {
         containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -4354,7 +4364,7 @@ export function CreateCapsule({
 
           {/* Steps Container with Animation */}
           <div className="relative overflow-hidden" style={{ minHeight: '600px', willChange: 'auto', transform: 'translateZ(0)' }}>
-            <AnimatePresence initial={false} custom={direction} mode="wait">
+            <AnimatePresence initial={false} custom={direction} mode="popLayout">
               {currentStep === 1 && (
                 <motion.div
                   key="step1"
@@ -4406,10 +4416,10 @@ export function CreateCapsule({
 
               {currentStep === 2 && (
                 <motion.div
-                  key="step2"
+                  key={`step2-${editingCapsule?.id || 'new'}`}
                   custom={direction}
                   variants={slideVariants}
-                  initial="enter"
+                  initial={editingCapsule ? "center" : "enter"}
                   animate="center"
                   exit="exit"
                   transition={{
@@ -5401,10 +5411,10 @@ export function CreateCapsule({
 
               {currentStep === 3 && (
                 <motion.div
-                  key="step3"
+                  key={`step3-${editingCapsule?.id || 'new'}`}
                   custom={direction}
                   variants={slideVariants}
-                  initial="enter"
+                  initial={editingCapsule ? "center" : "enter"}
                   animate="center"
                   exit="exit"
                   transition={{
@@ -5412,6 +5422,15 @@ export function CreateCapsule({
                     opacity: { duration: 0.2 }
                   }}
                   className="space-y-6"
+                  onAnimationComplete={() => {
+                    console.log('✅ Step 3 animation complete - rendering with:', {
+                      deliveryDate: deliveryDate ? deliveryDate.toISOString() : 'undefined',
+                      deliveryTime,
+                      recipientType,
+                      recipientsCount: recipients.length,
+                      themeId
+                    });
+                  }}
                 >
                   {/* Time Traveler Premium Step 3 */}
                   {themeId === 'future' ? (
@@ -5622,6 +5641,7 @@ export function CreateCapsule({
                               <Calendar
                                 mode="single"
                                 selected={deliveryDate}
+                                defaultMonth={deliveryDate}
                                 onSelect={(date) => {
                                   setDeliveryDate(date);
                                   setCalendarOpen(false);
@@ -5649,7 +5669,7 @@ export function CreateCapsule({
                           <Input
                             id="time"
                             type="time"
-                            value={deliveryTime}
+                            value={deliveryTime || ''}
                             onChange={(e) => setDeliveryTime(e.target.value)}
                             className={`h-12 bg-white/10 text-white text-center ${
                               timeValidationError 
@@ -5679,7 +5699,7 @@ export function CreateCapsule({
                       {/* Timezone */}
                       <div className="space-y-2">
                         <Label className="text-white/90">Time Zone</Label>
-                        <Select value={timeZone} onValueChange={setTimeZone}>
+                        <Select value={timeZone || getUserTimeZone()} onValueChange={setTimeZone}>
                           <SelectTrigger className="h-12 bg-white/10 border-white/20 text-white">
                             <SelectValue />
                           </SelectTrigger>
