@@ -7,6 +7,7 @@ export default defineConfig({
   base: '/',
   server: {
     port: 3000,
+    allowedHosts: ['sb-6zdqc9b7cpaj.vercel.run'],
   },
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
