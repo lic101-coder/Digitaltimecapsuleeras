@@ -374,7 +374,7 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
                 
                 if (response.ok) {
                   const result = await response.json();
-                  console.log(`✅ Orphaned IDs cleaned via backend: ${result.cleanedCount} orphaned ID(s) removed`);
+                  console.log(`��� Orphaned IDs cleaned via backend: ${result.cleanedCount} orphaned ID(s) removed`);
                   // Update local state with cleaned folders
                   setFolders(cleanedFolders);
                 } else {
@@ -1530,7 +1530,7 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
           }
         );
         
-        console.log('✅ TUS upload completed:', result.mediaId);
+        console.log('�� TUS upload completed:', result.mediaId);
         
         // ✅ THUMBNAIL FIX: Upload thumbnail to storage if provided
         let thumbnailPath = null;
@@ -4854,6 +4854,41 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
                       </Button>
                     </div>
                   )}
+                  
+                  {/* Download Button */}
+                  <Button
+                    onClick={async () => {
+                      try {
+                        // Fetch the file
+                        const response = await fetch(previewItem.base64Data);
+                        const blob = await response.blob();
+                        
+                        // Get file extension from MIME type
+                        const extension = previewItem.mimeType ? getFileExtension(previewItem.mimeType) : 'jpg';
+                        const fileName = `${mediaName || previewItem.fileName || previewItem.id}${extension.startsWith('.') ? extension : '.' + extension}`;
+                        
+                        // Create blob URL and download
+                        const blobUrl = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = blobUrl;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        
+                        // Clean up
+                        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+                        toast.success(`Downloaded: ${fileName}`);
+                      } catch (error) {
+                        console.error('❌ Download failed:', error);
+                        toast.error('Failed to download photo');
+                      }
+                    }}
+                    className="w-full bg-white/20 hover:bg-white/30 text-white gap-2 border border-white/30"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Photo
+                  </Button>
                 </div>
               </div>
             )}
@@ -4957,6 +4992,41 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
                         </Button>
                       </div>
                     )}
+                    
+                    {/* Download Button */}
+                    <Button
+                      onClick={async () => {
+                        try {
+                          // Fetch the file
+                          const response = await fetch(previewItem.base64Data);
+                          const blob = await response.blob();
+                          
+                          // Get file extension from MIME type
+                          const extension = previewItem.mimeType ? getFileExtension(previewItem.mimeType) : 'mp4';
+                          const fileName = `${mediaName || previewItem.fileName || previewItem.id}${extension.startsWith('.') ? extension : '.' + extension}`;
+                          
+                          // Create blob URL and download
+                          const blobUrl = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = blobUrl;
+                          a.download = fileName;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          
+                          // Clean up
+                          setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+                          toast.success(`Downloaded: ${fileName}`);
+                        } catch (error) {
+                          console.error('❌ Download failed:', error);
+                          toast.error('Failed to download video');
+                        }
+                      }}
+                      className="w-full bg-white/20 hover:bg-white/30 text-white gap-2 border border-white/30"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download Video
+                    </Button>
                   </div>
                 </div>
               );
@@ -5037,6 +5107,41 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
                       </Button>
                     </div>
                   )}
+                  
+                  {/* Download Button */}
+                  <Button
+                    onClick={async () => {
+                      try {
+                        // Fetch the file
+                        const response = await fetch(previewItem.base64Data);
+                        const blob = await response.blob();
+                        
+                        // Get file extension from MIME type
+                        const extension = previewItem.mimeType ? getFileExtension(previewItem.mimeType) : 'mp3';
+                        const fileName = `${mediaName || previewItem.fileName || previewItem.id}${extension.startsWith('.') ? extension : '.' + extension}`;
+                        
+                        // Create blob URL and download
+                        const blobUrl = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = blobUrl;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        
+                        // Clean up
+                        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+                        toast.success(`Downloaded: ${fileName}`);
+                      } catch (error) {
+                        console.error('❌ Download failed:', error);
+                        toast.error('Failed to download audio');
+                      }
+                    }}
+                    className="w-full bg-white/20 hover:bg-white/30 text-white gap-2 border border-white/30"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Audio
+                  </Button>
                 </div>
                 
                 <div className="mt-2 text-white/80 text-sm text-center">
@@ -5140,7 +5245,7 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
                         
                         // Get file extension from MIME type
                         const extension = previewItem.mimeType ? getFileExtension(previewItem.mimeType) : 'bin';
-                        const fileName = `${documentName || previewItem.id}${extension.startsWith('.') ? extension : '.' + extension}`;
+                        const fileName = `${mediaName || previewItem.fileName || previewItem.id}${extension.startsWith('.') ? extension : '.' + extension}`;
                         
                         // Create blob URL and download
                         const blobUrl = URL.createObjectURL(blob);
