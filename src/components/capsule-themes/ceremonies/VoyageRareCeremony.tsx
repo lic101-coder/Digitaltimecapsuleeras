@@ -58,7 +58,7 @@ export function VoyageRareCeremony({
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900">

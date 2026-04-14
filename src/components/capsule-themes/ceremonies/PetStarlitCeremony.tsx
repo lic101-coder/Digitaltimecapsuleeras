@@ -42,7 +42,7 @@ export function PetStarlitCeremony({
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Constellation pattern - SUPER CLEAR DOG PROFILE - obvious head, ears, body, tail, legs
   const constellationPoints = [

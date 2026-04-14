@@ -93,6 +93,23 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false); // New hybrid modal
   
+  // 🔐 Detect authentication provider (OAuth vs email/password)
+  const authProvider = React.useMemo(() => {
+    // Check cached auth state first for provider information
+    try {
+      const cached = localStorage.getItem('eras-auth-state');
+      if (cached) {
+        const authData = JSON.parse(cached);
+        return authData.provider || 'email';
+      }
+    } catch (e) {
+      console.warn('Could not read auth provider from cache:', e);
+    }
+    return 'email';
+  }, []);
+
+  const isOAuthOnly = authProvider !== 'email'; // google, facebook, github, etc.
+  
   // Profile state
   const [firstName, setFirstName] = useState(user?.firstName || '');
   const [lastName, setLastName] = useState(user?.lastName || '');
@@ -396,41 +413,65 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
   };
 
   const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error('All password fields are required');
-      return;
-    }
+    // 🔐 OAuth users don't need current password (they're setting it for the first time)
+    if (isOAuthOnly) {
+      // For OAuth users: Only validate new password fields
+      if (!newPassword || !confirmPassword) {
+        toast.error('Please enter and confirm your new password');
+        return;
+      }
 
-    if (newPassword !== confirmPassword) {
-      toast.error('New passwords do not match');
-      return;
-    }
+      if (newPassword !== confirmPassword) {
+        toast.error('New passwords do not match');
+        return;
+      }
 
-    if (newPassword.length < 8) {
-      toast.error('New password must be at least 8 characters');
-      return;
-    }
+      if (newPassword.length < 8) {
+        toast.error('New password must be at least 8 characters');
+        return;
+      }
+    } else {
+      // For email users: Validate all fields including current password
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        toast.error('All password fields are required');
+        return;
+      }
 
-    if (newPassword === currentPassword) {
-      toast.error('New password must be different from current password');
-      return;
+      if (newPassword !== confirmPassword) {
+        toast.error('New passwords do not match');
+        return;
+      }
+
+      if (newPassword.length < 8) {
+        toast.error('New password must be at least 8 characters');
+        return;
+      }
+
+      if (newPassword === currentPassword) {
+        toast.error('New password must be different from current password');
+        return;
+      }
     }
 
     setIsChangingPassword(true);
     setPasswordSuccess(false);
 
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword
-      });
+      // 🔐 For email users: Verify current password first
+      if (!isOAuthOnly) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: currentPassword
+        });
 
-      if (signInError) {
-        toast.error('Current password is incorrect');
-        setIsChangingPassword(false);
-        return;
+        if (signInError) {
+          toast.error('Current password is incorrect');
+          setIsChangingPassword(false);
+          return;
+        }
       }
 
+      // Update password (works for both OAuth and email users)
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword
       });
@@ -438,7 +479,13 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
       if (updateError) throw updateError;
 
       setPasswordSuccess(true);
-      toast.success('Password changed successfully!');
+      
+      // Show appropriate success message
+      if (isOAuthOnly) {
+        toast.success('Password set successfully! You can now sign in with email.');
+      } else {
+        toast.success('Password changed successfully!');
+      }
       
       setCurrentPassword('');
       setNewPassword('');
@@ -835,23 +882,33 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
                 <Lock className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <CardTitle className="text-xl md:text-2xl font-bold text-white">Change Password</CardTitle>
-                <CardDescription className="text-white text-sm md:text-base">Keep your account secure</CardDescription>
+                <CardTitle className="text-xl md:text-2xl font-bold text-white">
+                  {isOAuthOnly ? 'Add Email Login' : 'Change Password'}
+                </CardTitle>
+                <CardDescription className="text-white text-sm md:text-base">
+                  {isOAuthOnly 
+                    ? `You signed in with ${authProvider.charAt(0).toUpperCase() + authProvider.slice(1)}. Add a password for email login.`
+                    : 'Keep your account secure'
+                  }
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4 md:space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword" className="text-black text-sm md:text-base">Enter current password</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Enter current password"
-                className="bg-slate-800/50 border-orange-500/20 text-white placeholder:text-slate-500 focus:border-orange-500/50 h-11 md:h-12 text-base"
-              />
-            </div>
+            {/* Only show current password field for email users */}
+            {!isOAuthOnly && (
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword" className="text-black text-sm md:text-base">Enter current password</Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  className="bg-slate-800/50 border-orange-500/20 text-white placeholder:text-slate-500 focus:border-orange-500/50 h-11 md:h-12 text-base"
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="newPassword" className="text-black text-sm md:text-base">Enter new password</Label>
@@ -901,12 +958,12 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
               {isChangingPassword ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Changing...
+                  {isOAuthOnly ? 'Setting...' : 'Changing...'}
                 </>
               ) : (
                 <>
                   <Key className="w-4 h-4 mr-2" />
-                  Change Password
+                  {isOAuthOnly ? 'Set Password' : 'Change Password'}
                 </>
               )}
             </Button>

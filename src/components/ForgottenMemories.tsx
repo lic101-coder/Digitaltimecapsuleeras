@@ -493,7 +493,7 @@ export function ForgottenMemories({ accessToken, onClose, onRestore }: Forgotten
                                         className="w-full h-full object-cover"
                                         onError={(e) => {
                                           console.error('❌ Vault thumbnail failed to load:', item.media?.[0]);
-                                          console.warn('⚠️ No pre-generated thumbnail - falling back to client-side generation (slow)');
+                                          // Use fallback icon SVG
                                           e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23334155" width="100" height="100"/><text x="50" y="50" font-size="40" text-anchor="middle" dy=".3em">📸</text></svg>';
                                         }}
                                         onLoad={() => {

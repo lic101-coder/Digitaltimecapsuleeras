@@ -56,7 +56,7 @@ export function GoldenGraduationCeremony({
     ];
 
     return () => timers.forEach(clearTimeout);
-  }, [isPreview, onComplete]);
+  }, [isPreview]); // Removed onComplete - don't restart ceremony midway through
 
   // Constellation stars
   const constellationStars = [

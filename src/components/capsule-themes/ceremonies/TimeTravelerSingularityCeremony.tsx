@@ -92,7 +92,7 @@ export function TimeTravelerSingularityCeremony({
     );
 
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Camera shake effect during kawoosh and unstable
   useEffect(() => {

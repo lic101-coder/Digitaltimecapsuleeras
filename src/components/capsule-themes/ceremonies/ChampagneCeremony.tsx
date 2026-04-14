@@ -249,7 +249,7 @@ export function ChampagneCeremony({ onComplete, isVisible }: ChampagneCeremonyPr
         });
       }, 16);
     }
-  }, [leftGlassTouched, rightGlassTouched, celebrationPhase, playClinkSound, playCelebrationChime, onComplete]);
+  }, [leftGlassTouched, rightGlassTouched, celebrationPhase, playClinkSound, playCelebrationChime]); // Removed onComplete - don't restart ceremony midway through
 
   // Device motion shake detection
   useEffect(() => {

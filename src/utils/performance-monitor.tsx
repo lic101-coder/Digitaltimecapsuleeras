@@ -12,7 +12,9 @@ interface PerformanceMetric {
 class PerformanceMonitor {
   private metrics: PerformanceMetric[] = [];
   private readonly MAX_METRICS = 100;
-  private readonly SLOW_THRESHOLD = 5000;
+  // Increased from 5000ms to 10000ms to reduce noise for database operations
+  // Network latency + 57 capsules = ~5s is reasonable
+  private readonly SLOW_THRESHOLD = 10000;
   
   /**
    * Measure the duration of an operation

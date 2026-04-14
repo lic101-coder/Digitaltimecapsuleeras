@@ -71,7 +71,7 @@ export function GratitudeLanternCeremony({
       timeoutsRef.current.forEach(clearTimeout);
       timeoutsRef.current = [];
     };
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Memoize lanterns
   const lanterns = useMemo((): Lantern[] => {

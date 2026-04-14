@@ -47,7 +47,7 @@ export function BirthdayPartyCeremony({
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   const balloonColors = [
     { main: '#ef4444', light: '#fca5a5', dark: '#dc2626', shadow: 'rgba(239, 68, 68, 0.6)' },     // red

@@ -20,24 +20,52 @@ interface FAQ {
 
 const faqs: FAQ[] = [
   {
-    question: "When will my capsule be delivered?",
-    answer: "Your capsule will be delivered at the exact date and time you scheduled during creation. You'll receive a notification when it's delivered. You can check the delivery status in your Vault."
+    question: "How do I create a time capsule?",
+    answer: "Tap the 'Compose' button in the main navigation (✨ icon). Select a theme, add your message and media, choose recipients, and set a delivery date. You can save as draft or schedule immediately."
   },
   {
-    question: "Can I edit or reschedule a capsule after creating it?",
-    answer: "Yes! You can edit scheduled capsules from your Vault. Tap any capsule to view details, then use the edit options to change the message, media, recipients, or delivery date. Once a capsule is delivered, you can view it but not edit it."
+    question: "Where can I see my capsules?",
+    answer: "Go to the 'Home' tab (🏡 icon). You'll see delivered capsules, upcoming scheduled capsules, and drafts. Switch between Timeline, Classic (grid), or Calendar views using the controls at the top."
   },
   {
-    question: "Why can't I attach media to my capsule?",
-    answer: "If media won't attach, try these steps: 1) Check your file size (max 50MB per file), 2) Ensure you have a stable internet connection, 3) Try a different file format, 4) Clear your browser cache and try again. If the issue persists, contact support."
+    question: "Can I edit a capsule after creating it?",
+    answer: "You can edit drafts and scheduled capsules before they're delivered. Find the capsule in your Home tab, open it, and use the edit option. Once delivered, capsules become permanent memories and cannot be edited."
   },
   {
-    question: "How do I set up Legacy Access beneficiaries?",
-    answer: "Go to Settings → Legacy Access from the gear menu. You can add beneficiaries who will receive access to your vault if your account becomes inactive for an extended period. Beneficiaries must verify their email to be confirmed."
+    question: "What's the difference between the Vault and Home tabs?",
+    answer: "Home shows your time capsules (scheduled, delivered, and drafts). The Vault (🏛️ icon) is your personal media library where you organize photos, videos, and audio to use when creating capsules. Think of Vault as your storage, Home as your capsule timeline."
   },
   {
-    question: "I can't find a capsule I created. Where did it go?",
-    answer: "Check these locations: 1) Vault tab for scheduled/draft capsules, 2) Home tab for delivered capsules, 3) Use the search feature, 4) Check if you archived it in the Archive section. Capsules are never deleted unless you explicitly delete them."
+    question: "How do I add media to a capsule?",
+    answer: "When composing a capsule, you can upload media directly, record new content using the 'Record' tab (📹 icon), or import existing media from your Vault. Each capsule supports photos, videos, audio recordings, and text."
+  },
+  {
+    question: "What are themes and where can I get more?",
+    answer: "Themes add visual effects, animations, and ceremony experiences to your capsules. You start with 3 free themes (Classic, Eternal Bloom, Cosmic Voyage). Visit the Store in the ⚙️ Settings menu to purchase additional themed packs with unique VFX-quality effects."
+  },
+  {
+    question: "What is Legacy Access and how does it work?",
+    answer: "Legacy Access lets you designate beneficiaries who will receive access to your vault and capsules if your account becomes inactive for an extended period. Set it up in Settings → Legacy Access. Beneficiaries must verify their email to be confirmed. You can purchase additional beneficiary slots in the Store."
+  },
+  {
+    question: "How do achievements and titles work?",
+    answer: "Eras has 57+ achievements you can unlock by creating capsules, using features, and reaching milestones. Each achievement awards points and some grant special titles you can display. View your progress in Settings → Achievements & Titles."
+  },
+  {
+    question: "I'm having trouble uploading media. What should I check?",
+    answer: "Common solutions: 1) Ensure files are under the size limit (varies by file type), 2) Check your internet connection stability, 3) Try a different browser if issues persist, 4) Clear browser cache and cookies. If problems continue, contact support with details about file type and size."
+  },
+  {
+    question: "How do I delete a capsule?",
+    answer: "Open the capsule from your Home tab, then look for the delete option in the capsule details menu (usually three dots or similar). Deletion is permanent - the capsule and all its contents will be removed. Consider archiving instead if you want to hide it temporarily."
+  },
+  {
+    question: "What happens when a capsule is delivered?",
+    answer: "At the scheduled time, recipients receive notifications and can view the capsule with its chosen theme and ceremony effects. You'll also receive a notification confirming delivery. Delivered capsules appear in your Home tab's timeline and can be viewed anytime but cannot be edited."
+  },
+  {
+    question: "Can I schedule capsules far into the future?",
+    answer: "Yes! Eras is designed for long-term time capsules. You can schedule delivery months or even years ahead. Your capsules are securely stored and will be delivered at the exact date and time you specify."
   }
 ];
 

@@ -275,22 +275,9 @@ export function useAuth() {
               error.message?.includes('Refresh Token Not Found') ||
               error.message?.includes('refresh_token_not_found')) {
             console.warn('🔑 Invalid refresh token detected during session check');
-            
-            // Clear everything and force re-authentication
-            setUser(null);
-            setIsAuthenticated(false);
-            localStorage.removeItem('eras-auth-state');
-            
-            try {
-              await supabase.auth.signOut({ scope: 'local' });
-            } catch (signOutError) {
-              console.warn('Error during local sign out:', signOutError);
-            }
-            
-            toast.error('Your session has expired. Please sign in again.', {
-              duration: 5000,
-              position: 'top-center'
-            });
+            handleAuthError(error);
+            setIsCheckingAuth(false);
+            return;
           } else {
             // For other errors, keep cached state if we have it
             if (!isAuthenticated) {

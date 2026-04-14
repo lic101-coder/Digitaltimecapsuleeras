@@ -82,7 +82,7 @@ export function EternalFlamePassionateCeremony({
     );
 
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Generate supernova particles
   useEffect(() => {

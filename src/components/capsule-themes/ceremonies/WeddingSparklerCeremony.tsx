@@ -44,7 +44,7 @@ export function WeddingSparklerCeremony({
     
     setTimeout(onComplete, 14000);
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Enhanced continuous sparks from sparklers
   useEffect(() => {

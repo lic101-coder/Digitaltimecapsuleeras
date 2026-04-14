@@ -68,7 +68,7 @@ export function CareerCurtainCallCeremony({
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-neutral-950 via-black to-neutral-950 flex items-center justify-center">

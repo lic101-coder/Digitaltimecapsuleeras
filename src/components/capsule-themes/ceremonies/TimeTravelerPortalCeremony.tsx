@@ -83,7 +83,7 @@ export function TimeTravelerPortalCeremony({
     );
 
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Generate Matrix-style data streams
   useEffect(() => {

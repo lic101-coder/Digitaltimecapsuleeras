@@ -25,31 +25,16 @@ export function BirthdayMemoryLaneCeremony({
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   
   useEffect(() => {
-    // Intro: 2s
-    const timer1 = setTimeout(() => {
-      setStage('montage');
-    }, 2000);
+    const timeline = [
+      { time: 2000, action: () => setStage('montage') },
+      { time: 2000 + Math.min(media.length, 6) * 2000, action: () => setStage('wish') },
+      { time: 2000 + Math.min(media.length, 6) * 2000 + 4000, action: () => onComplete?.() }
+    ];
     
-    // Montage duration: show each photo for 2s
-    const photoCount = Math.min(media.length, 6);
-    const montageDuration = photoCount * 2000;
-    
-    const timer2 = setTimeout(() => {
-      setStage('wish');
-    }, 2000 + montageDuration);
-    
-    // Complete: after wish stage
-    const timer3 = setTimeout(() => {
-      onComplete?.();
-    }, 2000 + montageDuration + 4000);
-    
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-    };
-  }, [media.length, onComplete]);
-  
+    const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
+    return () => timeouts.forEach(clearTimeout);
+  }, []); // Only run once on mount - don't restart ceremony midway through
+
   // Cycle through photos during montage
   useEffect(() => {
     if (stage !== 'montage') return;

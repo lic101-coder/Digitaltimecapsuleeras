@@ -139,7 +139,7 @@ export function LuxeBirthdayCeremony({ onComplete, isVisible, age, recipientName
         onComplete();
       }, 2500);
     }, 800);
-  }, [phase, hasBlown, playBlowSound, playChimeSound, onComplete, initAudio]);
+  }, [phase, hasBlown, playBlowSound, playChimeSound, initAudio]); // Removed onComplete - don't restart ceremony midway through
 
   if (!isVisible) return null;
 

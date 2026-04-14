@@ -61,7 +61,7 @@ export function CareerGavelCeremony({
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 flex items-center justify-center">

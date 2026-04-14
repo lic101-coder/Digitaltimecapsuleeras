@@ -31,7 +31,7 @@ export function StandardCeremony({ onComplete, isVisible }: StandardCeremonyProp
       clearTimeout(timer2);
       clearTimeout(timer3);
     };
-  }, [isVisible, onComplete]);
+  }, [isVisible]); // Removed onComplete - don't restart ceremony midway through
 
   if (!isVisible) return null;
 

@@ -46,7 +46,7 @@ export function PetFirstPawsCeremony({
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-sky-100 via-blue-50 to-amber-50">

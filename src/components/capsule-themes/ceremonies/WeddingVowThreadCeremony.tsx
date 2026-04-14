@@ -43,7 +43,7 @@ export function WeddingVowThreadCeremony({
     
     setTimeout(onComplete, 13000);
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#1a0f2e] via-[#2d1b3d] to-[#1a0f2e]">

@@ -72,7 +72,7 @@ export function EternalFlameForgeCeremony({
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   const isStriking = ['strike1', 'strike2', 'strike3', 'strike4', 'strike5'].includes(stage);
   const isPostStrike = ['fuse', 'quench', 'reveal', 'radiance'].includes(stage);

@@ -59,7 +59,7 @@ export function NewLifeGenesisCeremony({
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Cinematic easing for smooth transitions
   const cinematicEase = [0.43, 0.13, 0.23, 0.96];

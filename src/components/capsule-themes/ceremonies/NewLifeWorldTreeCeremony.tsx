@@ -42,7 +42,7 @@ export function NewLifeWorldTreeCeremony({
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   const isLit = stage !== 'predawn';
   const isRadiant = stage === 'rays' || stage === 'painting';

@@ -1027,60 +1027,10 @@ const MainAppContent = React.memo(
       string | undefined
     >(undefined);
 
-    // 👑 Listen for Title Modal Close Event to trigger First Capsule onboarding
-    React.useEffect(() => {
-      const handleTitleModalClosed = (event: CustomEvent) => {
-        const { title } = event.detail;
-
-        console.log(
-          "👑 [Title Modal Event] Received titleModalClosed event",
-          { title },
-        );
-
-        // Only trigger for Time Novice title
-        if (title === "Time Novice") {
-          console.log(
-            "👑 [Title Modal Event] Time Novice modal closed",
-          );
-
-          // Check if First Capsule onboarding has been completed
-          const firstCapsuleCompleted = localStorage.getItem(
-            "eras_onboarding_first_capsule_completed",
-          );
-
-          if (firstCapsuleCompleted) {
-            console.log(
-              "👑 [Title Modal Event] First Capsule already completed, skipping trigger",
-            );
-            return;
-          }
-
-          console.log(
-            "👑 [Title Modal Event] Triggering First Capsule onboarding in 1 second...",
-          );
-
-          setTimeout(() => {
-            console.log(
-              "📚 [Onboarding Trigger] Showing First Capsule onboarding",
-            );
-            setShowOnboarding(true);
-            setOnboardingModule("first_capsule");
-          }, 1000); // 1 second delay
-        }
-      };
-
-      window.addEventListener(
-        "titleModalClosed",
-        handleTitleModalClosed as EventListener,
-      );
-
-      return () => {
-        window.removeEventListener(
-          "titleModalClosed",
-          handleTitleModalClosed as EventListener,
-        );
-      };
-    }, []);
+    // 🔥 REMOVED: Title Modal Event Listener
+    // This was causing an infinite tutorial loop. The tutorial should show BEFORE
+    // achievement/title modals, not after. The Eras Gate completion handler
+    // (lines ~1862) is the correct trigger point for new users.
 
     // 🔥 Store removeMedia function from CreateCapsule
     const removeMediaByVaultIdRef = React.useRef<
@@ -1854,9 +1804,25 @@ const MainAppContent = React.memo(
 
               // Check if core onboarding is needed
               if (!completionState.first_capsule) {
+                // 🔥 Session-based safeguard: Prevent same-session re-showing
+                const shownThisSession = sessionStorage.getItem(
+                  "eras_tutorial_shown_this_session",
+                );
+                
+                if (shownThisSession) {
+                  console.log(
+                    "📚 [ONBOARDING CHECK] Tutorial already shown this session, skipping",
+                  );
+                  return;
+                }
+                
                 console.log(
                   "📚 [ONBOARDING CHECK] ✅ New user detected - showing First Capsule Tutorial",
                 );
+                
+                // Set session flag immediately to prevent re-showing
+                sessionStorage.setItem("eras_tutorial_shown_this_session", "true");
+                
                 // Small delay to ensure UI is ready
                 setTimeout(() => {
                   setShowOnboarding(true);
@@ -1894,6 +1860,8 @@ const MainAppContent = React.memo(
       // Reset when user logs out
       if (!isAuthenticated && hasCheckedOnboardingRef.current) {
         hasCheckedOnboardingRef.current = false;
+        // Clear session flag on logout so tutorial can show again for new login
+        sessionStorage.removeItem("eras_tutorial_shown_this_session");
       }
     }, [auth.isAuthenticated, auth.user?.id]);
 

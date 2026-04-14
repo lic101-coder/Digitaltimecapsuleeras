@@ -76,15 +76,17 @@ export function TimeTravelerPassageCeremony({
     );
 
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Generate spiraling time particles
   useEffect(() => {
     if (stage === 'dissolve' || stage === 'shards') {
       const newParticles: TimeParticle[] = [];
+      // Use stage-specific ID offset to prevent duplicate keys during AnimatePresence transitions
+      const idOffset = stage === 'dissolve' ? 0 : 1000;
       for (let i = 0; i < 200; i++) {
         newParticles.push({
-          id: i,
+          id: idOffset + i,
           angle: (i / 200) * Math.PI * 2,
           radius: 50 + Math.random() * 150,
           size: 2 + Math.random() * 3,
@@ -100,11 +102,13 @@ export function TimeTravelerPassageCeremony({
   useEffect(() => {
     if (stage === 'shards' || stage === 'constellation' || stage === 'radiance') {
       const newShards: TimeShard[] = [];
+      // Use stage-specific ID offset to prevent duplicate keys during AnimatePresence transitions
+      const idOffset = stage === 'shards' ? 0 : stage === 'constellation' ? 100 : 200;
       for (let i = 0; i < 40; i++) {
         const angle = (i / 40) * Math.PI * 2;
         const distance = 100 + Math.random() * 180;
         newShards.push({
-          id: i,
+          id: idOffset + i,
           x: Math.cos(angle) * distance,
           y: Math.sin(angle) * distance,
           rotation: Math.random() * 360,
@@ -732,15 +736,16 @@ export function TimeTravelerPassageCeremony({
               className="absolute z-36 text-8xl"
               initial={{ scale: 0, opacity: 0 }}
               animate={{
-                scale: [0, 1.3, 1.1],
-                opacity: [0, 1, 0.95],
+                scale: 1.1,
+                opacity: 0.95,
                 y: -120
               }}
               transition={{
                 delay: 1.2,
                 duration: 1.5,
                 type: 'spring',
-                stiffness: 150
+                stiffness: 150,
+                damping: 10
               }}
               style={{
                 filter: 'drop-shadow(0 0 40px rgba(56, 189, 248, 1))'

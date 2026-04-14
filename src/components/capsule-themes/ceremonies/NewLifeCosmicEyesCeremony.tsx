@@ -41,7 +41,7 @@ export function NewLifeCosmicEyesCeremony({
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Lightning strikes
   useEffect(() => {

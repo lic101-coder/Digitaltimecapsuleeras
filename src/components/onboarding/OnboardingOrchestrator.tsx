@@ -227,18 +227,24 @@ export function OnboardingOrchestrator({
     }
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
     logger.info(`Onboarding: User skipped/closed module: ${currentModule?.id}`);
     
     // Track which module was exited early so we can award partial achievements
     const exitedModuleId = currentModule?.id;
     setEarlyExitModule(exitedModuleId || null);
     
-    // Store the exit info for App.tsx to handle achievement awards
+    // 🔥 CRITICAL FIX: Mark module as complete even when skipped
+    // This prevents the tutorial from re-showing and ensures backend + localStorage sync
     if (exitedModuleId) {
+      logger.info(`Onboarding: Marking ${exitedModuleId} as complete (even though skipped)`);
+      await markModuleComplete(exitedModuleId);
+      
+      // Store exit info for partial achievement awards
       localStorage.setItem('eras_onboarding_exit', JSON.stringify({
         moduleId: exitedModuleId,
-        exitedAt: new Date().toISOString()
+        exitedAt: new Date().toISOString(),
+        skipped: true // Flag to indicate early exit vs completion
       }));
     }
     

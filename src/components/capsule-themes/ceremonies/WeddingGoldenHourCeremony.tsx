@@ -38,7 +38,7 @@ export function WeddingGoldenHourCeremony({
     
     setTimeout(onComplete, 15000);
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Smoothly animate sun descent
   useEffect(() => {

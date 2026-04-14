@@ -53,7 +53,7 @@ export function EternalFlameEpicCeremony({
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
     return () => timeouts.forEach(clearTimeout);
-  }, [onComplete]);
+  }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Generate fireflies with SAFE positioning (stays on screen)
   const fireflies = useMemo(() => {

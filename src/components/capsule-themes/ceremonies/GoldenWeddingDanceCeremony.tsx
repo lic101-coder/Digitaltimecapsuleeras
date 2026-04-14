@@ -56,7 +56,7 @@ export function GoldenWeddingDanceCeremony({
     ];
 
     return () => timers.forEach(clearTimeout);
-  }, [isPreview, onComplete]);
+  }, [isPreview]); // Removed onComplete - don't restart ceremony midway through
 
   // Heart particles for eternal love stage
   const heartParticles = Array.from({ length: 300 }, (_, i) => ({

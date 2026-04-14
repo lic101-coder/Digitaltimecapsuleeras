@@ -7,7 +7,7 @@
  * Renders via Portal to ensure proper positioning.
  */
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, RefreshCw } from 'lucide-react';
@@ -103,15 +103,17 @@ export function CeremonyPreviewModal({
     setIsPlaying(false);
   }, []);
   
+  // 🔥 CRITICAL FIX: Memoize ceremony props to prevent mid-ceremony restarts
+  // Without this, props object recreates on every render, causing ceremonies to restart
+  const ceremonyProps = React.useMemo(() => ({
+    capsuleTitle: capsuleTitle,
+    media: sampleMedia,
+    isPreview: true,
+    onComplete: handleComplete
+  }), [capsuleTitle, sampleMedia, handleComplete]);
+  
   // Render the appropriate ceremony component
   const renderCeremony = () => {
-    const ceremonyProps = {
-      capsuleTitle: capsuleTitle,
-      media: sampleMedia,
-      isPreview: true,
-      onComplete: handleComplete
-    };
-    
     if (themeId === 'birthday') {
       if (ceremonyId === 'classic') {
         return <BirthdayClassicCeremony {...ceremonyProps} />;

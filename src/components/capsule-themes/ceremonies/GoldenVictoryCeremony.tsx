@@ -53,7 +53,7 @@ export function GoldenVictoryCeremony({
     ];
 
     return () => timers.forEach(clearTimeout);
-  }, [isPreview, onComplete]);
+  }, [isPreview]); // Removed onComplete - don't restart ceremony midway through
 
   // Generate confetti particles
   const confettiParticles = Array.from({ length: 200 }, (_, i) => ({

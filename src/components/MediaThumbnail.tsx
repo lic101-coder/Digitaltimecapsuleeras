@@ -213,8 +213,9 @@ export function MediaThumbnail({
         return; // Skip generation entirely
       }
       
-      // FALLBACK: Generate thumbnail on client (slow, downloads full video)
-      console.warn('⚠️ No pre-generated thumbnail - falling back to client-side generation (slow)');
+      // FALLBACK: Generate thumbnail on client (expected for videos without pre-generated thumbnails)
+      // Note: This is slower as it downloads the full video, but works as a fallback
+      console.log('📸 Generating thumbnail on client (no pre-generated thumbnail available)');
       setError(false);
       setThumbnailUrl(null);
       
