@@ -29,4 +29,18 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    // Exclude Supabase Edge Functions from the build - they use Deno-style imports
+    rollupOptions: {
+      external: [
+        /^jsr:/,
+        /^npm:/,
+        /^node:/,
+      ],
+    },
+  },
+  // Exclude Supabase Edge Functions directory from the build (uses Deno imports)
+  optimizeDeps: {
+    exclude: ['src/app/supabase/**/*'],
+  },
 })
