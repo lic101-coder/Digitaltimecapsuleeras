@@ -1139,8 +1139,8 @@ app.post("/make-server-f9be53a7/api/auth/signup", async (c) => {
     // These will be awarded AFTER the user completes (or dismisses) the First Capsule Tutorial
     // This ensures the proper onboarding flow: Tutorial → A001 Achievement Modal → Time Novice Title Modal
 
-    // Get app URL from environment or use Figma site URL
-    const appUrl = Deno.env.get('APP_URL') || 'https://found-shirt-81691824.figma.site';
+    // Get app URL from environment or use production site URL
+    const appUrl = Deno.env.get('APP_URL') || 'https://www.erastimecapsule.com';
     console.log(`🔗 [Custom Signup] App URL for verification link: ${appUrl}`);
     
     // Create verification URL
@@ -1234,8 +1234,8 @@ app.post("/make-server-f9be53a7/api/auth/send-verification-email", async (c) => 
     
     console.log('✅ [Email Verification] Token stored:', tokenKey, 'for user:', actualUserId);
 
-    // Get app URL from environment or use Figma site URL
-    const appUrl = Deno.env.get('APP_URL') || 'https://found-shirt-81691824.figma.site';
+    // Get app URL from environment or use production site URL
+    const appUrl = Deno.env.get('APP_URL') || 'https://www.erastimecapsule.com';
     console.log(`🔗 [Email Verification] App URL for verification link: ${appUrl}`);
     
     // Create verification URL
@@ -16252,9 +16252,9 @@ app.post('/make-server-f9be53a7/purchase-theme', async (c) => {
 
     console.log(`💳 [Purchase] Creating checkout for ${productKey}`);
 
-    // Get app URL from environment or use Figma site URL
+    // Get app URL from environment or use production site URL
     // ⚠️ IMPORTANT: Set APP_URL environment variable when deploying to production (erastimecapsule.com)
-    const appUrl = Deno.env.get('APP_URL') || 'https://found-shirt-81691824.figma.site';
+    const appUrl = Deno.env.get('APP_URL') || 'https://www.erastimecapsule.com';
     console.log(`🔗 [Purchase] Redirecting to app URL: ${appUrl}`);
 
     // Create Stripe checkout
@@ -16349,9 +16349,9 @@ app.post('/make-server-f9be53a7/purchase-beneficiary', async (c) => {
 
     console.log(`💳 [Beneficiary] Creating checkout for user ${userId} (type: ${purchaseType}, slots: ${priceInfo.slots})`);
 
-    // Get app URL from environment or use Figma site URL
+    // Get app URL from environment or use production site URL
     // ⚠️ IMPORTANT: Set APP_URL environment variable when deploying to production (erastimecapsule.com)
-    const appUrl = Deno.env.get('APP_URL') || 'https://found-shirt-81691824.figma.site';
+    const appUrl = Deno.env.get('APP_URL') || 'https://www.erastimecapsule.com';
     console.log(`🔗 [Beneficiary] Redirecting to app URL: ${appUrl}`);
 
     // Determine quantity based on product type

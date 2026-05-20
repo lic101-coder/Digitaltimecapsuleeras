@@ -9,7 +9,7 @@ import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { 
   Sparkles, 
   Loader2,

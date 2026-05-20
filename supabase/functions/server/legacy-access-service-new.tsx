@@ -23,7 +23,7 @@ export interface Beneficiary {
   personalMessage?: string;
   status: 'pending_unlock' | 'pending' | 'verified' | 'rejected' | 'revoked';
   verificationToken?: string;
-  tokenExpiresAt?: number; // ✅ UPDATED: Now optional/undefined for unlock notifications (never expires)
+  tokenExpiresAt?: number;
   verifiedAt?: number;
   addedAt: number;
   rejectedAt?: number;
@@ -42,7 +42,6 @@ export interface Beneficiary {
   // NEW: Notification timing control
   notificationTiming?: 'immediate' | 'deferred'; // When beneficiary should be notified
   notificationSentAt?: number; // Timestamp when initial notification was sent
-  notificationContext?: 'immediate' | 'manual' | 'unlock'; // ✅ NEW: WHY notification was sent (determines expiration policy)
 }
 
 export interface LegacyAccessTrigger {
@@ -136,10 +135,9 @@ export async function addBeneficiary(
     const notificationTiming = beneficiaryData.notificationTiming || 'deferred';
     const shouldNotifyNow = notificationTiming === 'immediate';
     
-    // ✅ UPDATED: 30 days for immediate notifications (owner can resend if needed)
     // Generate verification token if notifying immediately
     const verificationToken = shouldNotifyNow ? generateSecureToken() : undefined;
-    const tokenExpiresAt = shouldNotifyNow ? Date.now() + (30 * 24 * 60 * 60 * 1000) : undefined; // 30 days
+    const tokenExpiresAt = shouldNotifyNow ? Date.now() + (14 * 24 * 60 * 60 * 1000) : undefined;
     
     const newBeneficiary: Beneficiary = {
       id: `ben_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -161,7 +159,6 @@ export async function addBeneficiary(
       },
       notificationTiming, // Store the choice
       notificationSentAt: shouldNotifyNow ? Date.now() : undefined, // Track when notification was sent
-      notificationContext: shouldNotifyNow ? 'immediate' : undefined, // ✅ NEW: Track why notification was sent
     };
     
     config.beneficiaries.push(newBeneficiary);
@@ -197,8 +194,7 @@ export async function addBeneficiary(
               year: 'numeric',
               month: 'long',
               day: 'numeric'
-            }),
-            expirationDays: 30 // ✅ Immediate notification - 30 days expiration
+            })
           }
         });
         
@@ -255,7 +251,6 @@ export async function sendBeneficiaryNotification(
     beneficiary.tokenExpiresAt = tokenExpiresAt;
     beneficiary.notificationTiming = 'immediate'; // Update to reflect it's now been sent
     beneficiary.notificationSentAt = Date.now();
-    beneficiary.notificationContext = 'manual'; // ✅ NEW: Mark as manually sent
     
     config.updatedAt = Date.now();
     await kv.set(getLegacyAccessKey(userId), config);
@@ -288,8 +283,7 @@ export async function sendBeneficiaryNotification(
             year: 'numeric',
             month: 'long',
             day: 'numeric'
-          }),
-          expirationDays: 14 // ✅ Manual notification - 14 days expiration
+          })
         }
       });
       
@@ -459,8 +453,7 @@ export async function resendVerificationEmail(
             year: 'numeric',
             month: 'long',
             day: 'numeric'
-          }),
-          expirationDays: 14 // ✅ Resend verification - 14 days expiration
+          })
         }
       });
       
@@ -728,102 +721,6 @@ export async function checkInactivityTriggers(): Promise<{
 }
 
 /**
- * ✅ NEW: Check and send reminder emails to beneficiaries who haven't verified yet
- * Called by cron job weekly to remind pending beneficiaries
- * 
- * Reminder schedule for unlock-context beneficiaries (no expiration):
- * - Day 7 after unlock: First reminder
- * - Day 14 after unlock: Second reminder  
- * - Day 30 after unlock: Final reminder
- */
-export async function checkBeneficiaryReminders(): Promise<{
-  configsChecked: number;
-  remindersSent: number;
-}> {
-  const allConfigs = await kv.getByPrefix<LegacyAccessConfig>('legacy_access_');
-  
-  let configsChecked = 0;
-  let remindersSent = 0;
-  
-  for (const config of allConfigs) {
-    configsChecked++;
-    
-    if (!config.beneficiaries || !Array.isArray(config.beneficiaries)) continue;
-    
-    // Find pending beneficiaries who were notified during unlock (no expiration)
-    const pendingUnlockBeneficiaries = config.beneficiaries.filter(
-      b => b.status === 'pending' && 
-           b.notificationContext === 'unlock' && 
-           b.notificationSentAt
-    );
-    
-    if (pendingUnlockBeneficiaries.length === 0) continue;
-    
-    for (const beneficiary of pendingUnlockBeneficiaries) {
-      const daysSinceNotification = Math.floor(
-        (Date.now() - beneficiary.notificationSentAt!) / (24 * 60 * 60 * 1000)
-      );
-      
-      // Check if reminder should be sent
-      // Send at days 7, 14, and 30
-      const shouldSendReminder = 
-        daysSinceNotification === 7 || 
-        daysSinceNotification === 14 || 
-        daysSinceNotification === 30;
-      
-      if (!shouldSendReminder) continue;
-      
-      // Track which reminder this is
-      const reminderCount = 
-        daysSinceNotification === 7 ? 1 : 
-        daysSinceNotification === 14 ? 2 : 3;
-      
-      console.log(`📧 [Reminder] Sending reminder #${reminderCount} to ${beneficiary.email} (${daysSinceNotification} days since unlock)`);
-      
-      try {
-        // Get user info for email
-        const userProfile = await kv.get(`profile:${config.userId}`);
-        const userSettings = await kv.get(`user_settings:${config.userId}`);
-        const userName = userProfile?.name || userProfile?.displayName || userSettings?.displayName || 'the account owner';
-        
-        const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://www.erastimecapsule.com';
-        const verificationUrl = `${frontendUrl}/verify-beneficiary?token=${beneficiary.verificationToken}`;
-        const requestNewUrl = `${frontendUrl}/request-verification`;
-        
-        const emailResult = await sendEmail({
-          to: beneficiary.email,
-          subject: `Reminder: Verify Your Legacy Beneficiary Role - Eras`, // ✅ Emoji removed
-          template: 'beneficiary-verification-reminder',
-          variables: {
-            beneficiaryName: beneficiary.name,
-            beneficiaryEmail: beneficiary.email,
-            userName: userName,
-            reminderNumber: reminderCount,
-            daysSinceUnlock: daysSinceNotification,
-            verificationUrl: verificationUrl,
-            requestNewUrl: requestNewUrl,
-            personalMessage: beneficiary.personalMessage || '',
-            isFinalReminder: reminderCount === 3
-          }
-        });
-        
-        if (emailResult.success) {
-          console.log(`✅ [Reminder] Sent reminder #${reminderCount} to ${beneficiary.email}`);
-          remindersSent++;
-        } else {
-          console.error(`❌ [Reminder] Failed to send reminder to ${beneficiary.email}:`, emailResult.error);
-        }
-      } catch (emailError) {
-        console.error(`❌ [Reminder] Error sending reminder to ${beneficiary.email}:`, emailError);
-      }
-    }
-  }
-  
-  console.log(`✅ [Reminder] Checked ${configsChecked} configs, sent ${remindersSent} reminders`);
-  return { configsChecked, remindersSent };
-}
-
-/**
  * Trigger legacy vault unlock for beneficiaries
  */
 async function triggerLegacyUnlock(
@@ -848,15 +745,13 @@ async function triggerLegacyUnlock(
     console.log(`📧 [Unlock] Found ${pendingUnlockBeneficiaries.length} beneficiaries awaiting first-time verification`);
     
     for (const beneficiary of pendingUnlockBeneficiaries) {
-      // ✅ CRITICAL: NO EXPIRATION for unlock notifications (owner may be deceased/unreachable)
       // Generate verification token NOW (deferred from when they were added)
       beneficiary.verificationToken = generateSecureToken();
-      beneficiary.tokenExpiresAt = undefined; // ✅ NEVER EXPIRES - beneficiary can verify anytime
+      beneficiary.tokenExpiresAt = Date.now() + (14 * 24 * 60 * 60 * 1000); // 14 days
       beneficiary.status = 'pending'; // Now waiting for verification
       beneficiary.notificationSentAt = Date.now();
-      beneficiary.notificationContext = 'unlock'; // ✅ NEW: Mark as sent during unlock
       
-      console.log(`📧 [Unlock] Sending deferred verification email to ${beneficiary.email} (NO EXPIRATION)`);
+      console.log(`📧 [Unlock] Sending deferred verification email to ${beneficiary.email}`);
       
       const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://www.erastimecapsule.com';
       const verificationUrl = `${frontendUrl}/verify-beneficiary?token=${beneficiary.verificationToken}`;
@@ -1181,162 +1076,5 @@ async function sendInactivityWarningEmail(config: LegacyAccessConfig): Promise<v
     }
   } catch (error) {
     console.error(`❌ Error sending warning email:`, error);
-  }
-}
-
-/**
- * ✅ PHASE 1: Import inherited folders to recipient's vault
- * Creates read-only folder references in recipient's account
- */
-export async function importInheritedFolders(
-  tokenId: string,
-  recipientUserId: string
-): Promise<{ success: boolean; importedCount: number; error?: string }> {
-  try {
-    console.log(`📦 [Import] Starting import for recipient ${recipientUserId} with token ${tokenId}`);
-    
-    // 1. Validate token
-    const token = await kv.get<UnlockToken>(getUnlockTokenKey(tokenId));
-    if (!token) {
-      console.error('❌ [Import] Token not found');
-      return { success: false, importedCount: 0, error: 'Invalid token' };
-    }
-    
-    if (token.usedAt) {
-      console.error('❌ [Import] Token already used');
-      return { success: false, importedCount: 0, error: 'This inheritance has already been imported' };
-    }
-    
-    // Check token expiration
-    if (Date.now() > token.expiresAt) {
-      console.error('❌ [Import] Token expired');
-      return { success: false, importedCount: 0, error: 'Token has expired' };
-    }
-    
-    console.log(`✅ [Import] Token validated for owner ${token.userId}`);
-    
-    // 2. Get owner's legacy config
-    const ownerConfig = await getLegacyAccessConfig(token.userId);
-    const beneficiary = ownerConfig.beneficiaries.find(b => b.id === token.beneficiaryId);
-    
-    if (!beneficiary) {
-      console.error('❌ [Import] Beneficiary not found in config');
-      return { success: false, importedCount: 0, error: 'Beneficiary not found' };
-    }
-    
-    console.log(`✅ [Import] Found beneficiary ${beneficiary.email}`);
-    
-    // 3. Get folders this beneficiary has access to
-    const allFolders = await kv.getByPrefix<any>(`folder:${token.userId}:`);
-    console.log(`📁 [Import] Found ${allFolders.length} total folders for owner`);
-    
-    const foldersToImport = allFolders.filter(folder => {
-      // Check folder-specific permissions first
-      if (token.folderPermissions && token.folderPermissions[folder.id]) {
-        console.log(`✅ [Import] Folder ${folder.name} has token permission`);
-        return true;
-      }
-      
-      // Check if beneficiary has permission for this folder
-      if (beneficiary.folderPermissions && beneficiary.folderPermissions[folder.id]) {
-        console.log(`✅ [Import] Folder ${folder.name} has beneficiary permission`);
-        return true;
-      }
-      
-      // Check if folder has global legacy access
-      if (folder.legacyAccess?.mode === 'global') {
-        console.log(`✅ [Import] Folder ${folder.name} has global access`);
-        return true;
-      }
-      
-      console.log(`⊘ [Import] Folder ${folder.name} - no access`);
-      return false;
-    });
-    
-    console.log(`📦 [Import] ${foldersToImport.length} folders to import`);
-    
-    if (foldersToImport.length === 0) {
-      return { success: false, importedCount: 0, error: 'No folders available to import' };
-    }
-    
-    let importedCount = 0;
-    
-    // 4. Create inherited folder references
-    for (const originalFolder of foldersToImport) {
-      const inheritanceId = `${token.userId}_${originalFolder.id}`;
-      
-      // Get permission level (default to 'view')
-      const permission = 
-        token.folderPermissions?.[originalFolder.id] || 
-        beneficiary.folderPermissions?.[originalFolder.id] || 
-        'view';
-      
-      // Get capsule IDs from folder - support both mediaIds and capsule_ids
-      const capsuleIds = originalFolder.mediaIds || originalFolder.capsule_ids || [];
-      
-      const inheritedFolder = {
-        id: `inherited_${inheritanceId}`,
-        recipientUserId,
-        originalUserId: token.userId,
-        originalFolderId: originalFolder.id,
-        name: originalFolder.name,
-        icon: originalFolder.icon || '📦',
-        color: originalFolder.color || '#8b5cf6',
-        capsuleIds,
-        importedAt: Date.now(),
-        inheritanceToken: tokenId,
-        permission,
-        isInherited: true,
-        isReadOnly: true
-      };
-      
-      await kv.set(
-        `inherited_folder:${recipientUserId}:${inheritanceId}`,
-        inheritedFolder
-      );
-      
-      console.log(`✅ [Import] Created inherited folder: ${originalFolder.name} (${capsuleIds.length} capsules)`);
-      importedCount++;
-    }
-    
-    // 5. Mark token as used
-    token.usedAt = Date.now();
-    token.usedBy = recipientUserId;
-    await kv.set(getUnlockTokenKey(tokenId), token);
-    
-    console.log(`✅ [Import] Token marked as used`);
-    
-    // 6. Send confirmation email
-    try {
-      const ownerProfile = await kv.get(`profile:${token.userId}`);
-      const ownerSettings = await kv.get(`user_settings:${token.userId}`);
-      const ownerName = ownerProfile?.name || ownerProfile?.displayName || ownerSettings?.displayName || 'a loved one';
-      
-      const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://www.erastimecapsule.com';
-      
-      await sendEmail({
-        to: beneficiary.email,
-        subject: '✅ Legacy Folders Imported to Your Vault - Eras',
-        template: 'legacy-import-confirmation',
-        variables: {
-          beneficiaryName: beneficiary.name,
-          ownerName: ownerName,
-          folderCount: importedCount,
-          vaultUrl: `${frontendUrl}/vault`
-        }
-      });
-      
-      console.log(`📧 [Import] Confirmation email sent to ${beneficiary.email}`);
-    } catch (emailError) {
-      console.error('❌ [Import] Failed to send confirmation email:', emailError);
-      // Don't fail import if email fails
-    }
-    
-    console.log(`✅ [Import] Import complete: ${importedCount} folders`);
-    return { success: true, importedCount };
-    
-  } catch (error) {
-    console.error('❌ [Import] Import error:', error);
-    return { success: false, importedCount: 0, error: error.message || 'Import failed' };
   }
 }
