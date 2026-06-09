@@ -53,6 +53,7 @@ export function EternalFlamePassionateCeremony({
   const [supernovaParticles, setSupernovaParticles] = useState<Particle[]>([]);
   const [ringParticles, setRingParticles] = useState<Particle[]>([]);
   const [shake, setShake] = useState(false);
+  const [completed, setCompleted] = useState(false);
 
   // Refined timeline with smoother pacing and overlaps
   useEffect(() => {
@@ -70,17 +71,32 @@ export function EternalFlamePassionateCeremony({
       { time: 17400, stage: 9 },   // Formation - particles to ring
       { time: 18900, stage: 10 },  // Ring - sparkle and rotate
       { time: 19400, stage: 11 },  // Outro - fade
-      { time: 19900, stage: 12, callback: onComplete }
+      { time: 19900, stage: 12, callback: () => {
+        setCompleted(true);
+        onComplete?.();
+      }}
     ];
 
-    const timeouts = timeline.map(({ time, stage, callback }) => 
+    const timeouts = timeline.map(({ time, stage, callback }) =>
       setTimeout(() => {
         if (stage !== undefined) setStage(stage);
         callback?.();
       }, time)
     );
 
-    return () => timeouts.forEach(clearTimeout);
+    // CRITICAL FAILSAFE: Force completion after 25 seconds if ceremony hasn't finished
+    // This prevents freeze bugs where animations block completion
+    const failsafeTimeout = setTimeout(() => {
+      console.warn('⚠️ Binary Hearts Supernova failsafe triggered - forcing completion');
+      setStage(12);
+      setCompleted(true);
+      onComplete?.();
+    }, 25000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Generate supernova particles
@@ -138,13 +154,15 @@ export function EternalFlamePassionateCeremony({
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
             }}
-            animate={{
+            animate={stage < 11 ? {
               opacity: [0.2, 0.8, 0.2],
               scale: [1, 1.3, 1]
+            } : {
+              opacity: 0
             }}
             transition={{
               duration: 2 + Math.random() * 3,
-              repeat: Infinity,
+              repeat: stage < 11 ? Infinity : 0,
               delay: Math.random() * 2,
               ease: 'easeInOut'
             }}
@@ -214,18 +232,18 @@ export function EternalFlamePassionateCeremony({
                       left: '50%',
                       top: '50%',
                       transform: 'translate(-50%, -50%)',
-                      background: stage === 3 
+                      background: stage === 3
                         ? 'radial-gradient(circle, rgba(255, 107, 107, 0.9) 0%, rgba(255, 107, 107, 0.5) 40%, transparent 70%)'
                         : 'radial-gradient(circle, rgba(255, 107, 107, 0.7) 0%, rgba(255, 107, 107, 0.3) 40%, transparent 70%)',
                       filter: `blur(${getOptimalBlur(stage === 3 ? 45 : 30)}px)`,
                     }}
-                    animate={{
+                    animate={(stage === 0 || stage === 1 || stage === 2 || stage === 3) ? {
                       scale: stage === 3 ? [1, 1.6, 1] : [1, 1.2, 1],
                       opacity: stage === 3 ? [0.8, 1, 0.8] : [0.6, 0.9, 0.6]
-                    }}
+                    } : { opacity: 0 }}
                     transition={{
                       duration: stage === 3 ? 0.4 : 1.8,
-                      repeat: Infinity,
+                      repeat: (stage === 0 || stage === 1 || stage === 2 || stage === 3) ? Infinity : 0,
                       ease: 'easeInOut'
                     }}
                   />
@@ -314,13 +332,13 @@ export function EternalFlamePassionateCeremony({
                         : 'radial-gradient(circle, rgba(74, 222, 128, 0.7) 0%, rgba(74, 222, 128, 0.3) 40%, transparent 70%)',
                       filter: `blur(${getOptimalBlur(stage === 3 ? 45 : 30)}px)`,
                     }}
-                    animate={{
+                    animate={(stage === 0 || stage === 1 || stage === 2 || stage === 3) ? {
                       scale: stage === 3 ? [1, 1.6, 1] : [1, 1.2, 1],
                       opacity: stage === 3 ? [0.8, 1, 0.8] : [0.6, 0.9, 0.6]
-                    }}
+                    } : { opacity: 0 }}
                     transition={{
                       duration: stage === 3 ? 0.4 : 1.8,
-                      repeat: Infinity,
+                      repeat: (stage === 0 || stage === 1 || stage === 2 || stage === 3) ? Infinity : 0,
                       ease: 'easeInOut'
                     }}
                   />
@@ -398,20 +416,20 @@ export function EternalFlamePassionateCeremony({
                       background: 'radial-gradient(circle, rgba(255, 107, 107, 1) 0%, rgba(255, 107, 107, 0.7) 25%, rgba(255, 107, 107, 0.3) 50%, transparent 70%)',
                       filter: `blur(${getOptimalBlur(55)}px)`,
                     }}
-                    animate={{
+                    animate={stage === 4 ? {
                       scale: [1, 2, 1],
                       opacity: [0.7, 1, 0.7]
-                    }}
+                    } : { opacity: 0 }}
                     transition={{
                       duration: 0.6,
-                      repeat: Infinity,
+                      repeat: stage === 4 ? Infinity : 0,
                       ease: 'easeInOut'
                     }}
                   />
                 )}
 
                 {/* Energy rings charging - slower, clearer */}
-                {[0, 1, 2, 3].map((i) => (
+                {stage === 4 && [0, 1, 2, 3].map((i) => (
                   <motion.div
                     key={`charge-ring-1-${i}`}
                     className="absolute left-1/2 top-1/2 rounded-full border-4 border-red-400"
@@ -439,12 +457,12 @@ export function EternalFlamePassionateCeremony({
                   style={{
                     filter: `drop-shadow(0 0 ${getOptimalBlur(45)}px rgba(255, 107, 107, 1))`,
                   }}
-                  animate={{
+                  animate={stage === 4 ? {
                     scale: [1.1, 1.5, 1.1],
-                  }}
+                  } : { scale: 1.1 }}
                   transition={{
                     duration: 0.6,
-                    repeat: Infinity,
+                    repeat: stage === 4 ? Infinity : 0,
                     ease: 'easeInOut'
                   }}
                 >
@@ -473,20 +491,20 @@ export function EternalFlamePassionateCeremony({
                       background: 'radial-gradient(circle, rgba(74, 222, 128, 1) 0%, rgba(74, 222, 128, 0.7) 25%, rgba(74, 222, 128, 0.3) 50%, transparent 70%)',
                       filter: `blur(${getOptimalBlur(55)}px)`,
                     }}
-                    animate={{
+                    animate={stage === 4 ? {
                       scale: [1, 2, 1],
                       opacity: [0.7, 1, 0.7]
-                    }}
+                    } : { opacity: 0 }}
                     transition={{
                       duration: 0.6,
-                      repeat: Infinity,
+                      repeat: stage === 4 ? Infinity : 0,
                       ease: 'easeInOut'
                     }}
                   />
                 )}
 
                 {/* Energy rings charging - slower, clearer */}
-                {[0, 1, 2, 3].map((i) => (
+                {stage === 4 && [0, 1, 2, 3].map((i) => (
                   <motion.div
                     key={`charge-ring-2-${i}`}
                     className="absolute left-1/2 top-1/2 rounded-full border-4 border-green-400"
@@ -514,12 +532,12 @@ export function EternalFlamePassionateCeremony({
                   style={{
                     filter: `drop-shadow(0 0 ${getOptimalBlur(45)}px rgba(74, 222, 128, 1))`,
                   }}
-                  animate={{
+                  animate={stage === 4 ? {
                     scale: [1.1, 1.5, 1.1],
-                  }}
+                  } : { scale: 1.1 }}
                   transition={{
                     duration: 0.6,
-                    repeat: Infinity,
+                    repeat: stage === 4 ? Infinity : 0,
                     ease: 'easeInOut'
                   }}
                 >
@@ -528,7 +546,7 @@ export function EternalFlamePassionateCeremony({
               </motion.div>
 
               {/* Energy arc between hearts - thicker, clearer */}
-              {shouldRenderComplexEffect() && (
+              {shouldRenderComplexEffect() && stage === 4 && (
                 <motion.div
                   className="absolute left-1/2 top-1/2"
                   style={{
@@ -553,7 +571,7 @@ export function EternalFlamePassionateCeremony({
               )}
 
               {/* Electrical sparks along arc */}
-              {shouldRenderComplexEffect() && [0, 1, 2, 3, 4].map((i) => (
+              {shouldRenderComplexEffect() && stage === 4 && [0, 1, 2, 3, 4].map((i) => (
                 <motion.div
                   key={`spark-${i}`}
                   className="absolute left-1/2 top-1/2 w-2 h-2 bg-white rounded-full"
@@ -1157,13 +1175,13 @@ export function EternalFlamePassionateCeremony({
                     background: 'radial-gradient(circle, transparent 32%, rgba(255, 215, 0, 0.6) 43%, rgba(255, 215, 0, 0.35) 55%, transparent 68%)',
                     filter: `blur(${getOptimalBlur(35)}px)`,
                   }}
-                  animate={{
+                  animate={stage === 10 ? {
                     scale: [0.95, 1.15, 0.95],
                     opacity: [0.7, 1, 0.7]
-                  }}
+                  } : { opacity: 0 }}
                   transition={{
                     duration: 3,
-                    repeat: Infinity,
+                    repeat: stage === 10 ? 2 : 0, // Limit to 2 repeats instead of infinite
                     ease: 'easeInOut'
                   }}
                 />
@@ -1179,10 +1197,10 @@ export function EternalFlamePassionateCeremony({
                   maxHeight: '300px',
                   transform: 'translate(-50%, -50%)',
                 }}
-                animate={{ rotate: 360 }}
+                animate={stage === 10 ? { rotate: 360 } : { rotate: 0 }}
                 transition={{
                   duration: 12,
-                  repeat: Infinity,
+                  repeat: stage === 10 ? 1 : 0, // Limit to 1 repeat instead of infinite
                   ease: 'linear'
                 }}
               >
@@ -1205,14 +1223,14 @@ export function EternalFlamePassionateCeremony({
                         boxShadow: shouldRenderComplexEffect() ? `0 0 ${getOptimalBlur(10)}px ${particle.color}` : undefined,
                         filter: shouldRenderComplexEffect() ? `blur(${getOptimalBlur(0.6)}px)` : undefined,
                       }}
-                      animate={{
+                      animate={stage === 10 ? {
                         scale: [1, 1.4, 1],
                         opacity: [0.9, 1, 0.9]
-                      }}
+                      } : { opacity: 0 }}
                       transition={{
                         duration: 2.5,
                         delay: particle.id * 0.06,
-                        repeat: Infinity,
+                        repeat: stage === 10 ? 1 : 0, // Limit to 1 repeat instead of infinite
                         ease: 'easeInOut'
                       }}
                     />
@@ -1221,7 +1239,7 @@ export function EternalFlamePassionateCeremony({
               </motion.div>
 
               {/* Diamond sparkles */}
-              {[0, 90, 180, 270].map((angle, i) => {
+              {stage === 10 && [0, 90, 180, 270].map((angle, i) => {
                 const sparkleRadius = 15;
                 const sparkleX = 50 + Math.cos((angle * Math.PI) / 180) * sparkleRadius;
                 const sparkleY = 50 + Math.sin((angle * Math.PI) / 180) * sparkleRadius;
@@ -1245,7 +1263,7 @@ export function EternalFlamePassionateCeremony({
                     transition={{
                       duration: 2.5,
                       delay: i * 0.5,
-                      repeat: Infinity,
+                      repeat: 1, // Limit to 1 repeat
                       ease: 'easeInOut'
                     }}
                   >
@@ -1255,7 +1273,7 @@ export function EternalFlamePassionateCeremony({
               })}
 
               {/* Light rays */}
-              {shouldRenderComplexEffect() && Array.from({ length: 12 }).map((_, i) => {
+              {shouldRenderComplexEffect() && stage === 10 && Array.from({ length: 12 }).map((_, i) => {
                 const rayAngle = (i / 12) * Math.PI * 2;
 
                 return (
@@ -1277,7 +1295,7 @@ export function EternalFlamePassionateCeremony({
                     transition={{
                       duration: 3,
                       delay: i * 0.18,
-                      repeat: Infinity,
+                      repeat: 1, // Limit to 1 repeat
                       ease: 'easeInOut'
                     }}
                   />

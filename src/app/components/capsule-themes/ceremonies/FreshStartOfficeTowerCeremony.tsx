@@ -29,6 +29,7 @@ export function FreshStartOfficeTowerCeremony({
 }: FreshStartOfficeTowerCeremonyProps) {
   const [stage, setStage] = useState<'title' | 'threshold' | 'ascension' | 'arrival' | 'welcome' | 'desk' | 'finale' | 'outro'>('title');
   const [floor, setFloor] = useState(1);
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -44,7 +45,17 @@ export function FreshStartOfficeTowerCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 18000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Elevator floor counter animation
@@ -283,7 +294,7 @@ export function FreshStartOfficeTowerCeremony({
                 transition={{
                   duration: 3,
                   delay: i * 0.1,
-                  repeat: Infinity
+                  repeat: completed ? 0 : 5
                 }}
               />
             ))}
@@ -370,7 +381,7 @@ export function FreshStartOfficeTowerCeremony({
                 transition={{
                   duration: 0.5,
                   delay: i * 0.05,
-                  repeat: Infinity
+                  repeat: completed ? 0 : 8
                 }}
               />
             ))}
@@ -773,7 +784,7 @@ export function FreshStartOfficeTowerCeremony({
                     transition={{
                       duration: 2,
                       delay: i * 0.2,
-                      repeat: Infinity
+                      repeat: completed ? 0 : 6
                     }}
                   />
                 ))}

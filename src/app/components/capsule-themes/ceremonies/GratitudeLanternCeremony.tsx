@@ -45,6 +45,7 @@ export function GratitudeLanternCeremony({
   onComplete
 }: GratitudeLanternCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'appear' | 'messages' | 'release' | 'ascend' | 'stars' | 'constellation' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   // Animation timeline
@@ -66,9 +67,16 @@ export function GratitudeLanternCeremony({
       setTimeout(action, time)
     );
 
+    // Failsafe timeout - 1 second after last timeline action
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 17000);
+
     return () => {
       timeoutsRef.current.forEach(clearTimeout);
       timeoutsRef.current = [];
+      clearTimeout(failsafeTimeout);
     };
   }, []); // Only run once on mount - don't restart ceremony midway through
 

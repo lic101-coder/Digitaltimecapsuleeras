@@ -259,19 +259,15 @@ export function CeremonyCard({ ceremony, isSelected, onSelect, onPreview }: Cere
   return (
     <button
       onClick={() => {
-        console.log('🎬 [CeremonyCard] User clicked ceremony:', ceremony.id, ceremony.name);
-        // ✅ Select the ceremony (move checkmark)
         onSelect();
-        // ✅ Show the preview (so user can see what it looks like)
-        onPreview();
       }}
       data-ceremony-card
-      className={`relative flex flex-col w-full rounded-xl transition-all transform hover:scale-105 ${ 
+      className={`relative flex flex-col w-full rounded-xl transition-all transform active:scale-95 ${
         isSelected
           ? `ring-2 ${getRingColor()} shadow-xl`
           : 'ring-1 ring-white/20 hover:ring-white/40'
       }`}
-      style={{ 
+      style={{
         background: 'transparent',
         overflow: 'visible',
         padding: 0,
@@ -378,10 +374,26 @@ export function CeremonyCard({ ceremony, isSelected, onSelect, onPreview }: Cere
         </div>
       </div>
       
+      {/* Preview button - explicit, never auto-fires */}
+      <div
+        className="relative w-full px-2 pb-2"
+        style={{ zIndex: 20 }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect();
+          onPreview();
+        }}
+      >
+        <div className="flex items-center justify-center gap-1 py-1 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 transition-colors">
+          <Play className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 text-white" fill="currentColor" />
+          <span className="text-[8px] md:text-[11px] text-white font-semibold">Preview</span>
+        </div>
+      </div>
+
       {/* Shimmer effect overlay on selected */}
       {isSelected && (
-        <div 
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer rounded-xl" 
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer rounded-xl"
           style={{ zIndex: 5 }}
         />
       )}

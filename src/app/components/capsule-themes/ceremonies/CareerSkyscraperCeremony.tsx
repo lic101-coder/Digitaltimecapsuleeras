@@ -25,6 +25,7 @@ export function CareerSkyscraperCeremony({
   onComplete
 }: CareerSkyscraperCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'closing' | 'ascending' | 'exterior' | 'office' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
   const [floorNumber, setFloorNumber] = useState(1);
 
   useEffect(() => {
@@ -40,7 +41,17 @@ export function CareerSkyscraperCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Failsafe timeout - 1 second after last timeline action
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 15500);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   // FAST floor counter animation
@@ -107,7 +118,7 @@ export function CareerSkyscraperCeremony({
           }}
           transition={{
             duration: 1.5 + Math.random() * 2,
-            repeat: Infinity,
+            repeat: completed ? 0 : 5,
             delay: Math.random()
           }}
         />
@@ -231,7 +242,7 @@ export function CareerSkyscraperCeremony({
                         }}
                         transition={{
                           duration: 0.6,
-                          repeat: Infinity
+                          repeat: completed ? 0 : 8
                         }}
                       >
                         <div 
@@ -264,7 +275,7 @@ export function CareerSkyscraperCeremony({
                           }}
                           transition={{
                             duration: 0.8,
-                            repeat: Infinity,
+                            repeat: completed ? 0 : 6,
                             delay: i * 0.1,
                             ease: 'linear'
                           }}
@@ -341,7 +352,7 @@ export function CareerSkyscraperCeremony({
                     }}
                     transition={{
                       duration: 0.12,
-                      repeat: Infinity
+                      repeat: completed ? 0 : 8
                     }}
                   />
                 )}
@@ -430,7 +441,7 @@ export function CareerSkyscraperCeremony({
                       }}
                       transition={{
                         duration: 1,
-                        repeat: Infinity
+                        repeat: completed ? 0 : 5
                       }}
                     />
                   </div>
@@ -528,7 +539,7 @@ export function CareerSkyscraperCeremony({
                   }}
                   transition={{
                     duration: 18 + i * 4,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 2,
                     ease: 'linear'
                   }}
                 />
@@ -696,7 +707,7 @@ export function CareerSkyscraperCeremony({
                   transition={{
                     delay: 0.4 + i * 0.04,
                     duration: 7.5,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 2,
                     ease: 'linear'
                   }}
                 >

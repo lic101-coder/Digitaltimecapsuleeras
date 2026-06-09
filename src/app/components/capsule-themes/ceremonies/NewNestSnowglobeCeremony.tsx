@@ -27,6 +27,7 @@ export function NewNestSnowglobeCeremony({
   onComplete
 }: NewNestSnowglobeCeremonyProps) {
   const [stage, setStage] = useState<'trapped' | 'swirl' | 'crack' | 'shatter' | 'expand' | 'transform' | 'radiance' | 'outro'>('trapped');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -42,7 +43,17 @@ export function NewNestSnowglobeCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 15500);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
@@ -179,7 +190,7 @@ export function NewNestSnowglobeCeremony({
                   }}
                   transition={{
                     duration: stage === 'swirl' ? 1.5 : 3 + Math.random() * 2,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 5,
                     ease: stage === 'swirl' ? 'easeInOut' : 'linear'
                   }}
                 />
@@ -465,7 +476,7 @@ export function NewNestSnowglobeCeremony({
                     }}
                     transition={{
                       duration: 2,
-                      repeat: Infinity,
+                      repeat: completed ? 0 : 6,
                       delay: i * 0.2
                     }}
                   />
@@ -687,7 +698,7 @@ export function NewNestSnowglobeCeremony({
                     }}
                     transition={{
                       duration: 4,
-                      repeat: Infinity,
+                      repeat: completed ? 0 : 4,
                       ease: 'linear'
                     }}
                   >
@@ -740,7 +751,7 @@ export function NewNestSnowglobeCeremony({
                     }}
                     transition={{
                       duration: 3,
-                      repeat: Infinity,
+                      repeat: completed ? 0 : 5,
                       ease: 'easeInOut'
                     }}
                   >

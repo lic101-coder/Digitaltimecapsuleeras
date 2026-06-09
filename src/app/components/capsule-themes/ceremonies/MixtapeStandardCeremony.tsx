@@ -36,6 +36,7 @@ export function MixtapeStandardCeremony({
   onComplete
 }: MixtapeStandardCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'spin' | 'needle' | 'pulse' | 'shatter' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -46,11 +47,28 @@ export function MixtapeStandardCeremony({
       { time: 10000, action: () => setStage('shatter') },
       { time: 11000, action: () => setStage('radiance') },
       { time: 14500, action: () => setStage('outro') },
-      { time: 15000, action: () => onComplete?.() }
+      { time: 15000, action: () => {
+        setCompleted(true);
+        onComplete?.();
+      }}
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // CRITICAL FAILSAFE: Force completion after 16 seconds if ceremony hasn't finished
+    const failsafeTimeout = setTimeout(() => {
+      if (!completed) {
+        console.warn('⚠️ Mixtape Standard ceremony failsafe triggered - forcing completion');
+        setStage('outro');
+        setCompleted(true);
+        onComplete?.();
+      }
+    }, 16000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (

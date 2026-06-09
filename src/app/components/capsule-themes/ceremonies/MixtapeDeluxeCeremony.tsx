@@ -37,7 +37,9 @@ export function MixtapeDeluxeCeremony({
   onComplete
 }: MixtapeDeluxeCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'grid' | 'sun' | 'city' | 'shapes' | 'pulse' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
   const [glitch, setGlitch] = useState(false);
+  const completedRef = React.useRef(false);
 
   useEffect(() => {
     const timeline = [
@@ -50,11 +52,29 @@ export function MixtapeDeluxeCeremony({
       { time: 10700, action: () => setGlitch(false) },
       { time: 12500, action: () => setStage('radiance') },
       { time: 15500, action: () => setStage('outro') },
-      { time: 16000, action: () => onComplete?.() }
+      { time: 16000, action: () => {
+        completedRef.current = true;
+        setCompleted(true);
+        onComplete?.();
+      }}
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Failsafe: force completion after 17s if the normal timeline didn't fire
+    const failsafeTimeout = setTimeout(() => {
+      if (!completedRef.current) {
+        completedRef.current = true;
+        setStage('outro');
+        setCompleted(true);
+        onComplete?.();
+      }
+    }, 17000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (

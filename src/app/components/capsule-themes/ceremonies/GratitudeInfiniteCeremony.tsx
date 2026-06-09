@@ -50,6 +50,7 @@ export function GratitudeInfiniteCeremony({
   onComplete
 }: GratitudeInfiniteCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'birth' | 'expansion' | 'cosmic' | 'unity' | 'bloom' | 'radiance'>('intro');
+  const [completed, setCompleted] = useState(false);
 
   // Clear timeline
   useEffect(() => {
@@ -65,7 +66,17 @@ export function GratitudeInfiniteCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Failsafe timeout - 1 second after last timeline action
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 16000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Memoize waves - 6 total

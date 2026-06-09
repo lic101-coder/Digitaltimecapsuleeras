@@ -65,6 +65,7 @@ export function GratitudeGardenCeremony({
   onComplete
 }: GratitudeGardenCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'seeds' | 'sprout' | 'bloom' | 'butterflies' | 'wind' | 'heart' | 'radiance'>('intro');
+  const [completed, setCompleted] = useState(false);
 
   // Timeline
   useEffect(() => {
@@ -81,7 +82,17 @@ export function GratitudeGardenCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Failsafe timeout - 1 second after last timeline action
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 17000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Memoize seeds - 25 total to match flowers
@@ -426,24 +437,24 @@ export function GratitudeGardenCeremony({
                   scale: 1,
                   opacity: 1,
                   x: [
-                    butterfly.startX, 
-                    butterfly.startX + pathRadius, 
-                    butterfly.startX, 
-                    butterfly.startX - pathRadius, 
+                    butterfly.startX,
+                    butterfly.startX + pathRadius,
+                    butterfly.startX,
+                    butterfly.startX - pathRadius,
                     butterfly.startX
                   ],
                   y: [
-                    butterfly.startY - 30, 
-                    butterfly.startY - 100, 
-                    butterfly.startY - 150, 
-                    butterfly.startY - 100, 
+                    butterfly.startY - 30,
+                    butterfly.startY - 100,
+                    butterfly.startY - 150,
+                    butterfly.startY - 100,
                     butterfly.startY - 30
                   ]
                 }}
                 transition={{
                   delay: butterfly.delay,
                   duration: stage === 'wind' ? 1.2 : 7,
-                  repeat: stage === 'wind' ? 0 : Infinity,
+                  repeat: stage === 'wind' || completed ? 0 : 3,
                   ease: 'easeInOut'
                 }}
                 style={{

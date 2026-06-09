@@ -34,7 +34,7 @@ globalThis.addEventListener('unhandledrejection', (event) => {
 });
 
 console.log('🛡️ Global error handlers installed');
-console.log('🚀 [Startup] Initializing Hono app...');
+console.log('🚀 [Startup] Initializing Hono app... v2026-06-09-mfa-fix');
 
 const app = new Hono();
 
@@ -4723,10 +4723,28 @@ const startDeliveryScheduler = () => {
 
   // Run immediately on startup
   setTimeout(runDeliveryProcess, 5000); // Wait 5 seconds after startup
-  
+
   // Then run every 30 seconds for near-instant delivery
   setInterval(runDeliveryProcess, processInterval);
-  
+
+  // Check for expired grace-period accounts every hour
+  const checkExpiredDeletions = async () => {
+    try {
+      const scheduled = await kv.getByPrefix('account_deletion_scheduled:');
+      const now = new Date();
+      for (const record of (scheduled || [])) {
+        if (record && record.deleteAt && new Date(record.deleteAt) <= now) {
+          console.log(`💀 Grace period expired for ${record.email} — running hard delete`);
+          await performHardDelete(record.userId, record.email);
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ Expired deletion check failed:', e);
+    }
+  };
+  setTimeout(checkExpiredDeletions, 10000);
+  setInterval(checkExpiredDeletions, 60 * 60 * 1000);
+
   console.log(`✅ Delivery scheduler started - checking every ${processInterval / 1000} seconds`);
 };
 
@@ -5687,20 +5705,31 @@ app.get("/make-server-f9be53a7/achievements/notifications/pending", async (c) =>
       return c.json({ error: "Invalid token" }, 401);
     }
     
-    const pending = await AchievementService.getPendingNotifications(user.id);
-    
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('KV timeout')), 8000)
+    );
+
+    const pending = await Promise.race([
+      AchievementService.getPendingNotifications(user.id),
+      timeoutPromise
+    ]);
+
     console.log(`🏆 [Achievement Notifications] Found ${pending.length} pending notifications`);
-    
+
     return c.json({
       success: true,
       pending
     });
-    
+
   } catch (error) {
+    if (error.message === 'KV timeout') {
+      console.warn('⏱️ [achievements/notifications/pending] KV lookup timed out, returning empty');
+      return c.json({ success: true, pending: [] });
+    }
     console.error("🏆 [Achievement Notifications] Error:", error);
-    return c.json({ 
+    return c.json({
       error: "Failed to get pending notifications",
-      details: error.message 
+      details: error.message
     }, 500);
   }
 });
@@ -8180,246 +8209,206 @@ app.post("/make-server-f9be53a7/api/user-data-export", async (c) => {
 
     const exportData: any = {
       exportDate: new Date().toISOString(),
+      exportVersion: '2',
       userId: userId,
       userEmail: user.email,
-      capsules: {
-        sent: [],
-        received: []
-      },
+      capsules: { sent: [], received: [] },
       vault: [],
       recordLibrary: [],
       achievements: {},
       profile: {}
     };
 
-    // Helper function to generate signed URLs for media
-    const generateSignedUrl = async (bucketName: string, filePath: string): Promise<string | null> => {
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    // Generate a 24-hour signed URL using the stored storage_path + storage_bucket.
+    // Falls back to URL-parsing only when storage metadata is missing (legacy items).
+    const generateSignedUrl = async (bucket: string, storagePath: string): Promise<string | null> => {
+      if (!bucket || !storagePath) return null;
       try {
         const { data, error } = await supabase.storage
-          .from(bucketName)
-          .createSignedUrl(filePath, 86400); // 24 hours validity
-        
+          .from(bucket)
+          .createSignedUrl(storagePath, 86400);
         if (error) {
-          console.warn(`⚠️ Failed to generate signed URL for ${filePath}:`, error);
+          console.warn(`⚠️ Signed URL failed for ${bucket}/${storagePath}:`, error.message);
           return null;
         }
-        
         return data?.signedUrl || null;
-      } catch (error) {
-        console.warn(`⚠️ Exception generating signed URL for ${filePath}:`, error);
+      } catch (e: any) {
+        console.warn(`⚠️ Signed URL exception:`, e.message);
         return null;
       }
     };
 
-    // ============================================
-    // STEP 1: Export Sent Capsules
-    // ============================================
+    // Fetch all media metadata for a capsule and generate signed URLs.
+    // Media is stored under capsule_media:${capsuleId} (list of IDs) and
+    // media:${id} (metadata with storage_path + storage_bucket).
+    const getCapsuleMedia = async (capsuleId: string): Promise<any[]> => {
+      try {
+        const mediaIds: string[] = await kv.get(`capsule_media:${capsuleId}`) || [];
+        if (mediaIds.length === 0) return [];
+        const results = [];
+        for (const mediaId of mediaIds) {
+          try {
+            const mediaFile = await kv.get(`media:${mediaId}`);
+            if (!mediaFile) continue;
+            const signedUrl = await generateSignedUrl(
+              mediaFile.storage_bucket || 'make-f9be53a7-media',
+              mediaFile.storage_path
+            );
+            results.push({
+              id: mediaFile.id,
+              file_name: mediaFile.file_name,
+              file_type: mediaFile.file_type,
+              file_size: mediaFile.file_size,
+              created_at: mediaFile.created_at,
+              download_url: signedUrl,     // 24-hour signed download link
+              url_expires: signedUrl
+                ? new Date(Date.now() + 86400 * 1000).toISOString()
+                : null
+            });
+          } catch (e) {
+            console.warn(`⚠️ Failed to fetch media ${mediaId}:`, e);
+          }
+        }
+        return results;
+      } catch (e) {
+        console.warn(`⚠️ getCapsuleMedia failed for ${capsuleId}:`, e);
+        return [];
+      }
+    };
+
+    // Build a human-readable capsule object for the readable[] section
+    const exportOwnerEmail: string = user.email || '';
+    const makeReadableCapsule = (capsule: any, media: any[], direction: 'sent' | 'received') => ({
+      direction,
+      title: capsule.title || '(no title)',
+      message: capsule.text_message || capsule.message || '',
+      status: capsule.status,
+      delivery_date: capsule.delivery_date,
+      created_at: capsule.created_at,
+      recipient: capsule.recipient_email || capsule.recipient_name || capsule.recipient_type || '',
+      sender: direction === 'received' ? (capsule.sender_name || capsule.sender_email || '') : exportOwnerEmail,
+      media_files: media.map((m: any) => ({
+        name: m.file_name,
+        type: m.file_type,
+        size_bytes: m.file_size,
+        download_url: m.download_url,
+        url_expires: m.url_expires
+      }))
+    });
+
+    // ── STEP 1: Sent Capsules ────────────────────────────────────────────────
     console.log('📦 Exporting sent capsules...');
-    const userCapsulesKey = `user_capsules:${userId}`;
-    const capsuleIds = await kv.get(userCapsulesKey) || [];
-    
+    const capsuleIds: string[] = await kv.get(`user_capsules:${userId}`) || [];
     for (const capsuleId of capsuleIds) {
       try {
         const capsule = await kv.get(`capsule:${capsuleId}`);
-        if (capsule) {
-          const capsuleExport: any = {
-            ...capsule,
-            mediaWithSignedUrls: []
-          };
-          
-          // Generate signed URLs for media
-          if (capsule.media && capsule.media.length > 0) {
-            for (const mediaItem of capsule.media) {
-              const mediaExport: any = { ...mediaItem };
-              
-              if (mediaItem.url) {
-                try {
-                  const urlPath = new URL(mediaItem.url).pathname;
-                  const pathParts = urlPath.split('/');
-                  const fileName = pathParts[pathParts.length - 1];
-                  const signedUrl = await generateSignedUrl('make-f9be53a7-media', fileName);
-                  
-                  mediaExport.signedUrl = signedUrl;
-                  mediaExport.originalUrl = mediaItem.url;
-                } catch (error) {
-                  console.warn(`⚠️ Failed to process media URL:`, error);
-                }
-              }
-              
-              capsuleExport.mediaWithSignedUrls.push(mediaExport);
-            }
-          }
-          
-          exportData.capsules.sent.push(capsuleExport);
-        }
-      } catch (error) {
-        console.error(`❌ Failed to export capsule ${capsuleId}:`, error);
+        if (!capsule) continue;
+        const media = await getCapsuleMedia(capsuleId);
+        const capsuleExport = { ...capsule, media_files: media };
+        exportData.capsules.sent.push(capsuleExport);
+      } catch (e) {
+        console.error(`❌ Failed to export sent capsule ${capsuleId}:`, e);
       }
     }
-    
     console.log(`✅ Exported ${exportData.capsules.sent.length} sent capsules`);
 
-    // ============================================
-    // STEP 2: Export Received Capsules
-    // ============================================
+    // ── STEP 2: Received Capsules ────────────────────────────────────────────
     console.log('📦 Exporting received capsules...');
-    const receivedCapsulesKey = `received_capsules:${userId}`;
-    const receivedCapsules = await kv.get(receivedCapsulesKey) || [];
-    
-    for (const capsuleId of receivedCapsules) {
+    const receivedIds: string[] = await kv.get(`received_capsules:${userId}`) || [];
+    for (const capsuleId of receivedIds) {
       try {
         const capsule = await kv.get(`capsule:${capsuleId}`);
-        if (capsule) {
-          const capsuleExport: any = {
-            ...capsule,
-            mediaWithSignedUrls: []
-          };
-          
-          // Generate signed URLs for media
-          if (capsule.media && capsule.media.length > 0) {
-            for (const mediaItem of capsule.media) {
-              const mediaExport: any = { ...mediaItem };
-              
-              if (mediaItem.url) {
-                try {
-                  const urlPath = new URL(mediaItem.url).pathname;
-                  const pathParts = urlPath.split('/');
-                  const fileName = pathParts[pathParts.length - 1];
-                  const signedUrl = await generateSignedUrl('make-f9be53a7-media', fileName);
-                  
-                  mediaExport.signedUrl = signedUrl;
-                  mediaExport.originalUrl = mediaItem.url;
-                } catch (error) {
-                  console.warn(`⚠️ Failed to process media URL:`, error);
-                }
-              }
-              
-              capsuleExport.mediaWithSignedUrls.push(mediaExport);
-            }
-          }
-          
-          exportData.capsules.received.push(capsuleExport);
-        }
-      } catch (error) {
-        console.error(`❌ Failed to export received capsule ${capsuleId}:`, error);
+        if (!capsule) continue;
+        const media = await getCapsuleMedia(capsuleId);
+        const capsuleExport = { ...capsule, media_files: media };
+        exportData.capsules.received.push(capsuleExport);
+      } catch (e) {
+        console.error(`❌ Failed to export received capsule ${capsuleId}:`, e);
       }
     }
-    
     console.log(`✅ Exported ${exportData.capsules.received.length} received capsules`);
 
-    // ============================================
-    // STEP 3: Export Record Library
-    // ============================================
+    // ── STEP 3: Record Library ───────────────────────────────────────────────
+    // Records are stored individually at record_library:${userId}:${recordId}.
+    // The list of IDs lives at record_library_list:${userId}.
     console.log('📦 Exporting record library...');
-    const recordLibraryKey = `record_library:${userId}`;
-    const recordLibrary = await kv.get(recordLibraryKey) || [];
-    
-    for (const record of recordLibrary) {
+    const recordIds: string[] = await kv.get(`record_library_list:${userId}`) || [];
+    for (const recordId of recordIds) {
       try {
-        const recordExport: any = { ...record };
-        
-        if (record.url) {
-          try {
-            const urlPath = new URL(record.url).pathname;
-            const pathParts = urlPath.split('/');
-            const fileName = pathParts[pathParts.length - 1];
-            const signedUrl = await generateSignedUrl('make-f9be53a7-record-library', fileName);
-            
-            recordExport.signedUrl = signedUrl;
-            recordExport.originalUrl = record.url;
-          } catch (error) {
-            console.warn(`⚠️ Failed to process record library URL:`, error);
-          }
-        }
-        
-        exportData.recordLibrary.push(recordExport);
-      } catch (error) {
-        console.warn(`⚠️ Failed to export record library item:`, error);
+        const record = await kv.get(`record_library:${userId}:${recordId}`);
+        if (!record) continue;
+        const signedUrl = await generateSignedUrl(
+          record.storage_bucket || 'make-f9be53a7-media',
+          record.storage_path
+        );
+        exportData.recordLibrary.push({
+          id: record.id,
+          file_name: record.file_name,
+          file_type: record.file_type,
+          file_size: record.file_size,
+          created_at: record.created_at,
+          download_url: signedUrl,
+          url_expires: signedUrl ? new Date(Date.now() + 86400 * 1000).toISOString() : null
+        });
+      } catch (e) {
+        console.warn(`⚠️ Failed to export record ${recordId}:`, e);
       }
     }
-    
     console.log(`✅ Exported ${exportData.recordLibrary.length} record library items`);
 
-    // ============================================
-    // STEP 4: Export Vault/Legacy Vault
-    // ============================================
+    // ── STEP 4: Vault ────────────────────────────────────────────────────────
+    // Vault items stored at legacy_vault:${userId} as an array of objects,
+    // each with storage_path + storage_bucket populated at upload time.
     console.log('📦 Exporting vault...');
-    const vaultKey = `legacy_vault:${userId}`;
-    const vaultItems = await kv.get(vaultKey) || [];
-    
+    const vaultItems: any[] = await kv.get(`legacy_vault:${userId}`) || [];
     for (const vaultItem of vaultItems) {
       try {
-        const vaultExport: any = { ...vaultItem };
-        
-        if (vaultItem.url) {
-          try {
-            const urlPath = new URL(vaultItem.url).pathname;
-            const pathParts = urlPath.split('/');
-            const fileName = pathParts[pathParts.length - 1];
-            const signedUrl = await generateSignedUrl('make-f9be53a7-media', fileName);
-            
-            vaultExport.signedUrl = signedUrl;
-            vaultExport.originalUrl = vaultItem.url;
-          } catch (error) {
-            console.warn(`⚠️ Failed to process vault URL:`, error);
-          }
-        }
-        
-        exportData.vault.push(vaultExport);
-      } catch (error) {
-        console.warn(`⚠️ Failed to export vault item:`, error);
+        const signedUrl = await generateSignedUrl(
+          vaultItem.storage_bucket || 'make-f9be53a7-media',
+          vaultItem.storage_path
+        );
+        exportData.vault.push({
+          id: vaultItem.id,
+          file_name: vaultItem.file_name || vaultItem.name,
+          file_type: vaultItem.file_type || vaultItem.type,
+          file_size: vaultItem.file_size || vaultItem.size,
+          created_at: vaultItem.created_at,
+          download_url: signedUrl,
+          url_expires: signedUrl ? new Date(Date.now() + 86400 * 1000).toISOString() : null
+        });
+      } catch (e) {
+        console.warn(`⚠️ Failed to export vault item:`, e);
       }
     }
-    
     console.log(`✅ Exported ${exportData.vault.length} vault items`);
 
-    // ============================================
-    // STEP 5: Export Achievements
-    // ============================================
-    console.log('📦 Exporting achievements...');
+    // ── STEP 5: Achievements ─────────────────────────────────────────────────
     try {
-      const achievementStatsKey = `achievement_stats:${userId}`;
-      const achievementStats = await kv.get(achievementStatsKey) || {};
-      
-      const unlockedAchievementsKey = `achievement_unlocked:${userId}`;
-      const unlockedAchievements = await kv.get(unlockedAchievementsKey) || [];
-      
       exportData.achievements = {
-        stats: achievementStats,
-        unlocked: unlockedAchievements
+        stats: await kv.get(`achievement_stats:${userId}`) || {},
+        unlocked: await kv.get(`achievement_unlocked:${userId}`) || []
       };
-      
-      console.log(`✅ Exported achievements data`);
-    } catch (error) {
-      console.warn(`⚠️ Failed to export achievements:`, error);
+    } catch (e) {
+      console.warn(`⚠️ Failed to export achievements:`, e);
     }
 
-    // ============================================
-    // STEP 6: Export Profile Data
-    // ============================================
-    console.log('📦 Exporting profile...');
+    // ── STEP 6: Profile ──────────────────────────────────────────────────────
     try {
-      const profileKey = `user_profile:${userId}`;
-      const profile = await kv.get(profileKey) || {};
-      
-      exportData.profile = profile;
-      
-      console.log(`✅ Exported profile data`);
-    } catch (error) {
-      console.warn(`⚠️ Failed to export profile:`, error);
+      exportData.profile = await kv.get(`user_profile:${userId}`) || {};
+    } catch (e) {
+      console.warn(`⚠️ Failed to export profile:`, e);
     }
 
-    // ============================================
-    // Return Export Data
-    // ============================================
-    console.log('✅ Data export complete');
-    console.log(`📊 Export summary:`, {
+    const summary = {
       sentCapsules: exportData.capsules.sent.length,
       receivedCapsules: exportData.capsules.received.length,
-      recordLibrary: exportData.recordLibrary.length,
-      vault: exportData.vault.length,
-      achievements: exportData.achievements.unlocked?.length || 0
-    });
+      recordLibraryItems: exportData.recordLibrary.length,
+      vaultItems: exportData.vault.length,
+      achievementsUnlocked: exportData.achievements.unlocked?.length || 0
+    };
+    console.log('✅ Data export complete', summary);
 
     return c.json(exportData);
     
@@ -8435,8 +8424,8 @@ app.post("/make-server-f9be53a7/api/user-data-export", async (c) => {
 // Delete user account and all data
 app.post("/make-server-f9be53a7/delete-account", async (c) => {
   try {
-    console.log('🗑️ Account deletion request received');
-    
+    console.log('🗑️ Account deletion (schedule) request received');
+
     const accessToken = c.req.header('Authorization')?.split(' ')[1];
     if (!accessToken) {
       return c.json({ error: 'Unauthorized' }, 401);
@@ -8447,183 +8436,146 @@ app.post("/make-server-f9be53a7/delete-account", async (c) => {
       return c.json({ error: 'Unauthorized' }, 401);
     }
 
-    console.log(`🗑️ Deleting account for user: ${user.email} (${user.id})`);
     const userId = user.id;
-    const userEmail = user.email;
+    const now = new Date();
+    const deleteAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-    // ============================================
-    // STEP 1: Delete all capsules and media files
-    // ============================================
-    const userCapsulesKey = `user_capsules:${userId}`;
-    const capsuleIds = await kv.get(userCapsulesKey) || [];
-    
-    console.log(`🗑️ Found ${capsuleIds.length} capsules to delete`);
-    
-    for (const capsuleId of capsuleIds) {
-      try {
-        const capsule = await kv.get(`capsule:${capsuleId}`);
-        
-        // Delete media files from storage if they exist
-        if (capsule && capsule.media && capsule.media.length > 0) {
-          for (const mediaItem of capsule.media) {
-            if (mediaItem.url) {
-              try {
-                const urlPath = new URL(mediaItem.url).pathname;
-                const pathParts = urlPath.split('/');
-                const fileName = pathParts[pathParts.length - 1];
-                await supabase.storage
-                  .from('make-f9be53a7-media')
-                  .remove([fileName]);
-                console.log(`  ✅ Deleted media file: ${fileName}`);
-              } catch (storageError) {
-                console.warn(`  ⚠️ Failed to delete media file: ${mediaItem.url}`, storageError);
-              }
-            }
-          }
-        }
-        
-        // Delete capsule_media reference
-        await kv.del(`capsule_media:${capsuleId}`);
-        
-        // Delete capsule data
-        await kv.del(`capsule:${capsuleId}`);
-        console.log(`  ✅ Deleted capsule: ${capsuleId}`);
-      } catch (error) {
-        console.error(`  ❌ Failed to delete capsule ${capsuleId}:`, error);
-      }
-    }
-
-    await kv.del(userCapsulesKey);
-    console.log(`✅ Deleted capsule list`);
-
-    // ============================================
-    // STEP 2: Delete received capsules
-    // ============================================
-    const receivedCapsulesKey = `received_capsules:${userId}`;
-    await kv.del(receivedCapsulesKey);
-    console.log(`✅ Deleted received capsules list`);
-
-    // ============================================
-    // STEP 3: Delete Record Library files
-    // ============================================
-    const recordLibraryKey = `record_library:${userId}`;
-    const recordLibrary = await kv.get(recordLibraryKey) || [];
-    
-    for (const record of recordLibrary) {
-      try {
-        if (record.url) {
-          const urlPath = new URL(record.url).pathname;
-          const pathParts = urlPath.split('/');
-          const fileName = pathParts[pathParts.length - 1];
-          await supabase.storage
-            .from('make-f9be53a7-record-library')
-            .remove([fileName]);
-          console.log(`  ✅ Deleted record library file: ${fileName}`);
-        }
-      } catch (error) {
-        console.warn(`  ⚠️ Failed to delete record library file:`, error);
-      }
-    }
-    
-    await kv.del(recordLibraryKey);
-    console.log(`✅ Deleted record library`);
-
-    // ============================================
-    // STEP 4: Delete Vault files
-    // ============================================
-    const legacyVaultKey = `legacy_vault:${userId}`;
-    const legacyVault = await kv.get(legacyVaultKey) || [];
-    
-    for (const item of legacyVault) {
-      try {
-        if (item.url) {
-          const urlPath = new URL(item.url).pathname;
-          const pathParts = urlPath.split('/');
-          const fileName = pathParts[pathParts.length - 1];
-          await supabase.storage
-            .from('make-f9be53a7-media')
-            .remove([fileName]);
-          console.log(`  ✅ Deleted legacy vault file: ${fileName}`);
-        }
-      } catch (error) {
-        console.warn(`  ⚠️ Failed to delete legacy vault file:`, error);
-      }
-    }
-    
-    await kv.del(legacyVaultKey);
-    console.log(`✅ Deleted legacy vault`);
-
-    // ============================================
-    // STEP 5: Delete Achievement & Title data
-    // ============================================
-    await kv.del(`user_achievements:${userId}`);
-    await kv.del(`user_achievement_progress:${userId}`);
-    await kv.del(`achievement_notifications:${userId}`);
-    await kv.del(`user_titles:${userId}`);
-    await kv.del(`equipped_title:${userId}`);
-    await kv.del(`title_profile:${userId}`);
-    await kv.del(`welcome_celebration:${userId}`);
-    console.log(`✅ Deleted achievements and titles`);
-
-    // ============================================
-    // STEP 6: Delete user profile and preferences
-    // ============================================
-    await kv.del(`profile:${userId}`);
-    await kv.del(`user_preferences:${userId}`);
-    await kv.del(`notification_preferences:${userId}`);
-    await kv.del(`storage_preferences:${userId}`);
-    console.log(`✅ Deleted user profile and preferences`);
-
-    // ============================================
-    // STEP 7: Delete all user-prefixed data
-    // ============================================
-    const userDataKeys = await kv.getByPrefix(`user:${userId}`, 5000);
-    for (const key in userDataKeys) {
-      await kv.del(key);
-    }
-    console.log(`✅ Deleted user-prefixed data`);
-
-    // ============================================
-    // STEP 8: Delete user from Supabase Auth
-    // ============================================
-    // This is CRITICAL - it allows the email to be reused
-    try {
-      const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(userId);
-      
-      if (deleteAuthError) {
-        console.error(`❌ Failed to delete user from Supabase Auth:`, deleteAuthError);
-        // Don't fail the entire operation if this fails
-        // But log it prominently
-        return c.json({ 
-          success: true, 
-          warning: 'Data deleted but user record may still exist in auth system',
-          message: 'Account data deleted. Please contact support to complete deletion.'
-        });
-      }
-      
-      console.log(`✅ Deleted user from Supabase Auth - email can now be reused`);
-    } catch (authDeleteError) {
-      console.error(`❌ Error deleting user from Supabase Auth:`, authDeleteError);
-      return c.json({ 
-        success: true, 
-        warning: 'Data deleted but user record may still exist in auth system',
-        message: 'Account data deleted. Please contact support to complete deletion.'
-      });
-    }
-
-    console.log(`✅✅✅ COMPLETE ACCOUNT DELETION for user: ${userEmail}`);
-    console.log(`🎯 Email ${userEmail} can now be used to create a new account`);
-
-    return c.json({ 
-      success: true, 
-      message: 'Account permanently deleted. Your email can be used to create a new account.' 
+    await kv.set(`account_deletion_scheduled:${userId}`, {
+      userId,
+      email: user.email,
+      scheduledAt: now.toISOString(),
+      deleteAt: deleteAt.toISOString()
     });
-    
+
+    console.log(`🗓️ Account deletion scheduled for ${user.email} at ${deleteAt.toISOString()}`);
+    return c.json({ success: true, deleteAt: deleteAt.toISOString() });
+
   } catch (error) {
-    console.error('❌ Account deletion error:', error);
-    return c.json({ error: 'Failed to delete account' }, 500);
+    console.error('❌ Account deletion schedule error:', error);
+    return c.json({ error: 'Failed to schedule account deletion' }, 500);
   }
 });
+
+// Check if account is scheduled for deletion
+app.get("/make-server-f9be53a7/account-status", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) return c.json({ error: 'Unauthorized' }, 401);
+
+    const { user, error: authError } = await verifyUserToken(accessToken);
+    if (authError || !user) return c.json({ error: 'Unauthorized' }, 401);
+
+    const scheduled = await kv.get(`account_deletion_scheduled:${user.id}`);
+    if (!scheduled) {
+      return c.json({ deletionScheduled: false });
+    }
+
+    const deleteAt = new Date(scheduled.deleteAt);
+    const now = new Date();
+
+    // If past the deadline, run the hard delete now
+    if (now >= deleteAt) {
+      await performHardDelete(user.id, user.email);
+      return c.json({ deletionScheduled: false, permanentlyDeleted: true });
+    }
+
+    const daysLeft = Math.ceil((deleteAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+    return c.json({ deletionScheduled: true, deleteAt: scheduled.deleteAt, daysLeft });
+
+  } catch (error) {
+    console.error('❌ Account status error:', error);
+    return c.json({ error: 'Failed to check account status' }, 500);
+  }
+});
+
+// Reactivate account (cancel scheduled deletion)
+app.post("/make-server-f9be53a7/reactivate-account", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) return c.json({ error: 'Unauthorized' }, 401);
+
+    const { user, error: authError } = await verifyUserToken(accessToken);
+    if (authError || !user) return c.json({ error: 'Unauthorized' }, 401);
+
+    await kv.del(`account_deletion_scheduled:${user.id}`);
+    console.log(`✅ Account reactivated for ${user.email}`);
+    return c.json({ success: true });
+
+  } catch (error) {
+    console.error('❌ Reactivation error:', error);
+    return c.json({ error: 'Failed to reactivate account' }, 500);
+  }
+});
+
+// Hard-delete helper — runs after 30-day grace period expires
+async function performHardDelete(userId: string, userEmail: string) {
+  console.log(`💀 [HARD DELETE] Starting permanent deletion for ${userEmail} (${userId})`);
+
+  const userCapsulesKey = `user_capsules:${userId}`;
+  const capsuleIds = await kv.get(userCapsulesKey) || [];
+  for (const capsuleId of capsuleIds) {
+    try {
+      const capsule = await kv.get(`capsule:${capsuleId}`);
+      if (capsule?.media_urls) {
+        for (const url of capsule.media_urls) {
+          try {
+            const p = new URL(url).pathname.split('/storage/v1/object/')[1];
+            if (p) {
+              const [bucket, ...rest] = p.replace(/^(public|sign)\//, '').split('/');
+              await supabase.storage.from(bucket).remove([rest.join('/')]);
+            }
+          } catch (_) { /* best-effort */ }
+        }
+      }
+      const mediaIds: string[] = await kv.get(`capsule_media:${capsuleId}`) || [];
+      for (const mid of mediaIds) {
+        const m = await kv.get(`media:${mid}`);
+        if (m?.storage_path) {
+          await supabase.storage.from(m.storage_bucket || 'make-f9be53a7-media').remove([m.storage_path]);
+        }
+        await kv.del(`media:${mid}`);
+      }
+      await kv.del(`capsule_media:${capsuleId}`);
+      await kv.del(`capsule:${capsuleId}`);
+    } catch (e) { console.warn(`⚠️ [HARD DELETE] capsule ${capsuleId}:`, e); }
+  }
+  await kv.del(userCapsulesKey);
+  await kv.del(`received_capsules:${userId}`);
+
+  const recordIds: string[] = await kv.get(`record_library_list:${userId}`) || [];
+  for (const rid of recordIds) {
+    const r = await kv.get(`record_library:${userId}:${rid}`);
+    if (r?.storage_path) await supabase.storage.from(r.storage_bucket || 'make-f9be53a7-media').remove([r.storage_path]);
+    await kv.del(`record_library:${userId}:${rid}`);
+  }
+  await kv.del(`record_library_list:${userId}`);
+
+  const vaultItems: any[] = await kv.get(`legacy_vault:${userId}`) || [];
+  for (const v of vaultItems) {
+    if (v.storage_path) await supabase.storage.from(v.storage_bucket || 'make-f9be53a7-media').remove([v.storage_path]);
+  }
+  await kv.del(`legacy_vault:${userId}`);
+
+  const keysToDelete = [
+    `user_achievements:${userId}`, `user_achievement_progress:${userId}`,
+    `achievement_notifications:${userId}`, `achievement_stats:${userId}`,
+    `achievement_unlocked:${userId}`, `user_titles:${userId}`,
+    `equipped_title:${userId}`, `title_profile:${userId}`,
+    `welcome_celebration:${userId}`, `profile:${userId}`,
+    `user_profile:${userId}`, `user_preferences:${userId}`,
+    `notification_preferences:${userId}`, `storage_preferences:${userId}`,
+    `account_deletion_scheduled:${userId}`
+  ];
+  for (const k of keysToDelete) await kv.del(k);
+
+  try {
+    await supabase.auth.admin.deleteUser(userId);
+    console.log(`💀 [HARD DELETE] Auth user deleted — email ${userEmail} freed`);
+  } catch (e) {
+    console.error(`❌ [HARD DELETE] Auth delete failed:`, e);
+  }
+  console.log(`💀 [HARD DELETE] Complete for ${userEmail}`);
+}
 
 // Run diagnostics after a brief delay to let the server start
 setTimeout(runStartupDiagnostics, 2000);
@@ -10745,9 +10697,21 @@ app.get("/make-server-f9be53a7/achievements/pending", async (c) => {
       return c.json({ error: 'Unauthorized' }, 401);
     }
 
-    const pending = await AchievementService.getPendingNotifications(user.id);
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('KV timeout')), 8000)
+    );
+
+    const pending = await Promise.race([
+      AchievementService.getPendingNotifications(user.id),
+      timeoutPromise
+    ]);
+
     return c.json({ pending });
   } catch (error) {
+    if (error.message === 'KV timeout') {
+      console.warn('⏱️ [achievements/pending] KV lookup timed out, returning empty');
+      return c.json({ pending: [] });
+    }
     console.error('Get pending notifications error:', error);
     return c.json({ error: 'Failed to get pending notifications' }, 500);
   }
@@ -12924,13 +12888,13 @@ app.get("/make-server-f9be53a7/api/legacy-access/inherited-folders", async (c) =
     }
     
     const accessToken = authHeader.split(' ')[1];
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
-    
+    const { user, error } = await verifyUserToken(accessToken);
+
     if (error || !user) {
       console.error('❌ [Inherited Folders] Invalid authentication:', error?.message);
       return c.json({ error: 'Invalid authentication' }, 401);
     }
-    
+
     console.log(`✅ [Inherited Folders] Authenticated user: ${user.id}`);
     
     // Get all inherited folders for this user with timeout protection
@@ -16801,6 +16765,70 @@ console.log('✅ [Theme Beneficiary] Management endpoints registered');
 console.log('🌫️ [Startup] Mounting Archive routes...');
 app.route('/', forgottenMemoriesApp);
 console.log('✅ [Startup] Archive routes mounted');
+
+// MFA cleanup endpoint — fetches full user object (which contains ALL factors including
+// pending/unverified ones invisible to the client SDK) and deletes any unverified TOTP factors.
+app.post('/make-server-f9be53a7/mfa/cleanup-unverified', async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) return c.json({ error: 'Missing authorization token' }, 401);
+
+    const { user, error: authError } = await verifyUserToken(accessToken);
+    if (authError || !user) {
+      console.error('[MFA Cleanup] Auth error:', authError);
+      return c.json({ error: 'Invalid or expired token' }, 401);
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    // Fetch the full user object — this includes ALL factors (pending, unverified, verified)
+    // unlike the /factors sub-endpoint which may exclude pending enrollments.
+    const userRes = await fetch(`${supabaseUrl}/auth/v1/admin/users/${user.id}`, {
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+      }
+    });
+
+    if (!userRes.ok) {
+      const body = await userRes.text();
+      console.error('[MFA Cleanup] Failed to fetch user:', userRes.status, body);
+      return c.json({ error: `Failed to fetch user: ${body}` }, 500);
+    }
+
+    const userData = await userRes.json();
+    const allFactors: any[] = userData.factors ?? [];
+    console.log(`[MFA Cleanup] User ${user.id}: ${allFactors.length} total factors:`, allFactors.map((f: any) => `${f.friendly_name}(${f.status})`));
+
+    // Delete ALL TOTP factors that are not verified (status: unverified, or any non-verified state)
+    const toDelete = allFactors.filter((f: any) => f.factor_type === 'totp' && f.status !== 'verified');
+    console.log(`[MFA Cleanup] ${toDelete.length} non-verified totp factors to remove`);
+
+    let cleaned = 0;
+    for (const factor of toDelete) {
+      const delRes = await fetch(`${supabaseUrl}/auth/v1/admin/users/${user.id}/factors/${factor.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+        }
+      });
+      if (!delRes.ok) {
+        const body = await delRes.text();
+        console.error(`[MFA Cleanup] Failed to delete factor ${factor.id} (${factor.friendly_name}):`, delRes.status, body);
+      } else {
+        console.log(`[MFA Cleanup] Deleted factor ${factor.id} (${factor.friendly_name}, ${factor.status})`);
+        cleaned++;
+      }
+    }
+
+    return c.json({ cleaned, total: allFactors.length });
+  } catch (err: any) {
+    console.error('[MFA Cleanup] Unexpected error:', err);
+    return c.json({ error: err.message }, 500);
+  }
+});
 
 console.log('🚀 [Startup] Server starting - all systems ready');
 console.log('🚀 [Startup] Environment check:', {

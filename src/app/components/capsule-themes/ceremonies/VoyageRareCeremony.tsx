@@ -37,6 +37,7 @@ export function VoyageRareCeremony({
   onComplete
 }: VoyageRareCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'emerge' | 'directions' | 'details' | 'needle' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -51,7 +52,17 @@ export function VoyageRareCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 13000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (

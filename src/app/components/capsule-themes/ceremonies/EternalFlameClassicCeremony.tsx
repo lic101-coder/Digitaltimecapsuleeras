@@ -28,8 +28,9 @@ export function EternalFlameClassicCeremony({
   isPreview = false,
   onComplete
 }: EternalFlameClassicCeremonyProps) {
-  const [stage, setStage] = useState<'intro' | 'appear' | 'flicker' | 'move' | 'reach' | 'touch' | 'fuse' | 'merge' | 'radiance' | 'outro'>('intro');
+  const [stage, setStage] = useState<'intro' | 'appear' | 'flicker' | 'move' | 'reach' | 'touch' | 'fuse' | 'merge' | 'radiance' | 'outro' | 'complete'>('intro');
   const [shake, setShake] = useState(false);
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -44,11 +45,29 @@ export function EternalFlameClassicCeremony({
       { time: 15900, action: () => setShake(false) },
       { time: 16500, action: () => setStage('radiance') },
       { time: 20500, action: () => setStage('outro') },
-      { time: 21000, action: () => onComplete?.() }
+      { time: 21000, action: () => {
+        setStage('complete');
+        setCompleted(true);
+        onComplete?.();
+      }}
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // CRITICAL FAILSAFE: Force completion after 25 seconds if ceremony hasn't finished
+    const failsafeTimeout = setTimeout(() => {
+      if (!completed) {
+        console.warn('⚠️ Unity Candle failsafe triggered - forcing completion');
+        setStage('complete');
+        setCompleted(true);
+        onComplete?.();
+      }
+    }, 25000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
@@ -66,9 +85,9 @@ export function EternalFlameClassicCeremony({
             ? 'radial-gradient(ellipse at 50% 50%, #4a2540 0%, #2d1420 50%, #1a0f14 100%)'
             : 'radial-gradient(ellipse at 50% 50%, #2d1420 0%, #1a0f14 70%, #050208 100%)'
         }}
-        transition={{ 
+        transition={{
           duration: stage === 'radiance' ? 0.5 : 1.5,
-          repeat: stage === 'radiance' ? Infinity : 0
+          repeat: stage === 'radiance' && !completed ? 3 : 0 // Limit repeats
         }}
       />
 
@@ -904,14 +923,14 @@ export function EternalFlameClassicCeremony({
                   style={{
                     bottom: '90px'
                   }}
-                  animate={{
+                  animate={(stage === 'merge' || stage === 'radiance') && !completed ? {
                     scale: [1, 1.1, 1.05, 1.12, 1],
                     y: [0, -5, 2, -7, 0],
                     rotate: [0, -1, 0.5, -1.5, 0]
-                  }}
+                  } : { scale: 1, y: 0, rotate: 0 }}
                   transition={{
                     duration: 2,
-                    repeat: Infinity,
+                    repeat: (stage === 'merge' || stage === 'radiance') && !completed ? 5 : 0, // Limit repeats
                     ease: 'easeInOut'
                   }}
                 >
@@ -1054,11 +1073,11 @@ export function EternalFlameClassicCeremony({
                 for (let ring = 0; ring < 2; ring++) {
                   const radius = 200 + ring * 120;
                   const count = 40 + ring * 20;
-                  
+
                   for (let i = 0; i < count; i++) {
                     const angle = (i / count) * 360;
                     const colors = ['#f43f5e', '#fb923c', '#fbbf24', '#fda4af'];
-                    
+
                     particles.push(
                       <motion.div
                         key={`orbit-${ring}-${i}`}
@@ -1083,7 +1102,7 @@ export function EternalFlameClassicCeremony({
                         transition={{
                           delay: 0.5 + (ring * 60 + i) * 0.004,
                           duration: 7 + ring * 2,
-                          repeat: Infinity,
+                          repeat: completed ? 0 : 2, // Limit repeats
                           ease: 'linear'
                         }}
                       />

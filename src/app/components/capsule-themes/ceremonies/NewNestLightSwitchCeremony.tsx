@@ -25,6 +25,7 @@ export function NewNestLightSwitchCeremony({
   onComplete
 }: NewNestLightSwitchCeremonyProps) {
   const [stage, setStage] = useState<'darkness' | 'room1' | 'room2' | 'room3' | 'exterior' | 'allglow' | 'radiance' | 'outro'>('darkness');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -40,7 +41,17 @@ export function NewNestLightSwitchCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 14500);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
@@ -554,7 +565,7 @@ export function NewNestLightSwitchCeremony({
                 }}
                 transition={{
                   duration: 2 + Math.random() * 2,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 6,
                   delay: Math.random() * 2
                 }}
               />

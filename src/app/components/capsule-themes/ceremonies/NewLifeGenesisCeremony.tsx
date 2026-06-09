@@ -41,7 +41,8 @@ export function NewLifeGenesisCeremony({
   isVisible = true,
   onComplete
 }: NewLifeGenesisCeremonyProps) {
-  const [stage, setStage] = useState<'void' | 'heartbeat' | 'ignition' | 'formation' | 'waters' | 'awakening' | 'radiance' | 'outro'>('void');
+  const [stage, setStage] = useState<'void' | 'heartbeat' | 'ignition' | 'formation' | 'waters' | 'awakening' | 'radiance' | 'outro' | 'complete'>('void');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -53,11 +54,29 @@ export function NewLifeGenesisCeremony({
       { time: 13000, action: () => setStage('awakening') },
       { time: 16000, action: () => setStage('radiance') },
       { time: 19500, action: () => setStage('outro') },
-      { time: 20000, action: () => onComplete?.() }
+      { time: 20000, action: () => {
+        setStage('complete');
+        setCompleted(true);
+        onComplete?.();
+      }}
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // CRITICAL FAILSAFE: Force completion after 23 seconds if ceremony hasn't finished
+    const failsafeTimeout = setTimeout(() => {
+      if (!completed) {
+        console.warn('⚠️ Genesis ceremony failsafe triggered - forcing completion');
+        setStage('complete');
+        setCompleted(true);
+        onComplete?.();
+      }
+    }, 23000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Cinematic easing for smooth transitions
@@ -83,12 +102,12 @@ export function NewLifeGenesisCeremony({
               top: Math.random() * 100 + '%',
             }}
             animate={{
-              opacity: [0.15, 0.4, 0.15],
-              scale: [1, 1.2, 1]
+              opacity: completed ? 0 : [0.15, 0.4, 0.15],
+              scale: completed ? 1 : [1, 1.2, 1]
             }}
             transition={{
               duration: 3 + Math.random() * 4,
-              repeat: Infinity,
+              repeat: completed ? 0 : 5, // Limit repeats
               delay: Math.random() * 2
             }}
           />
@@ -107,12 +126,12 @@ export function NewLifeGenesisCeremony({
               boxShadow: '0 0 4px rgba(255, 255, 255, 0.6)'
             }}
             animate={{
-              opacity: [0.3, 0.8, 0.3],
-              scale: [1, 1.3, 1]
+              opacity: completed ? 0 : [0.3, 0.8, 0.3],
+              scale: completed ? 1 : [1, 1.3, 1]
             }}
             transition={{
               duration: 2 + Math.random() * 2,
-              repeat: Infinity,
+              repeat: completed ? 0 : 7, // Limit repeats
               delay: Math.random() * 2
             }}
           />
@@ -303,11 +322,11 @@ export function NewLifeGenesisCeremony({
                     <motion.div
                       className="absolute inset-0"
                       animate={{
-                        opacity: [0.8, 1, 0.8],
+                        opacity: stage === 'formation' && !completed ? [0.8, 1, 0.8] : 1,
                       }}
                       transition={{
                         duration: 2,
-                        repeat: Infinity,
+                        repeat: stage === 'formation' && !completed ? 2 : 0, // Limit repeats
                         ease: 'easeInOut'
                       }}
                     />
@@ -315,22 +334,78 @@ export function NewLifeGenesisCeremony({
                 )}
               </AnimatePresence>
 
-              {/* STAGE 4: WATERS - Ocean floods the world */}
+              {/* STAGE 4: WATERS - Ocean floods the world with ENHANCED REALISM */}
               <AnimatePresence>
                 {(stage === 'waters' || stage === 'awakening' || stage === 'radiance') && (
-                  <motion.div
-                    className="absolute inset-0"
-                    style={{
-                      background: 'radial-gradient(circle at 42% 35%, #7dd3fc 0%, #38bdf8 15%, #0ea5e9 30%, #0284c7 50%, #0369a1 70%, #075985 85%, #0c4a6e 100%)',
-                      borderRadius: '50%'
-                    }}
-                    initial={{ opacity: 0, scale: 0.7 }}
-                    animate={{
-                      opacity: 1,
-                      scale: 1.1
-                    }}
-                    transition={{ duration: 2.5, ease: smoothEase }}
-                  />
+                  <>
+                    {/* Deep ocean base - VIVID TURQUOISE/CYAN - UNMISSABLE CHANGE */}
+                    <motion.div
+                      className="absolute inset-0"
+                      style={{
+                        background: 'radial-gradient(circle at 42% 35%, #06b6d4 0%, #0891b2 20%, #0e7490 40%, #155e75 60%, #164e63 80%, #0c4a6e 100%)',
+                        borderRadius: '50%'
+                      }}
+                      initial={{ opacity: 0, scale: 0.7 }}
+                      animate={{
+                        opacity: 1,
+                        scale: 1.1
+                      }}
+                      transition={{ duration: 2.5, ease: smoothEase }}
+                    />
+
+                    {/* MASSIVE OCEAN WAVES - HUGE AND OBVIOUS */}
+                    {[0, 1, 2].map(i => (
+                      <motion.div
+                        key={`giant-wave-${i}`}
+                        className="absolute inset-0"
+                        style={{
+                          background: `radial-gradient(ellipse at ${30 + i * 20}% ${40 + i * 10}%, rgba(255, 255, 255, 0.6) 0%, rgba(34, 211, 238, 0.4) 25%, transparent 50%)`,
+                          borderRadius: '50%',
+                          mixBlendMode: 'overlay',
+                          filter: 'blur(8px)'
+                        }}
+                        animate={{
+                          scale: [0.8, 1.3, 0.8],
+                          opacity: [0.3, 0.9, 0.3],
+                          x: ['-5%', '5%', '-5%']
+                        }}
+                        transition={{
+                          duration: 3 + i * 0.5,
+                          repeat: completed ? 0 : 3,
+                          delay: i * 0.6,
+                          ease: 'easeInOut'
+                        }}
+                      />
+                    ))}
+
+                    {/* GIANT GLOWING WATER HIGHLIGHTS - IMPOSSIBLE TO MISS */}
+                    {[0, 1, 2, 3].map(i => (
+                      <motion.div
+                        key={`mega-shimmer-${i}`}
+                        className="absolute rounded-full"
+                        style={{
+                          left: `${20 + i * 15}%`,
+                          top: `${30 + i * 10}%`,
+                          width: '80px',
+                          height: '80px',
+                          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(6, 182, 212, 0.6) 50%, transparent 100%)',
+                          filter: 'blur(15px)',
+                          boxShadow: '0 0 60px rgba(6, 182, 212, 1)'
+                        }}
+                        animate={{
+                          opacity: [0, 1, 0],
+                          scale: [0.5, 1.5, 0.5],
+                          rotate: [0, 180, 360]
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: completed ? 0 : 4,
+                          delay: i * 0.5,
+                          ease: 'easeInOut'
+                        }}
+                      />
+                    ))}
+                  </>
                 )}
               </AnimatePresence>
 
@@ -388,33 +463,9 @@ export function NewLifeGenesisCeremony({
                     className="absolute inset-0 w-full h-full"
                     style={{ pointerEvents: 'none', zIndex: 10 }}
                   >
-                    {/* Continent 1 - Northern landmass */}
+                    {/* MASSIVELY LARGER CONTINENT 1 - Takes up 40% more space */}
                     <motion.path
-                      d="M 90,135 Q 115,120 145,118 Q 175,120 200,135 Q 220,155 225,180 Q 228,205 218,230 Q 203,250 178,258 Q 153,262 130,252 Q 112,240 103,220 Q 96,200 92,175 Q 89,155 90,135 Z"
-                      fill={stage === 'radiance' ? '#10b981' : '#065f46'}
-                      initial={{ opacity: 0, scale: 0, x: 225, y: 225 }}
-                      animate={{
-                        opacity: 1,
-                        scale: 1,
-                        x: 0,
-                        y: 0
-                      }}
-                      transition={{ 
-                        duration: 2.5, 
-                        delay: 0.3, 
-                        ease: cinematicEase 
-                      }}
-                      style={{
-                        filter: stage === 'radiance'
-                          ? 'drop-shadow(0 0 12px rgba(16, 185, 129, 0.8))'
-                          : 'drop-shadow(0 0 8px rgba(6, 95, 70, 0.6))',
-                        transformOrigin: '50% 50%'
-                      }}
-                    />
-
-                    {/* Continent 2 - Eastern landmass */}
-                    <motion.path
-                      d="M 240,100 Q 270,92 300,95 Q 330,105 350,125 Q 365,150 368,180 Q 368,210 353,235 Q 333,255 305,263 Q 277,268 250,258 Q 228,245 218,220 Q 212,195 215,170 Q 220,140 230,115 Q 235,105 240,100 Z"
+                      d="M 60,100 Q 95,75 140,70 Q 185,75 220,100 Q 250,130 260,170 Q 265,210 250,250 Q 230,285 190,300 Q 150,310 110,295 Q 75,275 60,240 Q 48,200 50,160 Q 52,120 60,100 Z"
                       fill={stage === 'radiance' ? '#22c55e' : '#047857'}
                       initial={{ opacity: 0, scale: 0, x: 225, y: 225 }}
                       animate={{
@@ -423,22 +474,46 @@ export function NewLifeGenesisCeremony({
                         x: 0,
                         y: 0
                       }}
-                      transition={{ 
-                        duration: 2.5, 
-                        delay: 0.6, 
-                        ease: cinematicEase 
+                      transition={{
+                        duration: 2.5,
+                        delay: 0.3,
+                        ease: cinematicEase
                       }}
                       style={{
                         filter: stage === 'radiance'
-                          ? 'drop-shadow(0 0 12px rgba(34, 197, 94, 0.8))'
-                          : 'drop-shadow(0 0 8px rgba(4, 120, 87, 0.6))',
+                          ? 'drop-shadow(0 0 20px rgba(34, 197, 94, 1))'
+                          : 'drop-shadow(0 0 15px rgba(4, 120, 87, 0.9))',
                         transformOrigin: '50% 50%'
                       }}
                     />
 
-                    {/* Continent 3 - Southern landmass */}
+                    {/* MASSIVELY LARGER CONTINENT 2 - Takes up 45% more space */}
                     <motion.path
-                      d="M 135,270 Q 165,262 195,268 Q 220,280 235,305 Q 242,335 235,365 Q 220,390 195,402 Q 168,410 140,402 Q 115,388 102,363 Q 95,335 98,305 Q 105,280 118,268 Q 125,265 135,270 Z"
+                      d="M 240,60 Q 285,45 330,55 Q 375,75 400,115 Q 415,160 415,205 Q 410,250 385,285 Q 355,315 310,325 Q 265,330 225,310 Q 195,285 185,245 Q 180,200 190,155 Q 205,105 225,75 Q 232,65 240,60 Z"
+                      fill={stage === 'radiance' ? '#10b981' : '#065f46'}
+                      initial={{ opacity: 0, scale: 0, x: 225, y: 225 }}
+                      animate={{
+                        opacity: 1,
+                        scale: 1,
+                        x: 0,
+                        y: 0
+                      }}
+                      transition={{
+                        duration: 2.5,
+                        delay: 0.6,
+                        ease: cinematicEase
+                      }}
+                      style={{
+                        filter: stage === 'radiance'
+                          ? 'drop-shadow(0 0 20px rgba(16, 185, 129, 1))'
+                          : 'drop-shadow(0 0 15px rgba(6, 95, 70, 0.9))',
+                        transformOrigin: '50% 50%'
+                      }}
+                    />
+
+                    {/* MASSIVELY LARGER CONTINENT 3 - Takes up 50% more space */}
+                    <motion.path
+                      d="M 100,250 Q 145,230 195,240 Q 240,260 270,300 Q 285,345 280,390 Q 265,430 230,450 Q 185,465 140,455 Q 95,435 70,395 Q 55,350 60,305 Q 70,265 85,250 Q 92,245 100,250 Z"
                       fill={stage === 'radiance' ? '#84cc16' : '#4d7c0f'}
                       initial={{ opacity: 0, scale: 0, x: 225, y: 225 }}
                       animate={{
@@ -447,42 +522,74 @@ export function NewLifeGenesisCeremony({
                         x: 0,
                         y: 0
                       }}
-                      transition={{ 
-                        duration: 2.5, 
-                        delay: 0.9, 
-                        ease: cinematicEase 
+                      transition={{
+                        duration: 2.5,
+                        delay: 0.9,
+                        ease: cinematicEase
                       }}
                       style={{
                         filter: stage === 'radiance'
-                          ? 'drop-shadow(0 0 12px rgba(132, 204, 22, 0.8))'
-                          : 'drop-shadow(0 0 8px rgba(77, 124, 15, 0.6))',
+                          ? 'drop-shadow(0 0 20px rgba(132, 204, 22, 1))'
+                          : 'drop-shadow(0 0 15px rgba(77, 124, 15, 0.9))',
                         transformOrigin: '50% 50%'
                       }}
                     />
 
-                    {/* Continent 4 - Southwestern landmass */}
+                    {/* ENHANCED: Coastal highlights (beaches/shores) on continents */}
+                    {/* Northern continent beach */}
                     <motion.path
-                      d="M 295,250 Q 320,243 345,248 Q 365,260 375,285 Q 380,310 372,335 Q 358,355 335,365 Q 310,372 285,362 Q 265,348 258,325 Q 254,300 260,275 Q 268,255 280,245 Q 287,242 295,250 Z"
-                      fill={stage === 'radiance' ? '#65a30d' : '#3f6212'}
-                      initial={{ opacity: 0, scale: 0, x: 225, y: 225 }}
-                      animate={{
-                        opacity: 1,
-                        scale: 1,
-                        x: 0,
-                        y: 0
-                      }}
-                      transition={{ 
-                        duration: 2.5, 
-                        delay: 1.2, 
-                        ease: cinematicEase 
-                      }}
-                      style={{
-                        filter: stage === 'radiance'
-                          ? 'drop-shadow(0 0 12px rgba(101, 163, 13, 0.8))'
-                          : 'drop-shadow(0 0 8px rgba(63, 98, 18, 0.6))',
-                        transformOrigin: '50% 50%'
-                      }}
+                      d="M 95,140 Q 120,125 145,123 Q 170,125 195,138"
+                      stroke="rgba(254, 243, 199, 0.7)"
+                      strokeWidth="4"
+                      fill="none"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 0.8 }}
+                      transition={{ duration: 1.5, delay: 1.5, ease: 'easeOut' }}
+                      style={{ filter: 'blur(1px)' }}
                     />
+
+                    {/* Eastern continent beach */}
+                    <motion.path
+                      d="M 245,105 Q 275,95 300,100 Q 325,110 345,130"
+                      stroke="rgba(254, 243, 199, 0.7)"
+                      strokeWidth="4"
+                      fill="none"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 0.8 }}
+                      transition={{ duration: 1.5, delay: 1.8, ease: 'easeOut' }}
+                      style={{ filter: 'blur(1px)' }}
+                    />
+
+                    {/* ENHANCED: Mountain ranges on continents (darker green peaks) */}
+                    {/* Northern continent mountains */}
+                    {[0, 1, 2, 3, 4].map(i => (
+                      <motion.circle
+                        key={`n-mountain-${i}`}
+                        cx={110 + i * 18}
+                        cy={148 + Math.sin(i) * 8}
+                        r={6 + Math.random() * 4}
+                        fill="rgba(6, 78, 59, 0.8)"
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.8, delay: 1.8 + i * 0.1, ease: 'easeOut' }}
+                        style={{ filter: 'blur(0.5px)' }}
+                      />
+                    ))}
+
+                    {/* Eastern continent mountains */}
+                    {[0, 1, 2, 3].map(i => (
+                      <motion.circle
+                        key={`e-mountain-${i}`}
+                        cx={260 + i * 20}
+                        cy={138 + Math.sin(i * 1.5) * 10}
+                        r={5 + Math.random() * 3}
+                        fill="rgba(4, 120, 87, 0.8)"
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.8, delay: 2.1 + i * 0.1, ease: 'easeOut' }}
+                        style={{ filter: 'blur(0.5px)' }}
+                      />
+                    ))}
 
                     {/* Forest vegetation blooming */}
                     {stage === 'radiance' && [...Array(getOptimalParticleCount(50))].map((_, j) => {
@@ -516,41 +623,39 @@ export function NewLifeGenesisCeremony({
                 )}
               </AnimatePresence>
 
-              {/* Atmospheric clouds forming */}
+              {/* MASSIVE BRIGHT WHITE CLOUDS - GIANT AND UNMISSABLE */}
               <AnimatePresence>
                 {(stage === 'awakening' || stage === 'radiance') && (
                   <>
-                    {[...Array(getOptimalParticleCount(15))].map((_, i) => {
-                      const size = 50 + Math.random() * 80;
+                    {/* HUGE cloud formations */}
+                    {[0, 1, 2, 3].map((i) => {
+                      const size = 150 + i * 30;
                       return (
                         <motion.div
-                          key={`cloud-${i}`}
-                          className="absolute rounded-full"
+                          key={`mega-cloud-${i}`}
+                          className="absolute"
                           style={{
                             width: `${size}px`,
-                            height: `${size * 0.6}px`,
-                            background: 'rgba(255, 255, 255, 0.5)',
-                            filter: 'blur(15px)',
-                            left: `${10 + Math.random() * 80}%`,
-                            top: `${10 + Math.random() * 80}%`,
-                            zIndex: 5
+                            height: `${size * 0.7}px`,
+                            left: `${10 + i * 22}%`,
+                            top: `${15 + i * 15}%`,
+                            background: 'radial-gradient(ellipse, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.7) 40%, rgba(255, 255, 255, 0.4) 70%, transparent 90%)',
+                            borderRadius: '50%',
+                            filter: 'blur(25px)',
+                            boxShadow: '0 0 50px rgba(255, 255, 255, 0.9)'
                           }}
                           initial={{ opacity: 0, scale: 0 }}
                           animate={{
-                            opacity: [0, 0.6, 0.4],
+                            opacity: [0, 1, 0.9],
                             scale: [0, 1.2, 1],
-                            x: [(Math.random() - 0.5) * 120]
+                            x: [0, 30, 0],
+                            rotate: [0, 15, 0]
                           }}
                           transition={{
-                            opacity: { duration: 2, delay: 1 + i * 0.1 },
-                            scale: { duration: 2.5, delay: 1 + i * 0.1, ease: cinematicEase },
-                            x: { 
-                              duration: 4 + Math.random() * 3,
-                              delay: 2,
-                              repeat: Infinity,
-                              repeatType: 'reverse',
-                              ease: 'easeInOut'
-                            }
+                            opacity: { duration: 2, delay: i * 0.3 },
+                            scale: { duration: 2.5, delay: i * 0.3 },
+                            x: { duration: 6 + i, repeat: completed ? 0 : 2, ease: 'easeInOut' },
+                            rotate: { duration: 8, repeat: completed ? 0 : 1, ease: 'easeInOut' }
                           }}
                         />
                       );
@@ -561,32 +666,49 @@ export function NewLifeGenesisCeremony({
 
             </div>
 
-            {/* Planet atmospheric glow - evolves with stage */}
+            {/* ENHANCED: Atmospheric rim lighting (scattering effect) */}
+            <motion.div
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{
+                width: '450px',
+                height: '450px',
+                background: 'radial-gradient(circle at 30% 30%, transparent 0%, transparent 65%, rgba(125, 211, 252, 0.25) 75%, rgba(56, 189, 248, 0.4) 85%, rgba(14, 165, 233, 0.25) 95%, transparent 100%)',
+                opacity: stage === 'waters' || stage === 'awakening' || stage === 'radiance' ? 0.8 : 0
+              }}
+              animate={{
+                opacity: stage === 'waters' || stage === 'awakening' || stage === 'radiance' ? [0.6, 0.9, 0.6] : 0
+              }}
+              transition={{
+                opacity: { duration: 3, repeat: completed ? 0 : 3, ease: 'easeInOut' }
+              }}
+            />
+
+            {/* MASSIVE BRIGHT PLANET GLOW - CYAN/TURQUOISE - UNMISSABLE */}
             <motion.div
               className="absolute inset-0 rounded-full pointer-events-none"
               style={{
                 width: '450px',
                 height: '450px',
                 boxShadow: stage === 'radiance'
-                  ? '0 0 80px rgba(16, 185, 129, 1), 0 0 160px rgba(34, 197, 94, 0.9), 0 0 240px rgba(132, 204, 22, 0.7)'
+                  ? '0 0 100px rgba(6, 182, 212, 1), 0 0 200px rgba(8, 145, 178, 1), 0 0 350px rgba(14, 116, 144, 0.9)'
                   : stage === 'awakening'
-                  ? '0 0 50px rgba(16, 185, 129, 0.8), 0 0 100px rgba(34, 197, 94, 0.6)'
+                  ? '0 0 70px rgba(6, 182, 212, 1), 0 0 140px rgba(8, 145, 178, 0.8)'
                   : stage === 'waters'
-                  ? '0 0 50px rgba(14, 165, 233, 0.8), 0 0 100px rgba(56, 189, 248, 0.6)'
+                  ? '0 0 70px rgba(6, 182, 212, 1), 0 0 140px rgba(8, 145, 178, 0.8)'
                   : '0 0 50px rgba(251, 191, 36, 0.8), 0 0 100px rgba(249, 115, 22, 0.6)'
               }}
               animate={{
-                boxShadow: stage === 'radiance'
+                boxShadow: stage === 'radiance' && !completed
                   ? [
-                      '0 0 80px rgba(16, 185, 129, 1), 0 0 160px rgba(34, 197, 94, 0.9), 0 0 240px rgba(132, 204, 22, 0.7)',
-                      '0 0 100px rgba(16, 185, 129, 1), 0 0 200px rgba(34, 197, 94, 1), 0 0 300px rgba(132, 204, 22, 0.8)',
-                      '0 0 80px rgba(16, 185, 129, 1), 0 0 160px rgba(34, 197, 94, 0.9), 0 0 240px rgba(132, 204, 22, 0.7)'
+                      '0 0 100px rgba(6, 182, 212, 1), 0 0 200px rgba(8, 145, 178, 1), 0 0 350px rgba(14, 116, 144, 0.9)',
+                      '0 0 130px rgba(6, 182, 212, 1), 0 0 260px rgba(8, 145, 178, 1), 0 0 450px rgba(14, 116, 144, 1)',
+                      '0 0 100px rgba(6, 182, 212, 1), 0 0 200px rgba(8, 145, 178, 1), 0 0 350px rgba(14, 116, 144, 0.9)'
                     ]
                   : undefined
               }}
               transition={{
                 duration: 2.5,
-                repeat: stage === 'radiance' ? Infinity : 0,
+                repeat: stage === 'radiance' && !completed ? 2 : 0,
                 ease: 'easeInOut'
               }}
             />
@@ -615,15 +737,15 @@ export function NewLifeGenesisCeremony({
                     zIndex: 15
                   }}
                   initial={{ scaleX: 0, opacity: 0 }}
-                  animate={{ 
-                    scaleX: 1, 
+                  animate={{
+                    scaleX: 1,
                     opacity: [0, 1, 0.8],
-                    height: ['8px', '12px', '8px']
+                    height: completed ? '8px' : ['8px', '12px', '8px']
                   }}
                   transition={{
                     scaleX: { duration: 1, delay: i * 0.008, ease: 'easeOut' },
                     opacity: { duration: 1, delay: i * 0.008 },
-                    height: { duration: 2, delay: 1, repeat: Infinity, ease: 'easeInOut' }
+                    height: { duration: 2, delay: 1, repeat: completed ? 0 : 2, ease: 'easeInOut' } // Limit repeats
                   }}
                 />
               );
@@ -689,11 +811,11 @@ export function NewLifeGenesisCeremony({
                   filter: 'drop-shadow(0 0 35px rgba(16, 185, 129, 0.9))',
                 }}
                 animate={{
-                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+                  backgroundPosition: completed ? '0% 50%' : ['0% 50%', '100% 50%', '0% 50%']
                 }}
                 transition={{
                   duration: 5,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 2, // Limit repeats
                   ease: 'linear'
                 }}
               >

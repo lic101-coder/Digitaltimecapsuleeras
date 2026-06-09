@@ -1216,7 +1216,7 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
         const received = await DatabaseService.getReceivedCapsules(user.id, user.email);
         const count = received?.length || 0;
         
-        // ✅ CRITICAL: Detect cache mismatch and log it
+        // ✅ CRITICAL: Detect cache mismatch and auto-clear stale cache
         if (cachedDataStr && !skipCache) {
           try {
             const cachedData = JSON.parse(cachedDataStr);
@@ -1225,6 +1225,9 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
               console.warn(`🚨 [CACHE MISMATCH] Cached count (${cachedCount}) != Fresh count (${count}). Difference: ${count - cachedCount}`);
               console.log('📊 [CACHE MISMATCH] Cached IDs:', cachedData.capsules?.map(c => c.id.substring(0, 8)).join(', '));
               console.log('📊 [CACHE MISMATCH] Fresh IDs:', received?.map(c => c.id.substring(0, 8)).join(', '));
+              console.log('🔄 [AUTO-FIX] Clearing stale cache and updating with fresh data');
+              // Clear the stale cache immediately
+              localStorage.removeItem(cacheKey);
             }
           } catch (e) {
             console.warn('Failed to compare cache:', e);
@@ -2872,26 +2875,26 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
         {/* Row 1: Scheduled, Delivered */}
         <div className="grid grid-cols-2 gap-4">
           {[
-            { 
-              key: 'scheduled', 
-              label: 'Scheduled', 
-              value: stats.scheduled, 
-              emoji: '⏰', 
-              ringGradient: 'ring-cyan-400', 
-              bgGradient: 'bg-gradient-to-br from-cyan-500/60 via-blue-500/50 to-cyan-600/60', 
+            {
+              key: 'scheduled',
+              label: 'Scheduled',
+              value: stats.scheduled,
+              emoji: '⏰',
+              ringGradient: 'ring-cyan-400',
+              bgGradient: 'bg-gradient-to-br from-cyan-500/60 via-blue-500/50 to-cyan-600/60',
               activeBgGradient: 'bg-gradient-to-br from-cyan-400/70 via-blue-400/60 to-cyan-500/70',
               hoverGlow: 'hover:shadow-cyan-500/60',
               textGradient: 'from-cyan-400 via-blue-400 to-cyan-300',
               neonBorder: 'border-cyan-400/50',
               neonGlow: 'shadow-cyan-400/30'
             },
-            { 
-              key: 'delivered', 
-              label: 'Delivered', 
-              value: stats.delivered, 
-              emoji: '📬', 
-              ringGradient: 'ring-emerald-400', 
-              bgGradient: 'bg-gradient-to-br from-emerald-500/60 via-teal-500/50 to-green-500/60', 
+            {
+              key: 'delivered',
+              label: 'Delivered',
+              value: stats.delivered,
+              emoji: '📬',
+              ringGradient: 'ring-emerald-400',
+              bgGradient: 'bg-gradient-to-br from-emerald-500/60 via-teal-500/50 to-green-500/60',
               activeBgGradient: 'bg-gradient-to-br from-emerald-400/70 via-teal-400/60 to-green-400/70',
               hoverGlow: 'hover:shadow-emerald-500/60',
               textGradient: 'from-emerald-400 via-teal-300 to-green-400',
@@ -2914,12 +2917,12 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
                   <div className={`absolute inset-0 ${ringGradient.replace('ring-', 'border-')} border-2 animate-pulse`} />
                 </div>
               )}
-              
+
               {/* Shimmer effect on hover - intensified */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               </div>
-              
+
               <CardContent className="p-6 relative z-10">
                 <div className="flex flex-col items-center text-center gap-3">
                   <p className="text-base font-bold text-white dark:text-white tracking-widest uppercase drop-shadow-lg">{label}</p>
@@ -2929,7 +2932,6 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
                     filter: activeTab === key ? 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.6))' : 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))'
                   }}>{emoji}</span>
                   <p className={`text-4xl font-bold bg-gradient-to-br ${textGradient} bg-clip-text text-transparent drop-shadow-sm`}>
-                    {/* ✅ Desktop: Show loading state for received count */}
                     {key === 'received' && stats.receivedLoading ? (
                       <span className="animate-pulse opacity-60">...</span>
                     ) : (
@@ -2945,26 +2947,26 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
         {/* Row 2: Received, Drafts */}
         <div className="grid grid-cols-2 gap-4">
           {[
-            { 
-              key: 'received', 
-              label: 'Received', 
-              value: stats.received, 
-              emoji: '🎁', 
-              ringGradient: 'ring-amber-400', 
-              bgGradient: 'bg-gradient-to-br from-amber-500/60 via-yellow-500/50 to-orange-500/60', 
+            {
+              key: 'received',
+              label: 'Received',
+              value: stats.received,
+              emoji: '🎁',
+              ringGradient: 'ring-amber-400',
+              bgGradient: 'bg-gradient-to-br from-amber-500/60 via-yellow-500/50 to-orange-500/60',
               activeBgGradient: 'bg-gradient-to-br from-amber-400/70 via-yellow-400/60 to-orange-400/70',
               hoverGlow: 'hover:shadow-amber-500/60',
               textGradient: 'from-amber-300 via-yellow-300 to-orange-300',
               neonBorder: 'border-amber-400/50',
               neonGlow: 'shadow-amber-400/30'
             },
-            { 
-              key: 'draft', 
-              label: 'Drafts', 
-              value: stats.draft, 
-              emoji: '🖊️', 
-              ringGradient: 'ring-purple-400', 
-              bgGradient: 'bg-gradient-to-br from-purple-500/60 via-violet-500/50 to-fuchsia-500/60', 
+            {
+              key: 'draft',
+              label: 'Drafts',
+              value: stats.draft,
+              emoji: '🖊️',
+              ringGradient: 'ring-purple-400',
+              bgGradient: 'bg-gradient-to-br from-purple-500/60 via-violet-500/50 to-fuchsia-500/60',
               activeBgGradient: 'bg-gradient-to-br from-purple-400/70 via-violet-400/60 to-fuchsia-400/70',
               hoverGlow: 'hover:shadow-purple-500/60',
               textGradient: 'from-purple-300 via-violet-300 to-fuchsia-300',
@@ -2987,12 +2989,12 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
                   <div className={`absolute inset-0 ${ringGradient.replace('ring-', 'border-')} border-2 animate-pulse`} />
                 </div>
               )}
-              
+
               {/* Shimmer effect on hover - intensified */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               </div>
-              
+
               <CardContent className="p-6 relative z-10">
                 <div className="flex flex-col items-center text-center gap-3">
                   <p className="text-base font-bold text-white dark:text-white tracking-widest uppercase drop-shadow-lg">{label}</p>
@@ -3023,12 +3025,12 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
               <div className="absolute inset-0 border-pink-400 border-2 animate-pulse" />
             </div>
           )}
-          
+
           {/* Shimmer effect on hover - intensified */}
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
           </div>
-          
+
           <CardContent className="p-6 overflow-visible relative z-10">
             <div className="flex flex-col items-center gap-3 overflow-visible">
               <p className="text-base font-bold text-white dark:text-white tracking-widest uppercase text-center drop-shadow-lg">All Capsules</p>
@@ -3049,25 +3051,25 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
         {/* Row 1: Scheduled, Delivered */}
         <div className="grid grid-cols-2 gap-3 sm:gap-3">
           {[
-            { 
-              key: 'scheduled', 
-              label: 'Scheduled', 
-              value: stats.scheduled, 
-              emoji: '⏰', 
-              ringGradient: 'ring-cyan-400', 
-              bgSolid: 'bg-cyan-600/60 dark:bg-cyan-700/70', 
+            {
+              key: 'scheduled',
+              label: 'Scheduled',
+              value: stats.scheduled,
+              emoji: '⏰',
+              ringGradient: 'ring-cyan-400',
+              bgSolid: 'bg-cyan-600/60 dark:bg-cyan-700/70',
               activeBgSolid: 'bg-cyan-500/70 dark:bg-cyan-600/80',
               textColor: 'text-cyan-200 dark:text-cyan-200',
               borderColor: 'border-cyan-400/60',
               activeBorder: 'border-cyan-400'
             },
-            { 
-              key: 'delivered', 
-              label: 'Delivered', 
-              value: stats.delivered, 
-              emoji: '📬', 
-              ringGradient: 'ring-emerald-400', 
-              bgSolid: 'bg-emerald-600/60 dark:bg-emerald-700/70', 
+            {
+              key: 'delivered',
+              label: 'Delivered',
+              value: stats.delivered,
+              emoji: '📬',
+              ringGradient: 'ring-emerald-400',
+              bgSolid: 'bg-emerald-600/60 dark:bg-emerald-700/70',
               activeBgSolid: 'bg-emerald-500/70 dark:bg-emerald-600/80',
               textColor: 'text-emerald-200 dark:text-emerald-200',
               borderColor: 'border-emerald-400/60',
@@ -3087,7 +3089,7 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                 </div>
               )}
-              
+
               <CardContent className="p-3 sm:p-4">
                 <div className="flex flex-col items-center text-center gap-2 sm:gap-2">
                   <p className="text-sm sm:text-base font-bold text-white dark:text-white tracking-wider uppercase lg:normal-case drop-shadow-md">{label}</p>
@@ -3106,25 +3108,25 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
         {/* Row 2: Received, Drafts */}
         <div className="grid grid-cols-2 gap-3 sm:gap-3">
           {[
-            { 
-              key: 'received', 
-              label: 'Received', 
-              value: stats.received, 
-              emoji: '🎁', 
-              ringGradient: 'ring-amber-400', 
-              bgSolid: 'bg-amber-600/60 dark:bg-amber-700/70', 
+            {
+              key: 'received',
+              label: 'Received',
+              value: stats.received,
+              emoji: '🎁',
+              ringGradient: 'ring-amber-400',
+              bgSolid: 'bg-amber-600/60 dark:bg-amber-700/70',
               activeBgSolid: 'bg-amber-500/70 dark:bg-amber-600/80',
               textColor: 'text-amber-200 dark:text-amber-200',
               borderColor: 'border-amber-400/60',
               activeBorder: 'border-amber-400'
             },
-            { 
-              key: 'draft', 
-              label: 'Drafts', 
-              value: stats.draft, 
-              emoji: '🖊️', 
-              ringGradient: 'ring-purple-400', 
-              bgSolid: 'bg-purple-600/60 dark:bg-purple-700/70', 
+            {
+              key: 'draft',
+              label: 'Drafts',
+              value: stats.draft,
+              emoji: '🖊️',
+              ringGradient: 'ring-purple-400',
+              bgSolid: 'bg-purple-600/60 dark:bg-purple-700/70',
               activeBgSolid: 'bg-purple-500/70 dark:bg-purple-600/80',
               textColor: 'text-purple-200 dark:text-purple-200',
               borderColor: 'border-purple-400/60',
@@ -3144,7 +3146,7 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                 </div>
               )}
-              
+
               <CardContent className="p-3 sm:p-4">
                 <div className="flex flex-col items-center text-center gap-2 sm:gap-2">
                   <p className="text-sm sm:text-base font-bold text-white dark:text-white tracking-wider uppercase lg:normal-case drop-shadow-md">{label}</p>
@@ -3180,7 +3182,7 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
             </div>
           )}
-          
+
           <CardContent className="p-3 sm:p-4 overflow-visible">
             <div className="flex flex-col items-center gap-2 sm:gap-2 overflow-visible">
               <p className="text-sm sm:text-base font-bold text-white dark:text-white tracking-wider text-center uppercase lg:normal-case drop-shadow-md">All Capsules</p>

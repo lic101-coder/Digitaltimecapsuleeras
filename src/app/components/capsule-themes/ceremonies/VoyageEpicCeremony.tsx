@@ -37,6 +37,7 @@ export function VoyageEpicCeremony({
   onComplete
 }: VoyageEpicCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'stars' | 'aurora' | 'grid' | 'constellations' | 'compass' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -52,7 +53,17 @@ export function VoyageEpicCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 18000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
@@ -81,7 +92,7 @@ export function VoyageEpicCeremony({
                 transition={{
                   duration: 0.8,
                   delay: i * 0.005,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 8,
                   repeatDelay: Math.random() * 3,
                   repeatType: 'loop'
                 }}
@@ -150,10 +161,10 @@ export function VoyageEpicCeremony({
                     skewY: [0, 2, -2, 0]
                   }}
                   transition={{
-                    opacity: { duration: 2, delay: i * 0.2, repeat: Infinity, repeatType: 'reverse' },
-                    scaleX: { duration: 4, delay: i * 0.3, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' },
-                    y: { duration: 5, delay: i * 0.2, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' },
-                    skewY: { duration: 3.5, delay: i * 0.4, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }
+                    opacity: { duration: 2, delay: i * 0.2, repeat: completed ? 0 : 4, repeatType: 'reverse' },
+                    scaleX: { duration: 4, delay: i * 0.3, repeat: completed ? 0 : 3, repeatType: 'reverse', ease: 'easeInOut' },
+                    y: { duration: 5, delay: i * 0.2, repeat: completed ? 0 : 3, repeatType: 'reverse', ease: 'easeInOut' },
+                    skewY: { duration: 3.5, delay: i * 0.4, repeat: completed ? 0 : 3, repeatType: 'reverse', ease: 'easeInOut' }
                   }}
                 />
               );
@@ -185,9 +196,9 @@ export function VoyageEpicCeremony({
                     skewX: [0, -3, 3, 0]
                   }}
                   transition={{
-                    opacity: { duration: 3, delay: 1 + i * 0.3, repeat: Infinity, repeatType: 'reverse' },
-                    scaleY: { duration: 4.5, delay: 1 + i * 0.4, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' },
-                    skewX: { duration: 4, delay: 1 + i * 0.3, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }
+                    opacity: { duration: 3, delay: 1 + i * 0.3, repeat: completed ? 0 : 3, repeatType: 'reverse' },
+                    scaleY: { duration: 4.5, delay: 1 + i * 0.4, repeat: completed ? 0 : 3, repeatType: 'reverse', ease: 'easeInOut' },
+                    skewX: { duration: 4, delay: 1 + i * 0.3, repeat: completed ? 0 : 3, repeatType: 'reverse', ease: 'easeInOut' }
                   }}
                 />
               );
@@ -657,7 +668,7 @@ export function VoyageEpicCeremony({
                       transition={{
                         delay: 0.4 + (ring * 80 + i) * 0.003,
                         duration: 7 + ring * 2,
-                        repeat: Infinity,
+                        repeat: completed ? 0 : 1,
                         ease: 'linear'
                       }}
                     />

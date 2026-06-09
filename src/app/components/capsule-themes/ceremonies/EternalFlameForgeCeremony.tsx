@@ -43,8 +43,9 @@ export function EternalFlameForgeCeremony({
   isPreview = false,
   onComplete
 }: EternalFlameForgeCeremonyProps) {
-  const [stage, setStage] = useState<'intro' | 'ignite' | 'hearts' | 'strike1' | 'strike2' | 'strike3' | 'strike4' | 'strike5' | 'fuse' | 'quench' | 'reveal' | 'radiance' | 'outro'>('intro');
+  const [stage, setStage] = useState<'intro' | 'ignite' | 'hearts' | 'strike1' | 'strike2' | 'strike3' | 'strike4' | 'strike5' | 'fuse' | 'quench' | 'reveal' | 'radiance' | 'outro' | 'complete'>('intro');
   const [strikeCount, setStrikeCount] = useState(0);
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -61,11 +62,29 @@ export function EternalFlameForgeCeremony({
       { time: 14500, action: () => setStage('reveal') },
       { time: 16000, action: () => setStage('radiance') },
       { time: 18000, action: () => setStage('outro') },
-      { time: 18500, action: () => onComplete?.() }
+      { time: 18500, action: () => {
+        setStage('complete');
+        setCompleted(true);
+        onComplete?.();
+      }}
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // CRITICAL FAILSAFE: Force completion after 22 seconds if ceremony hasn't finished
+    const failsafeTimeout = setTimeout(() => {
+      if (!completed) {
+        console.warn('⚠️ The Forge failsafe triggered - forcing completion');
+        setStage('complete');
+        setCompleted(true);
+        onComplete?.();
+      }
+    }, 22000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   const isStriking = ['strike1', 'strike2', 'strike3', 'strike4', 'strike5'].includes(stage);
@@ -203,7 +222,7 @@ export function EternalFlameForgeCeremony({
                   transition={{
                     duration: isStriking ? 0.3 : 1.5,
                     delay: i * 0.05,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 10, // Limit repeats
                     repeatDelay: 0.5
                   }}
                 />
@@ -579,7 +598,7 @@ export function EternalFlameForgeCeremony({
             </div>
 
             {/* Molten drips */}
-            {[...Array(8)].map((_, i) => (
+            {stage === 'fuse' && [...Array(8)].map((_, i) => (
               <motion.div
                 key={`drip-${i}`}
                 className="absolute rounded-full"
@@ -599,7 +618,7 @@ export function EternalFlameForgeCeremony({
                 transition={{
                   duration: 1,
                   delay: i * 0.1,
-                  repeat: Infinity,
+                  repeat: 3, // Limit repeats
                   repeatDelay: 0.5
                 }}
               />
@@ -762,13 +781,13 @@ export function EternalFlameForgeCeremony({
                 background: 'radial-gradient(circle, rgba(220, 38, 38, 0.6), rgba(251, 191, 36, 0.4), transparent)',
                 filter: 'blur(80px)'
               }}
-              animate={{
+              animate={!completed ? {
                 scale: [1, 1.3, 1],
                 opacity: [0.6, 0.9, 0.6]
-              }}
+              } : { scale: 1, opacity: 0.6 }}
               transition={{
                 duration: 2,
-                repeat: Infinity
+                repeat: completed ? 0 : 3 // Limit repeats
               }}
             />
 
@@ -779,13 +798,13 @@ export function EternalFlameForgeCeremony({
                 background: 'radial-gradient(circle, rgba(255, 255, 255, 0.9), transparent)',
                 filter: 'blur(15px)'
               }}
-              animate={{
+              animate={!completed ? {
                 x: [0, 100, 0],
                 opacity: [0.9, 0.6, 0.9]
-              }}
+              } : { x: 0, opacity: 0.9 }}
               transition={{
                 duration: 3,
-                repeat: Infinity
+                repeat: completed ? 0 : 2 // Limit repeats
               }}
             />
           </motion.div>
@@ -890,7 +909,7 @@ export function EternalFlameForgeCeremony({
                   transition={{
                     delay: 0.6 + i * 0.05,
                     duration: 10,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 1, // Limit repeats
                     ease: 'linear'
                   }}
                 >

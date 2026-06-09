@@ -1,0 +1,244 @@
+🎥 Initializing camera...
+index-C-fvxGeY.js:1858 Platform: Other, Desktop: true
+index-C-fvxGeY.js:1858 📹 Requesting camera with constraints: {video: {…}, audio: true}
+index-C-fvxGeY.js:1858 [Violation] Permissions policy violation: microphone is not allowed in this document.
+ie @ index-C-fvxGeY.js:1858
+(anonymous) @ index-C-fvxGeY.js:1858
+await in (anonymous)
+(anonymous) @ index-C-fvxGeY.js:1858
+Mc @ index-C-fvxGeY.js:161
+DU @ index-C-fvxGeY.js:174
+EU @ index-C-fvxGeY.js:174
+wU @ index-C-fvxGeY.js:174
+yU @ index-C-fvxGeY.js:174
+iW @ index-C-fvxGeY.js:174
+Yl @ index-C-fvxGeY.js:174
+(anonymous) @ index-C-fvxGeY.js:174
+L @ index-C-fvxGeY.js:62
+W @ index-C-fvxGeY.js:62
+_e @ index-C-fvxGeY.js:62
+postMessage
+Ne @ index-C-fvxGeY.js:62
+_e @ index-C-fvxGeY.js:62
+postMessage
+Ne @ index-C-fvxGeY.js:62
+Be @ index-C-fvxGeY.js:62
+oe @ index-C-fvxGeY.js:62
+I2 @ index-C-fvxGeY.js:178
+vi @ index-C-fvxGeY.js:174
+Ys @ index-C-fvxGeY.js:174
+lH @ index-C-fvxGeY.js:143
+(anonymous) @ index-C-fvxGeY.js:1154
+setInterval
+(anonymous) @ index-C-fvxGeY.js:1154
+Mc @ index-C-fvxGeY.js:161
+DU @ index-C-fvxGeY.js:174
+EU @ index-C-fvxGeY.js:174
+wU @ index-C-fvxGeY.js:174
+yU @ index-C-fvxGeY.js:174
+iW @ index-C-fvxGeY.js:174
+Yl @ index-C-fvxGeY.js:174
+nC @ index-C-fvxGeY.js:174
+Ec @ index-C-fvxGeY.js:91
+sW @ index-C-fvxGeY.js:174
+Rm @ index-C-fvxGeY.js:174
+YU @ index-C-fvxGeY.js:174
+rC @ index-C-fvxGeY.js:174
+L @ index-C-fvxGeY.js:62
+W @ index-C-fvxGeY.js:62
+_e @ index-C-fvxGeY.js:62
+postMessage
+Ne @ index-C-fvxGeY.js:62
+Be @ index-C-fvxGeY.js:62
+oe @ index-C-fvxGeY.js:62
+I2 @ index-C-fvxGeY.js:178
+vi @ index-C-fvxGeY.js:174
+Ys @ index-C-fvxGeY.js:174
+lH @ index-C-fvxGeY.js:143
+(anonymous) @ index-C-fvxGeY.js:2304
+await in (anonymous)
+(anonymous) @ index-C-fvxGeY.js:2308
+(anonymous) @ index-C-fvxGeY.js:2308
+onClick @ index-C-fvxGeY.js:1858
+Ba @ index-C-fvxGeY.js:78
+b4 @ index-C-fvxGeY.js:78
+f1 @ index-C-fvxGeY.js:78
+qR @ index-C-fvxGeY.js:78
+Tj @ index-C-fvxGeY.js:90
+BL @ index-C-fvxGeY.js:90
+Aj @ index-C-fvxGeY.js:90
+zL @ index-C-fvxGeY.js:90
+(anonymous) @ index-C-fvxGeY.js:90
+M2 @ index-C-fvxGeY.js:174
+h4 @ index-C-fvxGeY.js:78
+vg @ index-C-fvxGeY.js:90
+bF @ index-C-fvxGeY.js:78
+ag @ index-C-fvxGeY.js:78
+hF @ index-C-fvxGeY.js:78
+index-C-fvxGeY.js:1858 [Violation] Permissions policy violation: camera is not allowed in this document.
+ie @ index-C-fvxGeY.js:1858
+(anonymous) @ index-C-fvxGeY.js:1858
+await in (anonymous)
+(anonymous) @ index-C-fvxGeY.js:1858
+Mc @ index-C-fvxGeY.js:161
+DU @ index-C-fvxGeY.js:174
+EU @ index-C-fvxGeY.js:174
+wU @ index-C-fvxGeY.js:174
+yU @ index-C-fvxGeY.js:174
+iW @ index-C-fvxGeY.js:174
+Yl @ index-C-fvxGeY.js:174
+(anonymous) @ index-C-fvxGeY.js:174
+L @ index-C-fvxGeY.js:62
+W @ index-C-fvxGeY.js:62
+_e @ index-C-fvxGeY.js:62
+postMessage
+Ne @ index-C-fvxGeY.js:62
+_e @ index-C-fvxGeY.js:62
+postMessage
+Ne @ index-C-fvxGeY.js:62
+Be @ index-C-fvxGeY.js:62
+oe @ index-C-fvxGeY.js:62
+I2 @ index-C-fvxGeY.js:178
+vi @ index-C-fvxGeY.js:174
+Ys @ index-C-fvxGeY.js:174
+lH @ index-C-fvxGeY.js:143
+(anonymous) @ index-C-fvxGeY.js:1154
+setInterval
+(anonymous) @ index-C-fvxGeY.js:1154
+Mc @ index-C-fvxGeY.js:161
+DU @ index-C-fvxGeY.js:174
+EU @ index-C-fvxGeY.js:174
+wU @ index-C-fvxGeY.js:174
+yU @ index-C-fvxGeY.js:174
+iW @ index-C-fvxGeY.js:174
+Yl @ index-C-fvxGeY.js:174
+nC @ index-C-fvxGeY.js:174
+Ec @ index-C-fvxGeY.js:91
+sW @ index-C-fvxGeY.js:174
+Rm @ index-C-fvxGeY.js:174
+YU @ index-C-fvxGeY.js:174
+rC @ index-C-fvxGeY.js:174
+L @ index-C-fvxGeY.js:62
+W @ index-C-fvxGeY.js:62
+_e @ index-C-fvxGeY.js:62
+postMessage
+Ne @ index-C-fvxGeY.js:62
+Be @ index-C-fvxGeY.js:62
+oe @ index-C-fvxGeY.js:62
+I2 @ index-C-fvxGeY.js:178
+vi @ index-C-fvxGeY.js:174
+Ys @ index-C-fvxGeY.js:174
+lH @ index-C-fvxGeY.js:143
+(anonymous) @ index-C-fvxGeY.js:2304
+await in (anonymous)
+(anonymous) @ index-C-fvxGeY.js:2308
+(anonymous) @ index-C-fvxGeY.js:2308
+onClick @ index-C-fvxGeY.js:1858
+Ba @ index-C-fvxGeY.js:78
+b4 @ index-C-fvxGeY.js:78
+f1 @ index-C-fvxGeY.js:78
+qR @ index-C-fvxGeY.js:78
+Tj @ index-C-fvxGeY.js:90
+BL @ index-C-fvxGeY.js:90
+Aj @ index-C-fvxGeY.js:90
+zL @ index-C-fvxGeY.js:90
+(anonymous) @ index-C-fvxGeY.js:90
+M2 @ index-C-fvxGeY.js:174
+h4 @ index-C-fvxGeY.js:78
+vg @ index-C-fvxGeY.js:90
+bF @ index-C-fvxGeY.js:78
+ag @ index-C-fvxGeY.js:78
+hF @ index-C-fvxGeY.js:78
+index-C-fvxGeY.js:1858 ❌ Camera error: NotAllowedError: Permission denied
+ie @ index-C-fvxGeY.js:1858
+await in ie
+(anonymous) @ index-C-fvxGeY.js:1858
+await in (anonymous)
+(anonymous) @ index-C-fvxGeY.js:1858
+Mc @ index-C-fvxGeY.js:161
+DU @ index-C-fvxGeY.js:174
+EU @ index-C-fvxGeY.js:174
+wU @ index-C-fvxGeY.js:174
+yU @ index-C-fvxGeY.js:174
+iW @ index-C-fvxGeY.js:174
+Yl @ index-C-fvxGeY.js:174
+(anonymous) @ index-C-fvxGeY.js:174
+L @ index-C-fvxGeY.js:62
+W @ index-C-fvxGeY.js:62
+_e @ index-C-fvxGeY.js:62
+postMessage
+Ne @ index-C-fvxGeY.js:62
+_e @ index-C-fvxGeY.js:62
+postMessage
+Ne @ index-C-fvxGeY.js:62
+Be @ index-C-fvxGeY.js:62
+oe @ index-C-fvxGeY.js:62
+I2 @ index-C-fvxGeY.js:178
+vi @ index-C-fvxGeY.js:174
+Ys @ index-C-fvxGeY.js:174
+lH @ index-C-fvxGeY.js:143
+(anonymous) @ index-C-fvxGeY.js:1154
+setInterval
+(anonymous) @ index-C-fvxGeY.js:1154
+Mc @ index-C-fvxGeY.js:161
+DU @ index-C-fvxGeY.js:174
+EU @ index-C-fvxGeY.js:174
+wU @ index-C-fvxGeY.js:174
+yU @ index-C-fvxGeY.js:174
+iW @ index-C-fvxGeY.js:174
+Yl @ index-C-fvxGeY.js:174
+nC @ index-C-fvxGeY.js:174
+Ec @ index-C-fvxGeY.js:91
+sW @ index-C-fvxGeY.js:174
+Rm @ index-C-fvxGeY.js:174
+YU @ index-C-fvxGeY.js:174
+rC @ index-C-fvxGeY.js:174
+L @ index-C-fvxGeY.js:62
+W @ index-C-fvxGeY.js:62
+_e @ index-C-fvxGeY.js:62
+postMessage
+Ne @ index-C-fvxGeY.js:62
+Be @ index-C-fvxGeY.js:62
+oe @ index-C-fvxGeY.js:62
+I2 @ index-C-fvxGeY.js:178
+vi @ index-C-fvxGeY.js:174
+Ys @ index-C-fvxGeY.js:174
+lH @ index-C-fvxGeY.js:143
+(anonymous) @ index-C-fvxGeY.js:2304
+await in (anonymous)
+(anonymous) @ index-C-fvxGeY.js:2308
+(anonymous) @ index-C-fvxGeY.js:2308
+onClick @ index-C-fvxGeY.js:1858
+Ba @ index-C-fvxGeY.js:78
+b4 @ index-C-fvxGeY.js:78
+f1 @ index-C-fvxGeY.js:78
+qR @ index-C-fvxGeY.js:78
+Tj @ index-C-fvxGeY.js:90
+BL @ index-C-fvxGeY.js:90
+Aj @ index-C-fvxGeY.js:90
+zL @ index-C-fvxGeY.js:90
+(anonymous) @ index-C-fvxGeY.js:90
+M2 @ index-C-fvxGeY.js:174
+h4 @ index-C-fvxGeY.js:78
+vg @ index-C-fvxGeY.js:90
+bF @ index-C-fvxGeY.js:78
+ag @ index-C-fvxGeY.js:78
+hF @ index-C-fvxGeY.js:78
+index-C-fvxGeY.js:1858 📸 Loaded most recent media thumbnail from backend: b2e09b6c-1395-4a78-b80f-358709f29214
+index-C-fvxGeY.js:1218 🌐 Response status (attempt 1): 200 
+index-C-fvxGeY.js:1218 ✅ Database request successful on attempt 1/2 (took 3320ms)
+index-C-fvxGeY.js:1223 ✅ Fetched 60 received capsules with sender names from server
+index-C-fvxGeY.js:1723 📅 CalendarView: Received sent capsules: {capsules: Array(66), total: 66, hasMore: false}
+index-C-fvxGeY.js:1723 📅 CalendarView: Received received capsules: (60) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-C-fvxGeY.js:1723 📅 Using Server Stats: {scheduled: 1, delivered: 9, selfOnlyDelivered: 47, draft: 9, failed: 0, …}
+index-C-fvxGeY.js:1218 🌐 Response status (attempt 1): 200 
+index-C-fvxGeY.js:1218 ✅ Database request successful on attempt 1/2 (took 4986ms)
+index-C-fvxGeY.js:1223 ✅ Fetched 60 received capsules with sender names from server
+index-C-fvxGeY.js:1674 ✅ Received capsules loaded: 60
+index-C-fvxGeY.js:2308 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: false, hasGateAuthData: false, isOAuthCallback: false, …}
+index-C-fvxGeY.js:2308 🎬 Rendering Record with triggerSlideAnimation: false (ref: false state: false )
+index-C-fvxGeY.js:2308 🔔 [Notifications] Using unified Notification Center for all echo notifications
+index-C-fvxGeY.js:2308 📊 [Notifications] Current notification count: 41, Unread: 0
+index-C-fvxGeY.js:2308 📊 [Notifications] UNIFIED unreadCount: 0
+index-C-fvxGeY.js:2308 📊 [Notifications] UNIFIED notifications: 133
+index-C-fvxGeY.js:2308 🔔 [BADGE CHECK] Should show badge: NO

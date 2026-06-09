@@ -32,30 +32,42 @@ export function useProfile() {
       return;
     }
 
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/profile`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-          },
+    const maxRetries = 3;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/profile`,
+          {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch profile');
         }
-      );
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch profile');
+        const data = await response.json();
+        setProfile(data.profile);
+        setLoading(false);
+        return;
+      } catch (err) {
+        const isNetworkError = err instanceof TypeError && err.message === 'Failed to fetch';
+        if (attempt < maxRetries && isNetworkError) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+          continue;
+        }
+        if (!isNetworkError) {
+          console.error('Error fetching profile:', err);
+        }
+        setError(err instanceof Error ? err.message : 'Failed to load profile');
+        setLoading(false);
+        return;
       }
-
-      const data = await response.json();
-      setProfile(data.profile);
-    } catch (err) {
-      console.error('Error fetching profile:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load profile');
-    } finally {
-      setLoading(false);
     }
   }, [session?.access_token]);
 

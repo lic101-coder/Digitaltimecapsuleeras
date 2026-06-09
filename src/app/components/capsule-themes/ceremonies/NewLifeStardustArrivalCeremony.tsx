@@ -70,8 +70,9 @@ export function NewLifeStardustArrivalCeremony({
   isPreview = false,
   onComplete
 }: NewLifeStardustArrivalCeremonyProps) {
-  const [stage, setStage] = useState<'intro' | 'drift' | 'align' | 'beams' | 'portal' | 'emerge' | 'orbit' | 'outro'>('intro');
+  const [stage, setStage] = useState<'intro' | 'drift' | 'align' | 'beams' | 'portal' | 'emerge' | 'orbit' | 'outro' | 'complete'>('intro');
   const [starField, setStarField] = useState<StarField[]>([]);
+  const [completed, setCompleted] = useState(false);
 
   // Timeline - EXTENDED for smoother pacing
   useEffect(() => {
@@ -84,11 +85,29 @@ export function NewLifeStardustArrivalCeremony({
       { time: 12000, action: () => setStage('emerge') },    // +1000ms - bigger portal opening
       { time: 14500, action: () => setStage('orbit') },     // +1000ms - longer emergence
       { time: 16500, action: () => setStage('outro') },     // +1000ms - enjoy orbit
-      { time: 18000, action: () => onComplete?.() }         // 18s total (was 17s)
+      { time: 18000, action: () => {
+        setStage('complete');
+        setCompleted(true);
+        onComplete?.();
+      }}
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // CRITICAL FAILSAFE: Force completion after 22 seconds if ceremony hasn't finished
+    const failsafeTimeout = setTimeout(() => {
+      if (!completed) {
+        console.warn('⚠️ Planetary Alignment failsafe triggered - forcing completion');
+        setStage('complete');
+        setCompleted(true);
+        onComplete?.();
+      }
+    }, 22000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Generate star field
@@ -172,13 +191,13 @@ export function NewLifeStardustArrivalCeremony({
               width: `${star.size}px`,
               height: `${star.size}px`,
             }}
-            animate={{
+            animate={!completed ? {
               opacity: [0.3, 1, 0.3],
               scale: [1, 1.5, 1]
-            }}
+            } : { opacity: 0 }}
             transition={{
               duration: 2 + Math.random(),
-              repeat: Infinity,
+              repeat: completed ? 0 : 10, // Limit repeats
               delay: star.twinkleDelay
             }}
           />
@@ -211,7 +230,7 @@ export function NewLifeStardustArrivalCeremony({
                   ease: stage === 'drift' ? 'easeInOut' : 'easeOut',
                   scale: {
                     duration: 0.5,
-                    repeat: isAligned ? Infinity : 0,
+                    repeat: isAligned && !completed ? 3 : 0, // Limit repeats
                     repeatType: 'reverse'
                   }
                 }}
@@ -272,7 +291,7 @@ export function NewLifeStardustArrivalCeremony({
                     }}
                     transition={{
                       duration: 1.5,
-                      repeat: Infinity
+                      repeat: completed ? 0 : 3 // Limit repeats
                     }}
                   />
                 )}
@@ -335,12 +354,12 @@ export function NewLifeStardustArrivalCeremony({
                     : '0 0 20px rgba(255, 215, 0, 0.8)',
                 }}
                 animate={{
-                  rotate: 360,
-                  scale: [1, 1.1, 1]
+                  rotate: completed ? 0 : 360,
+                  scale: completed ? 1 : [1, 1.1, 1]
                 }}
                 transition={{
-                  rotate: { duration: 4, repeat: Infinity, ease: 'linear' },
-                  scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+                  rotate: { duration: 4, repeat: completed ? 0 : 2, ease: 'linear' }, // Limit repeats
+                  scale: { duration: 2, repeat: completed ? 0 : 2, ease: 'easeInOut' } // Limit repeats
                 }}
               />
 
@@ -358,12 +377,12 @@ export function NewLifeStardustArrivalCeremony({
                     borderColor: `rgba(139, 92, 246, ${0.6 - i * 0.15})`,
                   }}
                   animate={{
-                    rotate: i % 2 === 0 ? 360 : -360,
-                    scale: [1, 1.2, 1]
+                    rotate: completed ? 0 : (i % 2 === 0 ? 360 : -360),
+                    scale: completed ? 1 : [1, 1.2, 1]
                   }}
                   transition={{
-                    rotate: { duration: 3 + i, repeat: Infinity, ease: 'linear' },
-                    scale: { duration: 1.5, repeat: Infinity, delay: i * 0.2 }
+                    rotate: { duration: 3 + i, repeat: completed ? 0 : 2, ease: 'linear' }, // Limit repeats
+                    scale: { duration: 1.5, repeat: completed ? 0 : 2, delay: i * 0.2 } // Limit repeats
                   }}
                 />
               ))}
@@ -381,12 +400,12 @@ export function NewLifeStardustArrivalCeremony({
                   filter: shouldRenderComplexEffect() ? `blur(${getOptimalBlur(15)}px)` : undefined,
                 }}
                 animate={{
-                  scale: [1, 1.5, 1],
-                  opacity: [0.8, 1, 0.8]
+                  scale: completed ? 1 : [1, 1.5, 1],
+                  opacity: completed ? 0 : [0.8, 1, 0.8]
                 }}
                 transition={{
                   duration: 1.5,
-                  repeat: Infinity
+                  repeat: completed ? 0 : 2 // Limit repeats
                 }}
               />
 
@@ -448,12 +467,12 @@ export function NewLifeStardustArrivalCeremony({
                   filter: shouldRenderComplexEffect() ? `blur(${getOptimalBlur(60)}px)` : `blur(${getOptimalBlur(30)}px)`,
                 }}
                 animate={{
-                  scale: [1, 1.3, 1],
-                  opacity: [0.4, 0.7, 0.4]
+                  scale: completed ? 1 : [1, 1.3, 1],
+                  opacity: completed ? 0 : [0.4, 0.7, 0.4]
                 }}
                 transition={{
                   duration: 3,
-                  repeat: Infinity
+                  repeat: completed ? 0 : 2 // Limit repeats
                 }}
               />
 
@@ -466,11 +485,11 @@ export function NewLifeStardustArrivalCeremony({
                     : `drop-shadow(0 0 ${getOptimalBlur(15)}px rgba(255, 215, 0, 1))`,
                 }}
                 animate={{
-                  scale: [1, 1.1, 1],
+                  scale: completed ? 1 : [1, 1.1, 1],
                 }}
                 transition={{
                   duration: 2,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 3, // Limit repeats
                   ease: 'easeInOut'
                 }}
               >
@@ -496,13 +515,13 @@ export function NewLifeStardustArrivalCeremony({
                       filter: shouldRenderComplexEffect() ? `blur(${getOptimalBlur(2)}px)` : undefined,
                     }}
                     animate={{
-                      opacity: [0.3, 0.8, 0.3],
-                      scaleY: [1, 1.5, 1]
+                      opacity: completed ? 0 : [0.3, 0.8, 0.3],
+                      scaleY: completed ? 1 : [1, 1.5, 1]
                     }}
                     transition={{
                       duration: 2,
                       delay: i * 0.05,
-                      repeat: Infinity,
+                      repeat: completed ? 0 : 2, // Limit repeats
                       ease: 'easeInOut'
                     }}
                   />
@@ -532,7 +551,7 @@ export function NewLifeStardustArrivalCeremony({
                   transition={{
                     duration: 3,
                     delay: i * 0.5,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 1, // Limit repeats
                     ease: 'easeOut'
                   }}
                 />

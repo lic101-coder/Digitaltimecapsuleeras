@@ -58,6 +58,7 @@ export function TimeTravelerPortalCeremony({
   const [dataStreams, setDataStreams] = useState<DataStream[]>([]);
   const [packets, setPackets] = useState<DataPacket[]>([]);
   const [hexNodes, setHexNodes] = useState<HexNode[]>([]);
+  const [completed, setCompleted] = useState(false);
 
   // Animation timeline
   useEffect(() => {
@@ -78,7 +79,16 @@ export function TimeTravelerPortalCeremony({
       setTimeout(action, time)
     );
 
-    return () => timeouts.forEach(clearTimeout);
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 19000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Generate Matrix-style data streams
@@ -636,7 +646,7 @@ export function TimeTravelerPortalCeremony({
                     }}
                     transition={{
                       scaleX: { duration: 2, ease: 'easeOut' },
-                      opacity: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
+                      opacity: { duration: 2.5, repeat: completed ? 0 : 2, ease: 'easeInOut' }
                     }}
                   />
                 );
@@ -734,7 +744,7 @@ export function TimeTravelerPortalCeremony({
                           duration: 6 + ring * 2,
                           repeat: Infinity,
                           ease: 'linear',
-                          opacity: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
+                          opacity: { duration: 2.5, repeat: completed ? 0 : 2, ease: 'easeInOut' }
                         }}
                       />
                     );
@@ -803,7 +813,7 @@ export function TimeTravelerPortalCeremony({
                     transition={{
                       duration: 2.8,
                       delay: 0.4 + i * 0.022,
-                      opacity: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
+                      opacity: { duration: 2.5, repeat: completed ? 0 : 2, ease: 'easeInOut' }
                     }}
                   >
                     <svg viewBox="0 0 100 100" className="w-full h-full">

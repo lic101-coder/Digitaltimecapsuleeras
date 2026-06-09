@@ -39,6 +39,7 @@ export function GoldenVictoryCeremony({
   onComplete
 }: GoldenVictoryCeremonyProps) {
   const [stage, setStage] = useState<'push' | 'freeze' | 'recognized' | 'celebrate'>('push');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timers = [
@@ -52,7 +53,16 @@ export function GoldenVictoryCeremony({
       }, 14000)
     ];
 
-    return () => timers.forEach(clearTimeout);
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 15000);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, [isPreview]); // Removed onComplete - don't restart ceremony midway through
 
   // Generate confetti particles
@@ -539,8 +549,8 @@ export function GoldenVictoryCeremony({
                   rotateY: [0, 360]
                 }}
                 transition={{ 
-                  y: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-                  rotateY: { duration: 3, repeat: Infinity, ease: "linear" }
+                  y: { duration: 2, repeat: completed ? 0 : 4, ease: "easeInOut" },
+                  rotateY: { duration: 3, repeat: completed ? 0 : 3, ease: "linear" }
                 }}
               >
                 🏆
@@ -699,7 +709,7 @@ export function GoldenVictoryCeremony({
               }}
               transition={{
                 scale: { duration: 0.5 },
-                y: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+                y: { duration: 1.5, repeat: completed ? 0 : 6, ease: "easeInOut" }
               }}
             >
               <div className="text-9xl">🙌</div>

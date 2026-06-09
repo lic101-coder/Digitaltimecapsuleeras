@@ -49,16 +49,30 @@ export function useNotifications() {
       
       // Fetch from backend KV store using user's access token
       try {
-        const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/notifications`,
-          {
-            headers: {
-              'Authorization': `Bearer ${session.access_token}` // Use user's access token, not anon key
+        let response: Response | null = null;
+        const maxRetries = 3;
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+          try {
+            response = await fetch(
+              `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/notifications`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${session.access_token}`
+                }
+              }
+            );
+            break;
+          } catch (fetchErr) {
+            const isNetworkError = fetchErr instanceof TypeError && fetchErr.message === 'Failed to fetch';
+            if (attempt < maxRetries && isNetworkError) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+              continue;
             }
+            throw fetchErr;
           }
-        );
-        
-        if (response.ok) {
+        }
+
+        if (response && response.ok) {
           const backendNotifications = await response.json();
           console.log(`🔔 [NOTIFICATION] Loaded ${backendNotifications.length} notifications from backend`);
           
@@ -181,7 +195,10 @@ export function useNotifications() {
           setNotifications(deduped);
         }
       } catch (error) {
-        console.error('Error loading notifications from backend:', error);
+        const isNetworkError = error instanceof TypeError && (error as TypeError).message === 'Failed to fetch';
+        if (!isNetworkError) {
+          console.error('Error loading notifications from backend:', error);
+        }
         
         // Fallback to local only
         const deduped: Notification[] = [];

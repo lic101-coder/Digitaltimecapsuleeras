@@ -25,6 +25,7 @@ export function CareerSignatureCeremony({
   onComplete
 }: CareerSignatureCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'hall' | 'carpet' | 'walking' | 'unveiling' | 'nameplate' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -40,7 +41,17 @@ export function CareerSignatureCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Failsafe timeout - 1 second after last timeline action
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 17500);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   const legends = [
@@ -162,7 +173,7 @@ export function CareerSignatureCeremony({
                     scale: 1
                   }}
                   transition={{
-                    opacity: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
+                    opacity: { duration: 3, repeat: completed ? 0 : 3, ease: 'easeInOut' },
                     scale: { duration: 1, delay: i * 0.2 }
                   }}
                 />
@@ -426,7 +437,7 @@ export function CareerSignatureCeremony({
                     }}
                     transition={{
                       duration: 3,
-                      repeat: Infinity,
+                      repeat: completed ? 0 : 3,
                       ease: 'easeInOut'
                     }}
                   >
@@ -452,7 +463,7 @@ export function CareerSignatureCeremony({
                     }}
                     transition={{
                       duration: 4,
-                      repeat: Infinity,
+                      repeat: completed ? 0 : 3,
                       ease: 'linear'
                     }}
                   />
@@ -502,7 +513,7 @@ export function CareerSignatureCeremony({
                       transition={{
                         duration: 2,
                         delay: 0.5 + i * 0.08,
-                        repeat: Infinity,
+                        repeat: completed ? 0 : 3,
                         repeatDelay: 1
                       }}
                     >
@@ -673,7 +684,7 @@ export function CareerSignatureCeremony({
                     transition={{
                       delay: 0.4 + i * 0.04,
                       duration: 8,
-                      repeat: Infinity,
+                      repeat: completed ? 0 : 2,
                       ease: 'linear'
                     }}
                   >

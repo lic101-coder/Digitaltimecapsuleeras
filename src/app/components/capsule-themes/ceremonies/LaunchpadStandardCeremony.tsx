@@ -23,6 +23,7 @@ export function LaunchpadStandardCeremony({
   onComplete
 }: LaunchpadStandardCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'chrysalis' | 'cracking' | 'emergence' | 'drying' | 'flight' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -34,11 +35,28 @@ export function LaunchpadStandardCeremony({
       { time: 11500, action: () => setStage('flight') },
       { time: 12500, action: () => setStage('radiance') },
       { time: 15800, action: () => setStage('outro') },
-      { time: 16000, action: () => onComplete?.() }
+      { time: 16000, action: () => {
+        setCompleted(true);
+        onComplete?.();
+      }}
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // CRITICAL FAILSAFE: Force completion after 17 seconds if ceremony hasn't finished
+    const failsafeTimeout = setTimeout(() => {
+      if (!completed) {
+        console.warn('⚠️ Launchpad Standard ceremony failsafe triggered - forcing completion');
+        setStage('outro');
+        setCompleted(true);
+        onComplete?.();
+      }
+    }, 17000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
@@ -58,9 +76,9 @@ export function LaunchpadStandardCeremony({
             ? 'radial-gradient(ellipse at 50% 50%, #254636 0%, #1a3d2f 60%, #0a1f1a 90%)'
             : 'radial-gradient(ellipse at 50% 50%, #1a3d2f 0%, #0d2820 70%, #0a1f1a 100%)'
         }}
-        transition={{ 
+        transition={{
           duration: stage === 'radiance' ? 0.8 : 2.5,
-          repeat: stage === 'radiance' ? Infinity : 0
+          repeat: (stage === 'radiance' && !completed) ? 3 : 0
         }}
       />
 

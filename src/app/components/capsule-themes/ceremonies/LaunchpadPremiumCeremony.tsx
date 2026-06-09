@@ -23,6 +23,7 @@ export function LaunchpadPremiumCeremony({
   onComplete
 }: LaunchpadPremiumCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'gathering' | 'lightning' | 'sphere' | 'explosion' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
   const [lightningFlashes, setLightningFlashes] = useState<number[]>([]);
 
   useEffect(() => {
@@ -34,11 +35,28 @@ export function LaunchpadPremiumCeremony({
       { time: 9000, action: () => setStage('explosion') },
       { time: 11000, action: () => setStage('radiance') },
       { time: 13500, action: () => setStage('outro') },
-      { time: 14000, action: () => onComplete?.() }
+      { time: 14000, action: () => {
+        setCompleted(true);
+        onComplete?.();
+      }}
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // CRITICAL FAILSAFE: Force completion after 15 seconds if ceremony hasn't finished
+    const failsafeTimeout = setTimeout(() => {
+      if (!completed) {
+        console.warn('⚠️ Launchpad Premium ceremony failsafe triggered - forcing completion');
+        setStage('outro');
+        setCompleted(true);
+        onComplete?.();
+      }
+    }, 15000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Random lightning flashes during lightning stage
@@ -76,9 +94,9 @@ export function LaunchpadPremiumCeremony({
             ? 'radial-gradient(ellipse at 50% 40%, #141428 0%, #0f0f20 70%, #0a0a1a 100%)'
             : 'radial-gradient(ellipse at 50% 50%, #141428 0%, #0a0a1a 80%)'
         }}
-        transition={{ 
+        transition={{
           duration: stage === 'radiance' ? 0.7 : stage === 'explosion' ? 0.3 : 2,
-          repeat: stage === 'radiance' ? Infinity : 0
+          repeat: (stage === 'radiance' && !completed) ? 3 : 0
         }}
       />
 

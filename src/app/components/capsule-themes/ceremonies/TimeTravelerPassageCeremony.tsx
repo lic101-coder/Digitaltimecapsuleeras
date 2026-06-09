@@ -50,6 +50,7 @@ export function TimeTravelerPassageCeremony({
   const [stage, setStage] = useState<'intro' | 'clock' | 'gears' | 'accelerate' | 'dissolve' | 'shards' | 'constellation' | 'radiance' | 'outro'>('intro');
   const [particles, setParticles] = useState<TimeParticle[]>([]);
   const [shards, setShards] = useState<TimeShard[]>([]);
+  const [completed, setCompleted] = useState(false);
 
   // Animation timeline
   useEffect(() => {
@@ -70,7 +71,16 @@ export function TimeTravelerPassageCeremony({
       setTimeout(action, time)
     );
 
-    return () => timeouts.forEach(clearTimeout);
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 18500);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Generate spiraling time particles
@@ -635,7 +645,7 @@ export function TimeTravelerPassageCeremony({
               transition={{
                 delay: shard.delay,
                 duration: stage === 'constellation' ? 1.5 : 1.2,
-                rotate: { duration: 3, repeat: Infinity, ease: 'linear' },
+                rotate: { duration: 3, repeat: completed ? 0 : 2, ease: 'linear' },
                 opacity: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
               }}
             >
@@ -782,7 +792,7 @@ export function TimeTravelerPassageCeremony({
                     }}
                     transition={{
                       scaleX: { duration: 2, ease: 'easeOut' },
-                      opacity: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
+                      opacity: { duration: 2.5, repeat: completed ? 0 : 2, ease: 'easeInOut' }
                     }}
                   />
                 );
@@ -879,7 +889,7 @@ export function TimeTravelerPassageCeremony({
                           duration: 6 + ring * 2,
                           repeat: Infinity,
                           ease: 'linear',
-                          opacity: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
+                          opacity: { duration: 2.5, repeat: completed ? 0 : 2, ease: 'easeInOut' }
                         }}
                       />
                     );
@@ -946,7 +956,7 @@ export function TimeTravelerPassageCeremony({
                     transition={{
                       duration: 2.8,
                       delay: 0.4 + i * 0.022,
-                      opacity: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
+                      opacity: { duration: 2.5, repeat: completed ? 0 : 2, ease: 'easeInOut' }
                     }}
                   >
                     💎

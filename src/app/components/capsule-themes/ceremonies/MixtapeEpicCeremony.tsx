@@ -25,6 +25,7 @@ export function MixtapeEpicCeremony({
   onComplete
 }: MixtapeEpicCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'coin' | 'sprites' | 'games' | 'explosion' | 'trophy' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -36,11 +37,28 @@ export function MixtapeEpicCeremony({
       { time: 12000, action: () => setStage('trophy') },
       { time: 14000, action: () => setStage('radiance') },
       { time: 16500, action: () => setStage('outro') },
-      { time: 17000, action: () => onComplete?.() }
+      { time: 17000, action: () => {
+        setCompleted(true);
+        onComplete?.();
+      }}
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // CRITICAL FAILSAFE: Force completion after 18 seconds if ceremony hasn't finished
+    const failsafeTimeout = setTimeout(() => {
+      if (!completed) {
+        console.warn('⚠️ Mixtape Epic ceremony failsafe triggered - forcing completion');
+        setStage('outro');
+        setCompleted(true);
+        onComplete?.();
+      }
+    }, 18000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (

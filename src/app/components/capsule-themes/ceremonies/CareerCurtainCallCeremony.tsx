@@ -47,6 +47,7 @@ export function CareerCurtainCallCeremony({
   onComplete
 }: CareerCurtainCallCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'curtain' | 'entrance' | 'spotlight' | 'roses' | 'ovation' | 'flash' | 'confetti' | 'bow' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -65,7 +66,17 @@ export function CareerCurtainCallCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Failsafe timeout - 1 second after last timeline action
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 21500);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
@@ -160,7 +171,7 @@ export function CareerCurtainCallCeremony({
                 transition={{
                   duration: 2,
                   delay: i * 0.05,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 5,
                   repeatDelay: 0.3
                 }}
               />
@@ -186,7 +197,7 @@ export function CareerCurtainCallCeremony({
             }}
             transition={{
               duration: 3,
-              repeat: Infinity
+              repeat: completed ? 0 : 4
             }}
           />
         )}
@@ -219,7 +230,7 @@ export function CareerCurtainCallCeremony({
                   '0 0 80px rgba(251, 191, 36, 0.6)'
                 ]
               }}
-              transition={{ duration: 2, repeat: Infinity }}
+              transition={{ duration: 2, repeat: completed ? 0 : 5 }}
             >
               The Curtain Call
             </motion.h1>
@@ -265,7 +276,7 @@ export function CareerCurtainCallCeremony({
                   }}
                   transition={{
                     duration: 2 + Math.random() * 2,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 5,
                     delay: Math.random() * 2
                   }}
                 />
@@ -290,7 +301,7 @@ export function CareerCurtainCallCeremony({
                 }}
                 transition={{
                   duration: 3 + Math.random(),
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 4,
                   delay: Math.random() * 2
                 }}
               />
@@ -494,7 +505,7 @@ export function CareerCurtainCallCeremony({
                 }}
                 transition={{
                   duration: 3,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 4,
                   delay: idx * 1.5
                 }}
               />
@@ -784,7 +795,7 @@ export function CareerCurtainCallCeremony({
                 transition={{
                   duration: 2.8,
                   delay: i * 0.22,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 4,
                   ease: 'easeOut'
                 }}
               />
@@ -813,7 +824,7 @@ export function CareerCurtainCallCeremony({
                 transition={{
                   duration: 3,
                   delay: i * 0.4,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 3,
                   repeatDelay: 1.2
                 }}
               >
@@ -1001,7 +1012,7 @@ export function CareerCurtainCallCeremony({
                   transition={{
                     delay: 0.5 + i * 0.04,
                     duration: 9,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 2,
                     ease: 'linear'
                   }}
                 >

@@ -26,6 +26,7 @@ export function NewYearCountdownCeremony({
 }: NewYearCountdownCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'countdown' | 'finale' | 'radiance'>('intro');
   const [currentNumber, setCurrentNumber] = useState<number | null>(null);
+  const [completed, setCompleted] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -40,13 +41,13 @@ export function NewYearCountdownCeremony({
     // COUNTDOWN: 2s-13s (10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
     // Each number stays for 1 second
     let countdownValue = 10;
-    
+
     // Set up interval starting at 3 seconds (1 second after we show 10)
     timers.push(setTimeout(() => {
       intervalRef.current = setInterval(() => {
         countdownValue--;
         setCurrentNumber(countdownValue);
-        
+
         // Stop at 0
         if (countdownValue <= 0) {
           if (intervalRef.current) {
@@ -80,9 +81,16 @@ export function NewYearCountdownCeremony({
       }
     }, 18000));
 
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 19000);
+
     // Cleanup
     return () => {
       timers.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -134,7 +142,7 @@ export function NewYearCountdownCeremony({
           }}
           transition={{
             duration: 2 + i * 0.3,
-            repeat: Infinity,
+            repeat: completed ? 0 : 6,
             ease: 'easeInOut'
           }}
         />
@@ -212,7 +220,7 @@ export function NewYearCountdownCeremony({
                 }}
                 transition={{
                   duration: 0.5,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 8,
                   ease: 'easeInOut'
                 }}
               >
@@ -254,7 +262,7 @@ export function NewYearCountdownCeremony({
                 }}
                 transition={{
                   duration: 1 + ringIndex * 0.2,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 8,
                   ease: 'linear'
                 }}
               />
@@ -274,7 +282,7 @@ export function NewYearCountdownCeremony({
                 }}
                 transition={{
                   duration: 2.2 - i * 0.15,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 8,
                   ease: 'linear'
                 }}
               >
@@ -295,7 +303,7 @@ export function NewYearCountdownCeremony({
                   }}
                   transition={{
                     duration: 0.6,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 8,
                     delay: i * 0.08
                   }}
                 />
@@ -458,7 +466,7 @@ export function NewYearCountdownCeremony({
                 animate={{
                   backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
                 }}
-                transition={{ duration: 3, repeat: Infinity }}
+                transition={{ duration: 3, repeat: completed ? 0 : 6 }}
               >
                 HAPPY NEW YEAR! 🎉
               </motion.h1>

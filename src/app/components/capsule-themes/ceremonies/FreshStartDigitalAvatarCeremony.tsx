@@ -28,6 +28,7 @@ export function FreshStartDigitalAvatarCeremony({
   onComplete
 }: FreshStartDigitalAvatarCeremonyProps) {
   const [stage, setStage] = useState<'title' | 'homeoffice' | 'bootsequence' | 'avatar' | 'welcome' | 'workspace' | 'dualreality' | 'outro'>('title');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -43,7 +44,17 @@ export function FreshStartDigitalAvatarCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 18000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
@@ -132,7 +143,7 @@ export function FreshStartDigitalAvatarCeremony({
                   }}
                   transition={{
                     duration: 1.5 + Math.random() * 1,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 3,
                     delay: i * 0.2,
                     ease: 'easeOut'
                   }}
@@ -152,7 +163,7 @@ export function FreshStartDigitalAvatarCeremony({
                 }}
                 transition={{
                   duration: 3,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 3,
                   ease: 'easeInOut'
                 }}
               />
@@ -682,7 +693,7 @@ export function FreshStartDigitalAvatarCeremony({
                   transition={{
                     duration: 2,
                     delay: i * 0.2,
-                    repeat: Infinity
+                    repeat: completed ? 0 : 5
                   }}
                 />
               ))}

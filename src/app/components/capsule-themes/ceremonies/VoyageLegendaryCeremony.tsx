@@ -37,6 +37,7 @@ export function VoyageLegendaryCeremony({
   onComplete
 }: VoyageLegendaryCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'runway' | 'eiffel' | 'pyramids' | 'mountains' | 'return' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -52,7 +53,17 @@ export function VoyageLegendaryCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 16000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (

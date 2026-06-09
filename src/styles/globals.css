@@ -405,12 +405,22 @@ video::--webkit-media-controls-overlay-enclosure {
   }
 }
 
-/* Safe area handling for devices with notches */
+/* Safe area handling for devices with notches/Dynamic Island */
 @supports (padding: max(0px)) {
   body {
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
+}
+
+/* Utility: push fullscreen overlay content below the status bar */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Utility: push content above the home indicator */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Prevent zoom on input focus for iOS */

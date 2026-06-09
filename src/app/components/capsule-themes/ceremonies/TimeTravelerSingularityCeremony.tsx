@@ -68,6 +68,7 @@ export function TimeTravelerSingularityCeremony({
   const [kawooshParticles, setKawooshParticles] = useState<KawooshParticle[]>([]);
   const [gateRotation, setGateRotation] = useState(0);
   const [cameraShake, setCameraShake] = useState({ x: 0, y: 0 });
+  const [completed, setCompleted] = useState(false);
 
   // Animation timeline
   useEffect(() => {
@@ -90,7 +91,16 @@ export function TimeTravelerSingularityCeremony({
       setTimeout(action, time)
     );
 
-    return () => timeouts.forEach(clearTimeout);
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 22000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Camera shake effect during kawoosh and unstable
@@ -1080,7 +1090,7 @@ export function TimeTravelerSingularityCeremony({
               }}
               transition={{
                 duration: 4 / particle.speed,
-                repeat: Infinity,
+                repeat: completed ? 0 : 2,
                 ease: [0.45, 0, 0.55, 1],
                 delay: (particle.id * 0.004) % 4
               }}
@@ -1114,7 +1124,7 @@ export function TimeTravelerSingularityCeremony({
                   transition={{
                     duration: 2.5,
                     delay: i * 0.13,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 1,
                     ease: [0.34, 1.56, 0.64, 1]
                   }}
                 />
@@ -1150,7 +1160,7 @@ export function TimeTravelerSingularityCeremony({
                     transition={{
                       duration: 1.8,
                       delay: i * 0.01,
-                      repeat: Infinity,
+                      repeat: completed ? 0 : 1,
                       ease: [0.34, 1.56, 0.64, 1]
                     }}
                   />
@@ -1180,7 +1190,7 @@ export function TimeTravelerSingularityCeremony({
                     transition={{
                       duration: 2.2,
                       delay: i * 0.04,
-                      repeat: Infinity,
+                      repeat: completed ? 0 : 1,
                       ease: 'easeOut'
                     }}
                   />
@@ -1232,7 +1242,7 @@ export function TimeTravelerSingularityCeremony({
                     }}
                     transition={{
                       scaleX: { duration: 2.5, ease: [0.34, 1.56, 0.64, 1] },
-                      opacity: { duration: 3, repeat: Infinity, ease: 'easeInOut' }
+                      opacity: { duration: 3, repeat: completed ? 0 : 1, ease: 'easeInOut' }
                     }}
                   />
                 );
@@ -1267,7 +1277,7 @@ export function TimeTravelerSingularityCeremony({
                     }}
                     transition={{
                       scaleX: { duration: 2.7, ease: [0.34, 1.56, 0.64, 1] },
-                      opacity: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' }
+                      opacity: { duration: 3.5, repeat: completed ? 0 : 1, ease: 'easeInOut' }
                     }}
                   />
                 );
@@ -1338,9 +1348,9 @@ export function TimeTravelerSingularityCeremony({
                         transition={{
                           delay: 0.6 + (ring * 50 + i) * 0.01,
                           duration: 9 + ring * 3,
-                          repeat: Infinity,
+                          repeat: completed ? 0 : 1,
                           ease: 'linear',
-                          opacity: { duration: 3, repeat: Infinity, ease: 'easeInOut' }
+                          opacity: { duration: 3, repeat: completed ? 0 : 1, ease: 'easeInOut' }
                         }}
                       />
                     );

@@ -35,6 +35,7 @@ export function CareerGavelCeremony({
   onComplete
 }: CareerGavelCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'rising' | 'ascending' | 'crowd' | 'spotlights' | 'confetti' | 'trophy' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -51,7 +52,17 @@ export function CareerGavelCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Failsafe timeout - 1 second after last timeline action
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 15500);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
@@ -77,7 +88,7 @@ export function CareerGavelCeremony({
             }}
             transition={{
               opacity: { duration: 0.5 },
-              scale: { duration: 3 + i * 0.5, repeat: Infinity, ease: 'easeInOut' }
+              scale: { duration: 3 + i * 0.5, repeat: completed ? 0 : 3, ease: 'easeInOut' }
             }}
           />
         ))}
@@ -215,7 +226,7 @@ export function CareerGavelCeremony({
                           y: { duration: 1.5, ease: [0.34, 1.56, 0.64, 1] },
                           opacity: { duration: 0.8 },
                           scale: { duration: 0.8 },
-                          rotate: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+                          rotate: { duration: 2, repeat: completed ? 0 : 4, ease: 'easeInOut' }
                         }}
                       >
                         🏆
@@ -254,7 +265,7 @@ export function CareerGavelCeremony({
                     duration: 2,
                     delay: i * 0.05,
                     times: [0, 0.1, 0.2, 0.35, 0.5, 0.65, 0.8, 1],
-                    repeat: Infinity
+                    repeat: completed ? 0 : 5
                   }}
                 />
               ))}
@@ -281,7 +292,7 @@ export function CareerGavelCeremony({
                     duration: 2,
                     delay: i * 0.05 + 0.3,
                     times: [0, 0.1, 0.2, 0.35, 0.5, 0.65, 0.8, 1],
-                    repeat: Infinity
+                    repeat: completed ? 0 : 5
                   }}
                 />
               ))}
@@ -304,7 +315,7 @@ export function CareerGavelCeremony({
                   transition={{
                     duration: 2,
                     delay: i * 0.3,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 3,
                     repeatDelay: 1
                   }}
                 >
@@ -636,7 +647,7 @@ export function CareerGavelCeremony({
                     transition={{
                       delay: 0.3 + i * 0.04,
                       duration: 7,
-                      repeat: Infinity,
+                      repeat: completed ? 0 : 2,
                       ease: 'linear'
                     }}
                   >

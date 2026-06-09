@@ -110,24 +110,6 @@ export function useTabNavigation() {
     };
   }, [activeTab]);
 
-  // Monitor unexpected tab changes
-  useEffect(() => {
-    // Don't warn about initial tab restoration from sessionStorage
-    const isInitialRestore = tabChangeSource.current === 'initial';
-    
-    // Don't warn about legitimate tab changes (user clicks or direct navigation)
-    const isLegitimateChange = tabChangeSource.current === 'user' || tabChangeSource.current === 'direct' || tabChangeSource.current === 'browser-navigation';
-    
-    if (activeTab !== 'home' && activeTab !== lastActiveTab && !isLegitimateChange && !isInitialRestore) {
-      console.warn('⚠️ Unexpected tab change detected:', {
-        from: lastActiveTab,
-        to: activeTab,
-        source: tabChangeSource.current
-      });
-    }
-    // Reset source after change is processed
-    tabChangeSource.current = 'unknown';
-  }, [activeTab, lastActiveTab]);
 
   const handleTabChange = useCallback(async (newTab) => {
     if (newTab === activeTab) return;

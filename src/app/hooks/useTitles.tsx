@@ -126,7 +126,10 @@ export function useTitles() {
         console.error('[Titles] Failed to fetch profile:', response.status);
       }
     } catch (error) {
-      console.error('[Titles] Failed to fetch title profile:', error);
+      const isNetworkError = error instanceof TypeError && (error as TypeError).message === 'Failed to fetch';
+      if (!isNetworkError) {
+        console.error('[Titles] Failed to fetch title profile:', error);
+      }
     }
   }, []);
 
@@ -152,8 +155,8 @@ export function useTitles() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('[Titles] Available titles fetched:', { 
-          equipped: data.equipped, 
+        console.log('[Titles] Available titles fetched:', {
+          equipped: data.equipped,
           equippedId: data.equippedAchievementId,
           unlockedCount: data.unlockedCount,
           titlesArrayLength: data.titles?.length || 0,
@@ -168,7 +171,10 @@ export function useTitles() {
         console.error('[Titles] Failed to fetch available titles:', response.status);
       }
     } catch (error) {
-      console.error('[Titles] Failed to fetch available titles:', error);
+      const isNetworkError = error instanceof TypeError && (error as TypeError).message === 'Failed to fetch';
+      if (!isNetworkError) {
+        console.error('[Titles] Failed to fetch available titles:', error);
+      }
     } finally {
       setLoading(false);
     }

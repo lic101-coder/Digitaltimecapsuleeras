@@ -24,6 +24,7 @@ export function PetRainbowBridgeCeremony({
   onComplete
 }: PetRainbowBridgeCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'rainbow' | 'prints' | 'crossing' | 'stars' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -38,7 +39,17 @@ export function PetRainbowBridgeCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 15000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Rainbow - all 7 brilliant colors
@@ -75,7 +86,7 @@ export function PetRainbowBridgeCeremony({
             }}
             transition={{
               duration: 12 + i,
-              repeat: Infinity,
+              repeat: completed ? 0 : 2,
               ease: 'easeInOut'
             }}
           />
@@ -212,7 +223,7 @@ export function PetRainbowBridgeCeremony({
                 }}
                 transition={{
                   duration: 3.5,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 2,
                   ease: 'linear'
                 }}
               />
@@ -352,19 +363,19 @@ export function PetRainbowBridgeCeremony({
                 
                 {/* EARS - Floppy and adorable */}
                 <motion.ellipse 
-                  cx="88" cy="22" rx="10" ry="18" 
+                  cx="88" cy="22" rx="10" ry="18"
                   fill="#A0522D" stroke="#8B4513" strokeWidth="2"
                   animate={{ rotate: [-8, 8, -8] }}
-                  transition={{ duration: 0.35, repeat: Infinity, ease: 'easeInOut' }}
+                  transition={{ duration: 0.35, repeat: completed ? 0 : 8, ease: 'easeInOut' }}
                   style={{ transformOrigin: '88px 30px' }}
                 />
                 <ellipse cx="90" cy="26" rx="6" ry="12" fill="#DEB887"/>
-                
-                <motion.ellipse 
-                  cx="110" cy="20" rx="10" ry="18" 
+
+                <motion.ellipse
+                  cx="110" cy="20" rx="10" ry="18"
                   fill="#A0522D" stroke="#8B4513" strokeWidth="2"
                   animate={{ rotate: [-8, 8, -8] }}
-                  transition={{ duration: 0.35, repeat: Infinity, ease: 'easeInOut', delay: 0.17 }}
+                  transition={{ duration: 0.35, repeat: completed ? 0 : 8, ease: 'easeInOut', delay: 0.17 }}
                   style={{ transformOrigin: '110px 28px' }}
                 />
                 <ellipse cx="109" cy="24" rx="6" ry="12" fill="#DEB887"/>
@@ -389,9 +400,9 @@ export function PetRainbowBridgeCeremony({
                   stroke="#d63384"
                   strokeWidth="1.5"
                   animate={{ scaleY: [1, 1.15, 1] }}
-                  transition={{ duration: 0.5, repeat: Infinity, ease: 'easeInOut' }}
+                  transition={{ duration: 0.5, repeat: completed ? 0 : 8, ease: 'easeInOut' }}
                 />
-                
+
                 {/* TAIL - Wagging enthusiastically */}
                 <motion.path
                   d="M 24 45 Q 12 38, 6 28"
@@ -400,14 +411,14 @@ export function PetRainbowBridgeCeremony({
                   strokeWidth="7"
                   strokeLinecap="round"
                   animate={{ d: ['M 24 45 Q 12 38, 6 28', 'M 24 45 Q 12 25, 10 15', 'M 24 45 Q 12 38, 6 28'] }}
-                  transition={{ duration: 0.3, repeat: Infinity, ease: 'easeInOut' }}
+                  transition={{ duration: 0.3, repeat: completed ? 0 : 8, ease: 'easeInOut' }}
                 />
                 
                 {/* ANIMATED LEGS - More dynamic running */}
                 {/* Front left leg */}
                 <motion.g
                   animate={{ rotate: [0, -40, 30, -40, 0] }}
-                  transition={{ duration: 0.32, repeat: Infinity, ease: 'linear' }}
+                  transition={{ duration: 0.32, repeat: completed ? 0 : 8, ease: 'linear' }}
                   style={{ transformOrigin: '78px 70px' }}
                 >
                   <line x1="78" y1="70" x2="78" y2="96" stroke="#A0522D" strokeWidth="6" strokeLinecap="round"/>
@@ -417,7 +428,7 @@ export function PetRainbowBridgeCeremony({
                 {/* Front right leg */}
                 <motion.g
                   animate={{ rotate: [0, 30, -40, 30, 0] }}
-                  transition={{ duration: 0.32, repeat: Infinity, ease: 'linear', delay: 0.16 }}
+                  transition={{ duration: 0.32, repeat: completed ? 0 : 8, ease: 'linear', delay: 0.16 }}
                   style={{ transformOrigin: '90px 70px' }}
                 >
                   <line x1="90" y1="70" x2="90" y2="96" stroke="#A0522D" strokeWidth="6" strokeLinecap="round"/>
@@ -427,7 +438,7 @@ export function PetRainbowBridgeCeremony({
                 {/* Back left leg */}
                 <motion.g
                   animate={{ rotate: [0, 30, -40, 30, 0] }}
-                  transition={{ duration: 0.32, repeat: Infinity, ease: 'linear', delay: 0.08 }}
+                  transition={{ duration: 0.32, repeat: completed ? 0 : 8, ease: 'linear', delay: 0.08 }}
                   style={{ transformOrigin: '42px 70px' }}
                 >
                   <line x1="42" y1="70" x2="42" y2="96" stroke="#A0522D" strokeWidth="6" strokeLinecap="round"/>
@@ -437,7 +448,7 @@ export function PetRainbowBridgeCeremony({
                 {/* Back right leg */}
                 <motion.g
                   animate={{ rotate: [0, -40, 30, -40, 0] }}
-                  transition={{ duration: 0.32, repeat: Infinity, ease: 'linear', delay: 0.24 }}
+                  transition={{ duration: 0.32, repeat: completed ? 0 : 8, ease: 'linear', delay: 0.24 }}
                   style={{ transformOrigin: '54px 70px' }}
                 >
                   <line x1="54" y1="70" x2="54" y2="96" stroke="#A0522D" strokeWidth="6" strokeLinecap="round"/>
@@ -488,16 +499,16 @@ export function PetRainbowBridgeCeremony({
                 {/* EARS - Pointed and alert */}
                 <motion.g
                   animate={{ rotate: [-3, 3, -3] }}
-                  transition={{ duration: 0.5, repeat: Infinity, ease: 'easeInOut' }}
+                  transition={{ duration: 0.5, repeat: completed ? 0 : 8, ease: 'easeInOut' }}
                   style={{ transformOrigin: '77px 22px' }}
                 >
                   <path d="M 77 24 L 72 12 L 80 20 Z" fill="#FF8C42" stroke="#E67325" strokeWidth="2"/>
                   <path d="M 77 24 L 75 16 L 78 21 Z" fill="#FFB380"/>
                 </motion.g>
-                
+
                 <motion.g
                   animate={{ rotate: [-3, 3, -3] }}
-                  transition={{ duration: 0.5, repeat: Infinity, ease: 'easeInOut', delay: 0.25 }}
+                  transition={{ duration: 0.5, repeat: completed ? 0 : 8, ease: 'easeInOut', delay: 0.25 }}
                   style={{ transformOrigin: '95px 20px' }}
                 >
                   <path d="M 95 22 L 100 10 L 92 18 Z" fill="#FF8C42" stroke="#E67325" strokeWidth="2"/>
@@ -525,15 +536,15 @@ export function PetRainbowBridgeCeremony({
                   stroke="#E67325"
                   strokeWidth="5"
                   strokeLinecap="round"
-                  animate={{ 
+                  animate={{
                     d: [
-                      'M 20 42 Q 8 30, 4 18', 
-                      'M 20 42 Q 10 24, 8 10', 
+                      'M 20 42 Q 8 30, 4 18',
+                      'M 20 42 Q 10 24, 8 10',
                       'M 20 42 Q 12 32, 10 20',
                       'M 20 42 Q 8 30, 4 18'
                     ]
                   }}
-                  transition={{ duration: 0.4, repeat: Infinity, ease: 'easeInOut' }}
+                  transition={{ duration: 0.4, repeat: completed ? 0 : 8, ease: 'easeInOut' }}
                 />
                 {/* Tail tip - darker */}
                 <motion.circle
@@ -543,14 +554,14 @@ export function PetRainbowBridgeCeremony({
                     cx: [4, 8, 10, 4],
                     cy: [18, 10, 20, 18]
                   }}
-                  transition={{ duration: 0.4, repeat: Infinity, ease: 'easeInOut' }}
+                  transition={{ duration: 0.4, repeat: completed ? 0 : 8, ease: 'easeInOut' }}
                 />
                 
                 {/* ANIMATED LEGS - Graceful cat running */}
                 {/* Front left leg */}
                 <motion.g
                   animate={{ rotate: [0, -35, 25, -35, 0] }}
-                  transition={{ duration: 0.28, repeat: Infinity, ease: 'linear' }}
+                  transition={{ duration: 0.28, repeat: completed ? 0 : 8, ease: 'linear' }}
                   style={{ transformOrigin: '68px 60px' }}
                 >
                   <line x1="68" y1="60" x2="68" y2="80" stroke="#E67325" strokeWidth="5" strokeLinecap="round"/>
@@ -560,7 +571,7 @@ export function PetRainbowBridgeCeremony({
                 {/* Front right leg */}
                 <motion.g
                   animate={{ rotate: [0, 25, -35, 25, 0] }}
-                  transition={{ duration: 0.28, repeat: Infinity, ease: 'linear', delay: 0.14 }}
+                  transition={{ duration: 0.28, repeat: completed ? 0 : 8, ease: 'linear', delay: 0.14 }}
                   style={{ transformOrigin: '78px 60px' }}
                 >
                   <line x1="78" y1="60" x2="78" y2="80" stroke="#E67325" strokeWidth="5" strokeLinecap="round"/>
@@ -570,7 +581,7 @@ export function PetRainbowBridgeCeremony({
                 {/* Back left leg */}
                 <motion.g
                   animate={{ rotate: [0, 25, -35, 25, 0] }}
-                  transition={{ duration: 0.28, repeat: Infinity, ease: 'linear', delay: 0.07 }}
+                  transition={{ duration: 0.28, repeat: completed ? 0 : 8, ease: 'linear', delay: 0.07 }}
                   style={{ transformOrigin: '36px 60px' }}
                 >
                   <line x1="36" y1="60" x2="36" y2="80" stroke="#E67325" strokeWidth="5" strokeLinecap="round"/>
@@ -580,7 +591,7 @@ export function PetRainbowBridgeCeremony({
                 {/* Back right leg */}
                 <motion.g
                   animate={{ rotate: [0, -35, 25, -35, 0] }}
-                  transition={{ duration: 0.28, repeat: Infinity, ease: 'linear', delay: 0.21 }}
+                  transition={{ duration: 0.28, repeat: completed ? 0 : 8, ease: 'linear', delay: 0.21 }}
                   style={{ transformOrigin: '46px 60px' }}
                 >
                   <line x1="46" y1="60" x2="46" y2="80" stroke="#E67325" strokeWidth="5" strokeLinecap="round"/>

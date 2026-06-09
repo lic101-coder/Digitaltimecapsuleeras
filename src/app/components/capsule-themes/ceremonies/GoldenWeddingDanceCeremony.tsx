@@ -41,6 +41,7 @@ export function GoldenWeddingDanceCeremony({
   onComplete
 }: GoldenWeddingDanceCeremonyProps) {
   const [stage, setStage] = useState<'approach' | 'touch' | 'dance' | 'spin' | 'eternal'>('approach');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timers = [
@@ -55,7 +56,16 @@ export function GoldenWeddingDanceCeremony({
       }, 16000)
     ];
 
-    return () => timers.forEach(clearTimeout);
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 17000);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, [isPreview]); // Removed onComplete - don't restart ceremony midway through
 
   // Heart particles for eternal love stage
@@ -105,92 +115,46 @@ export function GoldenWeddingDanceCeremony({
 
             {/* Couple walking in from sides */}
             <motion.div
-              className="absolute left-[30%] top-1/2 -translate-y-1/2 text-7xl"
+              className="absolute left-[28%] top-1/2 -translate-y-1/2"
               initial={{ x: -300, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
             >
-              🤵
-              {/* Nervous heart beating */}
+              <span className="text-7xl select-none">🤵</span>
               <motion.div
                 className="absolute -top-8 left-1/2 -translate-x-1/2 text-3xl"
-                animate={{ 
-                  scale: [1, 1.3, 1],
-                  y: [-3, 3, -3]
-                }}
+                animate={{ scale: [1, 1.3, 1], y: [-3, 3, -3] }}
                 transition={{ duration: 0.8, repeat: Infinity }}
-              >
-                💓
-              </motion.div>
-              
-              {/* Anticipation sparkles */}
+              >💓</motion.div>
               {[0, 1, 2].map(i => (
-                <motion.div
-                  key={`groom-spark-${i}`}
-                  className="absolute text-xl"
-                  style={{
-                    left: `${-20 + i * 20}%`,
-                    top: `${30 + i * 15}%`
-                  }}
-                  animate={{
-                    opacity: [0, 1, 0],
-                    scale: [0, 1.2, 0],
-                    rotate: [0, 180]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    delay: i * 0.3,
-                    repeat: Infinity
-                  }}
-                >
-                  ✨
-                </motion.div>
+                <motion.div key={`partner-spark-${i}`} className="absolute text-xl"
+                  style={{ left: `${-20 + i * 20}%`, top: `${30 + i * 15}%` }}
+                  animate={{ opacity: [0, 1, 0], scale: [0, 1.2, 0], rotate: [0, 180] }}
+                  transition={{ duration: 1.5, delay: i * 0.3, repeat: Infinity }}
+                >✨</motion.div>
               ))}
             </motion.div>
 
             <motion.div
-              className="absolute right-[30%] top-1/2 -translate-y-1/2 text-7xl"
+              className="absolute right-[26%] top-1/2 -translate-y-1/2"
               initial={{ x: 300, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
             >
-              👰
-              {/* Nervous heart beating */}
+              <span className="text-7xl select-none">💃</span>
               <motion.div
                 className="absolute -top-8 left-1/2 -translate-x-1/2 text-3xl"
-                animate={{ 
-                  scale: [1, 1.3, 1],
-                  y: [-3, 3, -3]
-                }}
+                animate={{ scale: [1, 1.3, 1], y: [-3, 3, -3] }}
                 transition={{ duration: 0.8, repeat: Infinity, delay: 0.2 }}
-              >
-                💓
-              </motion.div>
-              
-              {/* Anticipation sparkles */}
+              >💓</motion.div>
               {[0, 1, 2].map(i => (
-                <motion.div
-                  key={`bride-spark-${i}`}
-                  className="absolute text-xl"
-                  style={{
-                    right: `${-20 + i * 20}%`,
-                    top: `${30 + i * 15}%`
-                  }}
-                  animate={{
-                    opacity: [0, 1, 0],
-                    scale: [0, 1.2, 0],
-                    rotate: [0, 180]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    delay: 0.2 + i * 0.3,
-                    repeat: Infinity
-                  }}
-                >
-                  ✨
-                </motion.div>
+                <motion.div key={`lady-spark-${i}`} className="absolute text-xl"
+                  style={{ right: `${-20 + i * 20}%`, top: `${30 + i * 15}%` }}
+                  animate={{ opacity: [0, 1, 0], scale: [0, 1.2, 0], rotate: [0, 180] }}
+                  transition={{ duration: 1.5, delay: 0.2 + i * 0.3, repeat: Infinity }}
+                >✨</motion.div>
               ))}
             </motion.div>
 
@@ -226,7 +190,7 @@ export function GoldenWeddingDanceCeremony({
               exit={{ opacity: 0 }}
             >
               <h2 className="text-3xl font-bold text-rose-200 drop-shadow-lg">
-                Two Souls, One Moment 🤵👰
+                Two Souls, One Moment 💕
               </h2>
             </motion.div>
           </>
@@ -246,9 +210,9 @@ export function GoldenWeddingDanceCeremony({
               transition={{ duration: 0.5 }}
             >
               <div className="relative">
-                <div className="text-8xl flex gap-1">
-                  <span>🤵</span>
-                  <span>👰</span>
+                <div className="flex gap-2 items-center">
+                  <span className="text-8xl select-none">🤵</span>
+                  <span className="text-8xl select-none">💃</span>
                 </div>
                 
                 {/* Golden spark at connection point */}
@@ -443,16 +407,16 @@ export function GoldenWeddingDanceCeremony({
 
             {/* Couple dancing - CENTER FOCUS - ENHANCED WALTZ */}
             <motion.div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-9xl z-20"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
               initial={{ scale: 0.5, opacity: 0, rotate: -20 }}
-              animate={{ 
+              animate={{
                 scale: 1,
                 opacity: 1,
                 rotate: [0, -18, 18, -15, 15, -10, 10, -5, 5, 0],
                 x: [0, -25, 25, -20, 20, -12, 12, -5, 5, 0],
                 y: [0, -15, -8, -12, -5, -10, -3, -5, 0, 0]
               }}
-              transition={{ 
+              transition={{
                 scale: { duration: 0.6, ease: [0.34, 1.56, 0.64, 1] },
                 opacity: { duration: 0.4 },
                 rotate: { duration: 10, repeat: Infinity, ease: [0.43, 0.13, 0.23, 0.96] },
@@ -460,9 +424,9 @@ export function GoldenWeddingDanceCeremony({
                 y: { duration: 10, repeat: Infinity, ease: [0.43, 0.13, 0.23, 0.96] }
               }}
             >
-              <div className="flex gap-2">
-                <span>🤵</span>
-                <span>👰</span>
+              <div className="flex gap-2 items-center">
+                <span className="text-8xl select-none">🤵</span>
+                <span className="text-8xl select-none">💃</span>
               </div>
               
               {/* Glowing dance aura - SMOOTHER COLOR TRANSITIONS */}
@@ -517,29 +481,18 @@ export function GoldenWeddingDanceCeremony({
                 );
               })}
 
-              {/* Dance motion blur trails - ENHANCED */}
+              {/* Dance motion blur trails */}
               {[0, 1, 2].map(i => (
                 <motion.div
                   key={`blur-trail-${i}`}
-                  className="absolute inset-0 text-9xl -z-10"
-                  animate={{
-                    opacity: [0, 0.15, 0],
-                    x: [-15, 15],
-                    y: [-8, 8]
-                  }}
-                  transition={{
-                    duration: 1.2,
-                    delay: i * 0.4,
-                    repeat: Infinity,
-                    ease: [0.43, 0.13, 0.23, 0.96]
-                  }}
-                  style={{
-                    filter: 'blur(8px)'
-                  }}
+                  className="absolute inset-0 -z-10"
+                  animate={{ opacity: [0, 0.12, 0], x: [-15, 15], y: [-8, 8] }}
+                  transition={{ duration: 1.2, delay: i * 0.4, repeat: Infinity, ease: [0.43, 0.13, 0.23, 0.96] }}
+                  style={{ filter: 'blur(8px)' }}
                 >
-                  <div className="flex gap-2">
-                    <span>🤵</span>
-                    <span>👰</span>
+                  <div className="flex gap-2 items-center">
+                    <span className="text-8xl select-none">🤵</span>
+                    <span className="text-8xl select-none">💃</span>
                   </div>
                 </motion.div>
               ))}
@@ -942,17 +895,14 @@ export function GoldenWeddingDanceCeremony({
 
             {/* Couple at center - DRAMATIC SPIN */}
             <motion.div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-9xl z-10"
-              animate={{ 
-                rotate: 720,
-                scale: [1, 1.3, 1]
-              }}
-              transition={{ 
-                rotate: { duration: 4, ease: "easeInOut" },
-                scale: { duration: 4, ease: "easeInOut" }
-              }}
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
+              animate={{ rotate: 720, scale: [1, 1.3, 1] }}
+              transition={{ rotate: { duration: 4, ease: "easeInOut" }, scale: { duration: 4, ease: "easeInOut" } }}
             >
-              💑
+              <div className="flex gap-2 items-center">
+                <span className="text-7xl select-none">🤵</span>
+                <span className="text-7xl select-none">💃</span>
+              </div>
               
               {/* Energy rings during spin */}
               {[0, 1, 2, 3, 4].map(i => (
@@ -1070,8 +1020,8 @@ export function GoldenWeddingDanceCeremony({
                   scale: [1, 1.1, 1]
                 }}
                 transition={{
-                  rotate: { duration: 8, ease: "linear", repeat: Infinity },
-                  scale: { duration: 2, repeat: Infinity }
+                  rotate: { duration: 8, ease: "linear", repeat: completed ? 0 : 2 },
+                  scale: { duration: 2, repeat: completed ? 0 : 4 }
                 }}
               >
                 ♾️
@@ -1089,25 +1039,25 @@ export function GoldenWeddingDanceCeremony({
                   ],
                   scale: [1, 1.5, 1]
                 }}
-                transition={{ duration: 4, repeat: Infinity }}
+                transition={{ duration: 4, repeat: completed ? 0 : 2 }}
               />
             </motion.div>
 
             {/* Couple beneath infinity symbol */}
             <motion.div
-              className="absolute left-1/2 top-[55%] -translate-x-1/2 text-8xl"
+              className="absolute left-1/2 top-[55%] -translate-x-1/2"
               initial={{ scale: 0, y: 50, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
               transition={{ delay: 0.5, type: "spring", damping: 10 }}
             >
               <motion.div
-                animate={{
-                  y: [-10, 10, -10],
-                  rotate: [-3, 3, -3]
-                }}
+                animate={{ y: [-10, 10, -10], rotate: [-3, 3, -3] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               >
-                💑
+                <div className="flex gap-2 items-center">
+                  <span className="text-7xl select-none">🤵</span>
+                  <span className="text-7xl select-none">💃</span>
+                </div>
               </motion.div>
             </motion.div>
 

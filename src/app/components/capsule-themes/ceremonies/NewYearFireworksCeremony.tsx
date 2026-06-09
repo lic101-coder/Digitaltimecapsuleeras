@@ -49,6 +49,7 @@ export function NewYearFireworksCeremony({
 }: NewYearFireworksCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'rockets' | 'wave1' | 'wave2' | 'wave3' | 'finale' | 'radiance' | 'outro'>('intro');
   const [fireworks, setFireworks] = useState<Firework[]>([]);
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -66,7 +67,17 @@ export function NewYearFireworksCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 23500);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   const launchWave1 = () => {
@@ -226,7 +237,7 @@ export function NewYearFireworksCeremony({
           }}
           transition={{
             duration: 2 + Math.random() * 2,
-            repeat: Infinity,
+            repeat: completed ? 0 : 8,
             delay: Math.random() * 2
           }}
         />
@@ -600,7 +611,7 @@ export function NewYearFireworksCeremony({
                   }}
                   transition={{
                     duration: 1,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 8,
                     ease: 'easeInOut'
                   }}
                 >
@@ -746,7 +757,7 @@ export function NewYearFireworksCeremony({
                 animate={{
                   backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
                 }}
-                transition={{ duration: 3, repeat: Infinity }}
+                transition={{ duration: 3, repeat: completed ? 0 : 7 }}
               >
                 HAPPY NEW YEAR! 🎉
               </motion.h1>

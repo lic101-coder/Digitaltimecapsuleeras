@@ -23,6 +23,7 @@ export function PetEternalPlayCeremony({
   onComplete
 }: PetEternalPlayCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'seed' | 'bloom' | 'pets' | 'transform' | 'space' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -38,7 +39,17 @@ export function PetEternalPlayCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 17000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
@@ -181,10 +192,10 @@ export function PetEternalPlayCeremony({
                     scale: 1, 
                     opacity: stage === 'transform' ? [1, 0.75, 1] : 1 
                   }}
-                  transition={{ 
-                    duration: 0.7, 
+                  transition={{
+                    duration: 0.7,
                     delay: i * 0.035,
-                    repeat: stage === 'transform' ? Infinity : 0,
+                    repeat: stage === 'transform' ? (completed ? 0 : 5) : 0,
                     repeatType: 'reverse',
                     repeatDelay: 0.2
                   }}
@@ -232,7 +243,7 @@ export function PetEternalPlayCeremony({
                       ]
                     : '0 0 40px #ec4899, 0 0 80px #f472b6'
                 }}
-                transition={{ duration: 3, repeat: stage === 'transform' ? Infinity : 0 }}
+                transition={{ duration: 3, repeat: stage === 'transform' ? (completed ? 0 : 3) : 0 }}
               >
                 {/* Individual cherry blossom clusters for detail */}
                 {[...Array(12)].map((_, i) => {
@@ -281,7 +292,7 @@ export function PetEternalPlayCeremony({
                       transition={{
                         duration: 3 + Math.random() * 2,
                         delay: i * 0.3,
-                        repeat: Infinity,
+                        repeat: completed ? 0 : 2,
                         ease: 'linear'
                       }}
                     >
@@ -309,7 +320,7 @@ export function PetEternalPlayCeremony({
                 }}
                 transition={{
                   duration: 6 + i * 0.4,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 2,
                   delay: i * 0.5,
                   ease: 'easeInOut'
                 }}
@@ -340,8 +351,8 @@ export function PetEternalPlayCeremony({
                 rotate: stage === 'transform' ? [0, -4, 4, 0] : 0
               }}
               transition={{
-                left: { duration: 3.5, repeat: stage === 'transform' ? Infinity : 0, ease: 'easeInOut' },
-                rotate: { duration: 1.8, repeat: stage === 'transform' ? Infinity : 0 },
+                left: { duration: 3.5, repeat: stage === 'transform' ? (completed ? 0 : 2) : 0, ease: 'easeInOut' },
+                rotate: { duration: 1.8, repeat: stage === 'transform' ? (completed ? 0 : 4) : 0 },
                 opacity: { duration: 1.2 }
               }}
             >
@@ -363,7 +374,7 @@ export function PetEternalPlayCeremony({
                 scale: stage === 'transform' ? [1, 1.1, 1] : 1
               }}
               transition={{
-                scale: { duration: 3, repeat: stage === 'transform' ? Infinity : 0 },
+                scale: { duration: 3, repeat: stage === 'transform' ? (completed ? 0 : 3) : 0 },
                 opacity: { duration: 1.2, delay: 0.4 }
               }}
             >
@@ -384,8 +395,8 @@ export function PetEternalPlayCeremony({
                 scale: stage === 'transform' ? [1, 1.05, 1] : 1
               }}
               transition={{
-                y: { duration: 2, repeat: stage === 'transform' ? Infinity : 0 },
-                scale: { duration: 2, repeat: stage === 'transform' ? Infinity : 0 },
+                y: { duration: 2, repeat: stage === 'transform' ? (completed ? 0 : 4) : 0 },
+                scale: { duration: 2, repeat: stage === 'transform' ? (completed ? 0 : 4) : 0 },
                 opacity: { duration: 1.2, delay: 0.7 }
               }}
             >
@@ -407,7 +418,7 @@ export function PetEternalPlayCeremony({
                 y: stage === 'transform' ? [0, -30, 0] : 0
               }}
               transition={{
-                y: { duration: 1.4, repeat: stage === 'transform' ? Infinity : 0, repeatDelay: 0.7 },
+                y: { duration: 1.4, repeat: stage === 'transform' ? (completed ? 0 : 4) : 0, repeatDelay: 0.7 },
                 opacity: { duration: 1.2, delay: 1 }
               }}
             >
@@ -438,7 +449,7 @@ export function PetEternalPlayCeremony({
                     transition={{
                       duration: 3,
                       delay: i * 0.18,
-                      repeat: Infinity
+                      repeat: completed ? 0 : 3
                     }}
                   />
                 ))}
@@ -478,7 +489,7 @@ export function PetEternalPlayCeremony({
             <motion.div
               className="absolute inset-0"
               animate={{ opacity: [0.5, 0.8, 0.5] }}
-              transition={{ duration: 5, repeat: Infinity }}
+              transition={{ duration: 5, repeat: completed ? 0 : 2 }}
             >
               <div
                 style={{

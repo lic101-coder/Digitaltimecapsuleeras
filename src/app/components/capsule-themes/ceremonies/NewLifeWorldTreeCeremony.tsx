@@ -12,7 +12,7 @@
  * 
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface NewLifeWorldTreeCeremonyProps {
@@ -29,6 +29,7 @@ export function NewLifeWorldTreeCeremony({
   onComplete
 }: NewLifeWorldTreeCeremonyProps) {
   const [stage, setStage] = useState<'predawn' | 'firstlight' | 'rays' | 'painting'>('predawn');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -40,30 +41,78 @@ export function NewLifeWorldTreeCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 23000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   const isLit = stage !== 'predawn';
   const isRadiant = stage === 'rays' || stage === 'painting';
   const isPainting = stage === 'painting';
 
+  // Stable flower/butterfly data — computed once so Math.random() never re-runs on render
+  const midFlowers = useMemo(() => {
+    const types = ['🌸', '🌺', '🌼', '🌻', '🌷', '🦋', '🌸', '🌺', '🦋', '🌼'];
+    return Array.from({ length: 80 }, (_, i) => ({
+      emoji: types[i % types.length],
+      x: (i / 80) * 100,
+      y: 5 + Math.random() * 26,
+      size: 11 + Math.random() * 10,
+      delay: 0.6 + i * 0.02,
+    }));
+  }, []);
+
+  const fgFlowers = useMemo(() => {
+    const types = ['🌸', '🌺', '🌼', '🌻', '🌷'];
+    return Array.from({ length: 40 }, (_, i) => ({
+      emoji: types[i % types.length],
+      x: (i / 40) * 100,
+      y: Math.random() * 7,
+      size: 18 + Math.random() * 14,
+      blur: Math.random() < 0.2,
+      delay: 1.2 + i * 0.025,
+    }));
+  }, []);
+
   return (
     <div className="relative w-full h-full overflow-hidden bg-black flex items-center justify-center">
       
-      {/* DYNAMIC SKY GRADIENT */}
-      <motion.div 
+      {/* CINEMATIC SUNRISE SKY - National Geographic quality */}
+      <motion.div
         className="absolute inset-0 z-0"
         animate={{
           background: isPainting
-            ? 'linear-gradient(to bottom, #fbbf24 0%, #fb923c 18%, #f472b6 38%, #c084fc 58%, #818cf8 78%, #4f46e5 100%)'
+            ? 'linear-gradient(to bottom, #93c5fd 0%, #60a5fa 8%, #fbbf24 22%, #f97316 36%, #fb7185 52%, #ec4899 66%, #c026d3 80%, #7e22ce 100%)'
             : isRadiant
-            ? 'linear-gradient(to bottom, #fcd34d 0%, #fbbf24 20%, #fb923c 40%, #f472b6 60%, #c084fc 80%, #8b5cf6 100%)'
+            ? 'linear-gradient(to bottom, #bfdbfe 0%, #93c5fd 10%, #fcd34d 24%, #fbbf24 38%, #fb923c 52%, #f97316 66%, #c026d3 82%, #581c87 100%)'
             : isLit
-            ? 'linear-gradient(to bottom, #94a3b8 0%, #64748b 25%, #475569 50%, #334155 75%, #1e293b 100%)'
-            : 'linear-gradient(to bottom, #0f172a 0%, #1e293b 30%, #334155 70%, #475569 100%)'
+            ? 'linear-gradient(to bottom, #1e3a5f 0%, #2d5986 18%, #f97316 38%, #fbbf24 55%, #fde68a 72%, #fef9c3 100%)'
+            : 'linear-gradient(to bottom, #020617 0%, #0f172a 25%, #1e1b4b 60%, #312e81 85%, #3730a3 100%)'
         }}
-        transition={{ duration: 3.5, ease: [0.4, 0, 0.2, 1] }}
+        transition={{ duration: 4, ease: [0.4, 0, 0.2, 1] }}
       />
+
+      {/* ENHANCED: Atmospheric color wash during sunrise */}
+      {isRadiant && (
+        <motion.div
+          className="absolute inset-0 z-1 pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse at 50% 60%, rgba(251, 191, 36, 0.3) 0%, rgba(251, 146, 60, 0.2) 30%, transparent 60%)',
+            mixBlendMode: 'overlay'
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.8, 0.6] }}
+          transition={{ duration: 3.5, delay: 1, ease: 'easeOut' }}
+        />
+      )}
 
       {/* STARS - Fade out as sun rises */}
       <AnimatePresence>
@@ -92,7 +141,7 @@ export function NewLifeWorldTreeCeremony({
                   exit={{ opacity: 0 }}
                   transition={{
                     duration: 2 + Math.random() * 1.5,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 10,
                     delay: i * 0.006
                   }}
                 />
@@ -102,7 +151,7 @@ export function NewLifeWorldTreeCeremony({
         )}
       </AnimatePresence>
 
-      {/* DISTANT MOUNTAIN RANGE - SIMPLE REALISTIC TRIANGULAR PEAKS */}
+      {/* ENHANCED: DISTANT MOUNTAIN RANGE - MAJESTIC LAYERED PEAKS */}
       <motion.div
         className="absolute z-10"
         style={{
@@ -120,14 +169,33 @@ export function NewLifeWorldTreeCeremony({
         }}
         transition={{ duration: 3, ease: [0.4, 0, 0.2, 1] }}
       >
-        {/* Simple mountain peaks - classic triangular shapes with varied heights */}
+        {/* Atmospheric haze in valleys - DEPTH EFFECT */}
+        {isPainting && [0, 1, 2, 3, 4].map(i => (
+          <motion.div
+            key={`valley-mist-${i}`}
+            style={{
+              position: 'absolute',
+              left: `${15 + i * 18}%`,
+              bottom: '0',
+              width: '120px',
+              height: '35%',
+              background: 'linear-gradient(to top, rgba(251, 191, 36, 0.25), rgba(251, 191, 36, 0.15) 40%, transparent)',
+              filter: 'blur(25px)',
+              mixBlendMode: 'overlay'
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.7, 0.5] }}
+            transition={{ duration: 2.5, delay: 2 + i * 0.3, ease: 'easeOut' }}
+          />
+        ))}
+
+        {/* DRAMATICALLY DIFFERENT MOUNTAIN COLORS - DEEP PURPLE/MAGENTA */}
         {[
-          { left: '8%', height: '75%', width: '15%', peakOffset: '48%' },
-          { left: '20%', height: '88%', width: '18%', peakOffset: '52%' },
-          { left: '35%', height: '100%', width: '20%', peakOffset: '50%' },
-          { left: '52%', height: '85%', width: '17%', peakOffset: '47%' },
-          { left: '66%', height: '92%', width: '19%', peakOffset: '51%' },
-          { left: '82%', height: '78%', width: '16%', peakOffset: '49%' }
+          { left: '5%', height: '80%', width: '18%', peakOffset: '48%' },
+          { left: '18%', height: '95%', width: '21%', peakOffset: '52%' },
+          { left: '35%', height: '110%', width: '24%', peakOffset: '50%' },
+          { left: '55%', height: '92%', width: '20%', peakOffset: '47%' },
+          { left: '72%', height: '98%', width: '22%', peakOffset: '51%' }
         ].map((peak, i) => (
           <div
             key={i}
@@ -138,12 +206,13 @@ export function NewLifeWorldTreeCeremony({
               width: peak.width,
               height: peak.height,
               clipPath: `polygon(${peak.peakOffset} 0%, 0% 100%, 100% 100%)`,
-              background: isLit 
-                ? i % 2 === 0 
-                  ? 'linear-gradient(125deg, #475569 0%, #334155 50%, #1e293b 100%)'
-                  : 'linear-gradient(125deg, #334155 0%, #1e293b 50%, #0f172a 100%)'
+              background: isLit
+                ? i % 2 === 0
+                  ? 'linear-gradient(125deg, #5f27cd 0%, #341f97 50%, #2c3a47 100%)'
+                  : 'linear-gradient(125deg, #341f97 0%, #2c3a47 50%, #1e272e 100%)'
                 : 'linear-gradient(125deg, #0f172a 0%, #020617 50%, #000000 100%)',
-              filter: isRadiant ? 'brightness(1.15)' : 'brightness(0.85)',
+              filter: isRadiant ? 'brightness(1.3) saturate(1.4)' : 'brightness(0.85)',
+              boxShadow: isRadiant ? `inset 0 0 60px rgba(255, 107, 53, 0.4)` : 'none',
               willChange: 'filter'
             }}
           />
@@ -182,7 +251,7 @@ export function NewLifeWorldTreeCeremony({
         })}
       </motion.div>
 
-      {/* GRASSY PLAIN - Ground extending from bottom to horizon */}
+      {/* DRAMATICALLY DIFFERENT GROUND - GOLDEN/YELLOW MEADOW */}
       <motion.div
         className="absolute z-18"
         style={{
@@ -191,9 +260,9 @@ export function NewLifeWorldTreeCeremony({
           bottom: '0',
           height: '38%',
           background: isPainting
-            ? 'linear-gradient(to bottom, rgba(34, 197, 94, 0.95) 0%, rgba(22, 163, 74, 1) 45%, rgba(21, 128, 61, 1) 100%)'
+            ? 'linear-gradient(to bottom, rgba(250, 204, 21, 0.95) 0%, rgba(234, 179, 8, 1) 45%, rgba(202, 138, 4, 1) 100%)'
             : isLit
-            ? 'linear-gradient(to bottom, rgba(21, 128, 61, 0.7) 0%, rgba(20, 83, 45, 0.85) 45%, rgba(14, 61, 33, 1) 100%)'
+            ? 'linear-gradient(to bottom, rgba(202, 138, 4, 0.7) 0%, rgba(161, 98, 7, 0.85) 45%, rgba(133, 77, 14, 1) 100%)'
             : 'linear-gradient(to bottom, rgba(15, 23, 42, 0.5) 0%, rgba(14, 61, 33, 0.7) 45%, rgba(7, 30, 16, 1) 100%)'
         }}
         initial={{ opacity: 0 }}
@@ -253,42 +322,23 @@ export function NewLifeWorldTreeCeremony({
         )}
       </AnimatePresence>
 
-      {/* WILDFLOWERS on plain - Mid-ground */}
+      {/* WILDFLOWERS + BUTTERFLIES on plain - Mid-ground */}
       <AnimatePresence>
         {isPainting && (
           <>
-            {[...Array(80)].map((_, i) => {
-              const flowers = ['🌸', '🌺', '🌼', '🌻', '🌷', '🏵️', '💮', '🌹'];
-              const xPos = (i / 80) * 100;
-              const yPos = 5 + (Math.random() * 28);
-              const size = 11 + Math.random() * 10;
-              
-              return (
-                <motion.div
-                  key={`plain-flower-${i}`}
-                  className="absolute z-20"
-                  style={{
-                    left: `${xPos}%`,
-                    bottom: `${yPos}%`,
-                    fontSize: `${size}px`
-                  }}
-                  initial={{ scale: 0, rotate: 0, opacity: 0, y: 12 }}
-                  animate={{
-                    scale: [0, 1.3, 1],
-                    rotate: [0, 15, -8, 0],
-                    opacity: [0, 1],
-                    y: [12, 0]
-                  }}
-                  transition={{
-                    duration: 1.3,
-                    delay: 0.8 + i * 0.025,
-                    ease: [0.4, 0, 0.2, 1]
-                  }}
-                >
-                  {flowers[i % flowers.length]}
-                </motion.div>
-              );
-            })}
+            {midFlowers.map((f, i) => (
+              <motion.div
+                key={`plain-flower-${i}`}
+                className="absolute z-20"
+                style={{ left: `${f.x}%`, bottom: `${f.y}%`, fontSize: `${f.size}px` }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ duration: 0.7, delay: f.delay, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {f.emoji}
+              </motion.div>
+            ))}
           </>
         )}
       </AnimatePresence>
@@ -303,127 +353,225 @@ export function NewLifeWorldTreeCeremony({
               bottom: '58%',
               transform: 'translateX(-50%)'
             }}
-            initial={{ y: 350, scale: 0.5, opacity: 0 }}
+            initial={{ y: 200, scale: 0.95, opacity: 0 }}
             animate={{
-              y: isRadiant ? -100 : 0,
-              scale: isRadiant ? 2 : 1,
+              y: isRadiant ? -15 : 80,
+              scale: isRadiant ? 1.25 : 0.95,
               opacity: 1
             }}
             transition={{
-              duration: stage === 'firstlight' ? 4.5 : 5.5,
-              ease: [0.22, 1, 0.36, 1]
+              duration: stage === 'firstlight' ? 5 : 6,
+              ease: [0.25, 0.46, 0.45, 0.94]
             }}
           >
-            {/* Main sun disc - perfectly smooth */}
-            <div
+            {/* SUN DISC - clean radial gradient, no internal ray artifacts */}
+            <motion.div
               style={{
-                width: '360px',
-                height: '360px',
+                width: '300px',
+                height: '300px',
                 borderRadius: '50%',
-                background: isRadiant 
-                  ? 'radial-gradient(circle at center, #ffffff 0%, #fffbeb 15%, #fef9c3 30%, #fde68a 45%, #fbbf24 60%, #fb923c 75%, #f97316 90%, #ea580c 100%)'
-                  : 'radial-gradient(circle at center, #ffffff 0%, #fef9c3 25%, #fbbf24 55%, #fb923c 80%, #f97316 100%)',
+                background: isRadiant
+                  ? 'radial-gradient(circle at center, #ffffff 0%, #fffff0 10%, #fffde7 20%, #fff9c4 32%, #fef3c7 44%, #fde68a 58%, #fbbf24 74%, #f59e0b 88%, #f97316 100%)'
+                  : 'radial-gradient(circle at center, #ffffff 0%, #fff9c4 22%, #fde68a 46%, #fbbf24 70%, #f59e0b 88%, #f97316 100%)',
                 boxShadow: isRadiant
-                  ? '0 0 450px rgba(251, 191, 36, 1), 0 0 900px rgba(251, 146, 60, 0.9), 0 0 1400px rgba(249, 115, 22, 0.65)'
-                  : '0 0 280px rgba(251, 191, 36, 0.95), 0 0 550px rgba(251, 146, 60, 0.65)',
+                  ? [
+                      '0 0 0 18px rgba(251, 191, 36, 0.35)',
+                      '0 0 0 40px rgba(251, 146, 60, 0.2)',
+                      '0 0 0 80px rgba(249, 115, 22, 0.1)',
+                      '0 0 100px 50px rgba(251, 191, 36, 0.75)',
+                      '0 0 200px 80px rgba(251, 146, 60, 0.45)',
+                      '0 0 380px 100px rgba(249, 115, 22, 0.22)'
+                    ].join(', ')
+                  : [
+                      '0 0 0 12px rgba(251, 191, 36, 0.28)',
+                      '0 0 0 28px rgba(251, 146, 60, 0.14)',
+                      '0 0 70px 35px rgba(251, 191, 36, 0.6)',
+                      '0 0 140px 50px rgba(251, 146, 60, 0.32)'
+                    ].join(', '),
                 willChange: 'transform'
               }}
+              animate={{ scale: isRadiant ? [1, 1.05, 1] : 1 }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
             />
-            
-            {/* Sun corona rays - EPIC explosion */}
-            {[...Array(32)].map((_, i) => {
-              const angle = (i / 32) * 360;
+
+            {/* 12 clean sun rays — left edge starts at sun centre, rotate from there */}
+            {[...Array(12)].map((_, i) => {
+              const angle = i * 30;
               return (
                 <motion.div
-                  key={i}
+                  key={`ray-${i}`}
                   style={{
                     position: 'absolute',
                     left: '50%',
                     top: '50%',
-                    width: isRadiant ? '420px' : '220px',
-                    height: isRadiant ? '8px' : '4.5px',
-                    background: isRadiant 
-                      ? 'linear-gradient(to right, rgba(251, 191, 36, 1), rgba(251, 146, 60, 0.8) 55%, rgba(249, 115, 22, 0.4) 80%, transparent)'
-                      : 'linear-gradient(to right, rgba(251, 191, 36, 0.9), rgba(251, 146, 60, 0.5) 60%, transparent)',
-                    transformOrigin: 'left center',
-                    transform: `translate(-50%, -50%) rotate(${angle}deg)`,
-                    filter: 'blur(4px)'
+                    height: isRadiant ? '8px' : '5px',
+                    marginTop: isRadiant ? '-4px' : '-2.5px',
+                    background: 'linear-gradient(to right, rgba(255,255,255,0.75), rgba(251,191,36,0.5) 30%, rgba(249,115,22,0.25) 65%, transparent)',
+                    transformOrigin: '0% 50%',
+                    transform: `rotate(${angle}deg)`,
+                    borderRadius: '0 4px 4px 0',
+                    pointerEvents: 'none'
                   }}
                   animate={{
-                    width: isRadiant ? ['420px', '550px', '420px'] : '220px',
-                    opacity: isRadiant ? [0.95, 1, 0.95] : [0.8, 1, 0.8],
-                    scaleY: isRadiant ? [1, 1.8, 1] : 1
+                    width: isRadiant ? ['160px', '210px', '160px'] : ['90px', '110px', '90px'],
+                    opacity: isRadiant ? [0.85, 1, 0.85] : [0.55, 0.75, 0.55]
                   }}
                   transition={{
-                    duration: 2.2,
+                    duration: 2.8,
                     repeat: Infinity,
-                    delay: i * 0.035
+                    delay: i * 0.18,
+                    ease: 'easeInOut'
                   }}
                 />
               );
             })}
 
-            {/* Explosive radiance at peak */}
+            {/* Soft corona halo ring */}
+            <motion.div
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                width: isRadiant ? '420px' : '340px',
+                height: isRadiant ? '420px' : '340px',
+                transform: 'translate(-50%, -50%)',
+                borderRadius: '50%',
+                background: isRadiant
+                  ? 'radial-gradient(circle at center, transparent 40%, rgba(251,191,36,0.18) 55%, rgba(251,146,60,0.1) 72%, transparent 88%)'
+                  : 'radial-gradient(circle at center, transparent 44%, rgba(251,191,36,0.14) 58%, transparent 80%)',
+                pointerEvents: 'none'
+              }}
+              animate={{ scale: isRadiant ? [1, 1.08, 1] : 1 }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            />
+
+            {/* Radiant atmosphere bloom at peak */}
             {isRadiant && (
               <motion.div
                 style={{
                   position: 'absolute',
                   left: '50%',
                   top: '50%',
-                  width: '750px',
-                  height: '750px',
+                  width: '700px',
+                  height: '700px',
                   transform: 'translate(-50%, -50%)',
                   borderRadius: '50%',
-                  background: 'radial-gradient(circle at center, rgba(251, 191, 36, 0.7), rgba(251, 146, 60, 0.5) 35%, rgba(249, 115, 22, 0.25) 65%, transparent)',
-                  filter: 'blur(80px)',
+                  background: 'radial-gradient(circle at center, rgba(251,191,36,0.45) 0%, rgba(251,146,60,0.28) 35%, rgba(249,115,22,0.12) 62%, transparent 80%)',
+                  filter: 'blur(55px)',
                   pointerEvents: 'none'
                 }}
                 initial={{ scale: 0, opacity: 0 }}
-                animate={{
-                  scale: [0, 1.8, 1.5],
-                  opacity: [0, 1, 0.85]
-                }}
-                transition={{
-                  duration: 3.5,
-                  ease: 'easeOut'
-                }}
+                animate={{ scale: [0, 1.7, 1.4], opacity: [0, 0.95, 0.8] }}
+                transition={{ duration: 3.5, ease: 'easeOut' }}
               />
             )}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* VOLUMETRIC GOD RAYS */}
+      {/* ENHANCED: VOLUMETRIC GOD RAYS - CHRISTOPHER NOLAN CINEMATOGRAPHY */}
       <AnimatePresence>
         {(stage === 'rays' || isPainting) && (
           <>
-            {[...Array(18)].map((_, i) => {
-              const angle = -65 + (i * 7.5);
-              const height = 900 + Math.random() * 500;
-              
+            {/* MASSIVE CINEMATIC GOD RAYS - Christopher Nolan level */}
+            {[...Array(24)].map((_, i) => {
+              const angle = -70 + (i * 6);
+              const height = 1000 + Math.random() * 600;
+              const intensity = 0.4 + (1 - Math.abs(i - 12) / 12) * 0.4; // Stronger in center
+
               return (
                 <motion.div
-                  key={i}
+                  key={`godray-${i}`}
                   className="absolute z-16"
                   style={{
                     left: '50%',
                     bottom: '58%',
-                    width: '12px',
+                    width: '18px',
                     height: `${height}px`,
-                    background: 'linear-gradient(to top, rgba(251, 191, 36, 0.35), rgba(251, 191, 36, 0.18) 45%, transparent)',
+                    background: `linear-gradient(to top, rgba(251, 191, 36, ${intensity}), rgba(251, 191, 36, ${intensity * 0.65}) 40%, rgba(251, 191, 36, ${intensity * 0.3}) 70%, transparent)`,
                     transformOrigin: 'bottom center',
                     transform: `translateX(-50%) rotate(${angle}deg)`,
-                    filter: 'blur(18px)'
+                    filter: 'blur(20px)',
+                    mixBlendMode: 'screen'
                   }}
                   initial={{ scaleY: 0, opacity: 0 }}
                   animate={{
-                    scaleY: [0, 1.1, 1],
-                    opacity: [0, 0.9, 0.75]
+                    scaleY: [0, 1.15, 1],
+                    opacity: [0, 1, 0.85],
+                    width: isPainting ? ['18px', '24px', '18px'] : '18px'
                   }}
                   transition={{
-                    duration: 2.5,
-                    delay: i * 0.12,
+                    scaleY: { duration: 3, delay: i * 0.1, ease: 'easeOut' },
+                    opacity: { duration: 3, delay: i * 0.1, ease: 'easeOut' },
+                    width: { duration: 3.5, delay: 2.5, repeat: completed ? 0 : 2, ease: 'easeInOut' }
+                  }}
+                />
+              );
+            })}
+
+            {/* Secondary atmospheric rays for depth */}
+            {isPainting && [...Array(12)].map((_, i) => {
+              const angle = -60 + (i * 10);
+              const height = 700 + Math.random() * 400;
+
+              return (
+                <motion.div
+                  key={`atmos-ray-${i}`}
+                  className="absolute z-15"
+                  style={{
+                    left: '50%',
+                    bottom: '58%',
+                    width: '20px',
+                    height: `${height}px`,
+                    background: 'linear-gradient(to top, rgba(255, 243, 199, 0.2), rgba(255, 243, 199, 0.1) 40%, transparent)',
+                    transformOrigin: 'bottom center',
+                    transform: `translateX(-50%) rotate(${angle}deg)`,
+                    filter: 'blur(30px)',
+                    mixBlendMode: 'overlay'
+                  }}
+                  initial={{ scaleY: 0, opacity: 0 }}
+                  animate={{
+                    scaleY: [0, 1.05, 1],
+                    opacity: [0, 0.6, 0.5]
+                  }}
+                  transition={{
+                    duration: 3,
+                    delay: 1.5 + i * 0.15,
                     ease: 'easeOut'
+                  }}
+                />
+              );
+            })}
+
+            {/* Dust particles floating in god rays */}
+            {isPainting && [...Array(30)].map((_, i) => {
+              const xPos = 45 + Math.random() * 10;
+              const yPos = 40 + Math.random() * 35;
+
+              return (
+                <motion.div
+                  key={`dust-${i}`}
+                  className="absolute z-17 rounded-full"
+                  style={{
+                    left: `${xPos}%`,
+                    top: `${yPos}%`,
+                    width: '3px',
+                    height: '3px',
+                    background: 'rgba(251, 243, 199, 0.8)',
+                    boxShadow: '0 0 8px rgba(251, 191, 36, 0.6)',
+                    filter: 'blur(1px)'
+                  }}
+                  initial={{ opacity: 0, y: 0 }}
+                  animate={{
+                    opacity: [0, 0.8, 0.6, 0.8],
+                    y: [-30, 15, -20],
+                    x: [0, Math.sin(i) * 15, Math.cos(i) * 10]
+                  }}
+                  transition={{
+                    duration: 8 + Math.random() * 4,
+                    delay: 2 + Math.random() * 2,
+                    repeat: completed ? 0 : 1,
+                    ease: 'easeInOut'
                   }}
                 />
               );
@@ -561,39 +709,24 @@ export function NewLifeWorldTreeCeremony({
       <AnimatePresence>
         {isPainting && (
           <>
-            {[...Array(40)].map((_, i) => {
-              const flowers = ['🌸', '🌺', '🌼', '🌻', '🌷'];
-              const xPos = (i / 40) * 100;
-              const yPos = 0 + (Math.random() * 8);
-              const size = 18 + Math.random() * 14;
-              
-              return (
-                <motion.div
-                  key={`foreground-flower-${i}`}
-                  className="absolute z-38"
-                  style={{
-                    left: `${xPos}%`,
-                    bottom: `${yPos}%`,
-                    fontSize: `${size}px`,
-                    filter: yPos < 3 ? 'blur(1px)' : 'none'
-                  }}
-                  initial={{ scale: 0, rotate: 0, opacity: 0, y: 18 }}
-                  animate={{
-                    scale: [0, 1.35, 1],
-                    rotate: [0, 20, -10, 0],
-                    opacity: [0, 1],
-                    y: [18, 0]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    delay: 1.5 + i * 0.03,
-                    ease: [0.4, 0, 0.2, 1]
-                  }}
-                >
-                  {flowers[i % flowers.length]}
-                </motion.div>
-              );
-            })}
+            {fgFlowers.map((f, i) => (
+              <motion.div
+                key={`fg-flower-${i}`}
+                className="absolute z-38"
+                style={{
+                  left: `${f.x}%`,
+                  bottom: `${f.y}%`,
+                  fontSize: `${f.size}px`,
+                  filter: f.blur ? 'blur(1px)' : 'none'
+                }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ duration: 0.8, delay: f.delay, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {f.emoji}
+              </motion.div>
+            ))}
           </>
         )}
       </AnimatePresence>

@@ -29,6 +29,7 @@ export function NewNestTimeLapseCeremony({
 }: NewNestTimeLapseCeremonyProps) {
   const [stage, setStage] = useState<'blueprint' | 'construction' | 'moving' | 'life' | 'seasons' | 'aging' | 'present' | 'outro'>('blueprint');
   const [constructionPhase, setConstructionPhase] = useState<'foundation' | 'framing' | 'walls'>('foundation');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -44,7 +45,17 @@ export function NewNestTimeLapseCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 17500);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   // Construction phase manager
@@ -542,7 +553,7 @@ export function NewNestTimeLapseCeremony({
                   transition={{
                     duration: 2,
                     delay: i * 0.03,
-                    repeat: Infinity
+                    repeat: completed ? 0 : 7
                   }}
                 />
               ))}
@@ -681,7 +692,7 @@ export function NewNestTimeLapseCeremony({
                     }}
                     transition={{
                       duration: 3,
-                      repeat: Infinity,
+                      repeat: completed ? 0 : 5,
                       ease: 'easeInOut'
                     }}
                   >

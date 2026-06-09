@@ -26,6 +26,7 @@ export function NewYearChampagneCeremony({
   onComplete
 }: NewYearChampagneCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'bottle' | 'unwrap' | 'cork' | 'fountain' | 'nebula' | 'stars' | 'radiance' | 'outro'>('intro');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -42,7 +43,17 @@ export function NewYearChampagneCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 15500);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
@@ -95,7 +106,7 @@ export function NewYearChampagneCeremony({
               animate={{
                 filter: ['brightness(1)', 'brightness(1.3)', 'brightness(1)']
               }}
-              transition={{ duration: 2, repeat: Infinity }}
+              transition={{ duration: 2, repeat: completed ? 0 : 7 }}
             >
               Champagne Dreams
             </motion.h1>
@@ -1060,7 +1071,7 @@ export function NewYearChampagneCeremony({
                   }}
                   transition={{
                     duration: 2,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 7,
                     ease: 'easeInOut'
                   }}
                 >
@@ -1099,7 +1110,7 @@ export function NewYearChampagneCeremony({
                     'drop-shadow(0 4px 20px rgba(251, 191, 36, 0.6))'
                   ]
                 }}
-                transition={{ duration: 1.5, repeat: Infinity }}
+                transition={{ duration: 1.5, repeat: completed ? 0 : 7 }}
               >
                 CHEERS! 🥂
               </motion.h1>

@@ -1,243 +1,295 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, Info, Lock, Sparkles } from 'lucide-react';
+import { Check, Lock, Sparkles } from 'lucide-react';
 import { THEMES, ThemeId, ThemeConfig } from './ThemeRegistry';
-import { Card } from '../ui/card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { useIsMobile } from '../ui/use-mobile';
 
 interface ThemeSelectorProps {
   selectedThemeId: string;
   onSelectTheme: (themeId: string) => void;
-  purchasedThemes?: string[]; // Array of purchased theme IDs
-  purchasedThemesLoading?: boolean; // Loading state to prevent flicker
-  onNavigateToStore?: () => void; // Callback to navigate to Store
+  purchasedThemes?: string[];
+  purchasedThemesLoading?: boolean;
+  onNavigateToStore?: () => void;
 }
 
-// Free themes that are always unlocked
 const FREE_THEME_IDS = ['standard', 'birthday', 'anniversary', 'first_day'];
 
-export function ThemeSelector({ selectedThemeId, onSelectTheme, purchasedThemes = [], purchasedThemesLoading = false, onNavigateToStore }: ThemeSelectorProps) {
+// ── Individual theme card ─────────────────────────────────────────────────────
+function ThemeCard({
+  theme,
+  isSelected,
+  isLocked,
+  isFeatured,
+  justSelected,
+  onClick,
+  isMobile,
+}: {
+  theme: ThemeConfig;
+  isSelected: boolean;
+  isLocked: boolean;
+  isFeatured: boolean;
+  justSelected: boolean;
+  onClick: () => void;
+  isMobile: boolean;
+}) {
+  const Icon = theme.icon;
+  const accentColor = isFeatured ? '#3b82f6' : theme.primaryColor;
+
+  return (
+    <motion.div
+      onClick={onClick}
+      whileHover={{ scale: isMobile ? 1.01 : 1.02, y: -2 }}
+      whileTap={{ scale: 0.97 }}
+      animate={justSelected ? { scale: [1, 1.04, 1] } : {}}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
+      className="cursor-pointer h-full"
+    >
+      <div
+        className={`
+          relative h-full rounded-2xl overflow-hidden
+          transition-all duration-300
+          ${isLocked
+            ? 'border border-white/8 bg-white/[0.03] opacity-70 hover:opacity-90'
+            : isSelected
+              ? 'border-2 border-white shadow-[0_0_0_4px_rgba(255,255,255,0.12)] bg-white/[0.08]'
+              : 'border border-white/10 bg-white/[0.04] hover:border-white/25 hover:bg-white/[0.07]'
+          }
+        `}
+      >
+        {/* Colored top strip */}
+        <div
+          className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl"
+          style={{ background: isLocked ? 'rgba(255,255,255,0.1)' : accentColor }}
+        />
+
+        {/* Soft color wash beneath top strip when selected */}
+        {isSelected && !isLocked && (
+          <div
+            className="absolute top-0 left-0 right-0 h-24 pointer-events-none"
+            style={{
+              background: `linear-gradient(to bottom, ${accentColor}22 0%, transparent 100%)`,
+            }}
+          />
+        )}
+
+        {/* Lock overlay */}
+        {isLocked && (
+          <div className="absolute inset-0 flex items-center justify-center z-20 bg-black/55 backdrop-blur-[2px] rounded-2xl">
+            <div className="text-center px-3">
+              <motion.div
+                animate={{ rotate: [0, -5, 5, -5, 5, 0], scale: [1, 1.1, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2.5 }}
+              >
+                <Lock className="w-7 h-7 text-amber-400 mx-auto mb-1.5 drop-shadow-lg" />
+              </motion.div>
+              <p className="text-white font-semibold text-xs">Premium</p>
+              <p className="text-white/55 text-[10px] mt-0.5">Tap to unlock</p>
+            </div>
+          </div>
+        )}
+
+        {/* Selected checkmark */}
+        <AnimatePresence>
+          {isSelected && (
+            <motion.div
+              className="absolute top-3 right-3 z-10 bg-white text-black rounded-full shadow-lg p-1"
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              exit={{ scale: 0, rotate: 180 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+            >
+              <Check className="w-3.5 h-3.5" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Owned premium sparkle badge */}
+        {!isLocked && !FREE_THEME_IDS.includes(theme.id) && (
+          <motion.div
+            className="absolute top-3 right-3 z-10"
+            animate={{ rotate: [-12, 12] }}
+            transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
+          >
+            <Sparkles className="w-4 h-4 text-amber-400 drop-shadow" />
+          </motion.div>
+        )}
+
+        {/* ── FEATURED layout (Standard Eras hero) ── */}
+        {isFeatured ? (
+          <div className={`flex flex-col items-center text-center h-full ${isMobile ? 'p-4 pt-5 gap-2.5' : 'p-5 pt-6 gap-3'}`}>
+            <Icon
+              className="flex-shrink-0"
+              style={{
+                fontSize: isMobile ? '2.5rem' : '3rem',
+                filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.5))',
+              }}
+            />
+            <div>
+              <div className="flex items-center justify-center gap-2 mb-1 flex-wrap">
+                <h3 className={`font-bold text-white leading-tight ${isMobile ? 'text-[15px]' : 'text-base'}`}>
+                  {theme.name}
+                </h3>
+                <span className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 uppercase whitespace-nowrap">
+                  Free · Included
+                </span>
+              </div>
+              <p className={`text-white/60 leading-snug mt-1.5 line-clamp-3 ${isMobile ? 'text-[12px]' : 'text-[13px]'}`}>{theme.description}</p>
+            </div>
+          </div>
+        ) : (
+          /* ── STANDARD card layout ── */
+          <div className={`flex flex-col items-center text-center h-full ${isMobile ? 'p-4 pt-5 gap-2.5' : 'p-5 pt-6 gap-3'}`}>
+            <Icon
+              className="flex-shrink-0"
+              style={{
+                fontSize: isMobile ? '2.5rem' : '3rem',
+                filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.35))',
+              }}
+            />
+            <div>
+              <h3 className={`font-bold text-white leading-tight ${isMobile ? 'text-[15px]' : 'text-base'}`}>
+                {theme.name}
+              </h3>
+              {FREE_THEME_IDS.includes(theme.id) && theme.id !== 'standard' && (
+                <span className="inline-block mt-1.5 text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 uppercase">
+                  Free · Included
+                </span>
+              )}
+              <p className={`text-white/60 leading-snug mt-1.5 line-clamp-3 ${isMobile ? 'text-[12px]' : 'text-[13px]'}`}>
+                {theme.description}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Slim section divider label ────────────────────────────────────────────────
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 mt-1">
+      <div className="h-px flex-1 bg-white/8" />
+      <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-white/30 select-none">
+        {children}
+      </span>
+      <div className="h-px flex-1 bg-white/8" />
+    </div>
+  );
+}
+
+// ── Main ThemeSelector ────────────────────────────────────────────────────────
+export function ThemeSelector({
+  selectedThemeId,
+  onSelectTheme,
+  purchasedThemes = [],
+  purchasedThemesLoading = false,
+  onNavigateToStore,
+}: ThemeSelectorProps) {
   const isMobile = useIsMobile();
   const [justSelected, setJustSelected] = React.useState<string | null>(null);
 
   const handleSelect = (themeId: string) => {
-    // Check if theme is locked
-    const isLocked = !FREE_THEME_IDS.includes(themeId) && !purchasedThemes.includes(themeId);
-    
+    const isLocked =
+      !FREE_THEME_IDS.includes(themeId) && !purchasedThemes.includes(themeId);
     if (isLocked) {
-      // Navigate to Store if handler provided
-      if (onNavigateToStore) {
-        onNavigateToStore();
-      }
+      onNavigateToStore?.();
       return;
     }
-    
     setJustSelected(themeId);
     onSelectTheme(themeId);
-    
-    // Clear animation state after animation completes
-    setTimeout(() => {
-      setJustSelected(null);
-    }, 600);
+    setTimeout(() => setJustSelected(null), 600);
   };
 
+  const allThemes = Object.values(THEMES);
+  const standard = allThemes.find(t => t.id === 'standard')!;
+  const otherFree = allThemes.filter(
+    t => FREE_THEME_IDS.includes(t.id) && t.id !== 'standard'
+  );
+  const premium = allThemes
+    .filter(t => !FREE_THEME_IDS.includes(t.id))
+    .sort((a, b) => {
+      const aLocked = purchasedThemesLoading ? false : !purchasedThemes.includes(a.id);
+      const bLocked = purchasedThemesLoading ? false : !purchasedThemes.includes(b.id);
+      return aLocked === bLocked ? 0 : aLocked ? 1 : -1;
+    });
+
+  const isLockedFn = (id: string) =>
+    purchasedThemesLoading
+      ? false
+      : !FREE_THEME_IDS.includes(id) && !purchasedThemes.includes(id);
+
   return (
-    <div className={`grid gap-4 md:gap-5 ${ 
-      isMobile 
-        ? 'grid-cols-2' // Mobile: 2 columns, Standard spans both
-        : 'grid-cols-2 lg:grid-cols-3' // Desktop: 2-3 columns
-    }`}>
-      {Object.values(THEMES)
-        // Sort: Unlocked themes first, then locked themes
-        .sort((a, b) => {
-          const aLocked = !FREE_THEME_IDS.includes(a.id) && !purchasedThemes.includes(a.id);
-          const bLocked = !FREE_THEME_IDS.includes(b.id) && !purchasedThemes.includes(b.id);
-          
-          // Unlocked comes first (false < true)
-          if (aLocked !== bLocked) {
-            return aLocked ? 1 : -1;
-          }
-          
-          // Within same lock status, maintain original order
-          return 0;
-        })
-        .map((theme, index) => {
-        const isSelected = selectedThemeId === theme.id;
-        const Icon = theme.icon;
-        const isStandard = theme.id === 'standard';
+    <div className="flex flex-col gap-3">
 
-        // Determine if the theme is locked (while loading, assume unlocked to prevent flicker)
-        const isLocked = purchasedThemesLoading 
-          ? false 
-          : !FREE_THEME_IDS.includes(theme.id) && !purchasedThemes.includes(theme.id);
+      {/* Row 1 — Standard Eras hero (full width) */}
+      <ThemeCard
+        theme={standard}
+        isSelected={selectedThemeId === 'standard'}
+        isLocked={false}
+        isFeatured={true}
+        justSelected={justSelected === 'standard'}
+        onClick={() => handleSelect('standard')}
+        isMobile={isMobile}
+      />
 
-        return (
-          <motion.div
+      {/* Row 2 — Other free themes */}
+      <SectionLabel>Free Themes</SectionLabel>
+      <div className={`grid gap-3 ${isMobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
+        {otherFree.map(theme => (
+          <ThemeCard
             key={theme.id}
-            whileHover={{ scale: isMobile ? 1.01 : 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            theme={theme}
+            isSelected={selectedThemeId === theme.id}
+            isLocked={false}
+            isFeatured={false}
+            justSelected={justSelected === theme.id}
             onClick={() => handleSelect(theme.id)}
-            className={`cursor-pointer h-full ${ 
-              isMobile && isStandard ? 'col-span-2' : '' // Standard Eras spans both columns on mobile
-            }`}
-            // Pulse animation when just selected
-            animate={justSelected === theme.id ? {
-              scale: [1, 1.05, 1],
-            } : {}}
-            transition={{
-              duration: 0.4,
-              ease: 'easeOut'
-            }}
-          >
-            <Card 
-              className={`h-full relative overflow-hidden transition-all duration-300 border-2 ${ 
-                isLocked 
-                  ? 'border-gray-600/50 bg-gray-900/40 opacity-75 hover:opacity-90' // Locked state
-                  : isSelected 
-                    ? 'border-white ring-4 ring-white/20 shadow-2xl shadow-white/10' 
-                    : 'border-white/10 hover:border-white/30 hover:bg-white/5'
-              } ${ 
-                isMobile 
-                  ? 'min-h-[150px]' // Mobile: slightly taller for better spacing
-                  : 'min-h-[180px]' // Desktop: taller cards
-              }`}
-              style={{
-                background: isLocked 
-                  ? 'rgba(30, 30, 30, 0.5)' // Dark locked background
-                  : isSelected 
-                    ? (isMobile ? theme.primaryColor : theme.bgGradient)
-                    : 'rgba(255, 255, 255, 0.03)'
-              }}
+            isMobile={isMobile}
+          />
+        ))}
+      </div>
+
+      {/* Row 3+ — Premium themes */}
+      <SectionLabel>Premium Themes</SectionLabel>
+      <div className={`grid gap-3 ${isMobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
+        {premium.map(theme => (
+          <ThemeCard
+            key={theme.id}
+            theme={theme}
+            isSelected={selectedThemeId === theme.id}
+            isLocked={isLockedFn(theme.id)}
+            isFeatured={false}
+            justSelected={justSelected === theme.id}
+            onClick={() => handleSelect(theme.id)}
+            isMobile={isMobile}
+          />
+        ))}
+
+        {/* "More coming" placeholder — fills the last row and teases future themes */}
+        <div className="relative h-full rounded-2xl overflow-hidden border border-dashed border-white/20 bg-gradient-to-br from-indigo-500/10 via-purple-500/8 to-violet-500/10 select-none">
+          <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl bg-gradient-to-r from-indigo-400 via-purple-400 to-violet-400 opacity-60" />
+          <div className={`flex flex-col items-center text-center h-full ${isMobile ? 'p-4 pt-5 gap-2.5' : 'p-5 pt-6 gap-3'}`}>
+            <motion.span
+              style={{ fontSize: isMobile ? '2.5rem' : '3rem', lineHeight: 1 }}
+              animate={{ rotate: [0, 15, -10, 15, 0], scale: [1, 1.1, 1] }}
+              transition={{ duration: 3, repeat: Infinity, repeatDelay: 2, ease: 'easeInOut' }}
             >
-              {/* Lock Overlay for Locked Themes */}
-              {isLocked && (
-                <div className="absolute inset-0 flex items-center justify-center z-20 bg-black/60 backdrop-blur-sm">
-                  <div className="text-center px-4">
-                    <motion.div
-                      animate={{ 
-                        rotate: [0, -5, 5, -5, 5, 0],
-                        scale: [1, 1.1, 1]
-                      }}
-                      transition={{ 
-                        duration: 0.6,
-                        ease: 'easeInOut',
-                        repeat: Infinity,
-                        repeatDelay: 2
-                      }}
-                    >
-                      <Lock className="w-12 h-12 text-amber-400 mx-auto mb-3 drop-shadow-lg" />
-                    </motion.div>
-                    <p className="text-white font-bold text-sm mb-1">Premium Theme</p>
-                    <p className="text-white/70 text-xs">Tap to unlock in Store</p>
-                  </div>
-                </div>
-              )}
-              
-              {/* Animated Glow Effect on Selection */}
-              {justSelected === theme.id && (
-                <motion.div
-                  className="absolute inset-0 rounded-xl"
-                  style={{
-                    background: `linear-gradient(135deg, ${theme.primaryColor}40, ${theme.secondaryColor || theme.primaryColor}40)`,
-                    filter: 'blur(12px)',
-                  }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: [0, 1, 0] }}
-                  transition={{ duration: 0.6, ease: 'easeInOut' }}
-                />
-              )}
-              
-              {/* Selected Indicator with Animation */}
-              <AnimatePresence>
-                {isSelected && (
-                  <motion.div 
-                    className={`absolute bg-white text-black rounded-full shadow-lg z-10 ${ 
-                      isMobile 
-                        ? 'top-2.5 right-2.5 p-1' // Mobile: better visibility
-                        : 'top-3 right-3 p-1.5'
-                    }`}
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    exit={{ scale: 0, rotate: 180 }}
-                    transition={{ 
-                      type: 'spring',
-                      stiffness: 400,
-                      damping: 20 
-                    }}
-                  >
-                    <Check className={isMobile ? 'w-3.5 h-3.5' : 'w-5 h-5'} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              ✨
+            </motion.span>
+            <div>
+              <h3 className={`font-bold text-white/50 leading-tight ${isMobile ? 'text-[15px]' : 'text-base'}`}>
+                More Coming Soon
+              </h3>
+              <p className={`text-white/35 leading-snug mt-1.5 ${isMobile ? 'text-[12px]' : 'text-[13px]'}`}>
+                New themes are added regularly — stay tuned!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-              <div className={`flex flex-col h-full justify-between ${ 
-                isMobile 
-                  ? 'p-4 gap-3' // Mobile: better padding and spacing
-                  : 'p-6 gap-4' // Desktop: generous padding
-              }`}>
-                {/* Header */}
-                <div className={`flex ${ 
-                  isMobile 
-                    ? 'gap-3 flex-col items-start' // Mobile: vertical layout
-                    : 'gap-4 items-center' // Desktop: horizontal layout
-                }`}>
-                  {/* Emoji Icon */}
-                  <Icon 
-                    className="flex-shrink-0 transition-all duration-300" 
-                    style={{ 
-                      fontSize: isMobile ? '2.75rem' : '4rem', // Mobile: larger emoji, Desktop: even bigger
-                      filter: isSelected 
-                        ? 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' 
-                        : 'drop-shadow(0 2px 8px rgba(0,0,0,0.3))'
-                    }}
-                  />
-                  <div className={`flex-1 ${isMobile ? 'w-full' : 'min-w-0'}`}>
-                    <h3 className={`font-bold leading-tight tracking-tight transition-all duration-300 ${ 
-                      isMobile 
-                        ? 'text-base' // Mobile: larger text
-                        : 'text-lg truncate' // Desktop: bigger text
-                    } ${ 
-                      isSelected ? 'text-white drop-shadow-lg' : 'text-white/95'
-                    }`}>
-                      {theme.name}
-                    </h3>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <p className={`leading-relaxed transition-all duration-300 ${ 
-                  isMobile 
-                    ? 'text-xs line-clamp-2' // Mobile: compact
-                    : 'text-sm line-clamp-2' // Desktop: larger text, 2 lines
-                } ${ 
-                  isSelected ? 'text-white/95 font-medium' : 'text-white/70'
-                }`}>
-                  {theme.description}
-                </p>
-
-                {/* Premium Badge for Owned Premium Themes */}
-                {!isLocked && !FREE_THEME_IDS.includes(theme.id) && (
-                  <div className="absolute top-2 right-2">
-                    <motion.div
-                      initial={{ rotate: -15 }}
-                      animate={{ rotate: 15 }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        repeatType: 'reverse',
-                        ease: 'easeInOut'
-                      }}
-                    >
-                      <Sparkles className="w-5 h-5 text-amber-400 drop-shadow-lg" />
-                    </motion.div>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </motion.div>
-        );
-      })}
     </div>
   );
 }

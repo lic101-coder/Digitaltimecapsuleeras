@@ -182,8 +182,9 @@ function FolderOverlayContent({
         <div className="absolute bottom-1/4 left-0 w-80 h-80 bg-fuchsia-900/15 rounded-full blur-3xl" />
       </div>
 
-      {/* Header - AGGRESSIVE POSITIONING: Close button ALWAYS on right with X icon */}
-      <div className="relative z-10 flex items-center gap-3 p-4 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-md">
+      {/* Header - close button clears phone status bar via safe-area-aware top padding */}
+      <div className="relative z-10 flex items-center gap-3 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-md px-4 pb-4"
+        style={{ paddingTop: 'max(calc(env(safe-area-inset-top) + 8px), 16px)' }}>
         <div className={`p-2 rounded-lg bg-gradient-to-br ${colorScheme.bg} border ${colorScheme.border}`}>
           {folder.icon ? (
             // Custom emoji icon for template/permanent folders
@@ -328,8 +329,8 @@ function FolderOverlayContent({
           title="Close"
           className="shrink-0 ml-auto flex items-center justify-center"
           style={{
-            width: '40px',
-            height: '40px',
+            width: '44px',
+            height: '44px',
             padding: 0,
             border: 'none',
             borderRadius: '8px',

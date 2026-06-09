@@ -53,7 +53,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
 import { toast } from 'sonner';
-import { projectId } from '../utils/supabase/info';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { DatabaseService } from '../utils/supabase/database';
 import { motion, AnimatePresence } from 'motion/react';
 import { TitleUnlockAdminPreview } from './TitleUnlockAdminPreview';
@@ -129,9 +129,13 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
 
   // 2FA state
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [twoFactorPending, setTwoFactorPending] = useState(false); // enrolled but not yet verified
   const [isEnabling2FA, setIsEnabling2FA] = useState(false);
   const [qrCode, setQrCode] = useState('');
   const [totpSecret, setTotpSecret] = useState('');
+  const [pendingFactorId, setPendingFactorId] = useState<string | null>(null);
+  const [usingExistingFactor, setUsingExistingFactor] = useState(false); // true when reusing pre-existing unverified factor
+  const [oldEntryDeleted, setOldEntryDeleted] = useState(false); // user confirmed they deleted old authenticator entry
   const [verificationCode, setVerificationCode] = useState('');
   const [isVerifying2FA, setIsVerifying2FA] = useState(false);
   const [show2FASetup, setShow2FASetup] = useState(false);
@@ -174,7 +178,6 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
     // Run initialization functions sequentially to prevent overwhelming the system
     const initializeSettings = async () => {
       try {
-        checkPurchaseStatus(); // Synchronous, runs first
         await loadAccessToken(); // Quick auth call
         await loadUserMetadata(); // Load profile data
         await loadNotificationPreferences(); // Load notification settings
@@ -351,7 +354,15 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (currentUser) {
         const { data: factors } = await supabase.auth.mfa.listFactors();
-        setTwoFactorEnabled(factors && factors.totp && factors.totp.length > 0);
+        const totpFactors = factors?.totp ?? [];
+        const verified = totpFactors.filter(f => f.status === 'verified');
+        const unverified = totpFactors.filter(f => f.status === 'unverified');
+        setTwoFactorEnabled(verified.length > 0);
+        setTwoFactorPending(unverified.length > 0 && verified.length === 0);
+        // If there's an unverified factor, store its ID so verification can proceed
+        if (unverified.length > 0 && verified.length === 0) {
+          setPendingFactorId(unverified[0].id);
+        }
       }
     } catch (error) {
       console.error('Error checking 2FA status:', error);
@@ -502,10 +513,34 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
 
   const handleEnable2FA = async () => {
     setIsEnabling2FA(true);
+    setUsingExistingFactor(false);
     try {
+      // Use server-side admin API to delete any pending/unverified TOTP factors.
+      // The client SDK listFactors() does NOT return unverified factors, so server cleanup
+      // is the only way to clear the "already exists" conflict before enrolling fresh.
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token ?? publicAnonKey;
+      let cleanupWorked = false;
+      try {
+        const cleanupRes = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/mfa/cleanup-unverified`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const cleanupData = await cleanupRes.json().catch(() => ({}));
+        console.log('[2FA] Cleanup result:', cleanupRes.status, cleanupData);
+        cleanupWorked = cleanupRes.ok;
+      } catch (cleanupErr) {
+        console.warn('[2FA] Cleanup endpoint failed:', cleanupErr);
+      }
+
+      // Use a unique friendly name so Supabase's "already exists" check never fires,
+      // regardless of whether cleanup succeeded. The friendly name is only a Supabase
+      // label — it does not affect what the authenticator app displays (that comes from
+      // the TOTP URI issuer/account fields in the QR code).
+      const friendlyName = `Eras Time Capsule ${Date.now()}`;
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: 'totp',
-        friendlyName: 'Eras Time Capsule'
+        friendlyName
       });
 
       if (error) throw error;
@@ -513,8 +548,8 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
       if (data) {
         setQrCode(data.totp.qr_code);
         setTotpSecret(data.totp.secret);
+        setPendingFactorId(data.id);
         setShow2FASetup(true);
-        toast.success('Scan the QR code with your authenticator app');
       }
     } catch (error: any) {
       console.error('Error enabling 2FA:', error);
@@ -532,12 +567,16 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
 
     setIsVerifying2FA(true);
     try {
-      const factors = await supabase.auth.mfa.listFactors();
-      if (!factors.data?.totp?.[0]) {
-        throw new Error('No TOTP factor found');
+      // Use the factorId saved during enroll (listFactors only returns verified factors)
+      let factorId = pendingFactorId;
+      if (!factorId) {
+        // Fallback: try listFactors in case user is re-verifying an already-enrolled factor
+        const factors = await supabase.auth.mfa.listFactors();
+        factorId = factors.data?.totp?.[0]?.id ?? null;
       }
-
-      const factorId = factors.data.totp[0].id;
+      if (!factorId) {
+        throw new Error('No TOTP factor found. Please restart the 2FA setup.');
+      }
 
       const { error } = await supabase.auth.mfa.challengeAndVerify({
         factorId,
@@ -547,8 +586,12 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
       if (error) throw error;
 
       setTwoFactorEnabled(true);
+      setTwoFactorPending(false);
       setShow2FASetup(false);
       setVerificationCode('');
+      setPendingFactorId(null);
+      setUsingExistingFactor(false);
+      setOldEntryDeleted(false);
       toast.success('Two-factor authentication enabled successfully!');
     } catch (error: any) {
       console.error('Error verifying 2FA:', error);
@@ -630,13 +673,17 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
       );
 
       if (!response.ok) {
-        throw new Error('Failed to delete account data');
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody.error || 'Failed to schedule account deletion');
       }
 
+      const result = await response.json();
+      const deleteDate = result.deleteAt ? new Date(result.deleteAt).toLocaleDateString() : '30 days from now';
+
       await supabase.auth.signOut();
-      
-      toast.success('Account scheduled for deletion. Sign in within 30 days to reactivate!');
-      
+
+      toast.success(`Account scheduled for deletion on ${deleteDate}. Sign in any time before then to reactivate.`, { duration: 8000 });
+
       setTimeout(() => {
         window.location.href = '/';
       }, 2000);
@@ -668,6 +715,119 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
     }
   };
 
+  const buildExportHtml = (data: any): string => {
+    const fmt = (iso: string | null) => iso ? new Date(iso).toLocaleString() : '—';
+    const esc = (s: string) => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const mediaIcon = (type: string) => {
+      if (!type) return '📎';
+      if (type.startsWith('image')) return '🖼️';
+      if (type.startsWith('video')) return '🎬';
+      if (type.startsWith('audio')) return '🎵';
+      return '📎';
+    };
+    const renderMedia = (files: any[]) => {
+      if (!files || files.length === 0) return '';
+      return `<div class="media-list">${files.map(f => `
+        <a class="media-item" href="${esc(f.download_url)}" target="_blank" rel="noopener">
+          <span class="media-icon">${mediaIcon(f.file_type)}</span>
+          <span class="media-name">${esc(f.file_name || 'file')}</span>
+          <span class="media-meta">${f.file_type || ''} · ${f.file_size ? (f.file_size / 1024).toFixed(0) + ' KB' : ''}</span>
+          ${f.url_expires ? `<span class="media-expires">link expires ${fmt(f.url_expires)}</span>` : ''}
+        </a>`).join('')}</div>`;
+    };
+    const renderCapsule = (c: any, dir: string) => `
+      <div class="capsule">
+        <div class="capsule-header">
+          <span class="capsule-dir ${dir}">${dir === 'sent' ? '↑ Sent' : '↓ Received'}</span>
+          <span class="capsule-status status-${(c.status||'').toLowerCase()}">${c.status || ''}</span>
+          <span class="capsule-date">${fmt(c.delivery_date || c.created_at)}</span>
+        </div>
+        <div class="capsule-title">${esc(c.title || '(no title)')}</div>
+        ${c.text_message ? `<div class="capsule-body">${esc(c.text_message).replace(/\n/g,'<br>')}</div>` : ''}
+        ${c.recipients && c.recipients.length ? `<div class="capsule-meta">To: ${c.recipients.map((r:any)=>esc(r.value||r.name||'')).join(', ')}</div>` : ''}
+        ${renderMedia(c.media_files)}
+      </div>`;
+
+    const sentHtml = (data.capsules?.sent || []).map((c:any) => renderCapsule(c,'sent')).join('');
+    const receivedHtml = (data.capsules?.received || []).map((c:any) => renderCapsule(c,'received')).join('');
+    const vaultHtml = (data.vault || []).map((v:any) => `
+      <div class="vault-item">
+        <span class="media-icon">${mediaIcon(v.file_type)}</span>
+        <div class="vault-info">
+          <div class="vault-name">${esc(v.file_name || 'file')}</div>
+          <div class="vault-meta">${v.file_type || ''} · ${v.file_size ? (v.file_size/1024).toFixed(0)+' KB' : ''} · ${fmt(v.created_at)}</div>
+          ${v.download_url ? `<a href="${esc(v.download_url)}" target="_blank" rel="noopener" class="dl-link">Download ↗</a>` : '<span class="no-link">No download available</span>'}
+        </div>
+      </div>`).join('');
+    const recordHtml = (data.recordLibrary || []).map((r:any) => `
+      <div class="vault-item">
+        <span class="media-icon">${mediaIcon(r.file_type)}</span>
+        <div class="vault-info">
+          <div class="vault-name">${esc(r.file_name || 'recording')}</div>
+          <div class="vault-meta">${r.file_type || ''} · ${r.file_size ? (r.file_size/1024).toFixed(0)+' KB' : ''} · ${fmt(r.created_at)}</div>
+          ${r.download_url ? `<a href="${esc(r.download_url)}" target="_blank" rel="noopener" class="dl-link">Download ↗</a>` : '<span class="no-link">No download available</span>'}
+        </div>
+      </div>`).join('');
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eras Time Capsule — Data Export</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f1a;color:#e2e8f0;padding:24px;line-height:1.6}
+  h1{font-size:1.6rem;font-weight:700;color:#a78bfa;margin-bottom:4px}
+  .subtitle{color:#94a3b8;font-size:.9rem;margin-bottom:32px}
+  h2{font-size:1.1rem;font-weight:600;color:#c4b5fd;margin:32px 0 12px;border-bottom:1px solid #2d2d44;padding-bottom:8px}
+  .summary{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:32px}
+  .stat{background:#1e1e33;border:1px solid #2d2d44;border-radius:10px;padding:12px 20px;text-align:center}
+  .stat-n{font-size:1.6rem;font-weight:700;color:#a78bfa}
+  .stat-l{font-size:.75rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+  .capsule{background:#1a1a2e;border:1px solid #2d2d44;border-radius:12px;padding:16px;margin-bottom:12px}
+  .capsule-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .capsule-dir{font-size:.75rem;font-weight:600;padding:2px 8px;border-radius:999px}
+  .capsule-dir.sent{background:#1d3a2f;color:#34d399}
+  .capsule-dir.received{background:#2d1f3f;color:#c4b5fd}
+  .capsule-status{font-size:.75rem;padding:2px 8px;border-radius:999px;background:#1e2a3a;color:#7dd3fc}
+  .capsule-status.status-delivered{background:#1d3a2f;color:#34d399}
+  .capsule-status.status-draft{background:#332a1a;color:#fbbf24}
+  .capsule-date{font-size:.78rem;color:#64748b;margin-left:auto}
+  .capsule-title{font-weight:600;font-size:1rem;color:#e2e8f0;margin-bottom:6px}
+  .capsule-body{font-size:.88rem;color:#94a3b8;white-space:pre-wrap;background:#0f0f1a;border-radius:8px;padding:10px;margin:8px 0}
+  .capsule-meta{font-size:.8rem;color:#64748b;margin-top:6px}
+  .media-list{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+  .media-item{display:flex;align-items:center;gap:8px;background:#0f0f1a;border:1px solid #2d2d44;border-radius:8px;padding:8px 12px;text-decoration:none;color:#e2e8f0;transition:border-color .2s}
+  .media-item:hover{border-color:#7c3aed}
+  .media-icon{font-size:1.1rem}
+  .media-name{font-size:.85rem;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .media-meta{font-size:.75rem;color:#64748b;white-space:nowrap}
+  .media-expires{font-size:.72rem;color:#f59e0b;white-space:nowrap}
+  .vault-item{display:flex;align-items:flex-start;gap:12px;background:#1a1a2e;border:1px solid #2d2d44;border-radius:10px;padding:14px;margin-bottom:10px}
+  .vault-info{flex:1;min-width:0}
+  .vault-name{font-weight:500;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .vault-meta{font-size:.78rem;color:#64748b;margin:3px 0 6px}
+  .dl-link{font-size:.82rem;color:#818cf8;text-decoration:none}
+  .dl-link:hover{text-decoration:underline}
+  .no-link{font-size:.82rem;color:#475569}
+  .note{background:#1e1e33;border:1px solid #3730a3;border-radius:8px;padding:12px 16px;font-size:.82rem;color:#94a3b8;margin-bottom:24px}
+  @media(max-width:600px){body{padding:16px}.summary{gap:8px}.stat{padding:10px 14px}}
+</style></head>
+<body>
+<h1>Eras Time Capsule — Data Export</h1>
+<div class="subtitle">Exported on ${fmt(data.exportDate)} · ${esc(data.userEmail || '')}</div>
+<div class="note">⏳ Media download links expire 24 hours after export. Download your files before then.</div>
+<div class="summary">
+  <div class="stat"><div class="stat-n">${(data.capsules?.sent||[]).length}</div><div class="stat-l">Sent Capsules</div></div>
+  <div class="stat"><div class="stat-n">${(data.capsules?.received||[]).length}</div><div class="stat-l">Received Capsules</div></div>
+  <div class="stat"><div class="stat-n">${(data.vault||[]).length}</div><div class="stat-l">Vault Items</div></div>
+  <div class="stat"><div class="stat-n">${(data.recordLibrary||[]).length}</div><div class="stat-l">Recordings</div></div>
+</div>
+${sentHtml || receivedHtml ? `<h2>Capsules</h2>${sentHtml}${receivedHtml}` : ''}
+${vaultHtml ? `<h2>Vault</h2>${vaultHtml}` : ''}
+${recordHtml ? `<h2>Record Library</h2>${recordHtml}` : ''}
+</body></html>`;
+  };
+
   const handleExportData = async () => {
     setIsExportingData(true);
     try {
@@ -676,37 +836,48 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
         throw new Error('No access token available');
       }
 
-      toast.info('Generating your data export...', { duration: 3000 });
+      toast.info('Generating your data export… this may take up to 30 seconds.', { duration: 6000 });
 
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/user-data-export`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
+
+      let response: Response;
+      try {
+        response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/user-data-export`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json'
+            },
+            signal: controller.signal
           }
-        }
-      );
+        );
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       if (!response.ok) {
-        throw new Error('Failed to export data');
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody.message || `Export failed (${response.status})`);
       }
 
       const data = await response.json();
-      
-      // Create a downloadable JSON file
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+
+      const html = buildExportHtml(data);
+      const filename = `eras-data-export-${new Date().toISOString().split('T')[0]}.html`;
+      const blob = new Blob([html], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
+
       const link = document.createElement('a');
       link.href = url;
-      link.download = `eras-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      toast.success('Data exported successfully! Check your downloads.');
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      toast.success('Export downloaded! Open the .html file in any browser to view your data.', { duration: 6000 });
     } catch (error: any) {
       console.error('Error exporting data:', error);
       toast.error(error.message || 'Failed to export data');
@@ -992,15 +1163,98 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
                       Enabled
                     </Badge>
                   )}
+                  {twoFactorPending && !twoFactorEnabled && (
+                    <Badge className="bg-yellow-600 text-white shadow-lg shadow-yellow-500/30">
+                      <AlertTriangle className="w-3 h-3 mr-1" />
+                      Setup Incomplete
+                    </Badge>
+                  )}
                 </div>
                 <CardDescription className="text-white text-sm md:text-base">
-                  {twoFactorEnabled ? 'Your account is protected with 2FA' : 'Add an extra layer of security'}
+                  {twoFactorEnabled ? 'Your account is protected with 2FA' : twoFactorPending ? 'Enrollment started but not verified' : 'Add an extra layer of security'}
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4 md:space-y-6">
-            {!twoFactorEnabled ? (
+            {twoFactorEnabled ? (
+              // State 3: Fully active
+              <div className="space-y-4">
+                <div className="p-4 md:p-5 rounded-xl bg-green-500/10 border border-green-500/30">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+                    <div>
+                      <p className="text-sm md:text-base font-medium text-green-300">
+                        2FA is Active
+                      </p>
+                      <p className="text-sm text-white">
+                        Your account is protected with two-factor authentication. Every sign-in requires your authenticator app code.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleDisable2FA}
+                  variant="outline"
+                  className="border-red-500/30 text-red-300 bg-red-900/20 hover:bg-red-900/30 hover:border-red-500/50 hover:text-red-200 min-h-[44px] px-6 w-full md:w-auto"
+                >
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  Disable 2FA
+                </Button>
+              </div>
+            ) : twoFactorPending ? (
+              // State 2: Enrolled but not verified
+              <div className="space-y-4">
+                <div className="p-4 md:p-5 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-yellow-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm md:text-base font-medium text-yellow-300 mb-1">
+                        Setup Incomplete — 2FA Is Not Active
+                      </p>
+                      <p className="text-sm text-white">
+                        You started 2FA enrollment but never verified it with a code. Your account is <span className="font-semibold text-yellow-200">not protected</span> until setup is finished. Complete setup or discard and start fresh.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={handleEnable2FA}
+                    disabled={isEnabling2FA}
+                    className="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold min-h-[44px] px-6"
+                  >
+                    {isEnabling2FA ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Restarting...
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="w-4 h-4 mr-2" />
+                        Complete Setup (Restart)
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      if (pendingFactorId) {
+                        await supabase.auth.mfa.unenroll({ factorId: pendingFactorId });
+                        setPendingFactorId(null);
+                        setTwoFactorPending(false);
+                        toast.success('Incomplete 2FA enrollment removed');
+                      }
+                    }}
+                    variant="outline"
+                    className="border-red-500/30 text-red-300 bg-red-900/20 hover:bg-red-900/30 hover:border-red-500/50 hover:text-red-200 min-h-[44px] px-6"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Discard Incomplete Setup
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              // State 1: Not set up at all
               <>
                 <div className="p-4 md:p-5 rounded-xl bg-blue-500/10 border border-blue-500/30">
                   <div className="flex items-start gap-3">
@@ -1010,7 +1264,7 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
                         Enhance Your Security
                       </p>
                       <p className="text-sm text-white">
-                        Two-factor authentication adds an extra layer of protection by requiring a code from your phone in addition to your password.
+                        Two-factor authentication adds an extra layer of protection by requiring a code from your authenticator app in addition to your password.
                       </p>
                     </div>
                   </div>
@@ -1033,30 +1287,6 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
                   )}
                 </Button>
               </>
-            ) : (
-              <div className="space-y-4">
-                <div className="p-4 md:p-5 rounded-xl bg-green-500/10 border border-green-500/30">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
-                    <div>
-                      <p className="text-sm md:text-base font-medium text-green-300">
-                        2FA is Active
-                      </p>
-                      <p className="text-sm text-white">
-                        Your account is protected with two-factor authentication
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <Button
-                  onClick={handleDisable2FA}
-                  variant="outline"
-                  className="border-red-500/30 text-red-300 bg-red-900/20 hover:bg-red-900/30 hover:border-red-500/50 hover:text-red-200 min-h-[44px] px-6 w-full md:w-auto"
-                >
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  Disable 2FA
-                </Button>
-              </div>
             )}
           </CardContent>
         </Card>
@@ -1251,56 +1481,105 @@ export function Settings({ user, onProfileUpdate, onDataChange, initialSection, 
       </AnimatePresence>
 
       {/* Dialogs */}
-      <Dialog open={show2FASetup} onOpenChange={setShow2FASetup}>
+      <Dialog open={show2FASetup} onOpenChange={(open) => {
+        setShow2FASetup(open);
+        if (!open) { setVerificationCode(''); setUsingExistingFactor(false); setOldEntryDeleted(false); }
+      }}>
         <DialogContent className="bg-slate-900 border-purple-500/30">
-          <DialogTitle className="text-white">Set Up Two-Factor Authentication</DialogTitle>
+          <DialogTitle className="text-white">
+            {usingExistingFactor ? 'Complete 2FA Setup' : 'Set Up Two-Factor Authentication'}
+          </DialogTitle>
           <DialogDescription className="text-slate-300">
-            Scan the QR code below with your authenticator app (Google Authenticator, Authy, etc.)
+            {usingExistingFactor
+              ? 'Your authenticator app already has this account. Enter the current 6-digit code shown there.'
+              : 'Follow each step in order.'}
           </DialogDescription>
           <div className="space-y-4 mt-4">
-            {qrCode && (
-              <div className="flex justify-center p-4 bg-white rounded-lg">
-                <img src={qrCode} alt="2FA QR Code" className="w-48 h-48" />
-              </div>
-            )}
-            {totpSecret && (
-              <div className="space-y-2">
-                <Label className="text-slate-100">Or enter this code manually:</Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={totpSecret}
-                    readOnly
-                    className="font-mono bg-slate-800/50 text-white"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={copySecretToClipboard}
-                    className="min-h-[44px] min-w-[44px]"
-                  >
-                    {secretCopied ? (
-                      <Check className="w-4 h-4 text-green-400" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </Button>
+            {usingExistingFactor ? (
+              <>
+                <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-start gap-3">
+                  <Smartphone className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-300 mb-1">Already in your authenticator app</p>
+                    <p className="text-sm text-white">
+                      Open your authenticator app, find the <span className="font-semibold text-blue-200">Eras Time Capsule</span> entry, and enter the 6-digit code shown.
+                    </p>
+                  </div>
                 </div>
-              </div>
+                <div className="space-y-2">
+                  <Input
+                    id="verificationCode"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="Enter 6-digit code"
+                    maxLength={6}
+                    inputMode="numeric"
+                    className="bg-slate-800/50 text-white h-12 text-center text-2xl tracking-widest font-mono"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Step 1 */}
+                <div className="p-4 rounded-lg border border-red-500/40 bg-red-500/10">
+                  <p className="text-sm font-bold text-red-300 mb-2">Step 1 of 3 — Delete old entry</p>
+                  <p className="text-sm text-white mb-3">
+                    Open your authenticator app. If it has <span className="font-bold text-red-200">any existing entry</span> for this account, <span className="font-bold text-red-200">delete it now</span>. If you skip this, the code you enter will not match and setup will fail.
+                  </p>
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={oldEntryDeleted}
+                      onChange={e => setOldEntryDeleted(e.target.checked)}
+                      className="w-4 h-4 mt-0.5 accent-red-500 shrink-0"
+                    />
+                    <span className="text-sm text-red-200 font-medium">
+                      Done — I deleted the old entry (or I never had one)
+                    </span>
+                  </label>
+                </div>
+
+                {/* Steps 2 & 3 — gated behind checkbox */}
+                <div className={`space-y-4 transition-opacity duration-200 ${oldEntryDeleted ? 'opacity-100' : 'opacity-25 pointer-events-none select-none'}`}>
+                  <div>
+                    <p className="text-sm font-bold text-slate-200 mb-2">Step 2 of 3 — Scan this QR code</p>
+                    {qrCode && (
+                      <div className="flex justify-center p-4 bg-white rounded-lg">
+                        <img src={qrCode} alt="2FA QR Code" className="w-48 h-48" />
+                      </div>
+                    )}
+                    {totpSecret && (
+                      <div className="space-y-2 mt-3">
+                        <Label className="text-slate-100 text-xs">Or enter manually:</Label>
+                        <div className="flex gap-2">
+                          <Input value={totpSecret} readOnly className="font-mono bg-slate-800/50 text-white text-xs" />
+                          <Button variant="outline" size="sm" onClick={copySecretToClipboard} className="min-h-[44px] min-w-[44px]">
+                            {secretCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-bold text-slate-200 mb-2">Step 3 of 3 — Enter code from the <span className="text-green-300">newly added</span> entry</p>
+                    <Input
+                      id="verificationCode"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="6-digit code"
+                      maxLength={6}
+                      inputMode="numeric"
+                      className="bg-slate-800/50 text-white h-12 text-center text-2xl tracking-widest font-mono"
+                    />
+                  </div>
+                </div>
+              </>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="verificationCode" className="text-slate-100">Verification Code</Label>
-              <Input
-                id="verificationCode"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                placeholder="Enter 6-digit code"
-                maxLength={6}
-                className="bg-slate-800/50 text-white h-12"
-              />
-            </div>
+
             <Button
               onClick={handleVerify2FA}
-              disabled={isVerifying2FA}
+              disabled={isVerifying2FA || verificationCode.length !== 6 || (!usingExistingFactor && !oldEntryDeleted)}
               className="w-full bg-green-600 md:bg-gradient-to-r md:from-green-600 md:to-emerald-600 hover:bg-green-700 md:hover:from-green-700 md:hover:to-emerald-700 text-white min-h-[44px]"
             >
               {isVerifying2FA ? (

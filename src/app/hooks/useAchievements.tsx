@@ -232,16 +232,21 @@ export function useAchievements() {
       if (!accessToken) {
         return;
       }
-      
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
       // console.log('🔍 [Achievement] Checking for pending notifications...');
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/achievements/pending`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`
-          }
+          },
+          signal: controller.signal
         }
       );
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const data = await response.json();
@@ -333,10 +338,12 @@ export function useAchievements() {
       }
     } catch (error) {
       // Network errors during server cold start are expected - fail silently
-      if (error instanceof TypeError && error.message.includes('fetch')) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn('⏱️ [Achievement] Pending notifications request timed out after 8 seconds');
+      } else if (error instanceof TypeError && error.message.includes('fetch')) {
         console.log('🔌 [Achievement] Server warming up, will retry...');
       } else {
-        console.warn('⚠️ [Achievement] Notification check error:', error.message);
+        console.warn('⚠️ [Achievement] Notification check error:', error instanceof Error ? error.message : String(error));
       }
     }
   }, [definitions]);

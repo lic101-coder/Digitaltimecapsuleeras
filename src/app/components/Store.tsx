@@ -84,7 +84,7 @@ const PREMIUM_THEMES: ThemeConfig[] = [
     ceremonies: [
       { icon: '🏆', name: 'Photo Finish Victory', description: 'Triumphant & Explosive', color: '#fbbf24' },
       { icon: '🎓', name: 'Graduation Cap Toss', description: 'Inspiring & Celestial', color: '#a78bfa' },
-      { icon: '🤵👰', name: 'Wedding First Dance', description: 'Romantic & Magical', color: '#ec4899' },
+      { icon: '🤵💃', name: 'Wedding First Dance', description: 'Romantic & Magical', color: '#ec4899' },
     ],
     features: ['150+ particle effects', 'Cinema-quality VFX', 'Lifetime access']
   },

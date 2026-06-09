@@ -28,6 +28,7 @@ export function PetFirstPawsCeremony({
   onComplete
 }: PetFirstPawsCeremonyProps) {
   const [stage, setStage] = useState<'title' | 'lonely' | 'center' | 'meeting' | 'connection' | 'home' | 'together' | 'finale' | 'outro'>('title');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timeline = [
@@ -44,7 +45,17 @@ export function PetFirstPawsCeremony({
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    return () => timeouts.forEach(clearTimeout);
+
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 19000);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
   return (
@@ -94,7 +105,7 @@ export function PetFirstPawsCeremony({
               transition={{
                 opacity: { duration: 0.8 },
                 scale: { duration: 0.8, type: 'spring', bounce: 0.3 },
-                y: { duration: 3, repeat: Infinity, ease: 'easeInOut' }
+                y: { duration: 3, repeat: completed ? 0 : 5, ease: 'easeInOut' }
               }}
             >
               😔
@@ -146,9 +157,9 @@ export function PetFirstPawsCeremony({
               className="absolute left-1/2 -translate-x-1/2 top-[25%] text-7xl z-20"
               initial={{ opacity: 0, y: -30 }}
               animate={{ opacity: 0.7, y: [0, 5, 0] }}
-              transition={{ 
+              transition={{
                 opacity: { delay: 1.3, duration: 0.8 },
-                y: { delay: 1.5, duration: 2, repeat: Infinity, ease: 'easeInOut' }
+                y: { delay: 1.5, duration: 2, repeat: completed ? 0 : 3, ease: 'easeInOut' }
               }}
             >
               ☁️
@@ -168,7 +179,7 @@ export function PetFirstPawsCeremony({
                 transition={{
                   duration: 1.5,
                   delay: 1.8 + i * 0.15,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 2,
                   ease: 'linear'
                 }}
               >
@@ -193,7 +204,7 @@ export function PetFirstPawsCeremony({
                 transition={{
                   duration: 4 + Math.random() * 3,
                   delay: Math.random() * 2,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 2,
                   ease: 'easeInOut'
                 }}
               />
@@ -267,12 +278,12 @@ export function PetFirstPawsCeremony({
                   >
                     <motion.div
                       animate={{ rotate: [-5, 5, -5] }}
-                      transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                      transition={{ duration: 1, repeat: completed ? 0 : 5, ease: 'easeInOut' }}
                     >
                       🐕
                     </motion.div>
                   </motion.div>
-                  <motion.div 
+                  <motion.div
                     className="absolute right-12 top-16 w-20 h-20 bg-yellow-100 border-4 border-blue-900 rounded-lg flex items-center justify-center text-4xl"
                     initial={{ scale: 0, rotate: 180 }}
                     animate={{ scale: 1, rotate: 0 }}
@@ -280,12 +291,12 @@ export function PetFirstPawsCeremony({
                   >
                     <motion.div
                       animate={{ rotate: [5, -5, 5] }}
-                      transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                      transition={{ duration: 1.2, repeat: completed ? 0 : 4, ease: 'easeInOut' }}
                     >
                       🐱
                     </motion.div>
                   </motion.div>
-                  <motion.div 
+                  <motion.div
                     className="absolute left-1/2 -translate-x-1/2 top-16 w-20 h-20 bg-yellow-100 border-4 border-blue-900 rounded-lg flex items-center justify-center text-3xl"
                     initial={{ scale: 0, rotate: -90 }}
                     animate={{ scale: 1, rotate: 0 }}
@@ -293,7 +304,7 @@ export function PetFirstPawsCeremony({
                   >
                     <motion.div
                       animate={{ y: [-3, 3, -3] }}
-                      transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
+                      transition={{ duration: 0.8, repeat: completed ? 0 : 6, ease: 'easeInOut' }}
                     >
                       🐇
                     </motion.div>
@@ -324,7 +335,7 @@ export function PetFirstPawsCeremony({
                     '0 20px 40px rgba(244, 63, 94, 0.5)'
                   ]
                 }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                transition={{ duration: 2, repeat: completed ? 0 : 3, ease: 'easeInOut' }}
               >
                 <h3 className="text-3xl md:text-4xl font-black text-white text-center drop-shadow-xl">
                   🏥 PET ADOPTION CENTER 🏥
@@ -343,11 +354,11 @@ export function PetFirstPawsCeremony({
                 transition={{ duration: 2, ease: 'linear' }}
               >
                 <motion.div
-                  animate={{ 
+                  animate={{
                     y: [0, -8, 0, -8, 0],
                     rotate: [0, -2, 0, 2, 0]
                   }}
-                  transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                  transition={{ duration: 0.8, repeat: completed ? 0 : 8, ease: 'linear' }}
                 >
                   🚶
                 </motion.div>
@@ -373,7 +384,7 @@ export function PetFirstPawsCeremony({
                 transition={{
                   duration: 3,
                   delay: 0.8 + i * 0.2,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 3,
                   ease: 'easeOut'
                 }}
               >
@@ -407,7 +418,7 @@ export function PetFirstPawsCeremony({
                   transition={{
                     duration: 2.5,
                     delay: 1 + i * 0.4,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 3,
                     ease: 'easeOut'
                   }}
                 />
@@ -422,10 +433,10 @@ export function PetFirstPawsCeremony({
                   x: 0,
                   scale: [1, 1.05, 1, 1.05, 1]
                 }}
-                transition={{ 
+                transition={{
                   opacity: { duration: 0.6 },
                   x: { duration: 0.6 },
-                  scale: { duration: 2, delay: 1, repeat: Infinity, ease: 'easeInOut' }
+                  scale: { duration: 2, delay: 1, repeat: completed ? 0 : 5, ease: 'easeInOut' }
                 }}
               >
                 😊
@@ -439,11 +450,11 @@ export function PetFirstPawsCeremony({
                   filter: 'blur(40px)'
                 }}
                 initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ 
+                animate={{
                   opacity: [0.6, 1, 0.6],
-                  scale: [1, 1.3, 1] 
+                  scale: [1, 1.3, 1]
                 }}
-                transition={{ duration: 2, delay: 0.8, repeat: Infinity, ease: 'easeInOut' }}
+                transition={{ duration: 2, delay: 0.8, repeat: completed ? 0 : 4, ease: 'easeInOut' }}
               />
             </div>
 
@@ -463,7 +474,7 @@ export function PetFirstPawsCeremony({
                   transition={{
                     duration: 2.5,
                     delay: 1.2 + i * 0.4,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 3,
                     ease: 'easeOut'
                   }}
                 />
@@ -479,11 +490,11 @@ export function PetFirstPawsCeremony({
                   rotate: [0, -10, 10, -10, 10, -8, 8, 0],
                   scale: [1, 1.1, 1, 1.1, 1]
                 }}
-                transition={{ 
+                transition={{
                   opacity: { duration: 0.6 },
                   x: { duration: 0.6 },
-                  rotate: { duration: 1.2, delay: 0.8, repeat: Infinity, ease: 'easeInOut' },
-                  scale: { duration: 1, delay: 0.8, repeat: Infinity, ease: 'easeInOut' }
+                  rotate: { duration: 1.2, delay: 0.8, repeat: completed ? 0 : 6, ease: 'easeInOut' },
+                  scale: { duration: 1, delay: 0.8, repeat: completed ? 0 : 8, ease: 'easeInOut' }
                 }}
               >
                 🐕
@@ -497,11 +508,11 @@ export function PetFirstPawsCeremony({
                   filter: 'blur(35px)'
                 }}
                 initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ 
+                animate={{
                   opacity: [0.6, 1, 0.6],
-                  scale: [1, 1.3, 1] 
+                  scale: [1, 1.3, 1]
                 }}
-                transition={{ duration: 2, delay: 1, repeat: Infinity, ease: 'easeInOut' }}
+                transition={{ duration: 2, delay: 1, repeat: completed ? 0 : 4, ease: 'easeInOut' }}
               />
             </div>
             
@@ -517,7 +528,7 @@ export function PetFirstPawsCeremony({
               transition={{
                 duration: 0.4,
                 delay: 1,
-                repeat: Infinity,
+                repeat: completed ? 0 : 8,
                 ease: 'easeInOut'
               }}
             >
@@ -540,7 +551,7 @@ export function PetFirstPawsCeremony({
                 transition={{
                   duration: 1.5,
                   delay: 1.5 + i * 0.3,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 3,
                   ease: 'easeOut'
                 }}
               >
@@ -555,7 +566,7 @@ export function PetFirstPawsCeremony({
               height="20"
               initial={{ opacity: 0 }}
               animate={{ opacity: [0.3, 0.7, 0.3] }}
-              transition={{ duration: 1.5, delay: 1, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 1.5, delay: 1, repeat: completed ? 0 : 4, ease: 'easeInOut' }}
             >
               <motion.line
                 x1="0"
@@ -584,7 +595,7 @@ export function PetFirstPawsCeremony({
                 transition={{ 
                   duration: 2,
                   delay: 1.5 + i * 0.2,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 3,
                   ease: 'easeInOut'
                 }}
               >
@@ -598,10 +609,10 @@ export function PetFirstPawsCeremony({
                   strokeDasharray="5 3"
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: [0, 1, 0] }}
-                  transition={{ 
+                  transition={{
                     duration: 2.5,
                     delay: 1.5 + i * 0.2,
-                    repeat: Infinity,
+                    repeat: completed ? 0 : 3,
                     ease: 'easeInOut'
                   }}
                 />
@@ -616,11 +627,11 @@ export function PetFirstPawsCeremony({
                 filter: 'blur(60px)'
               }}
               initial={{ opacity: 0, scale: 0.3 }}
-              animate={{ 
+              animate={{
                 opacity: [0, 0.8, 0.5, 0.8],
-                scale: [0.3, 1, 1.1, 1] 
+                scale: [0.3, 1, 1.1, 1]
               }}
-              transition={{ duration: 3, delay: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 3, delay: 1.2, repeat: completed ? 0 : 2, ease: 'easeInOut' }}
             />
             
             {/* Small indicator: "At Adoption Center" - TOP instead of bottom */}
@@ -655,7 +666,7 @@ export function PetFirstPawsCeremony({
                     transition={{
                       duration: 2.5,
                       delay: 1 + i * 0.15,
-                      repeat: Infinity,
+                      repeat: completed ? 0 : 2,
                       ease: 'easeOut'
                     }}
                   >
@@ -682,7 +693,7 @@ export function PetFirstPawsCeremony({
                     transition={{
                       duration: 2,
                       delay: 1.5 + Math.random() * 2,
-                      repeat: Infinity,
+                      repeat: completed ? 0 : 3,
                       ease: 'easeInOut'
                     }}
                   />
@@ -823,7 +834,7 @@ export function PetFirstPawsCeremony({
               }}
               initial={{ opacity: 0 }}
               animate={{ opacity: [0, 1, 0.8, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 2, repeat: completed ? 0 : 4, ease: 'easeInOut' }}
             />
 
             {/* Person walking with dog on leash */}
@@ -839,7 +850,7 @@ export function PetFirstPawsCeremony({
                 <div className="text-7xl inline-block">
                   <motion.div
                     animate={{ rotate: [-3, 3, -3] }}
-                    transition={{ duration: 0.4, repeat: Infinity }}
+                    transition={{ duration: 0.4, repeat: completed ? 0 : 8 }}
                   >
                     🚶
                   </motion.div>
@@ -861,7 +872,7 @@ export function PetFirstPawsCeremony({
                     animate={{
                       d: ['M 0 0 Q 18 10, 32 2', 'M 0 0 Q 18 7, 32 2', 'M 0 0 Q 18 10, 32 2']
                     }}
-                    transition={{ duration: 0.4, repeat: Infinity, ease: 'easeInOut' }}
+                    transition={{ duration: 0.4, repeat: completed ? 0 : 8, ease: 'easeInOut' }}
                   />
                 </svg>
 
@@ -869,7 +880,7 @@ export function PetFirstPawsCeremony({
                 <div className="absolute left-[84px] top-[12px] text-5xl">
                   <motion.div
                     animate={{ rotate: [-5, 5, -5], y: [-2, 2, -2] }}
-                    transition={{ duration: 0.4, repeat: Infinity }}
+                    transition={{ duration: 0.4, repeat: completed ? 0 : 8 }}
                   >
                     🐕
                   </motion.div>
@@ -938,7 +949,7 @@ export function PetFirstPawsCeremony({
                 <motion.div
                   className="text-9xl"
                   animate={{ rotate: [-2, 2, -2] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                  transition={{ duration: 1.5, repeat: completed ? 0 : 6, ease: 'easeInOut' }}
                 >
                   😊
                 </motion.div>
@@ -946,11 +957,11 @@ export function PetFirstPawsCeremony({
                 {/* Dog - SMALLER */}
                 <motion.div
                   className="text-7xl"
-                  animate={{ 
+                  animate={{
                     rotate: [-5, 5, -5],
                     y: [-5, 5, -5]
                   }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                  transition={{ duration: 1, repeat: completed ? 0 : 8, ease: 'easeInOut' }}
                 >
                   🐕
                 </motion.div>
@@ -1111,7 +1122,7 @@ export function PetFirstPawsCeremony({
                 }}
                 transition={{
                   duration: 2,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 6,
                   ease: 'easeInOut'
                 }}
               >
@@ -1125,7 +1136,7 @@ export function PetFirstPawsCeremony({
                 }}
                 transition={{
                   duration: 2,
-                  repeat: Infinity,
+                  repeat: completed ? 0 : 6,
                   ease: 'easeInOut'
                 }}
               >

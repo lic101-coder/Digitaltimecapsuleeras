@@ -905,6 +905,55 @@ const MainAppContent = React.memo(
 
     // Custom Hooks (MUST be declared BEFORE useEffects that depend on them)
     const auth = useAuth();
+
+    // Account deletion grace-period state
+    const [deletionScheduled, setDeletionScheduled] = React.useState<{ deleteAt: string; daysLeft: number } | null>(null);
+    const [showReactivationModal, setShowReactivationModal] = React.useState(false);
+    const [isReactivating, setIsReactivating] = React.useState(false);
+
+    React.useEffect(() => {
+      if (!auth.isAuthenticated || !auth.user?.id) return;
+      let cancelled = false;
+      const checkDeletionStatus = async () => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.access_token || cancelled) return;
+          const res = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/account-status`,
+            { headers: { 'Authorization': `Bearer ${session.access_token}` } }
+          );
+          if (!res.ok || cancelled) return;
+          const data = await res.json();
+          if (data.deletionScheduled) {
+            setDeletionScheduled({ deleteAt: data.deleteAt, daysLeft: data.daysLeft });
+            setShowReactivationModal(true);
+          }
+        } catch (_) { /* silent */ }
+      };
+      checkDeletionStatus();
+      return () => { cancelled = true; };
+    }, [auth.isAuthenticated, auth.user?.id]);
+
+    const handleReactivate = async () => {
+      setIsReactivating(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) throw new Error('No session');
+        const res = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/reactivate-account`,
+          { method: 'POST', headers: { 'Authorization': `Bearer ${session.access_token}` } }
+        );
+        if (!res.ok) throw new Error('Reactivation failed');
+        setDeletionScheduled(null);
+        setShowReactivationModal(false);
+        toast.success('Your account has been reactivated! Welcome back.');
+      } catch (e: any) {
+        console.error('Reactivation error:', e);
+        toast.error('Failed to reactivate account. Please try again.');
+      } finally {
+        setIsReactivating(false);
+      }
+    };
     const network = useNetworkStatus();
     const {
       activeTab,
@@ -2371,11 +2420,18 @@ const MainAppContent = React.memo(
         originalHandleTabChange;
     }, [originalHandleTabChange]);
 
+    // Ref mirror for activeTab so handleTabChange never needs activeTab as a dep
+    const activeTabRef = React.useRef(activeTab);
+    React.useEffect(() => {
+      activeTabRef.current = activeTab;
+    }, [activeTab]);
+
     const handleTabChange = React.useCallback(
       async (newTab, options = {}) => {
         const { editingCapsuleOverride = null } = options;
+        const currentTab = activeTabRef.current;
         // CRITICAL FIX: Reset RecordInterface when navigating TO Record tab for clean state
-        if (newTab === "record" && activeTab !== "record") {
+        if (newTab === "record" && currentTab !== "record") {
           console.log(
             "🎥 Navigating to Record tab - incrementing reset key for fresh mount",
           );
@@ -2384,13 +2440,13 @@ const MainAppContent = React.memo(
 
         // If navigating to Create tab from anywhere except Record/Vault tabs, reset for fresh start
         // This preserves the workflow when coming from Record or Vault but clears old state otherwise
-        // IMPORTANT: Use activeTab (current) instead of lastActiveTab because lastActiveTab hasn't been updated yet
+        // IMPORTANT: Use currentTab (ref) instead of lastActiveTab because lastActiveTab hasn't been updated yet
         const isComingFromWorkflowTab = [
           "record",
           "vault",
-        ].includes(activeTab);
+        ].includes(currentTab);
         // 🔥 FIX #2: ALSO preserve when coming FROM create tab (navigating away and back)
-        const isComingFromCreateTab = activeTab === "create";
+        const isComingFromCreateTab = currentTab === "create";
         // IMPORTANT: Don't check workflow.workflowMedia here because state might not be updated yet
         const shouldPreserveWorkflow =
           isComingFromWorkflowTab || isComingFromCreateTab;
@@ -2427,7 +2483,7 @@ const MainAppContent = React.memo(
         // CRITICAL: Only reset CreateCapsule if we're actually navigating TO create from a different tab
         // Don't reset if we're already on create tab (prevents unexpected resets while working)
         const isActuallyNavigatingToCreate =
-          newTab === "create" && activeTab !== "create";
+          newTab === "create" && currentTab !== "create";
 
         // CRITICAL PROTECTION: If user has been actively working on Create tab, never allow unexpected resets
         const timeOnCreateTab = createTabOpenedAt.current
@@ -2438,7 +2494,7 @@ const MainAppContent = React.memo(
           timeOnCreateTab > 3000;
 
         console.log("🔄 TAB CHANGE:", {
-          from: activeTab,
+          from: currentTab,
           to: newTab,
           isActuallyNavigatingToCreate,
           shouldPreserveWorkflow,
@@ -2460,7 +2516,7 @@ const MainAppContent = React.memo(
           ) {
             console.log(
               "🔄 ❌ RESETTING CreateCapsule - component will REMOUNT and LOSE state (coming from:",
-              activeTab,
+              currentTab,
               ")",
             );
             // IMPORTANT: Reset workflow FIRST to clear workflowMedia before CreateCapsule renders
@@ -2473,7 +2529,7 @@ const MainAppContent = React.memo(
           } else if (shouldPreserveWorkflow) {
             console.log(
               "✅ PRESERVING workflow - coming from:",
-              activeTab,
+              currentTab,
               "(component will NOT remount, state preserved)",
             );
           } else if (effectiveEditingCapsule) {
@@ -2487,7 +2543,7 @@ const MainAppContent = React.memo(
           }
         } else if (
           newTab === "create" &&
-          activeTab === "create"
+          currentTab === "create"
         ) {
           console.log(
             "⏭️ Clicking Compose while already on Create tab - returning to Step 1 (theme selection)",
@@ -2500,7 +2556,7 @@ const MainAppContent = React.memo(
 
         // IMPORTANT: When leaving Create tab (going to any other tab except record/vault), clear the workflow
         if (
-          activeTab === "create" &&
+          currentTab === "create" &&
           newTab !== "create" &&
           !["record", "vault"].includes(newTab)
         ) {
@@ -2512,17 +2568,17 @@ const MainAppContent = React.memo(
         }
 
         // Track the previous tab when navigating TO vault (for back navigation)
-        if (newTab === "vault" && activeTab !== "vault") {
-          tabBeforeVault.current = activeTab;
+        if (newTab === "vault" && currentTab !== "vault") {
+          tabBeforeVault.current = currentTab;
           console.log(
             "🏛️ Navigating to Vault from:",
-            activeTab,
+            currentTab,
           );
 
           // 🔥 CRITICAL FIX: Only sync importedVaultMediaIds when NOT coming from create tab
           // When coming from create tab, handleOpenVault has already set the correct IDs
           // and we shouldn't overwrite them with potentially stale workflowMedia
-          if (activeTab !== "create") {
+          if (currentTab !== "create") {
             // This ensures the vault shows the correct selection state even when
             // the user navigated directly to vault (not through CreateCapsule's vault button)
             const currentMedia = workflow.workflowMedia || [];
@@ -2556,7 +2612,7 @@ const MainAppContent = React.memo(
 
         // 🔥 SCROLL TO TOP: Always scroll to top when changing tabs
         // This ensures every tab loads at the top, especially the Vault
-        if (activeTab !== newTab) {
+        if (currentTab !== newTab) {
           console.log(
             "📜 Scrolling to top for new tab:",
             newTab,
@@ -2586,7 +2642,7 @@ const MainAppContent = React.memo(
           });
         }
       },
-      [editingCapsule, activeTab],
+      [editingCapsule],
     );
 
     // Activity tracking
@@ -4829,11 +4885,11 @@ const MainAppContent = React.memo(
               <div className="mt-1 pt-1 sm:mt-2 sm:pt-2 border-t">
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-4 text-[10px] sm:text-sm text-muted-foreground">
                   <span className="hidden sm:inline">
-                    © 2025 Eras. Capture Today, Unlock
+                    © {new Date().getFullYear()} Eras. Capture Today, Unlock
                     Tomorrow.
                   </span>
                   <span className="sm:hidden">
-                    © 2025 Eras
+                    © {new Date().getFullYear()} Eras
                   </span>
                   <div className="flex items-center gap-2 sm:gap-3">
                     <button
@@ -5158,6 +5214,44 @@ const MainAppContent = React.memo(
           z-index: 199 !important;
         }
       `}</style>
+        )}
+
+        {/* Account Reactivation Modal — shown on login when deletion is scheduled */}
+        {showReactivationModal && deletionScheduled && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }}>
+            <div className="bg-[#1a1a2e] border border-red-500/40 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <div>
+                  <h2 className="text-white font-bold text-lg">Your account is scheduled for deletion</h2>
+                  <p className="text-red-300 text-sm">{deletionScheduled.daysLeft} day{deletionScheduled.daysLeft !== 1 ? 's' : ''} remaining</p>
+                </div>
+              </div>
+              <p className="text-slate-300 text-sm leading-relaxed">
+                This account will be <strong className="text-red-300">permanently deleted</strong> on{' '}
+                <strong className="text-white">{new Date(deletionScheduled.deleteAt).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong>.
+                All your capsules, media, and data will be gone forever.
+              </p>
+              <p className="text-slate-400 text-sm">Would you like to keep your account?</p>
+              <div className="flex gap-3 pt-1">
+                <button
+                  onClick={handleReactivate}
+                  disabled={isReactivating}
+                  className="flex-1 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                >
+                  {isReactivating ? 'Reactivating…' : 'Yes, keep my account'}
+                </button>
+                <button
+                  onClick={() => setShowReactivationModal(false)}
+                  className="px-4 py-2.5 text-slate-400 hover:text-white border border-slate-600 hover:border-slate-400 rounded-xl transition-colors text-sm"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </>
     );

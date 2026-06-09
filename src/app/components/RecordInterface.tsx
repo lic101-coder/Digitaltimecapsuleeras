@@ -12,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import { RecordingModal } from './RecordingModal';
+import { NativeCaptureUI } from './NativeCaptureUI';
 import { supabase } from '../utils/supabase/client';
 import { projectId } from '../utils/supabase/info';
 import { toast } from 'sonner';
@@ -1173,6 +1174,33 @@ export function RecordInterface({ onMediaCaptured, onOpenVault, onClose, onRegis
   };
 
 
+
+  const isNativeMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  if (isNativeMobile) {
+    return (
+      <>
+        {showModal && currentMedia ? (
+          <RecordingModal
+            media={currentMedia}
+            onSendToCapsule={handleSendToCapsule}
+            onRetake={() => {
+              setShowModal(false);
+              setCurrentMedia(null);
+            }}
+            isSaving={isSaving}
+          />
+        ) : (
+          <NativeCaptureUI
+            onMediaCaptured={(item) => {
+              setCurrentMedia(item);
+              setShowModal(true);
+            }}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <>

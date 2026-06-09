@@ -84,9 +84,99 @@ export const getOptimalDuration = (desktopDuration: number): number => {
 /**
  * Should render complex effect based on device?
  * Some effects (nested glows, box-shadows, etc.) should be disabled on mobile
- * 
+ *
  * @returns true if device can handle complex effects
  */
 export const shouldRenderComplexEffect = (): boolean => {
   return !isMobile();
+};
+
+/**
+ * Performance Tier Detection
+ * Tier 1 (Minimal): Old devices, low memory, <4 cores
+ * Tier 2 (Standard): Average mobile devices
+ * Tier 3 (Full): High-end devices and desktops
+ */
+export type PerformanceTier = 1 | 2 | 3;
+
+let _performanceTier: PerformanceTier | null = null;
+
+export const getPerformanceTier = (): PerformanceTier => {
+  if (_performanceTier !== null) return _performanceTier;
+
+  if (typeof window === 'undefined') {
+    _performanceTier = 3;
+    return _performanceTier;
+  }
+
+  const isMobileDevice = isMobile();
+  const cores = navigator.hardwareConcurrency || 4;
+  const memory = (navigator as any).deviceMemory || 4; // In GB
+
+  // Tier 1: Old/budget devices
+  if (isMobileDevice && (cores <= 4 || memory <= 2)) {
+    _performanceTier = 1;
+  }
+  // Tier 2: Average devices
+  else if (isMobileDevice) {
+    _performanceTier = 2;
+  }
+  // Tier 3: Desktop and high-end
+  else {
+    _performanceTier = 3;
+  }
+
+  return _performanceTier;
+};
+
+/**
+ * Get particle count based on performance tier
+ * Tier 1: 15% of base, Tier 2: 30% of base, Tier 3: 100% of base
+ */
+export const getParticleCountByTier = (baseCount: number): number => {
+  const tier = getPerformanceTier();
+
+  switch (tier) {
+    case 1:
+      return Math.max(1, Math.ceil(baseCount * 0.15));
+    case 2:
+      return Math.max(1, Math.ceil(baseCount * 0.3));
+    case 3:
+    default:
+      return baseCount;
+  }
+};
+
+/**
+ * Get blur amount based on performance tier
+ * Tier 1: minimal blur, Tier 2: 50% blur, Tier 3: full blur
+ */
+export const getBlurByTier = (baseBlur: number): number => {
+  const tier = getPerformanceTier();
+
+  switch (tier) {
+    case 1:
+      return baseBlur > 20 ? Math.ceil(baseBlur * 0.2) : 0;
+    case 2:
+      return Math.ceil(baseBlur * 0.5);
+    case 3:
+    default:
+      return baseBlur;
+  }
+};
+
+/**
+ * Should render effect based on tier?
+ * Tier 1: Only essential effects, Tier 2: Most effects, Tier 3: All effects
+ */
+export const shouldRenderEffectByTier = (effectComplexity: 'essential' | 'standard' | 'complex'): boolean => {
+  const tier = getPerformanceTier();
+
+  if (tier === 1) {
+    return effectComplexity === 'essential';
+  } else if (tier === 2) {
+    return effectComplexity !== 'complex';
+  } else {
+    return true;
+  }
 };

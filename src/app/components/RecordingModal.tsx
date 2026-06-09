@@ -104,8 +104,9 @@ export function RecordingModal({ media, onSendToCapsule, onRetake, isSaving = fa
           )}
         </div>
 
-        {/* Action Buttons - Positioned below video */}
-        <div className="relative w-full p-4 bg-gradient-to-t from-slate-950 via-slate-900 to-black border-t border-purple-500/20">
+        {/* Action Buttons - Positioned below video, safe-area bottom for home indicator */}
+        <div className="relative w-full pt-4 px-4 bg-gradient-to-t from-slate-950 via-slate-900 to-black border-t border-purple-500/20"
+          style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom) + 12px), 16px)' }}>
           <div className="flex flex-col gap-3 max-w-2xl mx-auto">
             {/* Side by side: Send to Capsule and Retake */}
             <div className="grid grid-cols-2 gap-3">

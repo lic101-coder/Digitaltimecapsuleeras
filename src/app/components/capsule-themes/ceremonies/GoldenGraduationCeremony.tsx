@@ -41,6 +41,7 @@ export function GoldenGraduationCeremony({
   onComplete
 }: GoldenGraduationCeremonyProps) {
   const [stage, setStage] = useState<'anticipation' | 'toss' | 'transform' | 'ascend' | 'triumph'>('anticipation');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const timers = [
@@ -55,7 +56,16 @@ export function GoldenGraduationCeremony({
       }, 15000)
     ];
 
-    return () => timers.forEach(clearTimeout);
+    // Completion failsafe - ensure ceremony always completes
+    const failsafeTimeout = setTimeout(() => {
+      setCompleted(true);
+      onComplete?.();
+    }, 16000);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      clearTimeout(failsafeTimeout);
+    };
   }, [isPreview]); // Removed onComplete - don't restart ceremony midway through
 
   // Constellation stars
@@ -619,7 +629,7 @@ export function GoldenGraduationCeremony({
                   ],
                   scale: [1, 1.3, 1]
                 }}
-                transition={{ duration: 3, repeat: Infinity }}
+                transition={{ duration: 3, repeat: completed ? 0 : 4 }}
               />
             </motion.div>
 
