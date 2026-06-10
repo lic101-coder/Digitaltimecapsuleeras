@@ -109,46 +109,31 @@ export function useAchievements() {
   const fetchDefinitions = useCallback(async () => {
     console.log('🏆 Fetching achievement definitions...');
     setLoadingDefinitions(true);
-    
-    // Create an AbortController for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
-    
-    try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/achievements/definitions`,
-        {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`
-          },
-          signal: controller.signal
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      try {
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/achievements/definitions`,
+          { headers: { 'Authorization': `Bearer ${publicAnonKey}` }, signal: controller.signal }
+        );
+        clearTimeout(timeoutId);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ Achievement definitions loaded:', Object.keys(data.definitions || {}).length);
+          setDefinitions(data.definitions || {});
+          break;
         }
-      );
-      
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Achievement definitions loaded:', Object.keys(data.definitions || {}).length);
-        setDefinitions(data.definitions || {});
-      } else {
-        const errorText = await response.text();
-        console.error('❌ Failed to fetch definitions:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText
-        });
+      } catch (error) {
+        clearTimeout(timeoutId);
+        console.warn(`⚠️ Could not fetch achievement definitions (attempt ${attempt}/${maxAttempts}):`, error instanceof Error ? error.message : String(error));
+        if (attempt < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, attempt * 3000));
+        }
       }
-    } catch (error) {
-      clearTimeout(timeoutId);
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.warn('⏱️ Achievement definitions request timed out - server may be cold-starting');
-      } else {
-        console.warn('⚠️ Could not fetch achievement definitions:', error instanceof Error ? error.message : String(error));
-      }
-    } finally {
-      setLoadingDefinitions(false);
     }
+    setLoadingDefinitions(false);
   }, []);
 
   // Fetch user's achievements

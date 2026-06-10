@@ -1,30 +1,18 @@
 /**
- * Eternal Flame - Binary Hearts Supernova Ceremony ❤️💚
- * 
- * ULTRA SMOOTH VERSION - Refined timing, overlapping animations, no skips
- * 
- * STORY:
- * 1. Two hearts appear and float gently (clear intro)
- * 2. Hearts drift closer, circling each other (slow build)
- * 3. Orbit gets faster and tighter (tension rising)
- * 4. Hearts STOP and charge up power (anticipation)
- * 5. Hearts RUSH together in slow-motion clarity
- * 6. MERGED - hearts together at center (NEW!)
- * 7. COLLISION - massive impact you can SEE and FEEL
- * 8. SUPERNOVA - huge explosion with particles
- * 9. Particles converge into wedding ring
- * 10. Ring sparkles and rotates
- * 
+ * Eternal Flame - Binary Hearts Supernova Ceremony
+ *
+ * "Digital Supernova" pattern — mobile-safe animation rewrite.
+ * Stages: intro → hearts → supernova → radiance → outro
+ *
+ * RULES:
+ * - All particle arrays via useMemo, no Math.random() in JSX
+ * - repeat: Infinity only on slow ambient pulses (>3s, subtle)
+ * - Max ~25 elements at peak
+ * - Failsafe onComplete at ~18s
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  getOptimalParticleCount, 
-  getOptimalBlur,
-  getPerformanceStyle,
-  shouldRenderComplexEffect
-} from './ceremonyOptimization';
 
 interface EternalFlamePassionateCeremonyProps {
   capsuleTitle?: string;
@@ -34,1326 +22,756 @@ interface EternalFlamePassionateCeremonyProps {
   onComplete?: () => void;
 }
 
-interface Particle {
-  id: number;
-  angle: number;
-  speed: number;
-  size: number;
-  color: string;
-}
-
 export function EternalFlamePassionateCeremony({
   capsuleTitle = '',
   media = [],
   isPreview = false,
   isVisible = true,
-  onComplete
+  onComplete,
 }: EternalFlamePassionateCeremonyProps) {
-  const [stage, setStage] = useState(0);
-  const [supernovaParticles, setSupernovaParticles] = useState<Particle[]>([]);
-  const [ringParticles, setRingParticles] = useState<Particle[]>([]);
-  const [shake, setShake] = useState(false);
-  const [completed, setCompleted] = useState(false);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
-  // Refined timeline with smoother pacing and overlaps
+  const [stage, setStage] = useState<
+    'intro' | 'hearts' | 'supernova' | 'radiance' | 'outro' | 'complete'
+  >('intro');
+
+  // "LOVE = INFINITE" decode text state: 0=random, 1=partial, 2=final
+  const [decodeState, setDecodeState] = useState(0);
+
+  // ─── Pre-computed particle data ───────────────────────────────────────────
+
+  // Star field: 3 size tiers, 60/80 count
+  const starField = useMemo(() => {
+    const count = isMobile ? 60 : 80;
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i / count) * Math.PI * 2;
+      const r = 30 + ((i * 137) % 100) * 0.55;
+      const tier = i % 7 === 0 ? 5 : i % 3 === 0 ? 3 : 2; // medium / small / tiny
+      return {
+        size: tier,
+        left: 50 + Math.cos(angle) * r,
+        top: 50 + Math.sin(angle) * r * 0.7,
+        twinkleDuration: 5 + (i % 5), // always >5s — ambient allowed
+        twinkleDelay: i * 0.07,
+      };
+    });
+  }, []);
+
+  // 16 inner binary labels drifting inward from circle (radius ~38%)
+  const binaryInner = useMemo(() => {
+    const count = 16;
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i / count) * Math.PI * 2;
+      const radius = isMobile ? 170 : 240;
+      return {
+        label: i % 3 === 0 ? '1' : i % 5 === 0 ? '0' : i % 2 === 0 ? '1' : '0',
+        startX: Math.cos(angle) * radius,
+        startY: Math.sin(angle) * radius,
+        endX: Math.cos(angle) * (radius * 0.35),
+        endY: Math.sin(angle) * (radius * 0.35),
+        delay: i * 0.14,
+        color: i % 2 === 0 ? '#00ff41' : '#00e5ff',
+      };
+    });
+  }, []);
+
+  // 8 outer ring binary labels — dim, slower, radius ~45%
+  const binaryOuter = useMemo(() => {
+    const count = 8;
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i / count) * Math.PI * 2;
+      const radius = isMobile ? 210 : 290;
+      return {
+        label: i % 2 === 0 ? '0' : '1',
+        startX: Math.cos(angle) * radius,
+        startY: Math.sin(angle) * radius,
+        endX: Math.cos(angle) * (radius * 0.55),
+        endY: Math.sin(angle) * (radius * 0.55),
+        delay: i * 0.22 + 0.4,
+        color: i % 2 === 0 ? '#00ff41' : '#00e5ff',
+      };
+    });
+  }, []);
+
+  // Magnetic pull arcs — 3 SVG curved paths between hearts
+  const magneticArcs = useMemo(() => {
+    return Array.from({ length: 3 }, (_, i) => ({
+      // arc curves between ~(-28,0) and (28,0) with varying control point Y
+      d: `M -28 ${-8 + i * 8} Q 0 ${-30 + i * 20} 28 ${-8 + i * 8}`,
+      color: i % 2 === 0 ? '#ff69b4' : '#00e5ff',
+      delay: 0.4 + i * 0.15,
+      strokeWidth: 1.5 - i * 0.3,
+    }));
+  }, []);
+
+  // Love sparks: 8 dots at fixed 45° angles
+  const loveSparks = useMemo(() => {
+    return Array.from({ length: 8 }, (_, i) => {
+      const angle = (i / 8) * Math.PI * 2;
+      const dist = isMobile ? 60 : 80;
+      return {
+        x: Math.cos(angle) * dist,
+        y: Math.sin(angle) * dist,
+        delay: i * 0.04,
+        color: i % 2 === 0 ? '#ff69b4' : '#ffd700',
+      };
+    });
+  }, []);
+
+  // Pulse ring count for hearts stage
+  const pulseRingCount = 3;
+
+  // 6 shockwave rings × 8 binary labels — pre-computed
+  const supernovaRings = useMemo(() => {
+    return Array.from({ length: 6 }, (_, ringIdx) => ({
+      delay: ringIdx * 0.3,
+      color: ringIdx % 2 === 0 ? '#ff69b4' : '#e91e63',
+      labels: Array.from({ length: 8 }, (_, labelIdx) => {
+        const angle = (labelIdx / 8) * Math.PI * 2;
+        const distance = isMobile ? 160 : 220;
+        return {
+          x: Math.cos(angle) * distance,
+          y: Math.sin(angle) * distance,
+          label: labelIdx % 2 === 0 ? '1' : '0',
+          color: labelIdx % 3 === 0 ? '#00ff41' : labelIdx % 3 === 1 ? '#00e5ff' : '#ff69b4',
+          delay: ringIdx * 0.3 + labelIdx * 0.04,
+        };
+      }),
+    }));
+  }, []);
+
+  // Radiance orbit ring — 12 items (binary + heart emojis), useMemo positions
+  const orbitRing = useMemo(() => {
+    const items = ['1', '0', '❤️', '1', '0', '💛', '1', '0', '❤️', '1', '0', '💛'];
+    return Array.from({ length: 12 }, (_, i) => {
+      const angle = (i / 12) * Math.PI * 2;
+      const r = isMobile ? 90 : 120;
+      return {
+        label: items[i],
+        x: Math.cos(angle) * r,
+        y: Math.sin(angle) * r,
+        isEmoji: items[i].length > 1,
+        color: items[i] === '1' ? '#00ff41' : items[i] === '0' ? '#00e5ff' : '#ffd700',
+      };
+    });
+  }, []);
+
+  // Golden settle particles — 8 dots, scatter → center
+  const settleParticles = useMemo(() => {
+    // deterministic scatter: use golden angle spread
+    return Array.from({ length: 8 }, (_, i) => {
+      const angle = (i / 8) * Math.PI * 2;
+      const scatterDist = 40 + ((i * 53) % 20); // 40–59
+      return {
+        startX: Math.cos(angle) * scatterDist,
+        startY: -scatterDist - 10 - ((i * 37) % 30), // y: -40 to -70
+        color: i % 2 === 0 ? '#ffd700' : '#ffb347',
+        size: 4 + (i % 3) * 2,
+        delay: i * 0.1 + 0.4,
+      };
+    });
+  }, []);
+
+  // ─── LOVE = INFINITE decode text cycling ──────────────────────────────────
+  const decodeTexts = useMemo(
+    () => [
+      '10110 = 01101010', // random binary chars
+      'L0VE = INF1N1TE',  // partial decode
+      'LOVE = INFINITE',  // final
+    ],
+    []
+  );
+
+  // ─── Timeline ─────────────────────────────────────────────────────────────
+
   useEffect(() => {
     const timeline = [
-      { time: 0, stage: 0 },       // Intro - hearts appear
-      { time: 2500, stage: 1 },    // Approach - hearts drift closer (longer)
-      { time: 5000, stage: 2 },    // Orbit slow - gentle circle
-      { time: 8000, stage: 3 },    // Orbit fast - building tension
-      { time: 10500, stage: 4 },   // CHARGE - hearts stop and power up (longer)
-      { time: 12500, stage: 5 },   // RUSH - hearts accelerate (longer, clearer)
-      { time: 13800, stage: 6 },   // MERGED - hearts together at center (NEW!)
-      { time: 14200, stage: 7, callback: () => setShake(true) },  // COLLISION
-      { time: 14600, callback: () => setShake(false) },
-      { time: 15400, stage: 8 },   // SUPERNOVA - huge explosion (longer)
-      { time: 17400, stage: 9 },   // Formation - particles to ring
-      { time: 18900, stage: 10 },  // Ring - sparkle and rotate
-      { time: 19400, stage: 11 },  // Outro - fade
-      { time: 19900, stage: 12, callback: () => {
-        setCompleted(true);
-        onComplete?.();
-      }}
+      { time: 0,     action: () => setStage('intro') },
+      { time: 2800,  action: () => setStage('hearts') },
+      { time: 5800,  action: () => setStage('supernova') },
+      { time: 9500,  action: () => setStage('radiance') },
+      { time: 13000, action: () => setStage('outro') },
+      {
+        time: 13800, action: () => {
+          setStage('complete');
+          onComplete?.();
+        },
+      },
     ];
 
-    const timeouts = timeline.map(({ time, stage, callback }) =>
-      setTimeout(() => {
-        if (stage !== undefined) setStage(stage);
-        callback?.();
-      }, time)
-    );
+    const ids = timeline.map(({ time, action }) => setTimeout(action, time));
 
-    // CRITICAL FAILSAFE: Force completion after 25 seconds if ceremony hasn't finished
-    // This prevents freeze bugs where animations block completion
-    const failsafeTimeout = setTimeout(() => {
-      console.warn('⚠️ Binary Hearts Supernova failsafe triggered - forcing completion');
-      setStage(12);
-      setCompleted(true);
+    // Failsafe at 18s
+    const failsafe = setTimeout(() => {
+      setStage('complete');
       onComplete?.();
-    }, 25000);
+    }, 18000);
 
     return () => {
-      timeouts.forEach(clearTimeout);
-      clearTimeout(failsafeTimeout);
+      ids.forEach(clearTimeout);
+      clearTimeout(failsafe);
     };
-  }, []); // Only run once on mount - don't restart ceremony midway through
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Generate supernova particles
+  // Decode text cycling — triggered when supernova stage starts
   useEffect(() => {
-    if (stage === 8) {
-      const count = getOptimalParticleCount(500);
-      const colors = [
-        '#FF6B6B', '#FFD93D', '#FFA07A', '#FFE66D', '#FF8787',
-        '#FF5252', '#FFAA00', '#FF9999', '#FFDD77', '#FF6F6F',
-        '#FFBB33', '#FF7777', '#FFCC55', '#FF8888', '#FFE088'
-      ];
-      
-      const particles: Particle[] = Array.from({ length: count }, (_, i) => ({
-        id: i,
-        angle: (i / count) * Math.PI * 2,
-        speed: 0.7 + Math.random() * 0.6,
-        size: 2 + Math.random() * 5,
-        color: colors[Math.floor(Math.random() * colors.length)]
-      }));
-      
-      setSupernovaParticles(particles);
+    if (stage !== 'supernova') {
+      setDecodeState(0);
+      return;
     }
+    // Start cycling after 1.8s delay
+    const startDelay = setTimeout(() => {
+      let cycle = 0;
+      const interval = setInterval(() => {
+        cycle++;
+        if (cycle === 1) setDecodeState(0);
+        else if (cycle === 2) setDecodeState(1);
+        else if (cycle === 3) setDecodeState(0);
+        else if (cycle === 4) {
+          setDecodeState(2);
+          clearInterval(interval);
+        }
+      }, 200);
+      return () => clearInterval(interval);
+    }, 1800);
+
+    return () => clearTimeout(startDelay);
   }, [stage]);
 
-  // Generate ring particles
-  useEffect(() => {
-    if (stage === 9) {
-      const count = getOptimalParticleCount(60);
-      const colors = ['#FFD700', '#FFA500', '#FFED4E', '#FFB347'];
-      
-      const particles: Particle[] = Array.from({ length: count }, (_, i) => ({
-        id: i,
-        angle: (i / count) * Math.PI * 2,
-        speed: 1,
-        size: 3 + Math.random() * 3,
-        color: colors[i % colors.length]
-      }));
-      
-      setRingParticles(particles);
-    }
-  }, [stage]);
+  // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black"
-      style={getPerformanceStyle()}
+    <div
+      className="relative w-full h-full overflow-hidden"
+      style={{ background: 'radial-gradient(ellipse at 50% 40%, #0a001a 0%, #000 80%)' }}
     >
-      {/* Star field background */}
-      <div className="absolute inset-0">
-        {Array.from({ length: getOptimalParticleCount(80) }).map((_, i) => (
-          <motion.div
-            key={`star-${i}`}
-            className="absolute w-1 h-1 bg-white rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={stage < 11 ? {
-              opacity: [0.2, 0.8, 0.2],
-              scale: [1, 1.3, 1]
-            } : {
-              opacity: 0
-            }}
-            transition={{
-              duration: 2 + Math.random() * 3,
-              repeat: stage < 11 ? Infinity : 0,
-              delay: Math.random() * 2,
-              ease: 'easeInOut'
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Screen shake container */}
-      <motion.div
-        className="absolute inset-0"
-        animate={shake ? {
-          x: [0, -8, 8, -8, 8, -4, 4, 0],
-          y: [0, 8, -8, 8, -8, 4, -4, 0]
-        } : {}}
-        transition={{
-          duration: 0.5,
-          ease: 'easeInOut'
-        }}
-      >
-        <AnimatePresence mode="wait">
-          {/* STAGES 0-3: Hearts orbiting */}
-          {stage >= 0 && stage <= 3 && (
+      {/* ── Star field — 3 size tiers, ambient repeat:Infinity (>5s) ─────── */}
+      {useMemo(
+        () =>
+          starField.map((star, i) => (
             <motion.div
-              key="orbiting-hearts"
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.8, ease: 'easeInOut' }}
-            >
-              {/* Heart 1 - Red */}
-              <motion.div
-                className="absolute"
-                initial={{
-                  left: '20%',
-                  top: '50%',
-                }}
-                animate={{
-                  left: stage === 0 ? '20%' :
-                        stage === 1 ? '32%' :
-                        stage === 2 ? ['32%', '50%', '68%', '50%', '32%'] :
-                        stage === 3 ? ['32%', '50%', '68%', '50%', '32%'] : '50%',
-                  top: stage === 0 ? '50%' :
-                        stage === 1 ? '42%' :
-                        stage === 2 ? ['42%', '32%', '42%', '58%', '42%'] :
-                        stage === 3 ? ['42%', '28%', '42%', '62%', '42%'] : '50%',
-                }}
-                transition={{
-                  duration: stage === 0 ? 0 :
-                           stage === 1 ? 2.5 :
-                           stage === 2 ? 6 :
-                           stage === 3 ? 2.5 : 0,
-                  ease: stage === 2 || stage === 3 ? 'linear' : [0.42, 0, 0.58, 1],
-                  repeat: (stage === 2 || stage === 3) ? Infinity : 0,
-                }}
-                style={{
-                  transform: 'translate(-50%, -50%)',
-                }}
-              >
-                {/* Glow */}
-                {shouldRenderComplexEffect() && (
-                  <motion.div
-                    className="absolute rounded-full pointer-events-none"
-                    style={{
-                      width: stage === 3 ? '220px' : '160px',
-                      height: stage === 3 ? '220px' : '160px',
-                      left: '50%',
-                      top: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      background: stage === 3
-                        ? 'radial-gradient(circle, rgba(255, 107, 107, 0.9) 0%, rgba(255, 107, 107, 0.5) 40%, transparent 70%)'
-                        : 'radial-gradient(circle, rgba(255, 107, 107, 0.7) 0%, rgba(255, 107, 107, 0.3) 40%, transparent 70%)',
-                      filter: `blur(${getOptimalBlur(stage === 3 ? 45 : 30)}px)`,
-                    }}
-                    animate={(stage === 0 || stage === 1 || stage === 2 || stage === 3) ? {
-                      scale: stage === 3 ? [1, 1.6, 1] : [1, 1.2, 1],
-                      opacity: stage === 3 ? [0.8, 1, 0.8] : [0.6, 0.9, 0.6]
-                    } : { opacity: 0 }}
-                    transition={{
-                      duration: stage === 3 ? 0.4 : 1.8,
-                      repeat: (stage === 0 || stage === 1 || stage === 2 || stage === 3) ? Infinity : 0,
-                      ease: 'easeInOut'
-                    }}
-                  />
-                )}
+              key={`star-${i}`}
+              className="absolute rounded-full bg-white pointer-events-none"
+              style={{
+                width: star.size,
+                height: star.size,
+                left: `${star.left}%`,
+                top: `${star.top}%`,
+              }}
+              animate={{ opacity: [0.1, 0.6, 0.1] }}
+              transition={{
+                duration: star.twinkleDuration,
+                repeat: Infinity,
+                delay: star.twinkleDelay,
+                ease: 'easeInOut',
+              }}
+            />
+          )),
+        []
+      )}
 
-                {/* Heart */}
-                <motion.div
-                  className="text-7xl md:text-8xl"
-                  style={{
-                    filter: `drop-shadow(0 0 ${getOptimalBlur(stage === 3 ? 30 : 20)}px rgba(255, 107, 107, 1))`,
-                  }}
-                  animate={{
-                    scale: stage === 3 ? [1, 1.25, 1] : [1, 1.1, 1],
-                  }}
-                  transition={{
-                    duration: stage === 3 ? 0.3 : 1.2,
-                    repeat: Infinity,
-                    ease: 'easeInOut'
-                  }}
-                >
-                  ❤️
-                </motion.div>
-
-                {/* Motion trail during fast orbit */}
-                {stage === 3 && shouldRenderComplexEffect() && (
-                  <motion.div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      background: 'radial-gradient(circle, rgba(255, 107, 107, 0.6) 0%, transparent 60%)',
-                      filter: `blur(${getOptimalBlur(35)}px)`,
-                    }}
-                    animate={{
-                      scale: [0.8, 2.2],
-                      opacity: [0.7, 0]
-                    }}
-                    transition={{
-                      duration: 0.5,
-                      repeat: Infinity,
-                      ease: 'easeOut'
-                    }}
-                  />
-                )}
-              </motion.div>
-
-              {/* Heart 2 - Gold */}
-              <motion.div
-                className="absolute"
-                initial={{
-                  left: '80%',
-                  top: '50%',
-                }}
-                animate={{
-                  left: stage === 0 ? '80%' :
-                        stage === 1 ? '68%' :
-                        stage === 2 ? ['68%', '50%', '32%', '50%', '68%'] :
-                        stage === 3 ? ['68%', '50%', '32%', '50%', '68%'] : '50%',
-                  top: stage === 0 ? '50%' :
-                        stage === 1 ? '58%' :
-                        stage === 2 ? ['58%', '68%', '58%', '42%', '58%'] :
-                        stage === 3 ? ['58%', '72%', '58%', '38%', '58%'] : '50%',
-                }}
-                transition={{
-                  duration: stage === 0 ? 0 :
-                           stage === 1 ? 2.5 :
-                           stage === 2 ? 6 :
-                           stage === 3 ? 2.5 : 0,
-                  ease: stage === 2 || stage === 3 ? 'linear' : [0.42, 0, 0.58, 1],
-                  repeat: (stage === 2 || stage === 3) ? Infinity : 0,
-                }}
-                style={{
-                  transform: 'translate(-50%, -50%)',
-                }}
-              >
-                {/* Glow */}
-                {shouldRenderComplexEffect() && (
-                  <motion.div
-                    className="absolute rounded-full pointer-events-none"
-                    style={{
-                      width: stage === 3 ? '220px' : '160px',
-                      height: stage === 3 ? '220px' : '160px',
-                      left: '50%',
-                      top: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      background: stage === 3
-                        ? 'radial-gradient(circle, rgba(74, 222, 128, 0.9) 0%, rgba(74, 222, 128, 0.5) 40%, transparent 70%)'
-                        : 'radial-gradient(circle, rgba(74, 222, 128, 0.7) 0%, rgba(74, 222, 128, 0.3) 40%, transparent 70%)',
-                      filter: `blur(${getOptimalBlur(stage === 3 ? 45 : 30)}px)`,
-                    }}
-                    animate={(stage === 0 || stage === 1 || stage === 2 || stage === 3) ? {
-                      scale: stage === 3 ? [1, 1.6, 1] : [1, 1.2, 1],
-                      opacity: stage === 3 ? [0.8, 1, 0.8] : [0.6, 0.9, 0.6]
-                    } : { opacity: 0 }}
-                    transition={{
-                      duration: stage === 3 ? 0.4 : 1.8,
-                      repeat: (stage === 0 || stage === 1 || stage === 2 || stage === 3) ? Infinity : 0,
-                      ease: 'easeInOut'
-                    }}
-                  />
-                )}
-
-                {/* Heart */}
-                <motion.div
-                  className="text-7xl md:text-8xl"
-                  style={{
-                    filter: `drop-shadow(0 0 ${getOptimalBlur(stage === 3 ? 30 : 20)}px rgba(74, 222, 128, 1))`,
-                  }}
-                  animate={{
-                    scale: stage === 3 ? [1, 1.25, 1] : [1, 1.1, 1],
-                  }}
-                  transition={{
-                    duration: stage === 3 ? 0.3 : 1.2,
-                    repeat: Infinity,
-                    ease: 'easeInOut'
-                  }}
-                >
-                  💚
-                </motion.div>
-
-                {/* Motion trail during fast orbit */}
-                {stage === 3 && shouldRenderComplexEffect() && (
-                  <motion.div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      background: 'radial-gradient(circle, rgba(74, 222, 128, 0.6) 0%, transparent 60%)',
-                      filter: `blur(${getOptimalBlur(35)}px)`,
-                    }}
-                    animate={{
-                      scale: [0.8, 2.2],
-                      opacity: [0.7, 0]
-                    }}
-                    transition={{
-                      duration: 0.5,
-                      repeat: Infinity,
-                      ease: 'easeOut'
-                    }}
-                  />
-                )}
-              </motion.div>
-            </motion.div>
-          )}
-
-          {/* STAGE 4: CHARGE UP - Hearts stop and power up */}
-          {stage === 4 && (
-            <motion.div
-              key="charging"
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5, ease: 'easeInOut' }}
-            >
-              {/* Heart 1 - Left side, charging */}
-              <motion.div
-                className="absolute left-[37%] top-1/2"
-                style={{ transform: 'translate(-50%, -50%)' }}
-                initial={{ left: '32%' }}
-                animate={{ left: '37%' }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
-              >
-                {/* Massive charging glow */}
-                {shouldRenderComplexEffect() && (
-                  <motion.div
-                    className="absolute rounded-full pointer-events-none"
-                    style={{
-                      width: '280px',
-                      height: '280px',
-                      left: '50%',
-                      top: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      background: 'radial-gradient(circle, rgba(255, 107, 107, 1) 0%, rgba(255, 107, 107, 0.7) 25%, rgba(255, 107, 107, 0.3) 50%, transparent 70%)',
-                      filter: `blur(${getOptimalBlur(55)}px)`,
-                    }}
-                    animate={stage === 4 ? {
-                      scale: [1, 2, 1],
-                      opacity: [0.7, 1, 0.7]
-                    } : { opacity: 0 }}
-                    transition={{
-                      duration: 0.6,
-                      repeat: stage === 4 ? Infinity : 0,
-                      ease: 'easeInOut'
-                    }}
-                  />
-                )}
-
-                {/* Energy rings charging - slower, clearer */}
-                {stage === 4 && [0, 1, 2, 3].map((i) => (
-                  <motion.div
-                    key={`charge-ring-1-${i}`}
-                    className="absolute left-1/2 top-1/2 rounded-full border-4 border-red-400"
-                    style={{
-                      transform: 'translate(-50%, -50%)',
-                    }}
-                    animate={{
-                      width: ['220px', '60px'],
-                      height: ['220px', '60px'],
-                      opacity: [0, 0.8, 0.6, 0],
-                      borderWidth: ['2px', '5px', '2px']
-                    }}
-                    transition={{
-                      duration: 1,
-                      delay: i * 0.3,
-                      repeat: Infinity,
-                      ease: 'easeIn'
-                    }}
-                  />
-                ))}
-
-                {/* Heart - pulsing with power */}
-                <motion.div
-                  className="text-8xl md:text-9xl relative z-10"
-                  style={{
-                    filter: `drop-shadow(0 0 ${getOptimalBlur(45)}px rgba(255, 107, 107, 1))`,
-                  }}
-                  animate={stage === 4 ? {
-                    scale: [1.1, 1.5, 1.1],
-                  } : { scale: 1.1 }}
-                  transition={{
-                    duration: 0.6,
-                    repeat: stage === 4 ? Infinity : 0,
-                    ease: 'easeInOut'
-                  }}
-                >
-                  ❤️
-                </motion.div>
-              </motion.div>
-
-              {/* Heart 2 - Right side, charging */}
-              <motion.div
-                className="absolute left-[63%] top-1/2"
-                style={{ transform: 'translate(-50%, -50%)' }}
-                initial={{ left: '68%' }}
-                animate={{ left: '63%' }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
-              >
-                {/* Massive charging glow */}
-                {shouldRenderComplexEffect() && (
-                  <motion.div
-                    className="absolute rounded-full pointer-events-none"
-                    style={{
-                      width: '280px',
-                      height: '280px',
-                      left: '50%',
-                      top: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      background: 'radial-gradient(circle, rgba(74, 222, 128, 1) 0%, rgba(74, 222, 128, 0.7) 25%, rgba(74, 222, 128, 0.3) 50%, transparent 70%)',
-                      filter: `blur(${getOptimalBlur(55)}px)`,
-                    }}
-                    animate={stage === 4 ? {
-                      scale: [1, 2, 1],
-                      opacity: [0.7, 1, 0.7]
-                    } : { opacity: 0 }}
-                    transition={{
-                      duration: 0.6,
-                      repeat: stage === 4 ? Infinity : 0,
-                      ease: 'easeInOut'
-                    }}
-                  />
-                )}
-
-                {/* Energy rings charging - slower, clearer */}
-                {stage === 4 && [0, 1, 2, 3].map((i) => (
-                  <motion.div
-                    key={`charge-ring-2-${i}`}
-                    className="absolute left-1/2 top-1/2 rounded-full border-4 border-green-400"
-                    style={{
-                      transform: 'translate(-50%, -50%)',
-                    }}
-                    animate={{
-                      width: ['220px', '60px'],
-                      height: ['220px', '60px'],
-                      opacity: [0, 0.8, 0.6, 0],
-                      borderWidth: ['2px', '5px', '2px']
-                    }}
-                    transition={{
-                      duration: 1,
-                      delay: i * 0.3,
-                      repeat: Infinity,
-                      ease: 'easeIn'
-                    }}
-                  />
-                ))}
-
-                {/* Heart - pulsing with power */}
-                <motion.div
-                  className="text-8xl md:text-9xl relative z-10"
-                  style={{
-                    filter: `drop-shadow(0 0 ${getOptimalBlur(45)}px rgba(74, 222, 128, 1))`,
-                  }}
-                  animate={stage === 4 ? {
-                    scale: [1.1, 1.5, 1.1],
-                  } : { scale: 1.1 }}
-                  transition={{
-                    duration: 0.6,
-                    repeat: stage === 4 ? Infinity : 0,
-                    ease: 'easeInOut'
-                  }}
-                >
-                  💚
-                </motion.div>
-              </motion.div>
-
-              {/* Energy arc between hearts - thicker, clearer */}
-              {shouldRenderComplexEffect() && stage === 4 && (
-                <motion.div
-                  className="absolute left-1/2 top-1/2"
-                  style={{
-                    width: '26%',
-                    height: '8px',
-                    background: 'linear-gradient(to right, rgba(255, 107, 107, 0.9), rgba(100, 200, 100, 1), rgba(74, 222, 128, 0.9))',
-                    filter: `blur(${getOptimalBlur(5)}px)`,
-                    transform: 'translate(-50%, -50%)',
-                    boxShadow: '0 0 40px rgba(100, 200, 100, 0.9), 0 0 80px rgba(100, 200, 100, 0.5)'
-                  }}
-                  animate={{
-                    opacity: [0.6, 1, 0.6],
-                    scaleX: [0.9, 1.15, 0.9],
-                    scaleY: [1, 1.3, 1]
-                  }}
-                  transition={{
-                    duration: 0.5,
-                    repeat: Infinity,
-                    ease: 'easeInOut'
-                  }}
-                />
-              )}
-
-              {/* Electrical sparks along arc */}
-              {shouldRenderComplexEffect() && stage === 4 && [0, 1, 2, 3, 4].map((i) => (
-                <motion.div
-                  key={`spark-${i}`}
-                  className="absolute left-1/2 top-1/2 w-2 h-2 bg-white rounded-full"
-                  style={{
-                    transform: 'translate(-50%, -50%)',
-                    filter: `blur(${getOptimalBlur(1)}px)`,
-                    boxShadow: '0 0 10px #fff, 0 0 20px #4ade80'
-                  }}
-                  animate={{
-                    x: ['-13%', '13%'],
-                    opacity: [0, 1, 0],
-                    scale: [0, 1.5, 0]
-                  }}
-                  transition={{
-                    duration: 0.8,
-                    delay: i * 0.2,
-                    repeat: Infinity,
-                    ease: 'linear'
-                  }}
-                />
-              ))}
-            </motion.div>
-          )}
-
-          {/* STAGE 5: RUSH - Hearts accelerate toward each other (LONGER, CLEARER) */}
-          {stage === 5 && (
-            <motion.div
-              key="rushing"
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeIn' }}
-            >
-              {/* Heart 1 - Racing to center (SLOWER for clarity) */}
-              <motion.div
-                className="absolute"
-                initial={{ left: '37%', top: '50%' }}
-                animate={{ left: '50%', top: '50%' }}
-                transition={{
-                  duration: 1.3,
-                  ease: [0.5, 0.05, 0.1, 0.95] // Smooth acceleration
-                }}
-                style={{ transform: 'translate(-50%, -50%)' }}
-              >
-                {/* Speed trail - longer, more visible */}
-                {shouldRenderComplexEffect() && (
-                  <motion.div
-                    className="absolute pointer-events-none"
-                    style={{
-                      width: '400px',
-                      height: '120px',
-                      right: '50%',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'linear-gradient(to right, transparent 0%, rgba(255, 107, 107, 0.3) 30%, rgba(255, 107, 107, 0.7) 70%, rgba(255, 107, 107, 0.9) 100%)',
-                      filter: `blur(${getOptimalBlur(25)}px)`,
-                    }}
-                    animate={{
-                      opacity: [0, 1, 1],
-                      scaleX: [0.5, 1, 1.2]
-                    }}
-                    transition={{
-                      duration: 1.3,
-                      ease: 'easeOut'
-                    }}
-                  />
-                )}
-
-                {/* Heart growing */}
-                <motion.div
-                  className="text-8xl md:text-9xl relative z-10"
-                  style={{
-                    filter: `drop-shadow(0 0 ${getOptimalBlur(50)}px rgba(255, 107, 107, 1))`,
-                  }}
-                  animate={{ 
-                    scale: [1.2, 1.8]
-                  }}
-                  transition={{ 
-                    duration: 1.3, 
-                    ease: 'easeIn' 
-                  }}
-                >
-                  ❤️
-                </motion.div>
-              </motion.div>
-
-              {/* Heart 2 - Racing to center (SLOWER for clarity) */}
-              <motion.div
-                className="absolute"
-                initial={{ left: '63%', top: '50%' }}
-                animate={{ left: '50%', top: '50%' }}
-                transition={{
-                  duration: 1.3,
-                  ease: [0.5, 0.05, 0.1, 0.95] // Smooth acceleration
-                }}
-                style={{ transform: 'translate(-50%, -50%)' }}
-              >
-                {/* Speed trail - longer, more visible */}
-                {shouldRenderComplexEffect() && (
-                  <motion.div
-                    className="absolute pointer-events-none"
-                    style={{
-                      width: '400px',
-                      height: '120px',
-                      left: '50%',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'linear-gradient(to left, transparent 0%, rgba(74, 222, 128, 0.3) 30%, rgba(74, 222, 128, 0.7) 70%, rgba(74, 222, 128, 0.9) 100%)',
-                      filter: `blur(${getOptimalBlur(25)}px)`,
-                    }}
-                    animate={{
-                      opacity: [0, 1, 1],
-                      scaleX: [0.5, 1, 1.2]
-                    }}
-                    transition={{
-                      duration: 1.3,
-                      ease: 'easeOut'
-                    }}
-                  />
-                )}
-
-                {/* Heart growing */}
-                <motion.div
-                  className="text-8xl md:text-9xl relative z-10"
-                  style={{
-                    filter: `drop-shadow(0 0 ${getOptimalBlur(50)}px rgba(74, 222, 128, 1))`,
-                  }}
-                  animate={{ 
-                    scale: [1.2, 1.8]
-                  }}
-                  transition={{ 
-                    duration: 1.3, 
-                    ease: 'easeIn' 
-                  }}
-                >
-                  💚
-                </motion.div>
-              </motion.div>
-
-              {/* Convergence energy buildup at center */}
-              {shouldRenderComplexEffect() && (
-                <motion.div
-                  className="absolute left-1/2 top-1/2 rounded-full pointer-events-none"
-                  style={{
-                    width: '200px',
-                    height: '200px',
-                    transform: 'translate(-50%, -50%)',
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 200, 100, 0.6) 30%, transparent 70%)',
-                    filter: `blur(${getOptimalBlur(40)}px)`,
-                  }}
-                  animate={{
-                    scale: [0, 1.5],
-                    opacity: [0, 0.9]
-                  }}
-                  transition={{
-                    duration: 1.3,
-                    ease: 'easeIn'
-                  }}
-                />
-              )}
-            </motion.div>
-          )}
-
-          {/* STAGE 6: MERGED - Hearts together at center (NEW!) */}
-          {stage === 6 && (
-            <motion.div
-              key="merged"
-              className="absolute inset-0"
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-            >
-              {/* BOTH Hearts at CENTER - clearly visible */}
-              <div className="absolute left-1/2 top-1/2" style={{ transform: 'translate(-50%, -50%)' }}>
-                {/* Red heart */}
-                <motion.div
-                  className="absolute left-0 top-0 text-8xl md:text-9xl"
-                  style={{
-                    filter: `drop-shadow(0 0 ${getOptimalBlur(50)}px rgba(255, 107, 107, 1))`,
-                    transform: 'translate(-25%, -50%)'
-                  }}
-                  animate={{ 
-                    scale: [1.8, 1.9, 1.8]
-                  }}
-                  transition={{ 
-                    duration: 0.4, 
-                    repeat: 1,
-                    ease: 'easeInOut' 
-                  }}
-                >
-                  ❤️
-                </motion.div>
-
-                {/* Green heart overlapping */}
-                <motion.div
-                  className="absolute left-0 top-0 text-8xl md:text-9xl"
-                  style={{
-                    filter: `drop-shadow(0 0 ${getOptimalBlur(50)}px rgba(74, 222, 128, 1))`,
-                    transform: 'translate(25%, -50%)',
-                    mixBlendMode: 'screen'
-                  }}
-                  animate={{ 
-                    scale: [1.8, 1.9, 1.8]
-                  }}
-                  transition={{ 
-                    duration: 0.4, 
-                    repeat: 1,
-                    ease: 'easeInOut' 
-                  }}
-                >
-                  💚
-                </motion.div>
-              </div>
-
-              {/* Intense energy buildup at center */}
-              {shouldRenderComplexEffect() && (
-                <motion.div
-                  className="absolute left-1/2 top-1/2 rounded-full pointer-events-none"
-                  style={{
-                    width: '300px',
-                    height: '300px',
-                    transform: 'translate(-50%, -50%)',
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 200, 100, 0.7) 30%, transparent 70%)',
-                    filter: `blur(${getOptimalBlur(50)}px)`,
-                  }}
-                  animate={{
-                    scale: [1.2, 1.8, 1.2],
-                    opacity: [0.7, 1, 0.7]
-                  }}
-                  transition={{
-                    duration: 0.4,
-                    repeat: 1,
-                    ease: 'easeInOut'
-                  }}
-                />
-              )}
-            </motion.div>
-          )}
-
-          {/* STAGE 7: COLLISION - MASSIVE IMPACT (LONGER, MORE DRAMATIC) */}
-          {stage === 7 && (
-            <motion.div
-              key="collision"
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              {/* BLINDING WHITE FLASH - longer duration */}
-              <motion.div
-                className="absolute inset-0 bg-white z-50"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0, 1, 0.9, 0.7, 0] }}
-                transition={{ 
-                  duration: 1.2, 
-                  times: [0, 0.15, 0.35, 0.6, 1], 
-                  ease: 'easeOut' 
-                }}
-              />
-
-              {/* Impact point - center */}
-              <div className="absolute left-1/2 top-1/2" style={{ transform: 'translate(-50%, -50%)' }}>
-                {/* MASSIVE EXPLOSION CORE - triple layer with longer animation */}
-                {shouldRenderComplexEffect() && (
-                  <>
-                    {/* Inner core - white hot */}
-                    <motion.div
-                      className="absolute rounded-full pointer-events-none"
-                      style={{
-                        width: '350px',
-                        height: '350px',
-                        left: '50%',
-                        top: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        background: 'radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 240, 200, 1) 15%, rgba(255, 220, 150, 0.9) 35%, transparent 70%)',
-                        filter: `blur(${getOptimalBlur(45)}px)`,
-                      }}
-                      initial={{ scale: 0, opacity: 1 }}
-                      animate={{ scale: [0, 3.5, 3], opacity: [1, 1, 0.7, 0] }}
-                      transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-                    />
-
-                    {/* Middle layer - orange */}
-                    <motion.div
-                      className="absolute rounded-full pointer-events-none"
-                      style={{
-                        width: '550px',
-                        height: '550px',
-                        left: '50%',
-                        top: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        background: 'radial-gradient(circle, rgba(255, 170, 100, 0.95) 0%, rgba(255, 130, 107, 0.7) 35%, transparent 70%)',
-                        filter: `blur(${getOptimalBlur(65)}px)`,
-                      }}
-                      initial={{ scale: 0, opacity: 1 }}
-                      animate={{ scale: [0, 3, 2.5], opacity: [1, 0.9, 0.6, 0] }}
-                      transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
-                    />
-
-                    {/* Outer layer - red */}
-                    <motion.div
-                      className="absolute rounded-full pointer-events-none"
-                      style={{
-                        width: '750px',
-                        height: '750px',
-                        left: '50%',
-                        top: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        background: 'radial-gradient(circle, rgba(255, 107, 107, 0.8) 0%, rgba(255, 90, 90, 0.5) 35%, transparent 70%)',
-                        filter: `blur(${getOptimalBlur(85)}px)`,
-                      }}
-                      initial={{ scale: 0, opacity: 1 }}
-                      animate={{ scale: [0, 2.5, 2], opacity: [1, 0.8, 0.4, 0] }}
-                      transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
-                    />
-                  </>
-                )}
-
-                {/* Hearts exploding at center - slower rotation */}
-                <motion.div
-                  className="relative z-10"
-                  initial={{ scale: 1.8, rotate: 0 }}
-                  animate={{ 
-                    scale: [1.8, 2.8, 0],
-                    rotate: [0, 60, 120, 180]
-                  }}
-                  transition={{ duration: 0.9, ease: 'easeOut' }}
-                >
-                  <div className="relative text-9xl">
-                    <span className="absolute left-1/2 top-1/2" style={{ transform: 'translate(-50%, -50%)' }}>❤️</span>
-                    <span 
-                      className="absolute left-1/2 top-1/2" 
-                      style={{ transform: 'translate(-50%, -50%)', opacity: 0.85, mixBlendMode: 'screen' }}
-                    >
-                      💚
-                    </span>
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* IMPACT SHOCKWAVES - MORE EPIC: 8 rings, BIGGER */}
-              {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-                <motion.div
-                  key={`shockwave-${i}`}
-                  className="absolute left-1/2 top-1/2 rounded-full border-4"
-                  style={{
-                    transform: 'translate(-50%, -50%)',
-                    borderColor: i % 2 === 0 ? '#FF6B6B' : '#FFD93D',
-                  }}
-                  initial={{ width: 0, height: 0, opacity: 0 }}
-                  animate={{
-                    width: ['0px', '1800px'],
-                    height: ['0px', '1800px'],
-                    opacity: [0, 1, 0.85, 0.6, 0],
-                    borderWidth: ['10px', '5px', '2px', '0px']
-                  }}
-                  transition={{
-                    duration: 1.4,
-                    delay: i * 0.11,
-                    ease: [0.22, 1, 0.36, 1]
-                  }}
-                />
-              ))}
-
-              {/* Energy burst particles - MASSIVE: 80 particles, BIGGER */}
-              {shouldRenderComplexEffect() && Array.from({ length: getOptimalParticleCount(80) }).map((_, i) => {
-                const angle = (i / 80) * Math.PI * 2;
-                const distance = 48;
-                const endX = 50 + Math.cos(angle) * distance;
-                const endY = 50 + Math.sin(angle) * distance;
-
-                return (
-                  <motion.div
-                    key={`burst-${i}`}
-                    className="absolute rounded-full pointer-events-none"
-                    style={{
-                      width: '16px',
-                      height: '16px',
-                      backgroundColor: i % 3 === 0 ? '#FF6B6B' : i % 3 === 1 ? '#FFD93D' : '#FFA07A',
-                      left: '50%',
-                      top: '50%',
-                      boxShadow: `0 0 25px currentColor, 0 0 50px currentColor`,
-                      filter: `blur(${getOptimalBlur(2)}px)`
-                    }}
-                    initial={{ x: '-50%', y: '-50%', scale: 0, opacity: 0 }}
-                    animate={{
-                      x: `calc(${endX - 50}vw - 50%)`,
-                      y: `calc(${endY - 50}vh - 50%)`,
-                      scale: [0, 3, 1.8, 0.8],
-                      opacity: [0, 1, 0.95, 0]
-                    }}
-                    transition={{
-                      duration: 1.1,
-                      ease: 'easeOut',
-                      delay: i * 0.008
-                    }}
-                  />
-                );
-              })}
-            </motion.div>
-          )}
-
-          {/* STAGE 8: SUPERNOVA - Massive particle explosion (LONGER) */}
-          {stage === 8 && (
-            <motion.div
-              key="supernova"
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.6, ease: 'easeIn' }}
-            >
-              {/* Central afterglow - longer fade */}
-              {shouldRenderComplexEffect() && (
-                <motion.div
-                  className="absolute left-1/2 top-1/2 rounded-full pointer-events-none"
-                  style={{
-                    width: '550px',
-                    height: '550px',
-                    transform: 'translate(-50%, -50%)',
-                    background: 'radial-gradient(circle, rgba(255, 220, 120, 0.85) 0%, rgba(255, 130, 107, 0.5) 25%, rgba(255, 107, 107, 0.3) 50%, transparent 65%)',
-                    filter: `blur(${getOptimalBlur(75)}px)`,
-                  }}
-                  animate={{
-                    scale: [1.8, 3, 2.5],
-                    opacity: [0.9, 0.6, 0.3, 0.1]
-                  }}
-                  transition={{ duration: 2, ease: 'easeOut' }}
-                />
-              )}
-
-              {/* GRANDEOUS SUPERNOVA - 500 particles, BIGGER spread */}
-              {supernovaParticles.map((particle) => {
-                const distance = 60 * particle.speed;
-                const endX = 50 + Math.cos(particle.angle) * distance;
-                const endY = 50 + Math.sin(particle.angle) * distance;
-
-                return (
-                  <motion.div
-                    key={particle.id}
-                    className="absolute rounded-full pointer-events-none"
-                    style={{
-                      width: `${particle.size * 1.3}px`,
-                      height: `${particle.size * 1.3}px`,
-                      backgroundColor: particle.color,
-                      left: '50%',
-                      top: '50%',
-                      boxShadow: shouldRenderComplexEffect() ? `0 0 ${getOptimalBlur(18)}px ${particle.color}, 0 0 ${getOptimalBlur(35)}px ${particle.color}` : undefined,
-                      filter: shouldRenderComplexEffect() ? `blur(${getOptimalBlur(1.2)}px)` : undefined,
-                    }}
-                    initial={{
-                      x: '-50%',
-                      y: '-50%',
-                      opacity: 0,
-                      scale: 0
-                    }}
-                    animate={{
-                      x: `calc(${endX - 50}vw - 50%)`,
-                      y: `calc(${endY - 50}vh - 50%)`,
-                      opacity: [0, 1, 0.98, 0.85, 0.65, 0.4],
-                      scale: [0, 2.2, 1.8, 1.4, 1.1, 0.8]
-                    }}
-                    transition={{
-                      duration: 2,
-                      ease: [0.22, 1, 0.36, 1],
-                      delay: particle.id * 0.0008
-                    }}
-                  />
-                );
-              })}
-
-              {/* Expanding shockwave rings - EPIC: 9 rings, BIGGER */}
-              {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <motion.div
-                  key={`supernova-ring-${i}`}
-                  className="absolute left-1/2 top-1/2 rounded-full border-2 border-orange-400"
-                  style={{
-                    transform: 'translate(-50%, -50%)',
-                  }}
-                  initial={{ width: 0, height: 0, opacity: 0 }}
-                  animate={{
-                    width: ['0px', '2000px'],
-                    height: ['0px', '2000px'],
-                    opacity: [0.9, 0.7, 0.45, 0],
-                    borderWidth: ['6px', '3px', '1px', '0px']
-                  }}
-                  transition={{
-                    duration: 2.5,
-                    delay: i * 0.2,
-                    ease: [0.22, 1, 0.36, 1]
-                  }}
-                />
-              ))}
-            </motion.div>
-          )}
-
-          {/* STAGE 9: Ring formation - smoother convergence */}
-          {stage === 9 && (
-            <motion.div
-              key="ring-formation"
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1, ease: 'easeInOut' }}
-            >
-              {/* Ring glow - smooth fade in */}
-              {shouldRenderComplexEffect() && (
-                <motion.div
-                  className="absolute left-1/2 top-1/2 rounded-full pointer-events-none"
-                  style={{
-                    width: '38%',
-                    height: '38%',
-                    maxWidth: '380px',
-                    maxHeight: '380px',
-                    transform: 'translate(-50%, -50%)',
-                    background: 'radial-gradient(circle, transparent 32%, rgba(255, 215, 0, 0.5) 43%, rgba(255, 215, 0, 0.25) 55%, transparent 68%)',
-                    filter: `blur(${getOptimalBlur(35)}px)`,
-                  }}
-                  animate={{
-                    scale: [0.7, 1.15, 0.95, 1.05, 1],
-                    opacity: [0, 0.7, 0.9, 0.85]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    ease: [0.34, 1.56, 0.64, 1]
-                  }}
-                />
-              )}
-
-              {/* Particles converging to ring - slower, smoother */}
-              {ringParticles.map((particle) => {
-                const ringRadius = 15;
-                const ringX = 50 + Math.cos(particle.angle) * ringRadius;
-                const ringY = 50 + Math.sin(particle.angle) * ringRadius;
-
-                const startAngle = Math.random() * Math.PI * 2;
-                const startDist = 38 + Math.random() * 18;
-                const startX = 50 + Math.cos(startAngle) * startDist;
-                const startY = 50 + Math.sin(startAngle) * startDist;
-
-                return (
-                  <motion.div
-                    key={particle.id}
-                    className="absolute rounded-full pointer-events-none"
-                    style={{
-                      width: `${particle.size}px`,
-                      height: `${particle.size}px`,
-                      backgroundColor: particle.color,
-                      boxShadow: shouldRenderComplexEffect() ? `0 0 ${getOptimalBlur(8)}px ${particle.color}` : undefined,
-                      filter: shouldRenderComplexEffect() ? `blur(${getOptimalBlur(0.6)}px)` : undefined,
-                    }}
-                    initial={{
-                      left: `${startX}%`,
-                      top: `${startY}%`,
-                      x: '-50%',
-                      y: '-50%',
-                      opacity: 0,
-                      scale: 0
-                    }}
-                    animate={{
-                      left: `${ringX}%`,
-                      top: `${ringY}%`,
-                      opacity: [0, 0.5, 0.8, 1],
-                      scale: [0, 1.5, 1.2, 1]
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      delay: particle.id * 0.015,
-                      ease: [0.34, 1.56, 0.64, 1]
-                    }}
-                  />
-                );
-              })}
-            </motion.div>
-          )}
-
-          {/* STAGE 10: Ring sparkles and rotates */}
-          {stage === 10 && (
-            <motion.div
-              key="ring-sparkle"
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.8, ease: 'easeInOut' }}
-            >
-              {/* Ring glow - pulsing */}
-              {shouldRenderComplexEffect() && (
-                <motion.div
-                  className="absolute left-1/2 top-1/2 rounded-full pointer-events-none"
-                  style={{
-                    width: '38%',
-                    height: '38%',
-                    maxWidth: '380px',
-                    maxHeight: '380px',
-                    transform: 'translate(-50%, -50%)',
-                    background: 'radial-gradient(circle, transparent 32%, rgba(255, 215, 0, 0.6) 43%, rgba(255, 215, 0, 0.35) 55%, transparent 68%)',
-                    filter: `blur(${getOptimalBlur(35)}px)`,
-                  }}
-                  animate={stage === 10 ? {
-                    scale: [0.95, 1.15, 0.95],
-                    opacity: [0.7, 1, 0.7]
-                  } : { opacity: 0 }}
-                  transition={{
-                    duration: 3,
-                    repeat: stage === 10 ? 2 : 0, // Limit to 2 repeats instead of infinite
-                    ease: 'easeInOut'
-                  }}
-                />
-              )}
-
-              {/* Ring particles - rotating */}
-              <motion.div
-                className="absolute left-1/2 top-1/2"
-                style={{
-                  width: '30%',
-                  height: '30%',
-                  maxWidth: '300px',
-                  maxHeight: '300px',
-                  transform: 'translate(-50%, -50%)',
-                }}
-                animate={stage === 10 ? { rotate: 360 } : { rotate: 0 }}
-                transition={{
-                  duration: 12,
-                  repeat: stage === 10 ? 1 : 0, // Limit to 1 repeat instead of infinite
-                  ease: 'linear'
-                }}
-              >
-                {ringParticles.map((particle) => {
-                  const ringRadius = 15;
-                  const ringX = 50 + Math.cos(particle.angle) * ringRadius;
-                  const ringY = 50 + Math.sin(particle.angle) * ringRadius;
-
-                  return (
-                    <motion.div
-                      key={particle.id}
-                      className="absolute rounded-full pointer-events-none"
-                      style={{
-                        width: `${particle.size}px`,
-                        height: `${particle.size}px`,
-                        backgroundColor: particle.color,
-                        left: `${ringX}%`,
-                        top: `${ringY}%`,
-                        transform: 'translate(-50%, -50%)',
-                        boxShadow: shouldRenderComplexEffect() ? `0 0 ${getOptimalBlur(10)}px ${particle.color}` : undefined,
-                        filter: shouldRenderComplexEffect() ? `blur(${getOptimalBlur(0.6)}px)` : undefined,
-                      }}
-                      animate={stage === 10 ? {
-                        scale: [1, 1.4, 1],
-                        opacity: [0.9, 1, 0.9]
-                      } : { opacity: 0 }}
-                      transition={{
-                        duration: 2.5,
-                        delay: particle.id * 0.06,
-                        repeat: stage === 10 ? 1 : 0, // Limit to 1 repeat instead of infinite
-                        ease: 'easeInOut'
-                      }}
-                    />
-                  );
-                })}
-              </motion.div>
-
-              {/* Diamond sparkles */}
-              {stage === 10 && [0, 90, 180, 270].map((angle, i) => {
-                const sparkleRadius = 15;
-                const sparkleX = 50 + Math.cos((angle * Math.PI) / 180) * sparkleRadius;
-                const sparkleY = 50 + Math.sin((angle * Math.PI) / 180) * sparkleRadius;
-
-                return (
-                  <motion.div
-                    key={`diamond-${i}`}
-                    className="absolute text-3xl md:text-4xl pointer-events-none"
-                    style={{
-                      left: `${sparkleX}%`,
-                      top: `${sparkleY}%`,
-                      transform: 'translate(-50%, -50%)',
-                      filter: `drop-shadow(0 0 ${getOptimalBlur(10)}px rgba(255, 255, 255, 0.9))`,
-                    }}
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{
-                      opacity: [0, 1, 1, 0.8, 0],
-                      scale: [0, 1.8, 1.4, 1.2, 0.9],
-                      rotate: [0, 120, 240, 360]
-                    }}
-                    transition={{
-                      duration: 2.5,
-                      delay: i * 0.5,
-                      repeat: 1, // Limit to 1 repeat
-                      ease: 'easeInOut'
-                    }}
-                  >
-                    ✨
-                  </motion.div>
-                );
-              })}
-
-              {/* Light rays */}
-              {shouldRenderComplexEffect() && stage === 10 && Array.from({ length: 12 }).map((_, i) => {
-                const rayAngle = (i / 12) * Math.PI * 2;
-
-                return (
-                  <motion.div
-                    key={`ray-${i}`}
-                    className="absolute left-1/2 top-1/2 pointer-events-none"
-                    style={{
-                      width: '4px',
-                      height: '90px',
-                      background: 'linear-gradient(to bottom, rgba(255, 215, 0, 0.7), transparent)',
-                      transform: `rotate(${rayAngle}rad)`,
-                      transformOrigin: 'top center',
-                      filter: `blur(${getOptimalBlur(3)}px)`,
-                    }}
-                    animate={{
-                      opacity: [0.4, 0.8, 0.4],
-                      scaleY: [1, 1.5, 1]
-                    }}
-                    transition={{
-                      duration: 3,
-                      delay: i * 0.18,
-                      repeat: 1, // Limit to 1 repeat
-                      ease: 'easeInOut'
-                    }}
-                  />
-                );
-              })}
-            </motion.div>
-          )}
-
-          {/* STAGE 11: Outro */}
-          {stage === 11 && (
-            <motion.div
-              key="outro"
-              className="absolute inset-0"
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 0 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-            >
-              <div className="absolute left-1/2 top-1/2" style={{ transform: 'translate(-50%, -50%)' }}>
-                {ringParticles.map((particle) => {
-                  const ringRadius = 15;
-                  const ringX = Math.cos(particle.angle) * ringRadius;
-                  const ringY = Math.sin(particle.angle) * ringRadius;
-
-                  return (
-                    <div
-                      key={particle.id}
-                      className="absolute rounded-full pointer-events-none"
-                      style={{
-                        width: `${particle.size}px`,
-                        height: `${particle.size}px`,
-                        backgroundColor: particle.color,
-                        left: `${ringX}vh`,
-                        top: `${ringY}vh`,
-                        transform: 'translate(-50%, -50%)',
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      {/* Title overlay */}
+      {/* ── Stage 1: Intro — title + subtitle + 16 inner + 8 outer binary ── */}
       <AnimatePresence>
-        {(stage === 0 || stage === 1) && (
+        {(stage === 'intro' || stage === 'hearts') && (
           <motion.div
-            className="absolute top-24 left-0 right-0 text-center z-20 pointer-events-none"
-            initial={{ opacity: 0, y: -30 }}
+            key="title"
+            className="absolute top-12 left-0 right-0 text-center z-30 pointer-events-none"
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -30 }}
-            transition={{ duration: 1, ease: [0.42, 0, 0.58, 1] }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 1, ease: 'easeOut' }}
           >
-            <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-2xl px-4">
+            <h1
+              style={{
+                color: '#fff',
+                fontSize: isMobile ? '1.5rem' : '2.2rem',
+                fontWeight: 700,
+                letterSpacing: '0.06em',
+                textShadow: '0 0 24px rgba(255,105,180,0.7)',
+                padding: '0 1rem',
+                margin: 0,
+              }}
+            >
               {capsuleTitle}
             </h1>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.9, ease: 'easeOut' }}
+              style={{
+                color: '#ff69b4',
+                fontSize: isMobile ? '0.65rem' : '0.78rem',
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                fontFamily: 'monospace',
+                textShadow: '0 0 12px rgba(255,105,180,0.6)',
+                marginTop: '0.4rem',
+              }}
+            >
+              LOVE ENCODED IN EVERY BIT
+            </motion.p>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 16 inner binary labels drifting inward — single play */}
+      <AnimatePresence>
+        {stage === 'intro' && (
+          <motion.div
+            key="binary-inner"
+            className="absolute left-1/2 top-1/2 z-20"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            {binaryInner.map((b, i) => (
+              <motion.span
+                key={`inner-${i}`}
+                className="absolute font-mono font-bold pointer-events-none select-none"
+                style={{
+                  fontSize: isMobile ? '0.8rem' : '1rem',
+                  color: b.color,
+                  textShadow: `0 0 8px ${b.color}`,
+                  translateX: '-50%',
+                  translateY: '-50%',
+                }}
+                initial={{ x: b.startX, y: b.startY, opacity: 0 }}
+                animate={{ x: b.endX, y: b.endY, opacity: [0, 0.9, 0.65] }}
+                transition={{ duration: 2.8, delay: b.delay, ease: 'easeInOut' }}
+              >
+                {b.label}
+              </motion.span>
+            ))}
+
+            {/* 8 outer ring labels — dim, slower */}
+            {binaryOuter.map((b, i) => (
+              <motion.span
+                key={`outer-${i}`}
+                className="absolute font-mono pointer-events-none select-none"
+                style={{
+                  fontSize: isMobile ? '0.65rem' : '0.8rem',
+                  color: b.color,
+                  translateX: '-50%',
+                  translateY: '-50%',
+                }}
+                initial={{ x: b.startX, y: b.startY, opacity: 0 }}
+                animate={{ x: b.endX, y: b.endY, opacity: [0, 0.2, 0.15] }}
+                transition={{ duration: 4.8, delay: b.delay, ease: 'easeInOut' }}
+              >
+                {b.label}
+              </motion.span>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Stage 2: Two hearts meet + magnetic arcs + love sparks ───────── */}
+      <AnimatePresence>
+        {(stage === 'hearts' || stage === 'supernova') && (
+          <motion.div
+            key="hearts-meet"
+            className="absolute left-1/2 top-1/2 z-25"
+            style={{ translateX: '-50%', translateY: '-50%' }}
+          >
+            {/* Left heart (❤️) */}
+            <motion.div
+              className="absolute pointer-events-none select-none"
+              style={{
+                fontSize: isMobile ? '4rem' : '5.5rem',
+                filter: 'drop-shadow(0 0 18px #ff1744)',
+                translateX: '-50%',
+                translateY: '-50%',
+              }}
+              initial={{ x: isMobile ? -140 : -200, opacity: 0, scale: 0.6 }}
+              animate={
+                stage === 'supernova'
+                  ? { x: 0, opacity: 0, scale: 2.5 }
+                  : { x: isMobile ? -24 : -30, opacity: 1, scale: 1 }
+              }
+              transition={
+                stage === 'supernova'
+                  ? { duration: 0.4, ease: 'easeIn' }
+                  : { type: 'spring', stiffness: 260, damping: 20, delay: 0.2 }
+              }
+            >
+              ❤️
+            </motion.div>
+
+            {/* Right heart (💙) */}
+            <motion.div
+              className="absolute pointer-events-none select-none"
+              style={{
+                fontSize: isMobile ? '4rem' : '5.5rem',
+                filter: 'drop-shadow(0 0 18px #1e88e5)',
+                translateX: '-50%',
+                translateY: '-50%',
+              }}
+              initial={{ x: isMobile ? 140 : 200, opacity: 0, scale: 0.6 }}
+              animate={
+                stage === 'supernova'
+                  ? { x: 0, opacity: 0, scale: 2.5 }
+                  : { x: isMobile ? 24 : 30, opacity: 1, scale: 1 }
+              }
+              transition={
+                stage === 'supernova'
+                  ? { duration: 0.4, ease: 'easeIn' }
+                  : { type: 'spring', stiffness: 260, damping: 20, delay: 0.35 }
+              }
+            >
+              💙
+            </motion.div>
+
+            {/* Magnetic pull SVG arcs — 3 curved paths animate strokeDashoffset */}
+            {stage === 'hearts' && (
+              <svg
+                className="absolute pointer-events-none"
+                style={{
+                  width: 80,
+                  height: 60,
+                  left: '-40px',
+                  top: '-30px',
+                  overflow: 'visible',
+                }}
+                viewBox="-40 -30 80 60"
+              >
+                {magneticArcs.map((arc, i) => (
+                  <motion.path
+                    key={`arc-${i}`}
+                    d={arc.d}
+                    fill="none"
+                    stroke={arc.color}
+                    strokeWidth={arc.strokeWidth}
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: [0, 1, 1, 0], opacity: [0, 0.8, 0.6, 0] }}
+                    transition={{
+                      duration: 2.6,
+                      delay: arc.delay + 1.2,
+                      ease: 'easeInOut',
+                      times: [0, 0.4, 0.7, 1],
+                    }}
+                  />
+                ))}
+              </svg>
+            )}
+
+            {/* Pulse rings from meeting point — single play, staggered */}
+            {Array.from({ length: pulseRingCount }, (_, i) => (
+              <motion.div
+                key={`pulse-ring-${i}`}
+                className="absolute rounded-full pointer-events-none"
+                style={{
+                  width: 80,
+                  height: 80,
+                  border: `2px solid ${i % 2 === 0 ? '#ff69b4' : '#00e5ff'}`,
+                  translateX: '-50%',
+                  translateY: '-50%',
+                }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: [0, 3], opacity: [0, 0.7, 0] }}
+                transition={{ duration: 1.8, delay: 0.6 + i * 0.45, ease: 'easeOut' }}
+              />
+            ))}
+
+            {/* Love sparks — 8 dots burst at 45° angles on collision */}
+            {stage === 'hearts' &&
+              loveSparks.map((spark, i) => (
+                <motion.div
+                  key={`spark-${i}`}
+                  className="absolute rounded-full pointer-events-none"
+                  style={{
+                    width: 8,
+                    height: 8,
+                    background: spark.color,
+                    boxShadow: `0 0 8px ${spark.color}`,
+                    translateX: '-50%',
+                    translateY: '-50%',
+                  }}
+                  initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                  animate={{
+                    x: spark.x,
+                    y: spark.y,
+                    scale: [0, 1.5, 0],
+                    opacity: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 1.0,
+                    delay: spark.delay + 1.8,
+                    ease: 'easeOut',
+                  }}
+                />
+              ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Stage 3: Supernova ───────────────────────────────────────────────
+           6 shockwave rings + 48 binary labels + white flash + decode text  */}
+      <AnimatePresence>
+        {stage === 'supernova' && (
+          <motion.div
+            key="supernova"
+            className="absolute left-1/2 top-1/2 z-30"
+            style={{ translateX: '-50%', translateY: '-50%' }}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            {/* Full-screen white flash — single play */}
+            <motion.div
+              className="fixed inset-0 pointer-events-none"
+              style={{ background: '#fff', zIndex: 40 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            />
+
+            {/* Central flash glow */}
+            <motion.div
+              className="absolute pointer-events-none"
+              style={{
+                width: 240,
+                height: 240,
+                borderRadius: '50%',
+                background:
+                  'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,105,180,0.6) 40%, transparent 70%)',
+                translateX: '-50%',
+                translateY: '-50%',
+              }}
+              initial={{ scale: 0, opacity: 1 }}
+              animate={{ scale: [0, 3.5, 0], opacity: [1, 0.7, 0] }}
+              transition={{ duration: 1.0, ease: 'easeOut' }}
+            />
+
+            {/* 6 shockwave rings, staggered 0.3s */}
+            {supernovaRings.map((ring, ri) => (
+              <motion.div
+                key={`shock-ring-${ri}`}
+                className="absolute rounded-full pointer-events-none"
+                style={{
+                  width: 100,
+                  height: 100,
+                  border: `3px solid ${ring.color}`,
+                  translateX: '-50%',
+                  translateY: '-50%',
+                  boxShadow: `0 0 12px ${ring.color}`,
+                }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: [0, isMobile ? 5 : 7], opacity: [0, 0.9, 0.4, 0] }}
+                transition={{ duration: 2.0, delay: ring.delay, ease: 'easeOut' }}
+              />
+            ))}
+
+            {/* 48 binary labels riding outward (8 per ring × 6 rings) */}
+            {supernovaRings.flatMap((ring, ri) =>
+              ring.labels.map((lbl, li) => (
+                <motion.span
+                  key={`bin-${ri}-${li}`}
+                  className="absolute font-mono font-bold pointer-events-none select-none"
+                  style={{
+                    fontSize: isMobile ? '0.75rem' : '0.95rem',
+                    color: lbl.color,
+                    textShadow: `0 0 10px ${lbl.color}`,
+                    translateX: '-50%',
+                    translateY: '-50%',
+                  }}
+                  initial={{ x: 0, y: 0, opacity: 0 }}
+                  animate={{ x: lbl.x, y: lbl.y, opacity: [0, 1, 0.8, 0] }}
+                  transition={{ duration: 2.2, delay: lbl.delay, ease: 'easeOut' }}
+                >
+                  {lbl.label}
+                </motion.span>
+              ))
+            )}
+
+            {/* "LOVE = INFINITE" decode text — appears at delay 1.8s */}
+            <motion.div
+              className="absolute pointer-events-none select-none text-center"
+              style={{
+                translateX: '-50%',
+                top: isMobile ? 90 : 120,
+                width: isMobile ? 200 : 260,
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.8, duration: 0.4 }}
+            >
+              <span
+                style={{
+                  fontFamily: 'monospace',
+                  fontSize: isMobile ? '1rem' : '1.25rem',
+                  fontWeight: 700,
+                  color: decodeState === 2 ? '#ffd700' : '#00ff41',
+                  textShadow:
+                    decodeState === 2
+                      ? '0 0 20px rgba(255,215,0,0.9)'
+                      : '0 0 12px rgba(0,255,65,0.7)',
+                  letterSpacing: '0.1em',
+                  transition: 'color 0.15s, text-shadow 0.15s',
+                }}
+              >
+                {decodeTexts[decodeState]}
+              </span>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Stage 4: Radiance ─────────────────────────────────────────────────
+           Orbit ring + settle particles + glowing heart + titles           */}
+      <AnimatePresence>
+        {stage === 'radiance' && (
+          <motion.div
+            key="radiance"
+            className="absolute inset-0 flex flex-col items-center justify-center z-35"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1 }}
+          >
+            {/* Slowly rotating orbit ring of 12 items — repeat:Infinity ambient (8s) */}
+            <motion.div
+              className="absolute pointer-events-none"
+              style={{ width: 0, height: 0 }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+            >
+              {orbitRing.map((item, i) => (
+                <span
+                  key={`orbit-${i}`}
+                  className="absolute select-none"
+                  style={{
+                    left: item.x,
+                    top: item.y,
+                    transform: 'translate(-50%, -50%)',
+                    fontSize: item.isEmoji
+                      ? isMobile ? '0.9rem' : '1.1rem'
+                      : isMobile ? '0.7rem' : '0.85rem',
+                    fontFamily: 'monospace',
+                    fontWeight: item.isEmoji ? 400 : 700,
+                    color: item.isEmoji ? undefined : item.color,
+                    textShadow: item.isEmoji ? undefined : `0 0 8px ${item.color}`,
+                    opacity: 0.85,
+                  }}
+                >
+                  {item.label}
+                </span>
+              ))}
+            </motion.div>
+
+            {/* Ambient heart glow — slow pulse, safe repeat:Infinity */}
+            <motion.div
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                width: isMobile ? 200 : 280,
+                height: isMobile ? 200 : 280,
+                background:
+                  'radial-gradient(circle, rgba(255,23,68,0.35) 0%, rgba(233,30,99,0.15) 50%, transparent 70%)',
+                filter: 'blur(30px)',
+              }}
+              animate={{ scale: [1, 1.12, 1], opacity: [0.6, 1, 0.6] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+            />
+
+            {/* 8 golden particles settling into center */}
+            {settleParticles.map((p, i) => (
+              <motion.div
+                key={`settle-${i}`}
+                className="absolute rounded-full pointer-events-none"
+                style={{
+                  width: p.size,
+                  height: p.size,
+                  background: p.color,
+                  boxShadow: `0 0 10px ${p.color}`,
+                }}
+                initial={{ x: p.startX, y: p.startY, opacity: 1 }}
+                animate={{ x: 0, y: 0, opacity: 0 }}
+                transition={{ duration: 1.4, delay: p.delay, ease: 'easeIn' }}
+              />
+            ))}
+
+            {/* Large glowing heart */}
+            <motion.div
+              className="pointer-events-none select-none relative z-10"
+              style={{
+                fontSize: isMobile ? '7rem' : '10rem',
+                filter:
+                  'drop-shadow(0 0 40px #ff1744) drop-shadow(0 0 80px rgba(255,23,68,0.5))',
+              }}
+              initial={{ scale: 0.3, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 18, delay: 0.2 }}
+            >
+              ❤️
+            </motion.div>
+
+            {/* Capsule title with glow */}
+            <motion.div
+              className="text-center mt-6 pointer-events-none px-4 relative z-10"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 1.2, ease: 'easeOut' }}
+            >
+              <h2
+                style={{
+                  color: '#fff',
+                  fontSize: isMobile ? '1.5rem' : '2.2rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.06em',
+                  textShadow:
+                    '0 0 32px rgba(255,105,180,0.9), 0 0 16px rgba(255,23,68,0.7)',
+                  marginBottom: '0.5rem',
+                  margin: 0,
+                }}
+              >
+                {capsuleTitle}
+              </h2>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2, duration: 0.9, ease: 'easeOut' }}
+                style={{
+                  color: '#ffd700',
+                  fontSize: isMobile ? '0.65rem' : '0.78rem',
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  fontFamily: 'monospace',
+                  textShadow: '0 0 14px rgba(255,215,0,0.7)',
+                  marginTop: '0.6rem',
+                }}
+              >
+                YOUR LOVE, WRITTEN IN THE STARS
+              </motion.p>
+              <p
+                style={{
+                  color: '#00e5ff',
+                  fontSize: isMobile ? '0.7rem' : '0.85rem',
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  textShadow: '0 0 14px rgba(0,229,255,0.7)',
+                  fontFamily: 'monospace',
+                  marginTop: '0.4rem',
+                }}
+              >
+                01001100 01 01001111 01 01010110 01 01000101
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Stage 5: Outro fade ───────────────────────────────────────────── */}
+      <AnimatePresence>
+        {stage === 'outro' && (
+          <motion.div
+            key="outro-overlay"
+            className="absolute inset-0 bg-black z-50 pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, ease: 'easeIn' }}
+          />
         )}
       </AnimatePresence>
     </div>

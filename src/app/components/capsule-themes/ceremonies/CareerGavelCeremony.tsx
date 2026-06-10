@@ -124,7 +124,7 @@ export function CareerGavelCeremony({
           {(stage === 'rising' || stage === 'ascending' || stage === 'crowd' || stage === 'spotlights' || stage === 'confetti' || stage === 'trophy') && (
             // CENTERED CONTAINER FOR ALL PODIUMS
             <div className="absolute inset-0 flex items-end justify-center z-10">
-              <div className="relative flex items-end justify-center gap-4" style={{ width: '580px', marginBottom: 0 }}>
+              <div className="relative flex items-end justify-center gap-2 w-full max-w-[560px] px-2">
                 {/* Podium pieces rising */}
                 {[
                   { pos: 2, height: 180, label: '2', color: '#94a3b8', delay: 0.2 },  // Silver LEFT
@@ -142,7 +142,7 @@ export function CareerGavelCeremony({
                       ease: [0.34, 1.56, 0.64, 1]
                     }}
                   >
-                    <svg width="160" height={podium.height} viewBox={`0 0 160 ${podium.height}`}>
+                    <svg width="100%" height={podium.height} viewBox={`0 0 160 ${podium.height}`} style={{ width: 'clamp(90px, 28vw, 160px)' }}>
                       <defs>
                         <linearGradient id={`podiumGrad-${podium.pos}`} x1="0%" y1="0%" x2="100%" y2="0%">
                           <stop offset="0%" stopColor={podium.color} stopOpacity="0.8" />
@@ -214,7 +214,7 @@ export function CareerGavelCeremony({
                     {/* Champion indicator on #1 podium */}
                     {podium.pos === 1 && stage !== 'rising' && (
                       <motion.div
-                        className="absolute top-[-80px] left-1/2 -translate-x-1/2 text-7xl"
+                        className="absolute top-[-60px] left-1/2 -translate-x-1/2 text-5xl"
                         initial={{ y: 100, opacity: 0, scale: 0 }}
                         animate={{ 
                           y: stage === 'ascending' ? 0 : -20,

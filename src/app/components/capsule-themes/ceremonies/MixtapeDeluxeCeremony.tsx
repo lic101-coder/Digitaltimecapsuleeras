@@ -1,1285 +1,1430 @@
 /**
- * Mixtape - Neon Nights Ceremony (Deluxe) 🌆✨
- * 
- * ENHANCED & FIXED - 80s synthwave with MORE effects!
- * 
- * FEATURES:
- * - Animated VHS scanlines across entire screen
- * - Glitch effects during key moments
- * - Perspective grid with neon colors
- * - Neon sun with animated scan lines
- * - Palm tree silhouettes
- * - Mountain ranges with gradients
- * - "FRIENDS FOREVER" text (properly positioned & responsive)
- * - Neon signs (ARCADE, RETRO, 1985)
- * - Flying DeLorean with light trails
- * - TWO neon convertibles (pink & cyan) driving across screen
- * - Laser beams shooting from bottom
- * - Geometric shapes floating
- * - Enhanced radiance finale with orbiting particles
- * 
+ * Mixtape - Neon Nights Ceremony (Deluxe Enhanced — Round 2)
+ *
+ * 80s synthwave aesthetic — dark purple/navy background, neon pink/cyan/magenta palette
+ * Mobile-safe rebuild: all arrays via useMemo, Math.random() only in useMemo,
+ * repeat:Infinity only on slow ambient elements (>3s, subtle), max ~20 simultaneous elements.
  */
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect, useMemo } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
 
 interface MixtapeDeluxeCeremonyProps {
-  capsuleTitle: string;
-  media?: any[];
-  isPreview?: boolean;
-  onComplete?: () => void;
+  capsuleTitle: string
+  media?: any[]
+  isPreview?: boolean
+  onComplete?: () => void
 }
 
 export function MixtapeDeluxeCeremony({
   capsuleTitle,
   media = [],
   isPreview = false,
-  onComplete
+  onComplete,
 }: MixtapeDeluxeCeremonyProps) {
-  const [stage, setStage] = useState<'intro' | 'grid' | 'sun' | 'city' | 'shapes' | 'pulse' | 'radiance' | 'outro'>('intro');
-  const [completed, setCompleted] = useState(false);
-  const [glitch, setGlitch] = useState(false);
-  const completedRef = React.useRef(false);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 
-  useEffect(() => {
-    const timeline = [
-      { time: 0, action: () => setStage('intro') },
-      { time: 1200, action: () => setStage('grid') },
-      { time: 3200, action: () => setStage('sun') },
-      { time: 5200, action: () => setStage('city') },
-      { time: 8200, action: () => setStage('shapes') },
-      { time: 10500, action: () => { setStage('pulse'); setGlitch(true); } },
-      { time: 10700, action: () => setGlitch(false) },
-      { time: 12500, action: () => setStage('radiance') },
-      { time: 15500, action: () => setStage('outro') },
-      { time: 16000, action: () => {
-        completedRef.current = true;
-        setCompleted(true);
-        onComplete?.();
-      }}
-    ];
+  const [stage, setStage] = useState<
+    'intro' | 'synthwave' | 'delorean' | 'friends' | 'radiance'
+  >('intro')
+  const completedRef = React.useRef(false)
 
-    const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-
-    // Failsafe: force completion after 17s if the normal timeline didn't fire
-    const failsafeTimeout = setTimeout(() => {
-      if (!completedRef.current) {
-        completedRef.current = true;
-        setStage('outro');
-        setCompleted(true);
-        onComplete?.();
+  // ── Ambient stars (useMemo — static positions, slow twinkle) ──────────────
+  const stars = useMemo(() => {
+    const count = isMobile ? 40 : 70
+    return Array.from({ length: count }, (_, i) => {
+      const tier = i % 10
+      const size = tier < 6 ? 1 : tier < 9 ? 2 : 3
+      return {
+        id: i,
+        left: Math.random() * 100,
+        top: Math.random() * 55,
+        size,
+        duration: 3.5 + Math.random() * 3,
+        delay: Math.random() * 3,
       }
-    }, 17000);
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Grid pulse lines for intro stage ─────────────────────────────────────
+  const gridPulseLines = useMemo(() => {
+    return Array.from({ length: 8 }, (_, i) => ({
+      id: i,
+      delay: i * 0.1,
+    }))
+  }, [])
+
+  // ── Buildings for synthwave skyline — 8 total ─────────────────────────────
+  const buildings = useMemo(() => {
+    // heights as percentage of container height, widths in px
+    const specs = [
+      { heightPct: 30, width: 38, left: '2%',  color: '#ff00ff', windows: 3, delay: 0.5 },
+      { heightPct: 45, width: 28, left: '8%',  color: '#00ffff', windows: 4, delay: 0.6 },
+      { heightPct: 60, width: 44, left: '14%', color: '#ff00ff', windows: 6, delay: 0.7 },
+      { heightPct: 35, width: 22, left: '21%', color: '#aa00ff', windows: 3, delay: 0.8 },
+      { heightPct: 50, width: 36, right: '21%', color: '#ff00aa', windows: 5, delay: 0.8 },
+      { heightPct: 40, width: 26, right: '14%', color: '#00ffff', windows: 4, delay: 0.7 },
+      { heightPct: 65, width: 46, right: '7%',  color: '#ff00ff', windows: 6, delay: 0.6 },
+      { heightPct: 28, width: 20, right: '2%',  color: '#ffff00', windows: 2, delay: 0.5 },
+    ]
+    return specs.map((s, i) => ({
+      ...s,
+      id: i,
+      windowPositions: Array.from({ length: s.windows }, (_, wi) => ({
+        wx: 20 + (wi % 2) * 40,
+        wy: 15 + Math.floor(wi / 2) * 28,
+        lit: Math.random() > 0.35,
+      })),
+    }))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Flying neon birds — 2 drifting across sky ────────────────────────────
+  const neonBirds = useMemo(() => {
+    return [
+      { id: 0, top: 8 + Math.random() * 10, duration: 6 + Math.random() * 2, delay: 0.5 },
+      { id: 1, top: 16 + Math.random() * 8, duration: 5 + Math.random() * 3, delay: 2.5 },
+    ]
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Neon road lane markings (synthwave stage) ─────────────────────────────
+  const laneDashes = useMemo(() => {
+    return [
+      { id: 0, delay: 0.3, startY: 32, endY: 52, startW: 3, endW: 10, startH: 2, endH: 5 },
+      { id: 1, delay: 0.5, startY: 36, endY: 55, startW: 4, endW: 12, startH: 2, endH: 5 },
+      { id: 2, delay: 0.7, startY: 39, endY: 58, startW: 3, endW: 10, startH: 2, endH: 6 },
+    ]
+  }, [])
+
+  // ── Stage 3: star-streak lines behind car — 14 total ─────────────────────
+  const starStreaks = useMemo(() => {
+    return Array.from({ length: 14 }, (_, i) => ({
+      id: i,
+      top: 6 + i * 4.8,
+      width: 35 + Math.random() * 65,
+      delay: 0.05 + Math.random() * 0.5,
+    }))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Tire track dots — 3 positions on road ────────────────────────────────
+  const tireTracks = useMemo(() => {
+    return [
+      { id: 0, leftPct: 22, delay: 1.0 },
+      { id: 1, leftPct: 40, delay: 1.5 },
+      { id: 2, leftPct: 58, delay: 2.0 },
+    ]
+  }, [])
+
+  // ── Confetti squares for friends stage ───────────────────────────────────
+  const confettiSquares = useMemo(() => {
+    const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ff6600', '#00ff88', '#ff0088']
+    return Array.from({ length: 6 }, (_, i) => ({
+      id: i,
+      color: colors[i % colors.length],
+      left: 8 + Math.random() * 84,
+      top: 55 + Math.random() * 30,
+      size: 8 + Math.random() * 12,
+      delay: i * 0.12,
+      rotate: Math.random() * 45,
+    }))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Light columns for radiance stage — 10 total ──────────────────────────
+  const lightColumns = useMemo(() => {
+    const colors = [
+      '#ff00ff', '#00ffff', '#ffff00', '#ffffff',
+      '#ff0088', '#00ff88', '#ff6600', '#aa00ff',
+      '#ff44cc', '#44ffee',
+    ]
+    return Array.from({ length: 10 }, (_, i) => ({
+      id: i,
+      color: colors[i % colors.length],
+      left: 8 + i * 8.4,
+      delay: i * 0.1,
+    }))
+  }, [])
+
+  // ── Concert spotlights — 3 beams ─────────────────────────────────────────
+  const spotlights = useMemo(() => {
+    return [
+      { id: 0, color: 'rgba(255,0,255,0.18)', angle: -20, left: '20%', delay: 0.2 },
+      { id: 1, color: 'rgba(0,255,255,0.16)', angle: 0,   left: '50%', delay: 0.5 },
+      { id: 2, color: 'rgba(255,0,128,0.18)', angle: 20,  left: '78%', delay: 0.8 },
+    ]
+  }, [])
+
+  // ── Timeline ──────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const schedule: Array<{ t: number; fn: () => void }> = [
+      { t: 0,     fn: () => setStage('intro') },
+      { t: 2000,  fn: () => setStage('synthwave') },
+      { t: 6000,  fn: () => setStage('delorean') },
+      { t: 10000, fn: () => setStage('friends') },
+      { t: 14000, fn: () => setStage('radiance') },
+      {
+        t: 16500,
+        fn: () => {
+          if (!completedRef.current) {
+            completedRef.current = true
+            onComplete?.()
+          }
+        },
+      },
+    ]
+
+    const handles = schedule.map(({ t, fn }) => setTimeout(fn, t))
+
+    // Failsafe at ~17s
+    const failsafe = setTimeout(() => {
+      if (!completedRef.current) {
+        completedRef.current = true
+        onComplete?.()
+      }
+    }, 17000)
 
     return () => {
-      timeouts.forEach(clearTimeout);
-      clearTimeout(failsafeTimeout);
-    };
-  }, []); // Only run once on mount - don't restart ceremony midway through
+      handles.forEach(clearTimeout)
+      clearTimeout(failsafe)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Derived booleans ──────────────────────────────────────────────────────
+  const showGrid =
+    stage === 'synthwave' ||
+    stage === 'delorean' ||
+    stage === 'friends' ||
+    stage === 'radiance'
+
+  const showSun =
+    stage === 'synthwave' ||
+    stage === 'delorean' ||
+    stage === 'friends' ||
+    stage === 'radiance'
+
+  const showPalms =
+    stage === 'synthwave' ||
+    stage === 'delorean' ||
+    stage === 'friends' ||
+    stage === 'radiance'
+
+  const showSigns =
+    stage === 'synthwave' ||
+    stage === 'delorean' ||
+    stage === 'friends' ||
+    stage === 'radiance'
+
+  const screenW = typeof window !== 'undefined' ? window.innerWidth : 800
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-black via-purple-950 to-pink-900">
-      {/* VHS Scanlines overlay */}
-      <div className="absolute inset-0 z-50 pointer-events-none">
-        <motion.div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.15) 2px, rgba(0, 0, 0, 0.15) 4px)',
-            opacity: 0.3
-          }}
-          animate={{
-            y: [0, -4, 0]
-          }}
-          transition={{
-            duration: 0.1,
-            repeat: Infinity,
-            ease: 'linear'
-          }}
-        />
-      </div>
+    <motion.div
+      className="relative w-full h-full overflow-hidden"
+      style={{
+        background:
+          'linear-gradient(180deg, #0a0015 0%, #12002a 40%, #1a0040 70%, #0d001a 100%)',
+      }}
+      // Final neon frame — ambient inset box-shadow pulse on container
+      animate={{
+        boxShadow: [
+          'inset 0 0 60px rgba(255,0,255,0.4)',
+          'inset 0 0 90px rgba(255,0,255,0.65)',
+          'inset 0 0 60px rgba(255,0,255,0.4)',
+        ],
+      }}
+      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+    >
+      {/* ── VHS scanline overlay — static, no animation ──────────────────── */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px)',
+          zIndex: 60,
+        }}
+      />
 
-      {/* Glitch effect */}
+      {/* ── CSS perspective grid — animates backgroundPosition for road rush ─ */}
       <AnimatePresence>
-        {glitch && (
+        {showGrid && (
           <motion.div
-            className="absolute inset-0 z-45 pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{
-              opacity: [0, 1, 0, 1, 0],
-              x: [0, -5, 5, -3, 3, 0]
+            key="grid"
+            className="absolute left-0 right-0 bottom-0 pointer-events-none"
+            style={{
+              height: '55%',
+              zIndex: 5,
+              perspective: '400px',
+              perspectiveOrigin: '50% 0%',
             }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 1.2 }}
           >
-            <div
-              className="absolute inset-0"
+            <motion.div
               style={{
-                background: 'repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 0, 255, 0.1) 2px, rgba(255, 0, 255, 0.1) 4px)',
-                mixBlendMode: 'screen'
+                width: '100%',
+                height: '100%',
+                transform: 'rotateX(55deg)',
+                transformOrigin: '50% 0%',
+                backgroundImage: `
+                  linear-gradient(rgba(255,0,255,0.45) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(0,255,255,0.35) 1px, transparent 1px)
+                `,
+                backgroundSize: `${isMobile ? '60px' : '80px'} ${isMobile ? '40px' : '55px'}`,
               }}
+              animate={{ backgroundPosition: ['50% 0%', '50% 100%'] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Starfield */}
-      <div className="absolute inset-0">
-        {[...Array(120)].map((_, i) => (
-          <motion.div
-            key={`star-${i}`}
-            className="absolute"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 60}%`,
-              width: `${1 + Math.random() * 2}px`,
-              height: `${1 + Math.random() * 2}px`,
-              background: '#ffffff',
-              borderRadius: '50%',
-              boxShadow: '0 0 4px rgba(255, 255, 255, 0.8)'
-            }}
-            animate={{
-              opacity: [0.3, 1, 0.3],
-              scale: [1, 1.5, 1]
-            }}
-            transition={{
-              duration: 2 + Math.random() * 3,
-              repeat: Infinity,
-              delay: Math.random() * 2
-            }}
-          />
-        ))}
-      </div>
+      {/* ── Intro grid pulse lines — 8 lines sweep upward once ───────────── */}
+      <AnimatePresence>
+        {stage === 'intro' && (
+          <>
+            {gridPulseLines.map((line) => (
+              <motion.div
+                key={`pulse-line-${line.id}`}
+                className="absolute left-0 right-0 pointer-events-none"
+                style={{
+                  height: '2px',
+                  background: 'linear-gradient(to right, transparent, rgba(0,255,255,0.6), rgba(255,0,255,0.6), transparent)',
+                  zIndex: 6,
+                  bottom: 0,
+                }}
+                initial={{ bottom: '0%', opacity: 0 }}
+                animate={{ bottom: '55%', opacity: [0, 0.8, 0] }}
+                transition={{
+                  duration: 1.4,
+                  delay: line.delay,
+                  ease: 'easeOut',
+                }}
+              />
+            ))}
+          </>
+        )}
+      </AnimatePresence>
 
-      {/* Title */}
+      {/* ── Ambient stars — slow twinkle, repeat:Infinity ok (>3s, subtle) ─ */}
+      {stars.map((s) => (
+        <motion.div
+          key={`star-${s.id}`}
+          className="absolute rounded-full"
+          style={{
+            left: `${s.left}%`,
+            top: `${s.top}%`,
+            width: `${s.size}px`,
+            height: `${s.size}px`,
+            background: '#ffffff',
+            zIndex: 3,
+          }}
+          animate={{ opacity: [0.2, 0.9, 0.2] }}
+          transition={{
+            duration: s.duration,
+            repeat: Infinity,
+            delay: s.delay,
+            ease: 'easeInOut',
+          }}
+        />
+      ))}
+
+      {/* ════════════════════════════════════════════════════════════════════
+          STAGE 1 — INTRO (0–2s): "NEON NIGHTS" + VHS tape load + chromatic aberration
+          ════════════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {stage === 'intro' && (
           <motion.div
-            initial={{ opacity: 0, scale: 2, filter: 'blur(20px)' }}
-            animate={{ 
-              opacity: 1, 
-              scale: 1,
-              filter: 'blur(0px)'
-            }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.7, ease: 'easeOut' }}
-            className="absolute top-16 left-0 right-0 text-center z-50"
+            key="intro-title"
+            className="absolute inset-0 flex flex-col items-center justify-center z-40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            <motion.h1 
-              className="text-5xl md:text-7xl font-bold drop-shadow-2xl mb-3 px-4"
+            {/* Chromatic aberration copies — flash once then vanish */}
+            <motion.div
               style={{
-                fontFamily: 'Impact, sans-serif',
+                position: 'absolute',
+                fontFamily: 'Impact, "Arial Narrow", sans-serif',
+                fontSize: 'clamp(36px, 10vw, 80px)',
+                color: 'rgba(255,30,30,0.7)',
+                letterSpacing: 'clamp(4px, 1.5vw, 12px)',
+                textAlign: 'center',
+                lineHeight: 1,
+                left: 'calc(50% - 2px)',
+                transform: 'translateX(-50%)',
+                top: '50%',
+                marginTop: 'clamp(-40px, -5vw, -40px)',
+                zIndex: 38,
+                pointerEvents: 'none',
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.7, 0] }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+            >
+              NEON NIGHTS
+            </motion.div>
+            <motion.div
+              style={{
+                position: 'absolute',
+                fontFamily: 'Impact, "Arial Narrow", sans-serif',
+                fontSize: 'clamp(36px, 10vw, 80px)',
+                color: 'rgba(0,255,255,0.7)',
+                letterSpacing: 'clamp(4px, 1.5vw, 12px)',
+                textAlign: 'center',
+                lineHeight: 1,
+                left: 'calc(50% + 2px)',
+                transform: 'translateX(-50%)',
+                top: '50%',
+                marginTop: 'clamp(-40px, -5vw, -40px)',
+                zIndex: 38,
+                pointerEvents: 'none',
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.7, 0] }}
+              transition={{ duration: 0.4, delay: 0.35 }}
+            >
+              NEON NIGHTS
+            </motion.div>
+
+            <motion.h1
+              style={{
+                fontFamily: 'Impact, "Arial Narrow", sans-serif',
+                fontSize: 'clamp(36px, 10vw, 80px)',
                 color: '#ff00ff',
-                textShadow: '0 0 20px rgba(255, 0, 255, 0.8), 0 0 40px rgba(0, 255, 255, 0.5), 4px 4px 0px #00ffff',
-                letterSpacing: '8px'
+                textShadow:
+                  '0 0 20px #ff00ff, 0 0 40px #ff00ff, 4px 4px 0 #00ffff',
+                letterSpacing: 'clamp(4px, 1.5vw, 12px)',
+                textAlign: 'center',
+                lineHeight: 1,
+                position: 'relative',
+                zIndex: 39,
               }}
-              animate={{
-                textShadow: [
-                  '0 0 20px rgba(255, 0, 255, 0.8), 0 0 40px rgba(0, 255, 255, 0.5), 4px 4px 0px #00ffff',
-                  '0 0 30px rgba(255, 0, 255, 1), 0 0 50px rgba(0, 255, 255, 0.7), 4px 4px 0px #00ffff',
-                  '0 0 20px rgba(255, 0, 255, 0.8), 0 0 40px rgba(0, 255, 255, 0.5), 4px 4px 0px #00ffff'
-                ]
-              }}
-              transition={{ duration: 1.5, repeat: Infinity }}
+              initial={{ filter: 'blur(16px)', scale: 1.3, opacity: 0 }}
+              animate={{ filter: 'blur(0px)', scale: 1, opacity: 1 }}
+              transition={{ duration: 0.9, ease: 'easeOut' }}
             >
               NEON NIGHTS
             </motion.h1>
-            <p className="text-cyan-300 text-lg px-4" style={{ textShadow: '0 0 10px rgba(0, 255, 255, 0.8)', fontFamily: 'monospace', letterSpacing: '4px' }}>
+
+            <motion.p
+              style={{
+                fontFamily: 'monospace',
+                fontSize: 'clamp(11px, 2.5vw, 18px)',
+                color: '#00ffff',
+                textShadow: '0 0 10px #00ffff',
+                letterSpacing: 'clamp(3px, 1vw, 7px)',
+                marginTop: '12px',
+                position: 'relative',
+                zIndex: 39,
+              }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+            >
               FOREVER ELECTRIC
-            </p>
+            </motion.p>
+
+            {/* SIDE A ► cassette label */}
+            <motion.p
+              style={{
+                fontFamily: 'monospace',
+                fontSize: 'clamp(9px, 1.6vw, 12px)',
+                color: '#ffd700',
+                textShadow: '0 0 8px #ffd700, 0 0 16px rgba(255,215,0,0.5)',
+                letterSpacing: 'clamp(2px, 0.7vw, 4px)',
+                marginTop: '5px',
+                position: 'relative',
+                zIndex: 39,
+                border: '1px solid rgba(255,215,0,0.4)',
+                padding: '2px 8px',
+                borderRadius: '3px',
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.7, delay: 0.9 }}
+            >
+              SIDE A ►
+            </motion.p>
+
+            {/* EST. 1985 subtext */}
+            <motion.p
+              style={{
+                fontFamily: 'monospace',
+                fontSize: 'clamp(9px, 1.8vw, 13px)',
+                color: 'rgba(255,215,0,0.7)',
+                textShadow: '0 0 8px #ffd700',
+                letterSpacing: 'clamp(2px, 0.8vw, 5px)',
+                marginTop: '6px',
+                position: 'relative',
+                zIndex: 39,
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.7, delay: 0.7 }}
+            >
+              EST. 1985
+            </motion.p>
+
+            {/* VHS tape-loading scan line sweeping top→bottom once */}
+            <motion.div
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                height: '4px',
+                background: 'rgba(255,255,255,0.30)',
+                zIndex: 50,
+                pointerEvents: 'none',
+              }}
+              initial={{ top: '-20px', opacity: 0 }}
+              animate={{ top: '100%', opacity: [0, 0.9, 0.9, 0] }}
+              transition={{ duration: 0.8, delay: 0.6, ease: 'linear' }}
+            />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* PERSPECTIVE GRID */}
+      {/* ════════════════════════════════════════════════════════════════════
+          STAGE 2 — SYNTHWAVE (2–6s): sun rises, palm trees, 8 buildings, signs, birds
+          ════════════════════════════════════════════════════════════════════ */}
+
+      {/* Neon sun — single SVG, rises once (no repeat) */}
       <AnimatePresence>
-        {(stage === 'grid' || stage === 'sun' || stage === 'city' || stage === 'shapes' || stage === 'pulse') && (
+        {showSun && (
           <motion.div
-            className="absolute inset-0 z-10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: stage === 'grid' ? [0, 0.8] : 0.6 }}
-            transition={{ duration: 1.2 }}
+            key="sun"
+            className="absolute pointer-events-none"
+            style={{
+              left: '50%',
+              top: '30%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 12,
+            }}
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 2.2, ease: 'easeOut' }}
           >
             <svg
-              className="absolute bottom-0 left-0 right-0"
-              style={{ height: '70%', width: '100%' }}
-              viewBox="0 0 1000 700"
-              preserveAspectRatio="none"
+              width={isMobile ? 120 : 170}
+              height={isMobile ? 120 : 170}
+              viewBox="0 0 170 170"
+              overflow="visible"
             >
+              {/* Outer glow ring — slow ambient pulse, repeat:Infinity ok */}
+              <motion.circle
+                cx="85"
+                cy="85"
+                r="82"
+                fill="none"
+                stroke="rgba(255,0,255,0.25)"
+                strokeWidth="3"
+                animate={{ r: [82, 88, 82], opacity: [0.4, 0.7, 0.4] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              />
               <defs>
-                <linearGradient id="gridGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#ff00ff" stopOpacity="0" />
-                  <stop offset="30%" stopColor="#ff00ff" stopOpacity="0.5" />
-                  <stop offset="70%" stopColor="#00ffff" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#00ffff" stopOpacity="0.9" />
+                <linearGradient id="sunGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ffee00" />
+                  <stop offset="50%" stopColor="#ff00ff" />
+                  <stop offset="100%" stopColor="#cc0066" />
                 </linearGradient>
+                <clipPath id="sunClip">
+                  <circle cx="85" cy="85" r="72" />
+                </clipPath>
               </defs>
-
-              {/* Horizontal lines */}
-              {[...Array(25)].map((_, i) => {
-                const horizonY = 0;
-                const bottomY = 700;
-                const progress = i / 24;
-                const y = horizonY + (bottomY - horizonY) * Math.pow(progress, 0.6);
-
-                return (
-                  <motion.line
-                    key={`h-line-${i}`}
-                    x1="0"
-                    y1={y}
-                    x2="1000"
-                    y2={y}
-                    stroke="url(#gridGradient)"
-                    strokeWidth={2 + progress * 2}
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ 
-                      pathLength: 1,
-                      opacity: 0.6 + progress * 0.4
-                    }}
-                    transition={{ 
-                      duration: 1.2, 
-                      delay: i * 0.04,
-                      ease: 'easeOut'
-                    }}
-                  />
-                );
-              })}
-
-              {/* Vertical lines */}
-              {[...Array(31)].map((_, i) => {
-                const xBottom = (i / 30) * 1000;
-                const vanishingPointX = 500;
-                const vanishingPointY = 0;
-
-                return (
-                  <motion.line
-                    key={`v-line-${i}`}
-                    x1={xBottom}
-                    y1={700}
-                    x2={vanishingPointX}
-                    y2={vanishingPointY}
-                    stroke="url(#gridGradient)"
-                    strokeWidth={2}
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ 
-                      pathLength: 1,
-                      opacity: 0.7
-                    }}
-                    transition={{ 
-                      duration: 1.5, 
-                      delay: 0.4 + i * 0.02,
-                      ease: 'easeOut'
-                    }}
-                  />
-                );
-              })}
+              <circle cx="83" cy="85" r="72" fill="rgba(0,255,255,0.2)" clipPath="url(#sunClip)" />
+              <circle cx="87" cy="85" r="72" fill="rgba(255,0,255,0.2)" clipPath="url(#sunClip)" />
+              <circle cx="85" cy="85" r="72" fill="url(#sunGrad)" />
+              {[6, 16, 26, 36, 46, 56, 66, 76, 86, 93, 98].map((pct, idx) => (
+                <line
+                  key={`sl-${idx}`}
+                  x1="13"
+                  y1={85 - 72 + pct * 1.44}
+                  x2="157"
+                  y2={85 - 72 + pct * 1.44}
+                  stroke="rgba(200,0,200,0.55)"
+                  strokeWidth="2.5"
+                  clipPath="url(#sunClip)"
+                />
+              ))}
+              <circle
+                cx="85"
+                cy="85"
+                r="72"
+                fill="none"
+                stroke="#ff00ff"
+                strokeWidth="3"
+                style={{ filter: 'drop-shadow(0 0 18px #ff00ff)' }}
+              />
             </svg>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* HORIZON LINE */}
+      {/* Horizon line */}
       <AnimatePresence>
-        {(stage === 'sun' || stage === 'city' || stage === 'shapes' || stage === 'pulse') && (
+        {showSun && (
           <motion.div
-            className="absolute left-0 right-0 z-15"
-            style={{ top: '30%' }}
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={{ 
-              scaleX: 1,
-              opacity: 0.8
-            }}
-            transition={{ duration: 1 }}
-          >
-            <div
-              style={{
-                height: '3px',
-                background: 'linear-gradient(to right, #ff00ff, #00ffff, #ffff00, #00ffff, #ff00ff)',
-                boxShadow: '0 0 20px rgba(255, 0, 255, 0.8), 0 0 40px rgba(0, 255, 255, 0.6)',
-                filter: 'blur(1px)'
-              }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* SUN - Enhanced with more animation */}
-      <AnimatePresence>
-        {(stage === 'sun' || stage === 'city' || stage === 'shapes' || stage === 'pulse') && (
-          <motion.div
-            className="absolute left-1/2 z-20"
+            key="horizon"
+            className="absolute left-0 right-0 pointer-events-none"
             style={{
               top: '30%',
-              transform: 'translate(-50%, -50%)'
+              height: '3px',
+              background:
+                'linear-gradient(to right, #ff00ff, #00ffff, #ffff00, #00ffff, #ff00ff)',
+              boxShadow: '0 0 18px rgba(255,0,255,0.8)',
+              zIndex: 13,
             }}
-            initial={{ 
-              scale: 0, 
-              y: 100,
-              opacity: 0 
-            }}
-            animate={{
-              scale: stage === 'sun' ? [0, 1.2, 1] : stage === 'pulse' ? [1, 1.15, 1] : 1,
-              y: 0,
-              opacity: 1
-            }}
-            transition={{ 
-              scale: { duration: stage === 'pulse' ? 1.5 : 2, repeat: stage === 'pulse' ? Infinity : 0 },
-              y: { duration: 2, ease: 'easeOut' },
-              opacity: { duration: 1 }
-            }}
-          >
-            {/* Outer glow rings */}
-            {[300, 260, 220].map((size, i) => (
+            initial={{ scaleX: 0, opacity: 0 }}
+            animate={{ scaleX: 1, opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* 8 city buildings with neon-lit windows */}
+      <AnimatePresence>
+        {showSun && (
+          <>
+            {buildings.map((b) => (
               <motion.div
-                key={`glow-ring-${i}`}
+                key={`building-${b.id}`}
+                className="absolute pointer-events-none"
                 style={{
-                  position: 'absolute',
-                  top: '50%',
+                  left: (b as any).left,
+                  right: (b as any).right,
+                  bottom: '45%',
+                  width: `${b.width}px`,
+                  height: `${b.heightPct * (isMobile ? 0.6 : 1)}px`,
+                  background: '#000000',
+                  border: `1.5px solid ${b.color}`,
+                  boxShadow: `0 0 8px ${b.color}, inset 0 0 8px rgba(0,0,0,0.8)`,
+                  zIndex: 11,
+                  overflow: 'hidden',
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.8, delay: b.delay }}
+              >
+                {b.windowPositions.map((wp, wi) =>
+                  wp.lit ? (
+                    <div
+                      key={`win-${wi}`}
+                      style={{
+                        position: 'absolute',
+                        left: `${wp.wx}%`,
+                        top: `${wp.wy}%`,
+                        width: '5px',
+                        height: '5px',
+                        background: '#ffff00',
+                        boxShadow: '0 0 4px #ffff00',
+                      }}
+                    />
+                  ) : null
+                )}
+              </motion.div>
+            ))}
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Flying neon birds — 2, ambient drift, repeat:Infinity (>5s) */}
+      <AnimatePresence>
+        {showSun && (
+          <>
+            {neonBirds.map((bird) => (
+              <motion.div
+                key={`bird-${bird.id}`}
+                className="absolute pointer-events-none select-none"
+                style={{
+                  top: `${bird.top}%`,
+                  fontSize: isMobile ? '14px' : '18px',
+                  color: '#00ffff',
+                  textShadow: '0 0 8px #00ffff',
+                  zIndex: 15,
+                }}
+                initial={{ left: '-5%', opacity: 0 }}
+                animate={{ left: '110%', opacity: [0, 0.8, 0.8, 0] }}
+                transition={{
+                  duration: bird.duration,
+                  delay: bird.delay,
+                  repeat: Infinity,
+                  ease: 'linear',
+                }}
+              >
+                ~
+              </motion.div>
+            ))}
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Neon road lane markings — 3 dashes animating far→near, single-play */}
+      <AnimatePresence>
+        {(stage === 'synthwave' || stage === 'delorean') && (
+          <>
+            {laneDashes.map((dash) => (
+              <motion.div
+                key={`lane-${dash.id}`}
+                className="absolute pointer-events-none"
+                style={{
                   left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: `${size}px`,
-                  height: `${size}px`,
-                  borderRadius: '50%',
-                  border: '2px solid rgba(255, 0, 255, 0.3)',
-                  boxShadow: `0 0 40px rgba(255, 0, 255, 0.6), inset 0 0 40px rgba(255, 0, 255, 0.2)`
+                  background: 'rgba(255,255,255,0.9)',
+                  boxShadow: '0 0 6px rgba(255,255,255,0.8)',
+                  zIndex: 9,
+                  transformOrigin: 'center center',
+                }}
+                initial={{
+                  top: `${dash.startY}%`,
+                  width: `${dash.startW}px`,
+                  height: `${dash.startH}px`,
+                  x: '-50%',
+                  opacity: 0,
                 }}
                 animate={{
-                  scale: [1, 1.25, 1],
-                  opacity: [0.4, 0.7, 0.4]
+                  top: [`${dash.startY}%`, `${dash.endY}%`],
+                  width: [`${dash.startW}px`, `${dash.endW}px`],
+                  height: [`${dash.startH}px`, `${dash.endH}px`],
+                  opacity: [0, 0.9, 0],
                 }}
                 transition={{
-                  duration: 2 + i * 0.5,
-                  repeat: Infinity,
-                  delay: i * 0.3
+                  duration: 2.5,
+                  delay: dash.delay,
+                  ease: 'easeIn',
                 }}
               />
             ))}
+          </>
+        )}
+      </AnimatePresence>
 
-            {/* Sun body with grid texture */}
-            <div
+      {/* Palm trees (emoji, left & right) */}
+      <AnimatePresence>
+        {showPalms && (
+          <>
+            <motion.div
+              key="palm-left"
+              className="absolute pointer-events-none select-none"
               style={{
-                width: '180px',
-                height: '180px',
-                borderRadius: '50%',
-                background: 'linear-gradient(180deg, #ffff00 0%, #ff00ff 50%, #ff0080 100%)',
-                boxShadow: '0 0 70px rgba(255, 0, 255, 1), 0 0 120px rgba(255, 0, 255, 0.9), inset 0 0 50px rgba(255, 255, 0, 0.6)',
-                border: '3px solid #ff00ff',
-                position: 'relative',
-                overflow: 'hidden'
+                left: isMobile ? '2%' : '6%',
+                top: '14%',
+                fontSize: isMobile ? '52px' : '72px',
+                zIndex: 14,
+                filter: 'drop-shadow(0 0 10px rgba(0,255,255,0.6))',
+                lineHeight: 1,
               }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 0.85, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1, delay: 0.4 }}
             >
-              {/* Scan lines */}
-              {[...Array(14)].map((_, i) => (
-                <motion.div
-                  key={`sun-line-${i}`}
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    top: `${i * 7.14}%`,
-                    height: '2px',
-                    background: 'rgba(255, 0, 255, 0.5)',
-                    boxShadow: '0 0 6px rgba(255, 0, 255, 0.7)'
-                  }}
-                  animate={{
-                    opacity: [0.4, 0.9, 0.4]
-                  }}
-                  transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    delay: i * 0.1
-                  }}
-                />
-              ))}
+              🌴
+            </motion.div>
+            <motion.div
+              key="palm-right"
+              className="absolute pointer-events-none select-none"
+              style={{
+                right: isMobile ? '2%' : '6%',
+                top: '12%',
+                fontSize: isMobile ? '52px' : '72px',
+                zIndex: 14,
+                filter: 'drop-shadow(0 0 10px rgba(255,0,255,0.6))',
+                lineHeight: 1,
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 0.85, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1, delay: 0.6 }}
+            >
+              🌴
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
-              {/* Glowing center */}
-              <div
+      {/* Neon signs — ARCADE, RETRO, DRIVE (hot-pink double border) */}
+      <AnimatePresence>
+        {showSigns && (
+          <>
+            {[
+              {
+                label: 'ARCADE',
+                color: '#ffff00',
+                left: isMobile ? '5%' : '10%',
+                top: '34%',
+                rotate: -10,
+                delay: 0.8,
+                drive: false,
+              },
+              {
+                label: 'RETRO',
+                color: '#00ffff',
+                right: isMobile ? '5%' : '12%',
+                top: '38%',
+                rotate: 8,
+                delay: 1.2,
+                drive: false,
+              },
+            ].map((sign) => (
+              <motion.div
+                key={`sign-${sign.label}`}
+                className="absolute pointer-events-none"
                 style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '90px',
-                  height: '90px',
-                  borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 0, 0.7) 40%, transparent 70%)'
+                  left: (sign as any).left,
+                  right: (sign as any).right,
+                  top: sign.top,
+                  transform: `rotate(${sign.rotate}deg)`,
+                  zIndex: 18,
+                }}
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.7, delay: sign.delay }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Impact, "Arial Narrow", sans-serif',
+                    fontSize: isMobile ? '18px' : '26px',
+                    color: sign.color,
+                    textShadow: `0 0 12px ${sign.color}, 0 0 24px ${sign.color}`,
+                    letterSpacing: '3px',
+                  }}
+                >
+                  {sign.label}
+                </span>
+              </motion.div>
+            ))}
+
+            {/* DRIVE neon sign — hot-pink double border box-shadow */}
+            <motion.div
+              key="sign-drive"
+              className="absolute pointer-events-none"
+              style={{
+                left: '50%',
+                top: '44%',
+                transform: 'translateX(-50%)',
+                zIndex: 18,
+              }}
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.7, delay: 1.6 }}
+            >
+              <span
+                style={{
+                  fontFamily: 'Impact, "Arial Narrow", sans-serif',
+                  fontSize: isMobile ? '22px' : '32px',
+                  color: '#ff2d9b',
+                  letterSpacing: '4px',
+                  display: 'inline-block',
+                  padding: '3px 10px',
+                  border: '2px solid #ff2d9b',
+                  boxShadow:
+                    '0 0 12px #ff2d9b, 0 0 28px #ff2d9b, inset 0 0 10px rgba(255,45,155,0.25), 0 0 0 4px rgba(255,45,155,0.25)',
+                  textShadow: '0 0 14px #ff2d9b, 0 0 30px #ff2d9b',
+                  borderRadius: '4px',
+                }}
+              >
+                DRIVE
+              </span>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          STAGE 3 — DELOREAN (6–10s): 🚙 on road + trail + 14 streaks + underglow
+          + tire tracks + sonic boom ring
+          Peak: car + underglow + trail + 14 streaks + 3 tire tracks + 1 boom = 20
+          ════════════════════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {stage === 'delorean' && (
+          <>
+            {/* 🚙 car — on road (bottom ~38%), facing RIGHT via scaleX(-1) */}
+            <motion.div
+              key="delorean"
+              className="absolute pointer-events-none select-none"
+              style={{
+                bottom: '38%',
+                fontSize: isMobile ? '36px' : '52px',
+                zIndex: 22,
+                lineHeight: 1,
+              }}
+              initial={{ x: -200 }}
+              animate={{ x: screenW + 200 }}
+              transition={{ duration: 3.2, ease: 'linear', delay: 0.3 }}
+            >
+              <span style={{ display: 'inline-block', transform: 'scaleX(-1)' }}>🚙</span>
+            </motion.div>
+
+            {/* Neon underglow — oval blur beneath car */}
+            <motion.div
+              key="underglow"
+              className="absolute pointer-events-none"
+              style={{
+                bottom: 'calc(38% - 4px)',
+                width: isMobile ? '48px' : '68px',
+                height: '8px',
+                background: 'linear-gradient(to right, rgba(0,255,255,0.7), rgba(255,0,255,0.7))',
+                filter: 'blur(6px)',
+                borderRadius: '50%',
+                zIndex: 21,
+              }}
+              initial={{ x: -200, opacity: 0 }}
+              animate={{ x: screenW + 200, opacity: [0, 0.9, 0.9, 0.5] }}
+              transition={{ duration: 3.2, ease: 'linear', delay: 0.3 }}
+            />
+
+            {/* Headlight beams — 2 triangle divs in front of car */}
+            <motion.div
+              key="headlight-1"
+              className="absolute pointer-events-none"
+              style={{
+                bottom: isMobile ? 'calc(38% + 8px)' : 'calc(38% + 12px)',
+                left: 0,
+                width: isMobile ? '60px' : '90px',
+                height: isMobile ? '18px' : '26px',
+                background: 'rgba(255, 220, 100, 0.7)',
+                clipPath: 'polygon(0% 50%, 100% 0%, 100% 100%)',
+                filter: 'blur(2px)',
+                zIndex: 23,
+              }}
+              initial={{ opacity: 0, x: -200 }}
+              animate={{ opacity: [0, 0.8], x: screenW + 200 }}
+              transition={{ duration: 3.2, ease: 'linear', delay: 0.3 }}
+            />
+            <motion.div
+              key="headlight-2"
+              className="absolute pointer-events-none"
+              style={{
+                bottom: isMobile ? 'calc(38% - 8px)' : 'calc(38% - 10px)',
+                left: 0,
+                width: isMobile ? '60px' : '90px',
+                height: isMobile ? '14px' : '20px',
+                background: 'rgba(255, 230, 120, 0.5)',
+                clipPath: 'polygon(0% 50%, 100% 0%, 100% 100%)',
+                filter: 'blur(3px)',
+                zIndex: 23,
+              }}
+              initial={{ opacity: 0, x: -200 }}
+              animate={{ opacity: [0, 0.6], x: screenW + 200 }}
+              transition={{ duration: 3.2, ease: 'linear', delay: 0.3 }}
+            />
+
+            {/* Light trail behind car */}
+            <motion.div
+              key="car-trail"
+              className="absolute pointer-events-none"
+              style={{
+                bottom: isMobile ? 'calc(38% + 10px)' : 'calc(38% + 14px)',
+                left: 0,
+                height: isMobile ? '5px' : '7px',
+                width: '40%',
+                background:
+                  'linear-gradient(to right, transparent, rgba(0,255,255,0.8), rgba(255,0,255,0.6), transparent)',
+                filter: 'blur(2px)',
+                zIndex: 21,
+                transformOrigin: 'left center',
+              }}
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={{ scaleX: [0, 1, 0.7], opacity: [0, 1, 0.4] }}
+              transition={{ duration: 3.2, ease: 'easeInOut', delay: 0.3 }}
+            />
+
+            {/* Wheel sparks */}
+            <motion.div
+              key="wheel-spark-1"
+              className="absolute pointer-events-none rounded-full"
+              style={{
+                bottom: isMobile ? 'calc(38% - 6px)' : 'calc(38% - 8px)',
+                left: 0,
+                width: '5px',
+                height: '5px',
+                background: '#ff6600',
+                boxShadow: '0 0 6px #ff6600',
+                zIndex: 22,
+              }}
+              initial={{ x: -200, opacity: 0 }}
+              animate={{ x: screenW + 200, y: [0, -4, 0, -4, 0], opacity: [0, 1, 1, 1, 0.8] }}
+              transition={{ duration: 3.2, ease: 'linear', delay: 0.4 }}
+            />
+            <motion.div
+              key="wheel-spark-2"
+              className="absolute pointer-events-none rounded-full"
+              style={{
+                bottom: isMobile ? 'calc(38% - 6px)' : 'calc(38% - 8px)',
+                left: 0,
+                width: '5px',
+                height: '5px',
+                background: '#ffaa00',
+                boxShadow: '0 0 6px #ffaa00',
+                zIndex: 22,
+              }}
+              initial={{ x: -165, opacity: 0 }}
+              animate={{ x: screenW + 235, y: [0, -4, 0, -4, 0], opacity: [0, 1, 1, 1, 0.8] }}
+              transition={{ duration: 3.2, ease: 'linear', delay: 0.4 }}
+            />
+
+            {/* 3 tire track dots — appear one by one as car passes */}
+            {tireTracks.map((tt) => (
+              <motion.div
+                key={`tire-${tt.id}`}
+                className="absolute pointer-events-none rounded-full"
+                style={{
+                  left: `${tt.leftPct}%`,
+                  bottom: 'calc(38% - 3px)',
+                  width: '6px',
+                  height: '6px',
+                  background: 'rgba(0,255,255,0.8)',
+                  boxShadow: '0 0 5px rgba(0,255,255,0.9)',
+                  zIndex: 20,
+                }}
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: [0, 0.9, 0.9, 0], scale: [0, 1.2, 1, 0.8] }}
+                transition={{ duration: 1.8, delay: tt.delay, ease: 'easeOut' }}
+              />
+            ))}
+
+            {/* Sonic boom ring — expands from center at delay 1.8s */}
+            <motion.div
+              key="sonic-boom"
+              className="absolute pointer-events-none"
+              style={{
+                left: '50%',
+                bottom: '38%',
+                width: isMobile ? '60px' : '80px',
+                height: isMobile ? '60px' : '80px',
+                marginLeft: isMobile ? '-30px' : '-40px',
+                marginBottom: isMobile ? '-30px' : '-40px',
+                border: '2px solid rgba(0,255,255,0.8)',
+                borderRadius: '50%',
+                zIndex: 24,
+              }}
+              initial={{ scale: 0, opacity: 0.6 }}
+              animate={{ scale: 3, opacity: 0 }}
+              transition={{ duration: 0.9, delay: 1.8, ease: 'easeOut' }}
+            />
+
+            {/* 14 star streaks */}
+            {starStreaks.map((streak) => (
+              <motion.div
+                key={`streak-${streak.id}`}
+                className="absolute pointer-events-none"
+                style={{
+                  top: `${streak.top}%`,
+                  left: 0,
+                  height: '2px',
+                  width: `${streak.width}%`,
+                  background:
+                    'linear-gradient(to right, transparent, rgba(255,255,255,0.7), transparent)',
+                  zIndex: 20,
+                  transformOrigin: 'left center',
+                }}
+                initial={{ scaleX: 0, opacity: 0 }}
+                animate={{ scaleX: 1, opacity: [0, 0.8, 0] }}
+                transition={{
+                  duration: 1.8,
+                  delay: streak.delay + 0.5,
+                  ease: 'easeOut',
                 }}
               />
-            </div>
-
-            {/* Enhanced sun rays */}
-            {[...Array(16)].map((_, i) => {
-              const angle = (i / 16) * 360;
-              return (
-                <motion.div
-                  key={`sun-ray-${i}`}
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    width: '140px',
-                    height: '5px',
-                    background: 'linear-gradient(to right, #ff00ff, transparent)',
-                    transformOrigin: 'left center',
-                    transform: `rotate(${angle}deg)`,
-                    boxShadow: '0 0 12px rgba(255, 0, 255, 0.9)'
-                  }}
-                  animate={{
-                    scaleX: [1, 1.4, 1],
-                    opacity: [0.6, 1, 0.6]
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    delay: i * 0.1
-                  }}
-                />
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* PALM TREES */}
-      <AnimatePresence>
-        {(stage === 'city' || stage === 'shapes' || stage === 'pulse') && (
-          <>
-            {/* Left palm */}
-            <motion.div
-              className="absolute z-22"
-              style={{ left: '8%', top: '25%' }}
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 0.8 }}
-              transition={{ duration: 1, delay: 0.3 }}
-            >
-              <svg width="80" height="180" viewBox="0 0 80 180">
-                {/* Trunk */}
-                <rect x="35" y="80" width="10" height="100" fill="#ff00ff" opacity="0.6" />
-                {/* Palm fronds */}
-                {[0, 1, 2, 3, 4].map((i) => {
-                  const angle = (i - 2) * 25;
-                  return (
-                    <motion.ellipse
-                      key={`palm-left-${i}`}
-                      cx="40"
-                      cy="80"
-                      rx="35"
-                      ry="8"
-                      fill="none"
-                      stroke="#00ffff"
-                      strokeWidth="3"
-                      style={{
-                        transformOrigin: '40px 80px',
-                        transform: `rotate(${angle}deg)`,
-                        filter: 'drop-shadow(0 0 8px rgba(0, 255, 255, 0.8))'
-                      }}
-                      animate={{
-                        ry: [8, 10, 8]
-                      }}
-                      transition={{
-                        duration: 2 + i * 0.2,
-                        repeat: Infinity,
-                        delay: i * 0.1
-                      }}
-                    />
-                  );
-                })}
-              </svg>
-            </motion.div>
-
-            {/* Right palm */}
-            <motion.div
-              className="absolute z-22"
-              style={{ right: '8%', top: '23%' }}
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 0.8 }}
-              transition={{ duration: 1, delay: 0.5 }}
-            >
-              <svg width="80" height="190" viewBox="0 0 80 190">
-                {/* Trunk */}
-                <rect x="35" y="85" width="10" height="105" fill="#ff00ff" opacity="0.6" />
-                {/* Palm fronds */}
-                {[0, 1, 2, 3, 4].map((i) => {
-                  const angle = (i - 2) * 25;
-                  return (
-                    <motion.ellipse
-                      key={`palm-right-${i}`}
-                      cx="40"
-                      cy="85"
-                      rx="35"
-                      ry="8"
-                      fill="none"
-                      stroke="#00ffff"
-                      strokeWidth="3"
-                      style={{
-                        transformOrigin: '40px 85px',
-                        transform: `rotate(${angle}deg)`,
-                        filter: 'drop-shadow(0 0 8px rgba(0, 255, 255, 0.8))'
-                      }}
-                      animate={{
-                        ry: [8, 10, 8]
-                      }}
-                      transition={{
-                        duration: 2.2 + i * 0.2,
-                        repeat: Infinity,
-                        delay: i * 0.15
-                      }}
-                    />
-                  );
-                })}
-              </svg>
-            </motion.div>
+            ))}
           </>
         )}
       </AnimatePresence>
 
-      {/* MOUNTAIN RANGES */}
+      {/* ════════════════════════════════════════════════════════════════════
+          STAGE 4 — FRIENDS FOREVER (10–14s)
+          Main text + glitch + track listing + TV border + BEST FRIENDS ribbon
+          ════════════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
-        {(stage === 'city' || stage === 'shapes' || stage === 'pulse') && (
+        {(stage === 'friends' || stage === 'radiance') && (
           <>
-            {/* Mountain range 1 */}
+            {/* Retro TV border around friends section */}
             <motion.div
-              className="absolute left-0 right-0 z-18"
-              style={{ top: '28%' }}
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 0.7 }}
-              transition={{ duration: 1, delay: 0.2 }}
-            >
-              <svg width="100%" height="200" viewBox="0 0 1000 200" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="mountain1" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#ff00ff" stopOpacity="0.8" />
-                    <stop offset="100%" stopColor="#000000" stopOpacity="0.3" />
-                  </linearGradient>
-                </defs>
-                <polygon
-                  points="0,200 0,150 150,100 300,140 450,80 600,120 750,90 900,130 1000,110 1000,200"
-                  fill="url(#mountain1)"
-                  stroke="#ff00ff"
-                  strokeWidth="2"
-                  style={{ filter: 'drop-shadow(0 0 10px rgba(255, 0, 255, 0.6))' }}
-                />
-              </svg>
-            </motion.div>
-
-            {/* Mountain range 2 */}
-            <motion.div
-              className="absolute left-0 right-0 z-19"
-              style={{ top: '26%' }}
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 0.9 }}
-              transition={{ duration: 1, delay: 0.5 }}
-            >
-              <svg width="100%" height="250" viewBox="0 0 1000 250" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="mountain2" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#00ffff" stopOpacity="0.9" />
-                    <stop offset="100%" stopColor="#000000" stopOpacity="0.4" />
-                  </linearGradient>
-                </defs>
-                <polygon
-                  points="0,250 0,180 120,140 280,170 400,120 550,160 700,110 850,150 1000,130 1000,250"
-                  fill="url(#mountain2)"
-                  stroke="#00ffff"
-                  strokeWidth="3"
-                  style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.8))' }}
-                />
-              </svg>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* "FRIENDS FOREVER" - FIXED positioning */}
-      <AnimatePresence>
-        {(stage === 'city' || stage === 'shapes' || stage === 'pulse') && (
-          <motion.div
-            className="absolute z-40"
-            style={{
-              left: '50%',
-              top: '15%',
-              transform: 'translateX(-50%)',
-              width: 'fit-content',
-              maxWidth: '90%',
-              textAlign: 'center'
-            }}
-            initial={{ opacity: 0, y: -30, scale: 0.8 }}
-            animate={{
-              opacity: stage === 'city' ? [0, 1, 0.9, 1] : stage === 'pulse' ? [0.9, 1, 0.9] : 0.9,
-              y: 0,
-              scale: 1
-            }}
-            transition={{ 
-              opacity: { duration: stage === 'pulse' ? 1 : 0.8, repeat: stage === 'pulse' ? Infinity : 0 },
-              y: { duration: 0.8 },
-              scale: { duration: 0.8 }
-            }}
-          >
-            <div
+              key="tv-border"
+              className="absolute pointer-events-none"
               style={{
-                fontFamily: 'Impact, sans-serif',
-                fontSize: 'clamp(20px, 5vw, 44px)',
-                fontWeight: 'bold',
-                color: '#ff00ff',
-                textShadow: '0 0 20px #ff00ff, 0 0 40px #ff00ff, 0 0 60px #ff00ff, 3px 3px 0px #00ffff',
-                letterSpacing: 'clamp(1px, 0.6vw, 5px)',
-                textAlign: 'center',
-                padding: '0 8px'
+                left: '50%',
+                top: isMobile ? '8%' : '6%',
+                width: isMobile ? '92vw' : '70vw',
+                maxWidth: '560px',
+                transform: 'translateX(-50%)',
+                zIndex: 29,
+                border: '2px solid #ff00ff',
+                borderRadius: '12px',
+                boxShadow: '0 0 16px #ff00ff, inset 0 0 12px rgba(255,0,255,0.1)',
+                padding: isMobile ? '12px 10px 16px' : '16px 20px 22px',
               }}
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
             >
-              FRIENDS FOREVER
-            </div>
-            <motion.div
-              style={{
-                position: 'absolute',
-                inset: '-8px',
-                border: '3px solid #00ffff',
-                borderRadius: '10px',
-                boxShadow: '0 0 25px #00ffff, inset 0 0 25px rgba(0, 255, 255, 0.2)'
-              }}
-              animate={{
-                opacity: [0.6, 1, 0.6],
-                boxShadow: [
-                  '0 0 25px #00ffff, inset 0 0 25px rgba(0, 255, 255, 0.2)',
-                  '0 0 45px #00ffff, inset 0 0 45px rgba(0, 255, 255, 0.4)',
-                  '0 0 25px #00ffff, inset 0 0 25px rgba(0, 255, 255, 0.2)'
-                ]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity
-              }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Additional neon signs */}
-      <AnimatePresence>
-        {(stage === 'shapes' || stage === 'pulse') && (
-          <>
-            {/* "ARCADE" sign */}
-            <motion.div
-              className="absolute z-38"
-              style={{ left: '12%', top: '35%' }}
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: [0, 0.9, 0.7, 0.9], scale: 1 }}
-              transition={{ 
-                opacity: { duration: 1.5, repeat: Infinity },
-                scale: { duration: 0.6 }
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: 'Impact, sans-serif',
-                  fontSize: 'clamp(16px, 2.5vw, 28px)',
-                  color: '#ffff00',
-                  textShadow: '0 0 15px #ffff00, 0 0 30px #ffff00',
-                  letterSpacing: '3px',
-                  transform: 'rotate(-12deg)'
-                }}
-              >
-                ARCADE
-              </div>
-            </motion.div>
-
-            {/* "RETRO" sign */}
-            <motion.div
-              className="absolute z-38"
-              style={{ right: '15%', top: '38%' }}
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: [0, 0.85, 0.6, 0.85], scale: 1 }}
-              transition={{ 
-                opacity: { duration: 1.8, repeat: Infinity, delay: 0.3 },
-                scale: { duration: 0.6, delay: 0.2 }
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: 'Impact, sans-serif',
-                  fontSize: 'clamp(14px, 2.2vw, 24px)',
-                  color: '#00ffff',
-                  textShadow: '0 0 15px #00ffff, 0 0 30px #00ffff',
-                  letterSpacing: '3px',
-                  transform: 'rotate(8deg)'
-                }}
-              >
-                RETRO
-              </div>
-            </motion.div>
-
-            {/* "1985" sign */}
-            <motion.div
-              className="absolute z-38"
-              style={{ left: '50%', top: '52%', transform: 'translateX(-50%)' }}
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: [0, 0.8, 0.5, 0.8], scale: 1 }}
-              transition={{ 
-                opacity: { duration: 2.2, repeat: Infinity, delay: 0.5 },
-                scale: { duration: 0.7, delay: 0.3 }
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: 'Impact, sans-serif',
-                  fontSize: 'clamp(18px, 3vw, 32px)',
-                  color: '#ff00ff',
-                  textShadow: '0 0 20px #ff00ff, 0 0 40px #ff00ff',
-                  letterSpacing: '4px'
-                }}
-              >
-                1985
-              </div>
-            </motion.div>
-
-            {/* Flying DeLorean-style trail */}
-            <motion.div
-              className="absolute z-36"
-              style={{ left: '-10%', top: '20%' }}
-              animate={{
-                left: ['-10%', '110%']
-              }}
-              transition={{
-                duration: 8,
-                repeat: Infinity,
-                ease: 'linear',
-                delay: 1
-              }}
-            >
-              <svg width="80" height="40" viewBox="0 0 80 40">
-                {/* Car body */}
-                <rect x="10" y="15" width="60" height="20" fill="#ff00ff" opacity="0.8" />
-                {/* Light trails */}
-                {[0, 1, 2].map((i) => (
-                  <motion.rect
-                    key={`trail-${i}`}
-                    x={-20 - i * 15}
-                    y={15}
-                    width={15}
-                    height={20}
-                    fill="#00ffff"
-                    opacity={0.6 - i * 0.2}
-                    animate={{
-                      opacity: [0.6 - i * 0.2, 0, 0.6 - i * 0.2]
-                    }}
-                    transition={{
-                      duration: 0.5,
-                      repeat: Infinity,
-                      delay: i * 0.1
-                    }}
-                  />
-                ))}
-              </svg>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Neon Convertible Cars */}
-      <AnimatePresence>
-        {(stage === 'city' || stage === 'shapes' || stage === 'pulse') && (
-          <>
-            {/* Pink convertible driving left to right */}
-            <motion.div
-              className="absolute z-37"
-              style={{ left: '-15%', top: '60%' }}
-              animate={{
-                left: ['-15%', '115%']
-              }}
-              transition={{
-                duration: 12,
-                repeat: Infinity,
-                ease: 'linear',
-                delay: 0.5
-              }}
-            >
-              <svg width="140" height="70" viewBox="0 0 140 70">
-                {/* Headlight beams */}
-                <motion.polygon
-                  points="130,45 200,30 200,60"
-                  fill="rgba(255, 255, 0, 0.3)"
-                  style={{ filter: 'blur(3px)' }}
-                  animate={{
-                    opacity: [0.3, 0.6, 0.3]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity
-                  }}
-                />
-                {/* Car body */}
-                <path
-                  d="M 20,50 L 30,35 L 50,30 L 80,30 L 100,35 L 110,50 Z"
-                  fill="url(#carGradient1)"
-                  stroke="#ff00ff"
-                  strokeWidth="2"
-                  style={{ filter: 'drop-shadow(0 0 15px rgba(255, 0, 255, 0.8))' }}
-                />
-                {/* Windshield */}
-                <path
-                  d="M 50,32 L 55,28 L 75,28 L 80,32 Z"
-                  fill="rgba(0, 255, 255, 0.3)"
-                  stroke="#00ffff"
-                  strokeWidth="1.5"
-                  style={{ filter: 'drop-shadow(0 0 8px rgba(0, 255, 255, 0.6))' }}
-                />
-                {/* Wheels */}
-                <circle cx="40" cy="50" r="8" fill="#000000" stroke="#00ffff" strokeWidth="2" style={{ filter: 'drop-shadow(0 0 10px rgba(0, 255, 255, 0.8))' }} />
-                <circle cx="90" cy="50" r="8" fill="#000000" stroke="#00ffff" strokeWidth="2" style={{ filter: 'drop-shadow(0 0 10px rgba(0, 255, 255, 0.8))' }} />
-                {/* Headlights */}
-                <motion.circle
-                  cx="125"
-                  cy="45"
-                  r="4"
-                  fill="#ffff00"
-                  style={{ filter: 'drop-shadow(0 0 12px rgba(255, 255, 0, 1))' }}
-                  animate={{
-                    opacity: [0.8, 1, 0.8]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity
-                  }}
-                />
-                <motion.circle
-                  cx="125"
-                  cy="55"
-                  r="4"
-                  fill="#ffff00"
-                  style={{ filter: 'drop-shadow(0 0 12px rgba(255, 255, 0, 1))' }}
-                  animate={{
-                    opacity: [0.8, 1, 0.8]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity
-                  }}
-                />
-                {/* Speed lines */}
-                {[0, 1, 2, 3].map((i) => (
-                  <motion.line
-                    key={`speed-${i}`}
-                    x1={-10 - i * 20}
-                    y1={40 + i * 5}
-                    x2={10 - i * 20}
-                    y2={40 + i * 5}
-                    stroke="#ff00ff"
-                    strokeWidth="2"
-                    opacity={0.5 - i * 0.1}
-                    style={{ filter: 'blur(1px)' }}
-                    animate={{
-                      opacity: [0.5 - i * 0.1, 0, 0.5 - i * 0.1]
-                    }}
-                    transition={{
-                      duration: 0.6,
-                      repeat: Infinity,
-                      delay: i * 0.1
-                    }}
-                  />
-                ))}
-                <defs>
-                  <linearGradient id="carGradient1" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#ff00ff" />
-                    <stop offset="100%" stopColor="#ff0080" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </motion.div>
-
-            {/* Cyan convertible driving right to left (higher up) */}
-            <motion.div
-              className="absolute z-37"
-              style={{ right: '-15%', top: '45%', transform: 'scaleX(-1)' }}
-              animate={{
-                right: ['-15%', '115%']
-              }}
-              transition={{
-                duration: 15,
-                repeat: Infinity,
-                ease: 'linear',
-                delay: 3
-              }}
-            >
-              <svg width="140" height="70" viewBox="0 0 140 70">
-                {/* Headlight beams */}
-                <motion.polygon
-                  points="130,45 200,30 200,60"
-                  fill="rgba(255, 255, 0, 0.3)"
-                  style={{ filter: 'blur(3px)' }}
-                  animate={{
-                    opacity: [0.3, 0.6, 0.3]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    delay: 0.3
-                  }}
-                />
-                {/* Car body */}
-                <path
-                  d="M 20,50 L 30,35 L 50,30 L 80,30 L 100,35 L 110,50 Z"
-                  fill="url(#carGradient2)"
-                  stroke="#00ffff"
-                  strokeWidth="2"
-                  style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.8))' }}
-                />
-                {/* Windshield */}
-                <path
-                  d="M 50,32 L 55,28 L 75,28 L 80,32 Z"
-                  fill="rgba(255, 0, 255, 0.3)"
-                  stroke="#ff00ff"
-                  strokeWidth="1.5"
-                  style={{ filter: 'drop-shadow(0 0 8px rgba(255, 0, 255, 0.6))' }}
-                />
-                {/* Wheels */}
-                <circle cx="40" cy="50" r="8" fill="#000000" stroke="#ffff00" strokeWidth="2" style={{ filter: 'drop-shadow(0 0 10px rgba(255, 255, 0, 0.8))' }} />
-                <circle cx="90" cy="50" r="8" fill="#000000" stroke="#ffff00" strokeWidth="2" style={{ filter: 'drop-shadow(0 0 10px rgba(255, 255, 0, 0.8))' }} />
-                {/* Headlights */}
-                <motion.circle
-                  cx="125"
-                  cy="45"
-                  r="4"
-                  fill="#ffff00"
-                  style={{ filter: 'drop-shadow(0 0 12px rgba(255, 255, 0, 1))' }}
-                  animate={{
-                    opacity: [0.8, 1, 0.8]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    delay: 0.3
-                  }}
-                />
-                <motion.circle
-                  cx="125"
-                  cy="55"
-                  r="4"
-                  fill="#ffff00"
-                  style={{ filter: 'drop-shadow(0 0 12px rgba(255, 255, 0, 1))' }}
-                  animate={{
-                    opacity: [0.8, 1, 0.8]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    delay: 0.3
-                  }}
-                />
-                {/* Speed lines */}
-                {[0, 1, 2, 3].map((i) => (
-                  <motion.line
-                    key={`speed2-${i}`}
-                    x1={-10 - i * 20}
-                    y1={40 + i * 5}
-                    x2={10 - i * 20}
-                    y2={40 + i * 5}
-                    stroke="#00ffff"
-                    strokeWidth="2"
-                    opacity={0.5 - i * 0.1}
-                    style={{ filter: 'blur(1px)' }}
-                    animate={{
-                      opacity: [0.5 - i * 0.1, 0, 0.5 - i * 0.1]
-                    }}
-                    transition={{
-                      duration: 0.6,
-                      repeat: Infinity,
-                      delay: i * 0.1
-                    }}
-                  />
-                ))}
-                <defs>
-                  <linearGradient id="carGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#00ffff" />
-                    <stop offset="100%" stopColor="#0080ff" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Laser beams */}
-      <AnimatePresence>
-        {(stage === 'pulse') && (
-          <>
-            {[0, 1, 2, 3, 4].map((i) => (
+              {/* Glitch copy 1 */}
               <motion.div
-                key={`laser-${i}`}
-                className="absolute z-25"
                 style={{
-                  left: `${20 + i * 15}%`,
-                  bottom: '0%',
-                  width: '3px',
-                  height: '100%',
-                  background: `linear-gradient(to top, ${i % 2 === 0 ? '#ff00ff' : '#00ffff'}, transparent)`,
-                  filter: `blur(2px)`,
-                  boxShadow: `0 0 15px ${i % 2 === 0 ? '#ff00ff' : '#00ffff'}`,
-                  transformOrigin: 'bottom'
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  paddingTop: isMobile ? '12px' : '16px',
+                  fontFamily: 'Impact, "Arial Narrow", sans-serif',
+                  fontSize: 'clamp(20px, 6vw, 52px)',
+                  color: 'rgba(255,30,30,0.55)',
+                  letterSpacing: 'clamp(2px, 1vw, 6px)',
+                  mixBlendMode: 'screen',
+                  pointerEvents: 'none',
+                }}
+                animate={{ x: [-2, 2, -2], opacity: [0.6, 0, 0.6, 0, 0] }}
+                transition={{ duration: 0.18, repeat: 3, repeatDelay: 1.1 }}
+              >
+                FRIENDS FOREVER
+              </motion.div>
+              {/* Glitch copy 2 */}
+              <motion.div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  paddingTop: isMobile ? '12px' : '16px',
+                  fontFamily: 'Impact, "Arial Narrow", sans-serif',
+                  fontSize: 'clamp(20px, 6vw, 52px)',
+                  color: 'rgba(0,255,255,0.45)',
+                  letterSpacing: 'clamp(2px, 1vw, 6px)',
+                  mixBlendMode: 'screen',
+                  pointerEvents: 'none',
+                }}
+                animate={{ x: [2, -2, 2], opacity: [0, 0.55, 0, 0.55, 0] }}
+                transition={{ duration: 0.18, repeat: 3, repeatDelay: 1.1, delay: 0.09 }}
+              >
+                FRIENDS FOREVER
+              </motion.div>
+
+              {/* Main title */}
+              <div style={{ textAlign: 'center', position: 'relative' }}>
+                <motion.div
+                  style={{
+                    fontFamily: 'Impact, "Arial Narrow", sans-serif',
+                    fontSize: 'clamp(20px, 6vw, 52px)',
+                    color: '#ff00ff',
+                    textShadow: '0 0 18px #ff00ff, 0 0 36px #ff00ff, 3px 3px 0 #00ffff',
+                    letterSpacing: 'clamp(2px, 1vw, 6px)',
+                  }}
+                  animate={{
+                    textShadow: [
+                      '0 0 18px #ff00ff, 0 0 36px #ff00ff, 3px 3px 0 #00ffff',
+                      '0 0 32px #ff00ff, 0 0 60px #ff00ff, 3px 3px 0 #00ffff',
+                      '0 0 18px #ff00ff, 0 0 36px #ff00ff, 3px 3px 0 #00ffff',
+                    ],
+                  }}
+                  transition={{ duration: 1.2, repeat: 2 }}
+                >
+                  FRIENDS FOREVER
+                </motion.div>
+
+                {/* SINCE DAY ONE */}
+                <motion.p
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: 'clamp(9px, 2vw, 14px)',
+                    color: '#00ffff',
+                    textShadow: '0 0 8px #00ffff',
+                    letterSpacing: 'clamp(2px, 0.8vw, 4px)',
+                    marginTop: '4px',
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                >
+                  SINCE DAY ONE
+                </motion.p>
+
+                {/* Mixtape track listing — 3 lines staggered */}
+                {[
+                  { label: '01. THE NIGHT WE MET', color: '#00ffff', delay: 0.6 },
+                  { label: '02. NEON BOULEVARD',   color: '#ff00ff', delay: 0.9 },
+                  { label: '03. FOREVER ELECTRIC', color: '#ffff00', delay: 1.2 },
+                ].map((track) => (
+                  <motion.p
+                    key={track.label}
+                    style={{
+                      fontFamily: 'monospace',
+                      fontSize: 'clamp(8px, 1.6vw, 11px)',
+                      color: track.color,
+                      textShadow: `0 0 6px ${track.color}`,
+                      letterSpacing: '1px',
+                      marginTop: '4px',
+                      textAlign: 'left',
+                      paddingLeft: isMobile ? '4px' : '8px',
+                    }}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: track.delay }}
+                  >
+                    {track.label}
+                  </motion.p>
+                ))}
+
+                {/* ★ BEST FRIENDS ★ ribbon */}
+                <motion.p
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: 'clamp(9px, 1.8vw, 13px)',
+                    color: '#ff2d9b',
+                    textShadow: '0 0 10px #ff2d9b',
+                    letterSpacing: '2px',
+                    marginTop: '8px',
+                    fontStyle: 'italic',
+                    fontWeight: 'bold',
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 1.5 }}
+                >
+                  ★ BEST FRIENDS ★
+                </motion.p>
+              </div>
+            </motion.div>
+
+            {/* 6 neon confetti squares — pop in once, static after */}
+            {confettiSquares.map((sq) => (
+              <motion.div
+                key={`confetti-${sq.id}`}
+                className="absolute pointer-events-none"
+                style={{
+                  left: `${sq.left}%`,
+                  top: `${sq.top}%`,
+                  width: `${sq.size}px`,
+                  height: `${sq.size}px`,
+                  background: sq.color,
+                  boxShadow: `0 0 8px ${sq.color}`,
+                  transform: `rotate(${sq.rotate}deg)`,
+                  zIndex: 28,
+                }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 0.85 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 18, delay: sq.delay }}
+              />
+            ))}
+
+            {/* Extra neon signs: VIBES + FOREVER */}
+            <motion.div
+              key="sign-vibes"
+              className="absolute pointer-events-none"
+              style={{ left: isMobile ? '8%' : '15%', top: '35%', zIndex: 26 }}
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.7, delay: 0.9 }}
+            >
+              <span
+                style={{
+                  fontFamily: 'Impact, "Arial Narrow", sans-serif',
+                  fontSize: isMobile ? '16px' : '22px',
+                  color: '#ff00aa',
+                  textShadow: '0 0 12px #ff00aa, 0 0 24px #ff00aa',
+                  letterSpacing: '3px',
+                  transform: 'rotate(-6deg)',
+                  display: 'inline-block',
+                }}
+              >
+                VIBES
+              </span>
+            </motion.div>
+            <motion.div
+              key="sign-forever2"
+              className="absolute pointer-events-none"
+              style={{ right: isMobile ? '8%' : '15%', top: '38%', zIndex: 26 }}
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.7, delay: 1.2 }}
+            >
+              <span
+                style={{
+                  fontFamily: 'Impact, "Arial Narrow", sans-serif',
+                  fontSize: isMobile ? '16px' : '22px',
+                  color: '#00ffcc',
+                  textShadow: '0 0 12px #00ffcc, 0 0 24px #00ffcc',
+                  letterSpacing: '3px',
+                  transform: 'rotate(5deg)',
+                  display: 'inline-block',
+                }}
+              >
+                FOREVER
+              </span>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          STAGE 5 — RADIANCE (14–17s): spotlights + 10 columns + capsule title
+          + "YOUR MIXTAPE IS FOREVER"
+          ════════════════════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {stage === 'radiance' && (
+          <>
+            {/* 3 concert spotlight beams — conic gradient strips */}
+            {spotlights.map((sp) => (
+              <motion.div
+                key={`spotlight-${sp.id}`}
+                className="absolute pointer-events-none"
+                style={{
+                  left: sp.left,
+                  bottom: '45%',
+                  width: isMobile ? '40px' : '55px',
+                  height: isMobile ? '220px' : '320px',
+                  background: `linear-gradient(to top, ${sp.color}, transparent)`,
+                  filter: 'blur(12px)',
+                  transform: `translateX(-50%) rotate(${sp.angle}deg)`,
+                  transformOrigin: 'bottom center',
+                  zIndex: 7,
                 }}
                 initial={{ scaleY: 0, opacity: 0 }}
-                animate={{
-                  scaleY: [0, 1, 0],
-                  opacity: [0, 0.8, 0]
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  delay: i * 0.2,
-                  ease: 'easeInOut'
-                }}
+                animate={{ scaleY: 1, opacity: 1 }}
+                transition={{ duration: 1, delay: sp.delay, ease: 'easeOut' }}
               />
             ))}
-          </>
-        )}
-      </AnimatePresence>
 
-      {/* GEOMETRIC SHAPES - Enhanced */}
-      <AnimatePresence>
-        {(stage === 'shapes' || stage === 'pulse') && (
-          <>
-            {[...Array(10)].map((_, i) => {
-              const isTriangle = i % 2 === 0;
-              const colors = ['#ff00ff', '#00ffff', '#ffff00'];
-              const size = 45 + Math.random() * 50;
-              const x = 10 + (i * 10);
-              const y = 42 + (i % 4) * 15;
-
-              return (
-                <motion.div
-                  key={`shape-${i}`}
-                  className="absolute z-35"
-                  style={{
-                    left: `${x}%`,
-                    top: `${y}%`
-                  }}
-                  initial={{ opacity: 0, scale: 0, rotate: 0 }}
-                  animate={{
-                    opacity: stage === 'shapes' ? [0, 0.8] : [0.8, 1, 0.8],
-                    scale: stage === 'shapes' ? [0, 1] : [1, 1.3, 1],
-                    rotate: stage === 'shapes' ? [0, 180] : [180, 360],
-                    y: stage === 'pulse' ? [0, -25, 0] : 0
-                  }}
-                  transition={{
-                    opacity: { duration: stage === 'pulse' ? 2 : 0.7, delay: i * 0.1, repeat: stage === 'pulse' ? Infinity : 0 },
-                    scale: { duration: stage === 'pulse' ? 2 : 0.9, delay: i * 0.1, repeat: stage === 'pulse' ? Infinity : 0 },
-                    rotate: { duration: stage === 'pulse' ? 4 : 1.2, delay: i * 0.1, repeat: stage === 'pulse' ? Infinity : 0 },
-                    y: { duration: 2.2, delay: i * 0.2, repeat: stage === 'pulse' ? Infinity : 0 }
-                  }}
-                >
-                  <svg width={size} height={size} viewBox="0 0 100 100">
-                    {isTriangle ? (
-                      <polygon
-                        points="50,10 90,90 10,90"
-                        fill="none"
-                        stroke={colors[i % 3]}
-                        strokeWidth="4"
-                        style={{
-                          filter: `drop-shadow(0 0 18px ${colors[i % 3]})`
-                        }}
-                      />
-                    ) : (
-                      <rect
-                        x="10"
-                        y="10"
-                        width="80"
-                        height="80"
-                        fill="none"
-                        stroke={colors[i % 3]}
-                        strokeWidth="4"
-                        style={{
-                          filter: `drop-shadow(0 0 18px ${colors[i % 3]})`
-                        }}
-                      />
-                    )}
-                  </svg>
-                </motion.div>
-              );
-            })}
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* RADIANCE - Enhanced */}
-      <AnimatePresence>
-        {stage === 'radiance' && (
-          <>
-            {/* Rays */}
-            {[...Array(48)].map((_, i) => {
-              const angle = (i / 48) * 360;
-              const colors = ['rgba(255, 0, 255, 1)', 'rgba(0, 255, 255, 1)', 'rgba(255, 255, 0, 1)', 'rgba(255, 255, 255, 1)'];
-
-              return (
-                <motion.div
-                  key={`ray-${i}`}
-                  className="absolute"
-                  style={{
-                    left: '50%',
-                    top: '50%',
-                    width: '200vw',
-                    height: i % 4 === 0 ? '12px' : i % 4 === 1 ? '9px' : i % 4 === 2 ? '11px' : '10px',
-                    marginLeft: '-100vw',
-                    marginTop: i % 4 === 0 ? '-6px' : i % 4 === 1 ? '-4.5px' : i % 4 === 2 ? '-5.5px' : '-5px',
-                    background: `linear-gradient(to right, transparent, ${colors[i % 4].replace('1)', '0.94)')} 50%, transparent)`,
-                    transformOrigin: 'center center',
-                    transform: `rotate(${angle}deg)`,
-                    filter: 'blur(2px)'
-                  }}
-                  initial={{ scaleX: 0, opacity: 0 }}
-                  animate={{
-                    scaleX: [0, 3, 2.8],
-                    opacity: [0, 1, 0.95]
-                  }}
-                  transition={{
-                    duration: 1.4,
-                    ease: 'easeOut'
-                  }}
-                />
-              );
-            })}
-
-            {/* Core */}
+            {/* Outer ambient glow — single-play */}
             <motion.div
+              key="radiance-glow"
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ zIndex: 8 }}
               initial={{ scale: 0, opacity: 0 }}
-              animate={{
-                scale: [0, 7.5, 7.2],
-                opacity: [0, 1, 0.97],
-                rotate: [0, 180]
-              }}
-              transition={{ duration: 1.7, ease: 'easeOut' }}
+              animate={{ scale: 2.8, opacity: 1 }}
+              transition={{ duration: 2.5, ease: 'easeOut' }}
             >
               <div
-                className="w-[52rem] h-[52rem] rounded-full"
                 style={{
-                  background: 'radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 200, 255, 0.98) 7%, rgba(255, 0, 255, 0.95) 16%, rgba(0, 255, 255, 0.91) 26%, rgba(255, 255, 0, 0.86) 38%, rgba(255, 0, 255, 0.79) 52%, rgba(0, 255, 255, 0.69) 68%, rgba(80, 40, 120, 0.53) 84%, transparent 97%)',
-                  boxShadow: '0 0 500px rgba(255, 0, 255, 0.97), 0 0 700px rgba(0, 255, 255, 0.85)',
-                  filter: 'blur(120px)'
+                  width: isMobile ? '280px' : '420px',
+                  height: isMobile ? '280px' : '420px',
+                  borderRadius: '50%',
+                  background:
+                    'radial-gradient(circle, rgba(255,0,255,0.35) 0%, rgba(0,255,255,0.2) 40%, transparent 70%)',
+                  filter: 'blur(60px)',
                 }}
               />
             </motion.div>
 
-            {/* Orbiting particles */}
-            {(() => {
-              const particles = [];
-              for (let ring = 0; ring < 3; ring++) {
-                const radius = 190 + ring * 120;
-                const count = 45 + ring * 22;
-                
-                for (let i = 0; i < count; i++) {
-                  const angle = (i / count) * 360;
-                  const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ffffff'];
-                  
-                  particles.push(
-                    <motion.div
-                      key={`orbit-${ring}-${i}`}
-                      className="absolute"
-                      style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        background: colors[i % 4],
-                        boxShadow: `0 0 16px ${colors[i % 4]}`
-                      }}
-                      animate={{
-                        x: [
-                          Math.cos(angle * Math.PI / 180) * radius,
-                          Math.cos((angle + 360) * Math.PI / 180) * radius
-                        ],
-                        y: [
-                          Math.sin(angle * Math.PI / 180) * radius,
-                          Math.sin((angle + 360) * Math.PI / 180) * radius
-                        ]
-                      }}
-                      transition={{
-                        delay: 0.5 + (ring * 67 + i) * 0.003,
-                        duration: 6.8 + ring * 2,
-                        repeat: Infinity,
-                        ease: 'linear'
-                      }}
-                    />
-                  );
-                }
-              }
-              return particles;
-            })()}
+            {/* Inner core burst */}
+            <motion.div
+              key="radiance-core"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ zIndex: 9 }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1.4, opacity: 0.7 }}
+              transition={{ duration: 1.5, ease: 'easeOut', delay: 0.3 }}
+            >
+              <div
+                style={{
+                  width: isMobile ? '80px' : '120px',
+                  height: isMobile ? '80px' : '120px',
+                  borderRadius: '50%',
+                  background:
+                    'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,220,255,0.5) 50%, transparent 80%)',
+                  filter: 'blur(20px)',
+                }}
+              />
+            </motion.div>
 
-            {/* Burst particles */}
-            {[...Array(100)].map((_, i) => {
-              const angle = (i / 100) * Math.PI * 2;
-              const distance = 145 + Math.random() * 320;
-              const x = Math.cos(angle) * distance;
-              const y = Math.sin(angle) * distance;
-              const colors = ['#ff00ff', '#00ffff', '#ffff00'];
+            {/* 10 light columns radiating upward */}
+            {lightColumns.map((col) => (
+              <motion.div
+                key={`col-${col.id}`}
+                className="absolute pointer-events-none"
+                style={{
+                  left: `${col.left}%`,
+                  bottom: '45%',
+                  width: '3px',
+                  height: isMobile ? '120px' : '180px',
+                  background: `linear-gradient(to top, ${col.color}, transparent)`,
+                  boxShadow: `0 0 6px ${col.color}`,
+                  zIndex: 10,
+                  transformOrigin: 'bottom center',
+                  transform: 'translateX(-50%)',
+                }}
+                initial={{ scaleY: 0, opacity: 0 }}
+                animate={{ scaleY: 1, opacity: [0, 0.9, 0.7] }}
+                transition={{ duration: 1.2, delay: col.delay, ease: 'easeOut' }}
+              />
+            ))}
 
-              return (
-                <motion.div
-                  key={`burst-${i}`}
-                  className="absolute"
-                  initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-                  animate={{
-                    x: x,
-                    y: [y, y + 150],
-                    scale: [0, 2.3, 2],
-                    opacity: [0, 1, 0.95, 0],
-                    rotate: [0, Math.random() * 720]
-                  }}
-                  transition={{
-                    duration: 2.8,
-                    delay: i * 0.007,
-                    ease: 'easeOut'
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '12px',
-                      height: '9px',
-                      borderRadius: '50%',
-                      background: colors[i % 3],
-                      boxShadow: `0 0 14px ${colors[i % 3]}`,
-                      filter: 'brightness(1.3)'
-                    }}
-                  />
-                </motion.div>
-              );
-            })}
+            {/* Capsule title */}
+            <motion.div
+              key="capsule-title"
+              className="absolute bottom-16 left-0 right-0 text-center z-40 px-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 1 }}
+            >
+              <h2
+                style={{
+                  fontFamily: 'Impact, "Arial Narrow", sans-serif',
+                  fontSize: 'clamp(24px, 7vw, 52px)',
+                  color: '#ff00ff',
+                  textShadow:
+                    '0 0 24px #ff00ff, 0 0 48px #00ffff, 3px 3px 0 #00ffff',
+                  letterSpacing: 'clamp(2px, 1vw, 6px)',
+                  marginBottom: '8px',
+                }}
+              >
+                NEVER ENDING
+              </h2>
+              <p
+                style={{
+                  fontFamily: 'monospace',
+                  fontSize: 'clamp(14px, 3.5vw, 22px)',
+                  color: '#00ffff',
+                  textShadow: '0 0 12px rgba(0,255,255,0.9)',
+                  letterSpacing: '2px',
+                }}
+              >
+                {capsuleTitle}
+              </p>
+              {/* YOUR MIXTAPE IS FOREVER */}
+              <motion.p
+                style={{
+                  fontFamily: 'monospace',
+                  fontSize: 'clamp(9px, 1.8vw, 12px)',
+                  color: '#00ffff',
+                  textShadow: '0 0 8px #00ffff, 0 0 18px rgba(0,255,255,0.5)',
+                  letterSpacing: '2px',
+                  marginTop: '6px',
+                  fontStyle: 'italic',
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5, duration: 0.8 }}
+              >
+                YOUR MIXTAPE IS FOREVER
+              </motion.p>
+              {/* YOUR FRIENDSHIP, FOREVER ELECTRIC */}
+              <motion.p
+                style={{
+                  fontFamily: 'monospace',
+                  fontSize: 'clamp(9px, 1.8vw, 11px)',
+                  color: 'rgba(255,255,255,0.55)',
+                  textShadow: '0 0 6px rgba(255,255,255,0.4)',
+                  letterSpacing: '2px',
+                  marginTop: '4px',
+                  fontStyle: 'italic',
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1, duration: 0.8 }}
+              >
+                YOUR FRIENDSHIP, FOREVER ELECTRIC
+              </motion.p>
+            </motion.div>
           </>
         )}
       </AnimatePresence>
-
-      {/* Success message */}
-      <AnimatePresence>
-        {stage === 'radiance' && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ delay: 0.6, duration: 0.9 }}
-            className="absolute bottom-20 left-0 right-0 text-center z-50 px-4"
-          >
-            <h2 
-              className="text-4xl md:text-5xl font-bold drop-shadow-2xl mb-3"
-              style={{
-                fontFamily: 'Impact, sans-serif',
-                color: '#ff00ff',
-                textShadow: '0 0 25px #ff00ff, 0 0 50px #00ffff, 3px 3px 0px #00ffff',
-                letterSpacing: 'clamp(2px, 1vw, 6px)'
-              }}
-            >
-              NEVER ENDING
-            </h2>
-            <p 
-              className="text-2xl text-cyan-300" 
-              style={{ 
-                textShadow: '0 0 15px rgba(0, 255, 255, 0.9)', 
-                fontFamily: 'monospace',
-                fontSize: 'clamp(16px, 3vw, 24px)'
-              }}
-            >
-              {capsuleTitle}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+    </motion.div>
+  )
 }

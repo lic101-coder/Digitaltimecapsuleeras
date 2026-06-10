@@ -8,7 +8,7 @@
  * 
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface PetStarlitCeremonyProps {
@@ -26,6 +26,32 @@ export function PetStarlitCeremony({
 }: PetStarlitCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'stars' | 'connecting' | 'constellation' | 'moon' | 'shooting' | 'radiance' | 'outro'>('intro');
   const [completed, setCompleted] = useState(false);
+
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  const radianceStars = useMemo(() => {
+    const count = isMobile ? 30 : 60;
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i / count) * Math.PI * 2;
+      const distance = 100 + Math.random() * 150;
+      return {
+        x: 50 + Math.cos(angle) * (distance / 8),
+        y: 42 + Math.sin(angle) * (distance / 8),
+      };
+    });
+  }, []);
+
+  const bgStars = useMemo(() => {
+    const count = isMobile ? 60 : 150;
+    return Array.from({ length: count }, (_, i) => ({
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      opacity: 0.2 + Math.random() * 0.3,
+      duration: 2 + Math.random() * 3,
+      delay: Math.random() * 2,
+      size: 1 + Math.random() * 2,
+    }));
+  }, []);
 
   useEffect(() => {
     const timeline = [
@@ -117,23 +143,25 @@ export function PetStarlitCeremony({
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#0a0e27] via-[#1a1f3a] to-[#0f172a]">
       {/* Distant stars twinkling */}
       <div className="absolute inset-0">
-        {[...Array(200)].map((_, i) => (
+        {bgStars.map((star, i) => (
           <motion.div
             key={`bg-star-${i}`}
-            className="absolute w-1 h-1 bg-white rounded-full"
+            className="absolute rounded-full bg-white"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              opacity: 0.2 + Math.random() * 0.3
+              left: `${star.left}%`,
+              top: `${star.top}%`,
+              width: `${star.size}px`,
+              height: `${star.size}px`,
+              opacity: star.opacity
             }}
             animate={{
-              opacity: [0.2, 0.8, 0.2],
+              opacity: [star.opacity, 0.8, star.opacity],
               scale: [1, 1.5, 1]
             }}
             transition={{
-              duration: 2 + Math.random() * 3,
-              repeat: Infinity,
-              delay: Math.random() * 2
+              duration: star.duration,
+              repeat: 4,
+              delay: star.delay
             }}
           />
         ))}
@@ -303,10 +331,10 @@ export function PetStarlitCeremony({
             <motion.div
               className="absolute"
               style={{
-                right: '12%',
-                top: '15%',
-                width: '260px',
-                height: '260px',
+                right: isMobile ? '2%' : '12%',
+                top: isMobile ? '2%' : '15%',
+                width: isMobile ? '120px' : '260px',
+                height: isMobile ? '120px' : '260px',
                 borderRadius: '50%',
                 background: 'radial-gradient(circle at 38% 35%, #ffffff, #fafafa, #f8fafc, #f1f5f9, #e2e8f0)',
                 boxShadow: '0 0 140px rgba(255, 255, 255, 0.9), 0 0 220px rgba(241, 245, 249, 0.7), inset -30px -30px 60px rgba(148, 163, 184, 0.35)',
@@ -318,61 +346,63 @@ export function PetStarlitCeremony({
               transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1] }}
             />
 
-            {/* Detailed moon craters */}
-            <motion.div
-              className="absolute"
-              style={{
-                right: 'calc(12% + 80px)',
-                top: 'calc(15% + 110px)',
-                width: '35px',
-                height: '35px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(148, 163, 184, 0.4), rgba(148, 163, 184, 0.2) 50%, transparent)',
-                zIndex: 6
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.8 }}
-              transition={{ duration: 2, delay: 0.8 }}
-            />
-            <motion.div
-              className="absolute"
-              style={{
-                right: 'calc(12% + 140px)',
-                top: 'calc(15% + 60px)',
-                width: '28px',
-                height: '28px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(148, 163, 184, 0.35), rgba(148, 163, 184, 0.15) 50%, transparent)',
-                zIndex: 6
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.7 }}
-              transition={{ duration: 2, delay: 1 }}
-            />
-            <motion.div
-              className="absolute"
-              style={{
-                right: 'calc(12% + 50px)',
-                top: 'calc(15% + 160px)',
-                width: '22px',
-                height: '22px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(148, 163, 184, 0.3), rgba(148, 163, 184, 0.1) 50%, transparent)',
-                zIndex: 6
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.65 }}
-              transition={{ duration: 2, delay: 1.2 }}
-            />
+            {/* Detailed moon craters - desktop only */}
+            {!isMobile && <>
+              <motion.div
+                className="absolute"
+                style={{
+                  right: 'calc(12% + 80px)',
+                  top: 'calc(15% + 110px)',
+                  width: '35px',
+                  height: '35px',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(148, 163, 184, 0.4), rgba(148, 163, 184, 0.2) 50%, transparent)',
+                  zIndex: 6
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.8 }}
+                transition={{ duration: 2, delay: 0.8 }}
+              />
+              <motion.div
+                className="absolute"
+                style={{
+                  right: 'calc(12% + 140px)',
+                  top: 'calc(15% + 60px)',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(148, 163, 184, 0.35), rgba(148, 163, 184, 0.15) 50%, transparent)',
+                  zIndex: 6
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.7 }}
+                transition={{ duration: 2, delay: 1 }}
+              />
+              <motion.div
+                className="absolute"
+                style={{
+                  right: 'calc(12% + 50px)',
+                  top: 'calc(15% + 160px)',
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(148, 163, 184, 0.3), rgba(148, 163, 184, 0.1) 50%, transparent)',
+                  zIndex: 6
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.65 }}
+                transition={{ duration: 2, delay: 1.2 }}
+              />
+            </>}
 
             {/* Massive silver moon glow */}
             <motion.div
               className="absolute"
               style={{
-                right: '12%',
-                top: '15%',
-                width: '260px',
-                height: '260px',
+                right: isMobile ? '2%' : '12%',
+                top: isMobile ? '2%' : '15%',
+                width: isMobile ? '120px' : '260px',
+                height: isMobile ? '120px' : '260px',
                 borderRadius: '50%',
                 background: 'radial-gradient(circle, rgba(255, 255, 255, 0.6), rgba(241, 245, 249, 0.4) 40%, transparent 70%)',
                 filter: 'blur(90px)',
@@ -408,7 +438,7 @@ export function PetStarlitCeremony({
       <AnimatePresence>
         {(stage === 'shooting' || stage === 'radiance') && (
           <>
-            {[...Array(24)].map((_, i) => {
+            {[...Array(isMobile ? 8 : 18)].map((_, i) => {
               const startX = 5 + Math.random() * 40;
               const startY = 2 + Math.random() * 50;
               const endX = 500 + Math.random() * 300;
@@ -585,35 +615,28 @@ export function PetStarlitCeremony({
             />
 
             {/* Stars sparkling around constellation */}
-            {[...Array(80)].map((_, i) => {
-              const angle = (i / 80) * Math.PI * 2;
-              const distance = 100 + Math.random() * 150;
-              const x = 50 + Math.cos(angle) * (distance / 8);
-              const y = 42 + Math.sin(angle) * (distance / 8);
-              
-              return (
-                <motion.div
-                  key={`radiance-star-${i}`}
-                  className="absolute w-2 h-2 bg-blue-200 rounded-full"
-                  style={{
-                    left: `${x}%`,
-                    top: `${y}%`,
-                    boxShadow: '0 0 8px rgba(147, 197, 253, 0.9)',
-                    zIndex: 22
-                  }}
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{
-                    opacity: [0, 1, 0],
-                    scale: [0, 1.5, 0]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    delay: i * 0.015,
-                    ease: 'easeOut'
-                  }}
-                />
-              );
-            })}
+            {radianceStars.map((star, i) => (
+              <motion.div
+                key={`radiance-star-${i}`}
+                className="absolute w-2 h-2 bg-blue-200 rounded-full"
+                style={{
+                  left: `${star.x}%`,
+                  top: `${star.y}%`,
+                  boxShadow: '0 0 8px rgba(147, 197, 253, 0.9)',
+                  zIndex: 22
+                }}
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{
+                  opacity: [0, 1, 0],
+                  scale: [0, 1.5, 0]
+                }}
+                transition={{
+                  duration: 1.5,
+                  delay: i * 0.02,
+                  ease: 'easeOut'
+                }}
+              />
+            ))}
 
             {/* "Forever Watching" text */}
             <motion.div

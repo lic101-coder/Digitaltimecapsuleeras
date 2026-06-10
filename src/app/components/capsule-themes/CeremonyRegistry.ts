@@ -54,7 +54,7 @@ export const CEREMONY_REGISTRY: Record<string, CeremonyConfig[]> = {
     },
     {
       id: 'passionate',
-      name: 'Binary Hearts Supernova',
+      name: 'Digital Supernova',
       description: 'Two hearts collide like stars',
       duration: 20,
       mood: 'Cosmic Passion & Explosive Love',
@@ -62,7 +62,7 @@ export const CEREMONY_REGISTRY: Record<string, CeremonyConfig[]> = {
     },
     {
       id: 'forge',
-      name: 'The Forge',
+      name: 'Forge Master',
       description: 'Hammered together, unbreakable',
       duration: 18,
       mood: 'Primal & Epic',
@@ -72,7 +72,7 @@ export const CEREMONY_REGISTRY: Record<string, CeremonyConfig[]> = {
   future: [
     {
       id: 'passage',
-      name: "Time's Passage",
+      name: "Clock Hands Reveal",
       description: 'Elegant clock & time streams',
       duration: 18,
       mood: 'Contemplative & Beautiful',
@@ -88,7 +88,7 @@ export const CEREMONY_REGISTRY: Record<string, CeremonyConfig[]> = {
     },
     {
       id: 'singularity',
-      name: 'Stargate Portal',
+      name: 'Hex Grid Pulse',
       description: 'Epic chevron activation',
       duration: 21,
       mood: 'Epic & Cosmic',
@@ -278,7 +278,7 @@ export const CEREMONY_REGISTRY: Record<string, CeremonyConfig[]> = {
     },
     {
       id: 'epic',
-      name: 'Arcade Insert Coin',
+      name: 'Insert Coin',
       description: 'Level Complete!',
       duration: 17,
       mood: 'Fun & Epic',
@@ -488,7 +488,7 @@ export const CEREMONY_REGISTRY: Record<string, CeremonyConfig[]> = {
     },
     {
       id: 'firstdance',
-      name: 'Wedding First Dance',
+      name: 'First Dance Spotlight',
       description: 'Love transforms everything',
       duration: 16,
       mood: 'Romantic & Magical',
@@ -504,7 +504,7 @@ export const CEREMONY_REGISTRY: Record<string, CeremonyConfig[]> = {
   first_day: [
     {
       id: 'key-kingdom',
-      name: 'Blueprint to Reality',
+      name: 'Construction Stack',
       description: 'Your Vision Comes to Life',
       duration: 15,
       mood: 'Creative & Inspiring',

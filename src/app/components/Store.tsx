@@ -84,7 +84,7 @@ const PREMIUM_THEMES: ThemeConfig[] = [
     ceremonies: [
       { icon: '🏆', name: 'Photo Finish Victory', description: 'Triumphant & Explosive', color: '#fbbf24' },
       { icon: '🎓', name: 'Graduation Cap Toss', description: 'Inspiring & Celestial', color: '#a78bfa' },
-      { icon: '🤵💃', name: 'Wedding First Dance', description: 'Romantic & Magical', color: '#ec4899' },
+      { icon: '🤵💃', name: 'First Dance Spotlight', description: 'Romantic & Magical', color: '#ec4899' },
     ],
     features: ['150+ particle effects', 'Cinema-quality VFX', 'Lifetime access']
   },
@@ -114,9 +114,9 @@ const PREMIUM_THEMES: ThemeConfig[] = [
     textColor: 'white',
     category: 'mid',
     ceremonies: [
-      { icon: '⏰', name: "Time's Passage", description: 'Contemplative & Beautiful', color: '#60a5fa' },
+      { icon: '⏰', name: "Clock Hands Reveal", description: 'Contemplative & Beautiful', color: '#60a5fa' },
       { icon: '💻', name: 'Digital Archive', description: 'Futuristic & Tech', color: '#22d3ee' },
-      { icon: '🌀', name: 'Stargate Portal', description: 'Epic & Cosmic', color: '#a855f7' },
+      { icon: '🌀', name: 'Hex Grid Pulse', description: 'Epic & Cosmic', color: '#a855f7' },
     ],
     features: ['Cosmic VFX', 'Time-warp effects', 'Lifetime access']
   },
@@ -180,7 +180,7 @@ const PREMIUM_THEMES: ThemeConfig[] = [
     ceremonies: [
       { icon: '💿', name: 'Vinyl Spin', description: 'Nostalgic & Epic', color: '#ff00ff' },
       { icon: '🌃', name: 'Neon Nights', description: '80s Synthwave', color: '#00ffff' },
-      { icon: '🕹️', name: 'Arcade Insert Coin', description: 'Fun & Epic', color: '#00e676' },
+      { icon: '🕹️', name: 'Insert Coin', description: 'Fun & Epic', color: '#00e676' },
     ],
     features: ['Retro cassette VFX', 'Music animations', 'Lifetime access']
   },
@@ -730,8 +730,8 @@ export function Store({ onClose, userId, onOpenLegacyAccess }: StoreProps) {
                           <div className="space-y-2">
                             {theme.ceremonies.map((ceremony, idx) => (
                               <motion.div key={idx} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 + idx * 0.05 }} className="flex items-start gap-2 p-2 bg-slate-700/30 rounded-lg">
-                                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0" style={{ filter: `drop-shadow(0 0 5px ${ceremony.color}99)` }}>
-                                  <span className="text-2xl leading-none">{ceremony.icon}</span>
+                                <div className="w-12 h-10 flex items-center justify-center flex-shrink-0" style={{ filter: `drop-shadow(0 0 5px ${ceremony.color}99)` }}>
+                                  <span className="text-xl leading-none whitespace-nowrap">{ceremony.icon}</span>
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="font-medium text-white text-sm">{ceremony.name}</div>

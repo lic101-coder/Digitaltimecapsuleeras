@@ -207,37 +207,36 @@ export function CreateCapsule({
         setPurchasedThemesLoading(false);
         return;
       }
-      
-      try {
-        setPurchasedThemesLoading(true);
-        const accessToken = await supabase.auth.getSession().then(res => res.data.session?.access_token);
-        if (!accessToken) {
-          setPurchasedThemesLoading(false);
-          return;
-        }
-        
-        const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/store/purchases`,
-          {
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-            },
-          }
-        );
-        
-        if (response.ok) {
-          const data = await response.json();
-          const themeIds = (data.themes || []).map((t: any) => t.theme_id);
-          setPurchasedThemes(themeIds);
-          console.log('🎨 Loaded purchased themes:', themeIds);
-        }
-      } catch (error) {
-        console.error('Failed to fetch purchased themes:', error);
-      } finally {
+      const accessToken = await supabase.auth.getSession().then(res => res.data.session?.access_token);
+      if (!accessToken) {
         setPurchasedThemesLoading(false);
+        return;
       }
+      setPurchasedThemesLoading(true);
+      const maxAttempts = 3;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const response = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/api/store/purchases`,
+            { headers: { 'Authorization': `Bearer ${accessToken}` } }
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const themeIds = (data.themes || []).map((t: any) => t.theme_id);
+            setPurchasedThemes(themeIds);
+            console.log('🎨 Loaded purchased themes:', themeIds);
+            break;
+          }
+        } catch (error) {
+          console.error(`Failed to fetch purchased themes (attempt ${attempt}/${maxAttempts}):`, error);
+          if (attempt < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, attempt * 3000));
+          }
+        }
+      }
+      setPurchasedThemesLoading(false);
     };
-    
+
     fetchPurchasedThemes();
   }, [user?.id]);
   

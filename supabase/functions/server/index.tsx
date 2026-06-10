@@ -34,7 +34,7 @@ globalThis.addEventListener('unhandledrejection', (event) => {
 });
 
 console.log('🛡️ Global error handlers installed');
-console.log('🚀 [Startup] Initializing Hono app... v2026-06-09-mfa-fix');
+console.log('🚀 [Startup] Initializing Hono app... v2026-06-10-retry-fix');
 
 const app = new Hono();
 
@@ -476,7 +476,7 @@ app.get("/make-server-f9be53a7/health", (c) => {
     status: "ok",
     timestamp: new Date().toISOString(),
     service: "Eras Backend Server",
-    version: "1.0.4", // Version bump to force fresh deployment
+    version: "1.0.5", // Version bump to force fresh deployment
     environment: {
       hasSupabaseUrl: !!Deno.env.get('SUPABASE_URL'),
       hasServiceKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
@@ -5396,60 +5396,6 @@ app.post("/make-server-f9be53a7/api/manual-retry", async (c) => {
 // ACHIEVEMENT SYSTEM API ENDPOINTS
 // ============================================
 
-// Track action and check for achievement unlocks
-app.post("/make-server-f9be53a7/achievements/track", async (c) => {
-  try {
-    console.log("🏆 [Achievement Track] Endpoint called");
-    
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    
-    if (!token) {
-      console.error("🏆 [Achievement Track] No token provided");
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-    
-    const { user, error: authError } = await verifyUserToken(token);
-    
-    if (authError || !user) {
-      console.error("🏆 [Achievement Track] Invalid token:", authError);
-      return c.json({ error: "Invalid token" }, 401);
-    }
-    
-    const body = await c.req.json();
-    const { action, metadata } = body;
-    
-    if (!action) {
-      console.error("🏆 [Achievement Track] No action provided");
-      return c.json({ error: "Action is required" }, 400);
-    }
-    
-    console.log(`🏆 [Achievement Track] User ${user.id} action: "${action}"`, metadata);
-    
-    // Track the action using the Achievement Service
-    const result = await AchievementService.checkAndUnlockAchievements(user.id, action, metadata);
-    
-    console.log(`🏆 [Achievement Track] Result:`, {
-      newlyUnlocked: result.newlyUnlocked?.length || 0,
-      statsUpdated: !!result.stats
-    });
-    
-    return c.json({
-      success: true,
-      stats: result.stats,
-      newlyUnlocked: result.newlyUnlocked || [],
-      totalPoints: result.stats?.total_points || 0
-    });
-    
-  } catch (error) {
-    console.error("🏆 [Achievement Track] Error:", error);
-    return c.json({ 
-      error: "Failed to track action",
-      details: error.message 
-    }, 500);
-  }
-});
-
 // ============================================
 // ACHIEVEMENT RECALCULATION ENDPOINTS
 // ============================================
@@ -5619,40 +5565,6 @@ app.post("/make-server-f9be53a7/admin/recalculate-all-achievements", async (c) =
   }
 });
 
-// Get user's achievement stats
-app.get("/make-server-f9be53a7/achievements/stats", async (c) => {
-  try {
-    console.log("🏆 [Achievement Stats] Endpoint called");
-    
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    
-    if (!token) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-    
-    const { user, error: authError } = await verifyUserToken(token);
-    
-    if (authError || !user) {
-      return c.json({ error: "Invalid token" }, 401);
-    }
-    
-    const stats = await AchievementService.getUserStats(user.id);
-    
-    return c.json({
-      success: true,
-      stats
-    });
-    
-  } catch (error) {
-    console.error("🏆 [Achievement Stats] Error:", error);
-    return c.json({ 
-      error: "Failed to get stats",
-      details: error.message 
-    }, 500);
-  }
-});
-
 // Get user's unlocked achievements
 app.get("/make-server-f9be53a7/achievements/unlocked", async (c) => {
   try {
@@ -5768,28 +5680,6 @@ app.post("/make-server-f9be53a7/achievements/notifications/mark-shown", async (c
     console.error("🏆 [Achievement Notifications] Error:", error);
     return c.json({ 
       error: "Failed to mark notifications as shown",
-      details: error.message 
-    }, 500);
-  }
-});
-
-// Get all achievement definitions (for dashboard)
-// PUBLIC ENDPOINT - No auth required as definitions are static data
-app.get("/make-server-f9be53a7/achievements/definitions", async (c) => {
-  try {
-    console.log("🏆 [Achievement Definitions] Public endpoint called");
-    
-    const definitions = await AchievementService.getAchievementDefinitions();
-    
-    return c.json({
-      success: true,
-      definitions
-    });
-    
-  } catch (error) {
-    console.error("🏆 [Achievement Definitions] Error:", error);
-    return c.json({ 
-      error: "Failed to get achievement definitions",
       details: error.message 
     }, 500);
   }
@@ -7671,10 +7561,6 @@ app.post("/make-server-f9be53a7/vault/folders", async (c) => {
 
 // REMOVED DUPLICATE - Real /titles/profile and /titles/available endpoints are at lines ~10598 and ~10627
 
-// Welcome celebration endpoints (for existing users to see First Step achievement once)
-app.post("/make-server-f9be53a7/achievements/check-welcome", WelcomeCelebration.checkWelcomeCelebration);
-app.post("/make-server-f9be53a7/achievements/mark-welcome-seen", WelcomeCelebration.markWelcomeSeen);
-
 // Debug endpoint to check user's title and achievement data
 app.get("/make-server-f9be53a7/debug/user-titles", async (c) => {
   try {
@@ -8848,20 +8734,6 @@ app.get("/make-server-f9be53a7/api/capsules/pending-count", async (c) => {
 // ACHIEVEMENT ENDPOINTS
 // ============================================
 
-// Get achievement definitions
-app.get("/make-server-f9be53a7/achievements/definitions", async (c) => {
-  try {
-    console.log('🏆 Fetching achievement definitions...');
-    return c.json({ 
-      success: true,
-      definitions: AchievementService.ACHIEVEMENT_DEFINITIONS 
-    });
-  } catch (error) {
-    console.error('Failed to fetch achievement definitions:', error);
-    return c.json({ error: 'Failed to fetch definitions' }, 500);
-  }
-});
-
 // Get REAL rarity percentages from actual user data
 app.get("/make-server-f9be53a7/achievements/rarity", async (c) => {
   try {
@@ -8916,41 +8788,6 @@ app.get("/make-server-f9be53a7/achievements/rarity", async (c) => {
 });
 
 // REMOVED DUPLICATE - The real /achievements/user endpoint is at line ~10327
-
-// Get user stats
-app.get("/make-server-f9be53a7/achievements/stats", async (c) => {
-  try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
-    if (!accessToken) {
-      return c.json({ error: 'Unauthorized' }, 401);
-    }
-
-    const { user, error: authError } = await verifyUserToken(accessToken);
-    if (authError || !user) {
-      return c.json({ error: 'Unauthorized' }, 401);
-    }
-
-    const stats = await kv.get(`user_stats:${user.id}`) || {
-      capsules_created: 0,
-      capsules_sent: 0,
-      capsules_received: 0,
-      media_uploaded: 0,
-      filter_usage: {},
-      enhancements_used: 0,
-      current_streak: 0,
-      achievement_count: 0,
-      achievement_points: 0
-    };
-    
-    return c.json({ 
-      success: true,
-      stats 
-    });
-  } catch (error) {
-    console.error('Failed to fetch user stats:', error);
-    return c.json({ error: 'Failed to fetch stats' }, 500);
-  }
-});
 
 // Rebuild global achievement stats (admin/utility endpoint)
 app.post("/make-server-f9be53a7/achievements/rebuild-global-stats", async (c) => {

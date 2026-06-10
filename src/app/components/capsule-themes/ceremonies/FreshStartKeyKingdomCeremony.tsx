@@ -1,20 +1,16 @@
 /**
- * Fresh Start – Blueprint to Reality Ceremony (v4 — Single Continuous Building)
- *
- * ONE building grows from sketch → colour → 3-D reality without ever
- * disappearing or being replaced by a different building.
+ * Fresh Start – Blueprint to Reality Ceremony (v6 — Epic Construction)
  *
  * Stage flow:
- * 1. title   (0 – 1s)    – capsule title reveal
- * 2. canvas  (1 – 3.5s)  – blank paper, hand + pencil arriving
- * 3. sketch  (3.5 – 7s)  – building outline draws itself on paper
- * 4. color   (7 – 10.5s) – colour floods into the same outline; paint splashes
- * 5. peel    (10.5 – 14s)– paper background peels away; building revealed on sky
- * 6. reality (14 – 18s)  – final building with full environment & celebration
- * 7. outro   (18 – 19s)  – white fade
+ * 1. blueprint    (0–3s)    – dark navy + blueprint grid, SVG building draws itself, pencil ✏️
+ * 2. foundation   (3–6s)    – dawn sky, concrete slab slides up, workers 👷, crane 🏗️
+ * 3. construction (6–11s)   – 6 floors stack up with stagger, floor counter, 8 sparks
+ * 4. topping-out  (11–13s)  – gold star at peak, 8 confetti squares, "BUILDING COMPLETE!"
+ * 5. radiance     (13–17s)  – golden hour sky, warm glow, light rays, capsule title, skyline
+ * 6. outro        (17–18s)  – fade to white
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface FreshStartKeyKingdomCeremonyProps {
@@ -24,461 +20,871 @@ interface FreshStartKeyKingdomCeremonyProps {
   onComplete?: () => void;
 }
 
-/* ─── Shared building constants ──────────────────────────────────────────── */
-const BW = 160;   // SVG viewBox width
-const BH = 200;   // SVG viewBox height
-const WINDOWS = Array.from({ length: 24 }, (_, i) => ({ col: i % 4, row: Math.floor(i / 4) }));
+// 6 SVG path segments for the building blueprint drawing
+const BLUEPRINT_PATHS = [
+  // Outer left wall
+  'M 70 200 L 70 55',
+  // Outer right wall
+  'M 130 200 L 130 55',
+  // Roof triangle
+  'M 55 55 L 100 18 L 145 55 Z',
+  // Top windows
+  'M 78 68 L 95 68 L 95 82 L 78 82 Z M 105 68 L 122 68 L 122 82 L 105 82 Z',
+  // Mid windows
+  'M 78 92 L 95 92 L 95 106 L 78 106 Z M 105 92 L 122 92 L 122 106 L 105 106 Z',
+  // Door arch
+  'M 86 162 L 86 200 M 114 162 L 114 200 M 86 162 Q 100 148 114 162',
+];
+
+// Floor definitions bottom→top
+const FLOOR_DEFS = [
+  { color: '#0f2547', border: '#1e3a6e' },
+  { color: '#162d5a', border: '#1e3f7e' },
+  { color: '#1a3570', border: '#244a98' },
+  { color: '#1d3d80', border: '#2755b0' },
+  { color: '#1e4496', border: '#2b5fc8' },
+  { color: '#2250aa', border: '#3068d8' },
+];
 
 export function FreshStartKeyKingdomCeremony({
   capsuleTitle,
   media,
   isPreview = false,
-  onComplete
+  onComplete,
 }: FreshStartKeyKingdomCeremonyProps) {
-  const [stage, setStage] = useState<'title' | 'canvas' | 'sketch' | 'color' | 'peel' | 'reality' | 'outro'>('title');
-  const [completed, setCompleted] = useState(false);
+  type Stage =
+    | 'blueprint'
+    | 'foundation'
+    | 'construction'
+    | 'topping-out'
+    | 'radiance'
+    | 'outro';
+
+  const [stage, setStage] = useState<Stage>('blueprint');
+  const [floorCount, setFloorCount] = useState(0);
 
   useEffect(() => {
-    const timeline = [
-      { time: 0,     action: () => setStage('title')   },
-      { time: 1000,  action: () => setStage('canvas')  },
-      { time: 3500,  action: () => setStage('sketch')  },
-      { time: 7000,  action: () => setStage('color')   },
-      { time: 10500, action: () => setStage('peel')    },
-      { time: 14000, action: () => setStage('reality') },
-      { time: 18000, action: () => setStage('outro')   },
-      { time: 19000, action: () => onComplete?.()      },
+    const events: { time: number; fn: () => void }[] = [
+      { time: 0,     fn: () => { setStage('blueprint'); setFloorCount(0); } },
+      { time: 3000,  fn: () => setStage('foundation') },
+      { time: 6000,  fn: () => setStage('construction') },
+      // tick floors up 1–6
+      { time: 6400,  fn: () => setFloorCount(1) },
+      { time: 6800,  fn: () => setFloorCount(2) },
+      { time: 7200,  fn: () => setFloorCount(3) },
+      { time: 7600,  fn: () => setFloorCount(4) },
+      { time: 8000,  fn: () => setFloorCount(5) },
+      { time: 8400,  fn: () => setFloorCount(6) },
+      { time: 11000, fn: () => setStage('topping-out') },
+      { time: 13000, fn: () => setStage('radiance') },
+      { time: 17000, fn: () => setStage('outro') },
+      { time: 18000, fn: () => onComplete?.() },
     ];
-    const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-    const failsafe = setTimeout(() => { setCompleted(true); onComplete?.(); }, 20000);
-    return () => { timeouts.forEach(clearTimeout); clearTimeout(failsafe); };
+    const timers = events.map(({ time, fn }) => setTimeout(fn, time));
+    const failsafe = setTimeout(() => onComplete?.(), 19000);
+    return () => {
+      timers.forEach(clearTimeout);
+      clearTimeout(failsafe);
+    };
   }, []);
 
-  /* Which stages show the building */
-  const buildingVisible  = ['sketch', 'color', 'peel', 'reality'].includes(stage);
-  /* Whether the building has filled colour yet */
-  const buildingColoured = ['color', 'peel', 'reality'].includes(stage);
-  /* Whether it's fully in 3-D reality mode */
-  const buildingReality  = stage === 'reality';
+  // Path draw delays — one per BLUEPRINT_PATHS segment
+  const pathDelays = useMemo(() => BLUEPRINT_PATHS.map((_, i) => i * 0.38), []);
+
+  // Pencil dot: travels along a simplified horizontal arc across viewport
+  const pencilX = useMemo(() => ['-5%', '30%', '62%', '92%'], []);
+  const pencilY = useMemo(() => ['55%', '30%', '48%', '60%'], []);
+
+  // 8 construction sparks: fixed positions near building top-centre
+  const sparks = useMemo(
+    () =>
+      Array.from({ length: 8 }, (_, i) => ({
+        id: i,
+        x: 42 + Math.random() * 16,   // 42–58% horiz, relative to building area
+        angle: (i / 8) * 360,
+        dist: 18 + Math.random() * 22,
+        delay: Math.random() * 0.3,
+      })),
+    []
+  );
+
+  // 8 confetti squares for topping-out
+  const confetti = useMemo(
+    () =>
+      Array.from({ length: 8 }, (_, i) => ({
+        id: i,
+        x: 30 + Math.random() * 40,  // % across building width
+        color: ['#fbbf24', '#f59e0b', '#ef4444', '#10b981', '#3b82f6', '#a855f7', '#f97316', '#ec4899'][i],
+        delay: i * 0.07,
+        endY: 60 + Math.random() * 80, // px below start
+        rotate: Math.random() * 360,
+      })),
+    []
+  );
+
+  // 6 light rays from building peak, fanning outward
+  const lightRays = useMemo(
+    () =>
+      Array.from({ length: 6 }, (_, i) => ({
+        id: i,
+        rotation: -60 + i * 24,
+        width: 20 + Math.random() * 20,
+        delay: i * 0.12,
+        opacity: 0.35 + Math.random() * 0.25,
+      })),
+    []
+  );
+
+  // Skyline buildings (static, background decoration)
+  const skylineBuildings = useMemo(
+    () => [
+      { left: '2%',  width: '7%',  height: '22%', color: '#0a1628' },
+      { left: '10%', width: '5%',  height: '16%', color: '#0c1e36' },
+      { left: '16%', width: '9%',  height: '28%', color: '#0a1628' },
+      { left: '72%', width: '8%',  height: '24%', color: '#0a1628' },
+      { left: '81%', width: '6%',  height: '18%', color: '#0c1e36' },
+      { left: '88%', width: '10%', height: '30%', color: '#0a1628' },
+    ],
+    []
+  );
+
+  // Whether we're showing the building block stack
+  const showBuilding = ['construction', 'topping-out', 'radiance'].includes(stage);
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <div className="relative w-full h-full overflow-hidden select-none">
 
-      {/* ── BACKGROUND LAYER (changes each stage) ──────────────────────────── */}
+      {/* ── BACKGROUND LAYERS ──────────────────────────────────────────────────── */}
 
-      {/* Dark intro */}
+      {/* Base: always dark navy */}
+      <div
+        className="absolute inset-0"
+        style={{ background: 'linear-gradient(160deg, #060d1f 0%, #0f1f3d 55%, #060d1f 100%)' }}
+      />
+
+      {/* Blueprint grid — blueprint stage */}
       <AnimatePresence>
-        {stage === 'title' && (
-          <motion.div key="bg-title" className="absolute inset-0 bg-gradient-to-b from-slate-900 via-purple-900 to-indigo-900"
-            initial={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }} />
+        {stage === 'blueprint' && (
+          <motion.div
+            key="bp-grid"
+            className="absolute inset-0 pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(37,99,235,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(37,99,235,0.3) 1px, transparent 1px)',
+              backgroundSize: '36px 36px',
+            }}
+          />
         )}
       </AnimatePresence>
 
-      {/* Paper background (canvas + sketch + color) */}
+      {/* Dawn sky — foundation stage */}
       <AnimatePresence>
-        {(stage === 'canvas' || stage === 'sketch' || stage === 'color') && (
-          <motion.div key="bg-paper" className="absolute inset-0 bg-white"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.4 } }}
-            transition={{ duration: 0.5 }}>
-            {/* Ruled lines */}
-            {[...Array(30)].map((_, i) => (
-              <div key={i} className="absolute left-0 right-0 h-px bg-blue-50" style={{ top: `${(i + 1) * 3.33}%` }} />
-            ))}
+        {stage === 'foundation' && (
+          <motion.div
+            key="dawn-sky"
+            className="absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5 }}
+            style={{
+              background:
+                'linear-gradient(180deg, #0a0f1e 0%, #1a2744 35%, #2d3f6e 60%, #3d5a9c 80%, #5c7cb8 100%)',
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Construction sky — construction + topping-out */}
+      <AnimatePresence>
+        {(stage === 'construction' || stage === 'topping-out') && (
+          <motion.div
+            key="construction-sky"
+            className="absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2 }}
+            style={{
+              background:
+                'linear-gradient(180deg, #07111f 0%, #111f3a 30%, #1a2e55 60%, #1e3670 100%)',
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Golden hour — radiance stage */}
+      <AnimatePresence>
+        {stage === 'radiance' && (
+          <motion.div
+            key="golden-sky"
+            className="absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5 }}
+            style={{
+              background:
+                'linear-gradient(180deg, #1a0a00 0%, #7c2d12 30%, #ea580c 60%, #fbbf24 85%, #1e3a5f 100%)',
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── STAGE 1: BLUEPRINT ──────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {stage === 'blueprint' && (
+          <motion.div
+            key="blueprint-stage"
+            className="absolute inset-0 flex flex-col items-center justify-center z-20"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Blueprint SVG */}
+            <div className="relative" style={{ width: '52%', maxWidth: 260 }}>
+              <svg
+                viewBox="0 0 200 210"
+                className="w-full"
+                style={{ overflow: 'visible' }}
+              >
+                {/* Faint guide-line grid inside SVG */}
+                {[40, 80, 120, 160].map((y) => (
+                  <line
+                    key={`gy-${y}`}
+                    x1="20"
+                    y1={y}
+                    x2="180"
+                    y2={y}
+                    stroke="rgba(37,99,235,0.18)"
+                    strokeWidth="0.8"
+                  />
+                ))}
+                {[40, 80, 120, 160].map((x) => (
+                  <line
+                    key={`gx-${x}`}
+                    x1={x}
+                    y1="10"
+                    x2={x}
+                    y2="205"
+                    stroke="rgba(37,99,235,0.18)"
+                    strokeWidth="0.8"
+                  />
+                ))}
+
+                {/* Animated building paths */}
+                {BLUEPRINT_PATHS.map((d, i) => (
+                  <motion.path
+                    key={`bp-path-${i}`}
+                    d={d}
+                    fill="none"
+                    stroke={i < 2 ? '#93c5fd' : i === 2 ? '#bfdbfe' : '#60a5fa'}
+                    strokeWidth={i < 3 ? 2.5 : 1.8}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{
+                      pathLength: { delay: pathDelays[i], duration: 0.7, ease: 'easeInOut' },
+                      opacity: { delay: pathDelays[i], duration: 0.1 },
+                    }}
+                  />
+                ))}
+
+                {/* Dimension tick marks */}
+                <motion.g
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 2.0, duration: 0.4 }}
+                >
+                  <line x1="55" y1="205" x2="145" y2="205" stroke="#3b82f6" strokeWidth="1" />
+                  <line x1="55" y1="202" x2="55" y2="208" stroke="#3b82f6" strokeWidth="1" />
+                  <line x1="145" y1="202" x2="145" y2="208" stroke="#3b82f6" strokeWidth="1" />
+                </motion.g>
+              </svg>
+
+              {/* Pencil emoji travelling along the top */}
+              <motion.div
+                className="absolute pointer-events-none text-lg"
+                style={{ top: 0, left: 0 }}
+                initial={{ x: '-10%', y: '90%', opacity: 0 }}
+                animate={{
+                  x: ['−10%', '10%', '42%', '78%', '95%'],
+                  y: ['90%', '40%', '20%', '35%', '60%'],
+                  opacity: [0, 1, 1, 1, 0],
+                }}
+                transition={{ duration: 2.3, delay: 0.1, ease: 'easeInOut' }}
+              >
+                ✏️
+              </motion.div>
+            </div>
+
+            {/* Subtitle */}
+            <motion.div
+              className="mt-5 text-center px-4"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.8, duration: 0.5 }}
+            >
+              <p
+                className="text-xs uppercase tracking-[0.25em] font-semibold"
+                style={{ color: '#93c5fd' }}
+              >
+                Architecture of Your Future
+              </p>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Sky background (peel reveals it, reality keeps it) */}
+      {/* ── STAGE 2: FOUNDATION ─────────────────────────────────────────────────── */}
       <AnimatePresence>
-        {(stage === 'peel' || stage === 'reality') && (
-          <motion.div key="bg-sky" className="absolute inset-0 bg-gradient-to-b from-sky-400 via-blue-300 to-green-200"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
-            {/* Sun rays */}
-            {[...Array(14)].map((_, i) => (
-              <motion.div key={`sr-${i}`} className="absolute top-[18%] left-[28%] w-3 origin-left"
-                style={{ height: '45%', background: 'linear-gradient(to right, rgba(251,191,36,0.18), transparent)',
-                  transform: `rotate(${-55 + i * 9}deg)`, transformOrigin: 'left center' }}
-                animate={{ opacity: [0.3, 0.55, 0.3] }}
-                transition={{ duration: 4, delay: i * 0.2, repeat: Infinity, ease: 'easeInOut' }} />
-            ))}
-            {/* Clouds */}
-            {[...Array(5)].map((_, i) => (
-              <motion.div key={`cl-${i}`} className="absolute text-5xl opacity-80"
-                style={{ left: `${8 + i * 20}%`, top: `${7 + (i % 2) * 10}%` }}
-                animate={{ x: [0, 30, 0], y: [0, -8, 0] }}
-                transition={{ duration: 18, delay: i * 0.8, repeat: completed ? 0 : 2, ease: 'easeInOut' }}>☁️</motion.div>
-            ))}
-            {/* Ground */}
-            <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-b from-green-400 to-green-600 overflow-hidden">
-              {[...Array(50)].map((_, i) => (
-                <motion.div key={`gr-${i}`} className="absolute bottom-0 w-1 bg-green-700 rounded-t-full"
-                  style={{ left: `${i * 2}%`, height: 8 + Math.floor(Math.random() * 14) }}
-                  animate={{ scaleY: [1, 1.1, 1] }}
-                  transition={{ duration: 2, delay: i * 0.05, repeat: completed ? 0 : 5, ease: 'easeInOut' }} />
+        {stage === 'foundation' && (
+          <motion.div
+            key="foundation-stage"
+            className="absolute inset-0 z-20 flex flex-col items-center justify-end pb-[12%]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            {/* Concrete slab */}
+            <motion.div
+              className="relative flex items-center justify-center"
+              style={{
+                width: '52%',
+                maxWidth: 280,
+                height: 52,
+                background: 'linear-gradient(180deg, #6b7280 0%, #4b5563 50%, #374151 100%)',
+                borderRadius: 4,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
+              }}
+              initial={{ y: '120%', opacity: 0 }}
+              animate={{ y: '0%', opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 22, delay: 0.2 }}
+            >
+              {/* Rebar lines */}
+              {[20, 40, 60, 80].map((pct) => (
+                <div
+                  key={pct}
+                  className="absolute top-0 bottom-0"
+                  style={{
+                    left: `${pct}%`,
+                    width: 2,
+                    background: 'rgba(0,0,0,0.3)',
+                  }}
+                />
               ))}
+              <span
+                className="relative z-10 text-xs font-bold uppercase tracking-widest"
+                style={{ color: '#d1d5db' }}
+              >
+                Foundation
+              </span>
+            </motion.div>
+
+            {/* Breaking Ground text */}
+            <motion.p
+              className="mt-4 text-sm font-bold uppercase tracking-[0.2em]"
+              style={{ color: '#fbbf24' }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              ⚒️ Breaking Ground
+            </motion.p>
+
+            {/* Left worker */}
+            <motion.div
+              className="absolute text-3xl"
+              style={{ bottom: '15%', left: '12%' }}
+              initial={{ x: -60, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 180, damping: 18, delay: 0.4 }}
+            >
+              👷
+            </motion.div>
+
+            {/* Right worker */}
+            <motion.div
+              className="absolute text-3xl"
+              style={{ bottom: '15%', right: '12%' }}
+              initial={{ x: 60, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 180, damping: 18, delay: 0.55 }}
+            >
+              👷
+            </motion.div>
+
+            {/* Crane descending from top-right */}
+            <motion.div
+              className="absolute text-4xl"
+              style={{ top: '4%', right: '8%' }}
+              initial={{ y: -80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 120, damping: 16, delay: 0.8 }}
+            >
+              🏗️
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── STAGE 3: CONSTRUCTION ───────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {stage === 'construction' && (
+          <motion.div
+            key="construction-stage"
+            className="absolute inset-0 z-20 flex flex-col items-center justify-end"
+            style={{ paddingBottom: '8%' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            {/* Crane (persistent) */}
+            <motion.div
+              className="absolute text-4xl"
+              style={{ top: '4%', right: '8%' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              🏗️
+            </motion.div>
+
+            {/* Left worker */}
+            <motion.div
+              className="absolute text-3xl"
+              style={{ bottom: '9%', left: '8%' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              👷
+            </motion.div>
+
+            {/* Right worker */}
+            <motion.div
+              className="absolute text-3xl"
+              style={{ bottom: '9%', right: '8%' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              👷
+            </motion.div>
+
+            {/* Building stack */}
+            <div
+              className="relative flex flex-col-reverse"
+              style={{ width: '50%', maxWidth: 280 }}
+            >
+              {FLOOR_DEFS.map((floor, i) => (
+                <motion.div
+                  key={`floor-${i}`}
+                  className="relative"
+                  style={{
+                    height: 46,
+                    background: floor.color,
+                    border: `1.5px solid ${floor.border}`,
+                    borderBottom: i === 0 ? `1.5px solid ${floor.border}` : 'none',
+                    // Window pattern via repeating-linear-gradient
+                    backgroundImage: `
+                      linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 50%),
+                      repeating-linear-gradient(
+                        90deg,
+                        transparent,
+                        transparent 24%,
+                        rgba(255,255,255,0.12) 25%,
+                        rgba(255,255,255,0.12) 26%
+                      )
+                    `,
+                    boxShadow: '0 -4px 12px rgba(0,0,0,0.4)',
+                  }}
+                  initial={{ y: 80, opacity: 0, scaleX: 0.8 }}
+                  animate={{ y: 0, opacity: 1, scaleX: 1 }}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 280,
+                    damping: 24,
+                    delay: 0.35 + i * 0.4,
+                  }}
+                >
+                  {/* Window row highlights (CSS-only, no extra elements) */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage:
+                        'repeating-linear-gradient(90deg, transparent, transparent 22%, rgba(147,197,253,0.18) 23%, rgba(147,197,253,0.18) 27%, transparent 28%)',
+                      backgroundSize: '25% 100%',
+                      backgroundPositionY: '30%',
+                      backgroundRepeat: 'repeat-x',
+                      height: '55%',
+                      top: '20%',
+                    }}
+                  />
+                </motion.div>
+              ))}
+
+              {/* Foundation base */}
+              <div
+                style={{
+                  height: 20,
+                  background: 'linear-gradient(180deg, #374151 0%, #1f2937 100%)',
+                  borderRadius: '0 0 4px 4px',
+                }}
+              />
+            </div>
+
+            {/* Floor counter */}
+            <AnimatePresence mode="wait">
+              {floorCount > 0 && (
+                <motion.div
+                  key={`fc-${floorCount}`}
+                  className="absolute top-8 left-1/2 -translate-x-1/2 text-center"
+                  initial={{ opacity: 0, scale: 0.7, y: -6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 1.2 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                >
+                  <span
+                    className="text-2xl font-black tabular-nums"
+                    style={{ color: '#fbbf24', textShadow: '0 0 12px rgba(251,191,36,0.8)' }}
+                  >
+                    FLOOR {floorCount}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* 8 sparks — single-play, appear when last floor lands */}
+            {floorCount >= 6 &&
+              sparks.map((spark) => {
+                const rad = (spark.angle * Math.PI) / 180;
+                const tx = Math.cos(rad) * spark.dist;
+                const ty = Math.sin(rad) * spark.dist - spark.dist * 0.5;
+                return (
+                  <motion.div
+                    key={`spark-${spark.id}`}
+                    className="absolute rounded-full"
+                    style={{
+                      width: 6,
+                      height: 6,
+                      background: '#fbbf24',
+                      boxShadow: '0 0 6px 2px rgba(251,191,36,0.9)',
+                      bottom: `calc(8% + 280px)`,
+                      left: `${spark.x}%`,
+                    }}
+                    initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
+                    animate={{ scale: [0, 1.5, 0], x: tx, y: ty, opacity: [1, 1, 0] }}
+                    transition={{ duration: 0.7, delay: spark.delay, ease: 'easeOut' }}
+                  />
+                );
+              })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── STAGE 4: TOPPING-OUT ────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {stage === 'topping-out' && (
+          <motion.div
+            key="topping-out-stage"
+            className="absolute inset-0 z-20 flex flex-col items-center justify-end"
+            style={{ paddingBottom: '8%' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            {/* Building silhouette (static for this stage) */}
+            <div
+              className="relative flex flex-col-reverse"
+              style={{ width: '50%', maxWidth: 280 }}
+            >
+              {FLOOR_DEFS.map((floor, i) => (
+                <div
+                  key={`floor-static-${i}`}
+                  style={{
+                    height: 46,
+                    background: floor.color,
+                    border: `1.5px solid ${floor.border}`,
+                    borderBottom: i === 0 ? `1.5px solid ${floor.border}` : 'none',
+                    backgroundImage: `
+                      repeating-linear-gradient(
+                        90deg,
+                        transparent,
+                        transparent 24%,
+                        rgba(255,255,255,0.12) 25%,
+                        rgba(255,255,255,0.12) 26%
+                      )
+                    `,
+                  }}
+                />
+              ))}
+              <div
+                style={{
+                  height: 20,
+                  background: 'linear-gradient(180deg, #374151 0%, #1f2937 100%)',
+                  borderRadius: '0 0 4px 4px',
+                }}
+              />
+
+              {/* Gold star at peak */}
+              <motion.div
+                className="absolute left-1/2 text-3xl"
+                style={{ top: -32, transform: 'translateX(-50%)' }}
+                initial={{ scale: 0, rotate: -30, opacity: 0 }}
+                animate={{ scale: [0, 1.4, 1], rotate: 0, opacity: 1 }}
+                transition={{ duration: 0.5, ease: 'easeOut', delay: 0.2 }}
+              >
+                ⭐
+              </motion.div>
+
+              {/* Flag at peak */}
+              <motion.div
+                className="absolute text-2xl"
+                style={{ top: -52, left: '56%' }}
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.5, type: 'spring', stiffness: 260, damping: 18 }}
+              >
+                🚩
+              </motion.div>
+
+              {/* 8 confetti squares bursting from peak */}
+              {confetti.map((c) => (
+                <motion.div
+                  key={`conf-${c.id}`}
+                  className="absolute"
+                  style={{
+                    width: 8,
+                    height: 8,
+                    background: c.color,
+                    left: `${c.x}%`,
+                    top: -10,
+                    borderRadius: 1,
+                  }}
+                  initial={{ y: 0, x: 0, opacity: 1, rotate: 0, scale: 1 }}
+                  animate={{
+                    y: c.endY,
+                    x: (c.x - 50) * 1.2,
+                    opacity: [1, 1, 0],
+                    rotate: c.rotate,
+                    scale: [1, 1, 0.3],
+                  }}
+                  transition={{ duration: 1.2, delay: c.delay, ease: 'easeOut' }}
+                />
+              ))}
+            </div>
+
+            {/* BUILDING COMPLETE stamp */}
+            <motion.div
+              className="absolute top-8 left-1/2 -translate-x-1/2 text-center px-6"
+              initial={{ scale: 0.4, opacity: 0 }}
+              animate={{ scale: [0.4, 1.15, 1], opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.3, ease: 'easeOut' }}
+            >
+              <p
+                className="text-2xl md:text-3xl font-black uppercase tracking-widest"
+                style={{
+                  color: '#fbbf24',
+                  textShadow: '0 0 20px rgba(251,191,36,0.9), 0 2px 4px rgba(0,0,0,0.6)',
+                }}
+              >
+                Building Complete!
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── STAGE 5: RADIANCE ───────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {stage === 'radiance' && (
+          <motion.div
+            key="radiance-stage"
+            className="absolute inset-0 z-20"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.0 }}
+          >
+            {/* City skyline silhouette */}
+            {skylineBuildings.map((b, i) => (
+              <div
+                key={`sky-${i}`}
+                className="absolute bottom-0"
+                style={{
+                  left: b.left,
+                  width: b.width,
+                  height: b.height,
+                  background: b.color,
+                }}
+              />
+            ))}
+
+            {/* Radial amber glow behind main building */}
+            <div
+              className="absolute"
+              style={{
+                bottom: '8%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '65%',
+                height: '55%',
+                background:
+                  'radial-gradient(ellipse at center bottom, rgba(251,191,36,0.3) 0%, rgba(234,88,12,0.15) 45%, transparent 75%)',
+                filter: 'blur(24px)',
+              }}
+            />
+
+            {/* Light rays anchored at building peak */}
+            {lightRays.map((ray) => (
+              <motion.div
+                key={`ray-${ray.id}`}
+                className="absolute"
+                style={{
+                  width: ray.width,
+                  height: '35%',
+                  top: '18%',
+                  left: '50%',
+                  transformOrigin: 'top center',
+                  transform: `translateX(-50%) rotate(${ray.rotation}deg)`,
+                  background:
+                    'linear-gradient(to bottom, rgba(251,191,36,0.6), transparent)',
+                  borderRadius: '0 0 50% 50%',
+                }}
+                initial={{ scaleY: 0, opacity: 0 }}
+                animate={{ scaleY: 1, opacity: ray.opacity }}
+                transition={{ duration: 0.6, delay: ray.delay, ease: 'easeOut' }}
+              />
+            ))}
+
+            {/* Main building — glowing */}
+            <div
+              className="absolute left-1/2 -translate-x-1/2 flex flex-col-reverse"
+              style={{
+                bottom: '8%',
+                width: '50%',
+                maxWidth: 280,
+              }}
+            >
+              {FLOOR_DEFS.map((floor, i) => (
+                <motion.div
+                  key={`floor-rad-${i}`}
+                  style={{
+                    height: 46,
+                    background: floor.color,
+                    border: `1.5px solid ${floor.border}`,
+                    borderBottom: i === 0 ? `1.5px solid ${floor.border}` : 'none',
+                    backgroundImage: `
+                      repeating-linear-gradient(
+                        90deg,
+                        transparent,
+                        transparent 22%,
+                        rgba(254,240,138,0.22) 23%,
+                        rgba(254,240,138,0.22) 27%,
+                        transparent 28%
+                      )
+                    `,
+                    boxShadow: `0 0 16px rgba(251,191,36,0.18), inset 0 0 8px rgba(254,240,138,0.05)`,
+                  }}
+                  animate={{ opacity: [0.85, 1, 0.85] }}
+                  transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 }}
+                />
+              ))}
+              <div
+                style={{
+                  height: 20,
+                  background: 'linear-gradient(180deg, #374151 0%, #1f2937 100%)',
+                  borderRadius: '0 0 4px 4px',
+                }}
+              />
+
+              {/* Star at peak */}
+              <div
+                className="absolute left-1/2 text-2xl"
+                style={{ top: -28, transform: 'translateX(-50%)' }}
+              >
+                ⭐
+              </div>
+            </div>
+
+            {/* Title text */}
+            <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-8 px-6 text-center gap-3">
+              <motion.p
+                className="text-xs uppercase tracking-[0.3em] font-semibold"
+                style={{ color: '#fbbf24' }}
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                Your New Chapter Begins
+              </motion.p>
+              {capsuleTitle && (
+                <motion.h2
+                  className="text-3xl md:text-5xl font-black text-white"
+                  style={{
+                    textShadow:
+                      '0 0 30px rgba(251,191,36,0.7), 0 2px 8px rgba(0,0,0,0.8)',
+                    lineHeight: 1.1,
+                  }}
+                  initial={{ opacity: 0, scale: 0.88, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ delay: 0.7, type: 'spring', stiffness: 160, damping: 18 }}
+                >
+                  {capsuleTitle}
+                </motion.h2>
+              )}
+              <motion.div
+                className="h-0.5 rounded-full"
+                style={{
+                  width: 80,
+                  background:
+                    'linear-gradient(90deg, transparent, rgba(251,191,36,0.9), transparent)',
+                }}
+                initial={{ scaleX: 0, opacity: 0 }}
+                animate={{ scaleX: 1, opacity: 1 }}
+                transition={{ delay: 1.1, duration: 0.5 }}
+              />
+
+              {/* Ambient slow pulse line */}
+              <motion.div
+                className="absolute bottom-0 left-1/2 -translate-x-1/2"
+                style={{
+                  width: '60%',
+                  height: 4,
+                  borderRadius: 999,
+                  background:
+                    'radial-gradient(ellipse at center, rgba(251,191,36,0.5) 0%, transparent 70%)',
+                  filter: 'blur(4px)',
+                  bottom: '6%',
+                }}
+                animate={{ opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── CANVAS STAGE EXTRAS ─────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {stage === 'canvas' && (
-          <>
-            {/* Dramatic light rays */}
-            {[...Array(8)].map((_, i) => (
-              <motion.div key={`lr-${i}`} className="absolute top-0 left-1/2 w-2 origin-top"
-                style={{ height: '60%', background: 'linear-gradient(to bottom,rgba(251,191,36,0.2),transparent)',
-                  transform: `rotate(${-60 + i * 15}deg)`, transformOrigin: 'top center' }}
-                initial={{ opacity: 0, scaleY: 0 }} animate={{ opacity: [0, 0.6, 0.3], scaleY: 1 }}
-                transition={{ duration: 1.2, delay: 0.3 + i * 0.1, ease: 'easeOut' }} />
-            ))}
-            <motion.div
-              className="absolute left-1/2 -translate-x-1/2 top-[12%] bg-gradient-to-r from-slate-600 to-slate-800 px-10 py-4 rounded-full border-2 border-slate-300 shadow-2xl z-50"
-              initial={{ opacity: 0, y: -50, scale: 0.5 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0 }} transition={{ duration: 0.9, delay: 0.4, type: 'spring', damping: 8 }}>
-              <span className="text-2xl font-black text-white">Where Dreams Begin... ✨</span>
-            </motion.div>
-            {/* Pencil arriving */}
-            <motion.div className="absolute right-[20%] top-[35%] text-9xl z-30"
-              initial={{ x: 200, y: -150, opacity: 0, rotate: -60, scale: 0.5 }}
-              animate={{ x: 0, y: 0, opacity: 1, rotate: 0, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1.4, delay: 0.6, type: 'spring', damping: 12 }}>✍️</motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* ── SKETCH STAGE EXTRAS ─────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {stage === 'sketch' && (
-          <>
-            <motion.div
-              className="absolute left-1/2 -translate-x-1/2 top-[10%] bg-gradient-to-r from-blue-500 to-indigo-700 px-10 py-4 rounded-full border-2 border-blue-200 shadow-2xl z-50"
-              initial={{ opacity: 0, y: -40, scale: 0.6 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0 }} transition={{ duration: 0.7, delay: 0.2, type: 'spring', damping: 9 }}>
-              <span className="text-2xl font-black text-white">Drawing Your Vision... 📐</span>
-            </motion.div>
-            {/* Travelling pencil */}
-            <motion.div className="absolute text-5xl z-40"
-              initial={{ x: '30%', y: '15%' }}
-              animate={{ x: ['30%', '50%', '70%', '50%', '30%'], y: ['15%', '25%', '45%', '65%', '75%'] }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 3, delay: 0.3, ease: 'linear' }}>✏️</motion.div>
-            {/* Pencil shavings */}
-            {[...Array(20)].map((_, i) => (
-              <motion.div key={`sh-${i}`} className="absolute rounded-sm"
-                style={{ width: 2 + Math.random() * 4, height: 2 + Math.random() * 6,
-                  background: i % 3 === 0 ? '#94a3b8' : '#cbd5e1',
-                  left: `${42 + Math.random() * 20}%`, top: `${50 + Math.random() * 15}%` }}
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: [0, 0.6, 0.4], scale: [0, 1, 0.8], rotate: Math.random() * 360 }}
-                transition={{ duration: 0.5, delay: 0.5 + i * 0.15, ease: 'easeOut' }} />
-            ))}
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* ── COLOR STAGE EXTRAS ──────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {stage === 'color' && (
-          <>
-            <motion.div
-              className="absolute left-1/2 -translate-x-1/2 top-[10%] bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 px-12 py-4 rounded-full border-4 border-white shadow-2xl z-50"
-              initial={{ opacity: 0, y: -50, scale: 0.3, rotate: -10 }} animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-              exit={{ opacity: 0 }} transition={{ duration: 1, delay: 0.5, type: 'spring', damping: 10 }}>
-              <span className="text-2xl font-black text-white">Bringing Dreams to Life! 🎨</span>
-            </motion.div>
-            {/* Paint explosion particles */}
-            {[...Array(120)].map((_, i) => (
-              <motion.div key={`sp-${i}`} className="absolute rounded-full z-10"
-                style={{ width: 6 + Math.random() * 10, height: 6 + Math.random() * 10, left: '50%', top: '50%',
-                  background: ['#f59e0b','#ec4899','#8b5cf6','#3b82f6','#10b981','#ef4444'][i % 6],
-                  filter: 'blur(3px)' }}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: [0, 2, 1], opacity: [0, 1, 0.5],
-                  x: (Math.random() - 0.5) * 500, y: (Math.random() - 0.5) * 500 }}
-                transition={{ duration: 2, delay: i * 0.012, ease: [0.16, 1, 0.3, 1] }} />
-            ))}
-            {/* Dripping paint from top */}
-            {[...Array(14)].map((_, i) => (
-              <motion.div key={`dp-${i}`} className="absolute w-3 rounded-full z-10"
-                style={{ left: `${8 + i * 6.5}%`, top: '-5%',
-                  background: ['#f59e0b','#ec4899','#8b5cf6','#3b82f6','#10b981'][i % 5],
-                  filter: 'blur(1px)' }}
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: [0, 40 + Math.random() * 60, 50 + Math.random() * 80], opacity: [0, 0.8, 0.5] }}
-                transition={{ duration: 1.5, delay: 0.3 + i * 0.1, ease: 'easeOut' }} />
-            ))}
-            {/* Giant paintbrush sweeping */}
-            <motion.div className="absolute text-9xl z-40"
-              initial={{ x: '-20%', y: '50%', opacity: 0, rotate: -45 }}
-              animate={{ x: '75%', y: '45%', opacity: [0, 1, 1, 0], rotate: 15 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 2.5, ease: 'easeInOut' }}>🖌️</motion.div>
-            {/* Watercolour splatters */}
-            {[...Array(20)].map((_, i) => (
-              <motion.div key={`wc-${i}`} className="absolute rounded-full"
-                style={{ width: 20 + Math.random() * 40, height: 20 + Math.random() * 40,
-                  left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`,
-                  background: ['#f59e0b','#ec4899','#8b5cf6','#3b82f6'][i % 4],
-                  filter: 'blur(8px)' }}
-                initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 0.25 }}
-                transition={{ duration: 0.8, delay: 0.5 + Math.random() * 1.5 }} />
-            ))}
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* ── PEEL STAGE EXTRAS ───────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {stage === 'peel' && (
-          <>
-            {/* Paper layer peeling away — building is NOT on this layer */}
-            <motion.div className="absolute inset-0 origin-top-left z-30 shadow-2xl"
-              style={{ background: 'linear-gradient(135deg, #fce7f3 0%, #e9d5ff 50%, #dbeafe 100%)',
-                clipPath: 'polygon(0 0, 100% 0, 90% 100%, 10% 100%)',
-                filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))' }}
-              animate={{ scaleX: [1, 0.5, 0], scaleY: [1, 0.6, 0], x: [0, 200, 500], y: [0, 100, -400], rotate: [0, 25, 70], opacity: [1, 0.8, 0] }}
-              transition={{ duration: 2.2, ease: [0.16, 1, 0.3, 1] }}>
-              {/* Crack lines radiating on the paper before it tears */}
-              {[...Array(8)].map((_, i) => (
-                <motion.div key={`ck-${i}`} className="absolute left-[40%] top-[40%] w-px bg-slate-600 origin-left"
-                  style={{ height: 80 + Math.random() * 120, transform: `rotate(${-30 + i * 15}deg)` }}
-                  initial={{ scaleX: 0, opacity: 0 }} animate={{ scaleX: 1, opacity: 0.4 }}
-                  transition={{ duration: 0.3, delay: i * 0.04 }} />
-              ))}
-            </motion.div>
-
-            {/* Paper fragment explosion */}
-            {[...Array(70)].map((_, i) => (
-              <motion.div key={`tf-${i}`} className="absolute rounded-sm shadow z-40"
-                style={{ width: 10 + Math.random() * 35, height: 10 + Math.random() * 35,
-                  background: ['#fce7f3','#e9d5ff','#dbeafe'][i % 3],
-                  left: `${30 + Math.random() * 40}%`, top: `${30 + Math.random() * 40}%` }}
-                initial={{ opacity: 1, rotate: 0, scale: 1 }}
-                animate={{ opacity: 0, rotate: (Math.random() - 0.5) * 900,
-                  x: (Math.random() - 0.5) * 700, y: -350 - Math.random() * 300, scale: [1, 1.2, 0.3] }}
-                transition={{ duration: 2.2, delay: 0.3 + i * 0.02, ease: [0.16, 1, 0.3, 1] }} />
-            ))}
-
-            {/* Label */}
-            <motion.div
-              className="absolute left-1/2 -translate-x-1/2 top-[8%] bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 px-12 py-4 rounded-full border-4 border-white shadow-2xl z-50"
-              initial={{ opacity: 0, scale: 0, rotate: -20 }} animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              transition={{ duration: 0.9, delay: 0.8, type: 'spring', damping: 10 }}>
-              <span className="text-2xl font-black text-white">Reality Breaking Through! 💥</span>
-            </motion.div>
-
-            {/* Impact shockwave */}
-            <motion.div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full border-4 border-white z-50"
-              initial={{ scale: 0, opacity: 0.9 }} animate={{ scale: 7, opacity: 0 }}
-              transition={{ duration: 1.5, delay: 0.5, ease: 'easeOut' }} />
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* ── REALITY STAGE EXTRAS ────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {stage === 'reality' && (
-          <>
-            {/* "YOUR DREAM IS REAL!" title */}
-            <motion.div className="absolute top-[10%] left-1/2 -translate-x-1/2 text-center z-50 w-full px-4"
-              initial={{ opacity: 0, y: -80, scale: 0.3, rotate: -15 }} animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-              transition={{ duration: 1.2, delay: 1.5, type: 'spring', damping: 12 }}>
-              <motion.h1
-                className="text-5xl md:text-7xl font-black bg-gradient-to-r from-yellow-300 via-orange-400 to-pink-500 bg-clip-text text-transparent"
-                style={{ WebkitTextStroke: '3px rgba(255,255,255,0.4)',
-                  filter: 'drop-shadow(0 0 30px rgba(251,191,36,1)) drop-shadow(0 0 60px rgba(249,115,22,0.8))' }}
-                animate={{ scale: [1, 1.07, 1] }}
-                transition={{ duration: 2, repeat: completed ? 0 : 6, ease: 'easeInOut' }}>
-                YOUR DREAM IS REAL!
-              </motion.h1>
-            </motion.div>
-
-            {/* Confetti storm */}
-            {[...Array(180)].map((_, i) => (
-              <motion.div key={`cf-${i}`} className="absolute rounded-full z-40"
-                style={{ width: 3 + Math.random() * 5, height: 3 + Math.random() * 5,
-                  left: `${Math.random() * 100}%`, top: '-10%',
-                  background: ['#fbbf24','#f59e0b','#fb923c','#ffffff','#fef08a'][i % 5] }}
-                animate={{ y: [0, 1300], rotate: [0, Math.random() * 720], opacity: [0, 1, 0.9, 0], x: Math.sin(i) * 90 }}
-                transition={{ duration: 3 + Math.random() * 2, delay: 1.5 + i * 0.015, ease: 'linear' }} />
-            ))}
-
-            {/* Fireworks */}
-            {[...Array(7)].map((_, i) => (
-              <motion.div key={`fw-${i}`} className="absolute z-40" style={{ left: `${15 + i * 13}%`, top: '18%' }}>
-                <motion.div className="w-4 h-4 rounded-full bg-yellow-300"
-                  animate={{ opacity: [0, 1, 0], scale: [0, 10, 0] }}
-                  transition={{ duration: 1.8, delay: 2.5 + i * 0.4 }} />
-                {[...Array(10)].map((_, j) => (
-                  <motion.div key={j} className="absolute w-2 h-2 rounded-full"
-                    style={{ background: ['#fbbf24','#ef4444','#ec4899'][j % 3], left: '50%', top: '50%' }}
-                    animate={{ x: Math.cos((j / 10) * Math.PI * 2) * 70, y: [0, Math.sin((j / 10) * Math.PI * 2) * 70, Math.sin((j / 10) * Math.PI * 2) * 70 + 90], opacity: [0, 1, 0], scale: [0, 1.5, 0] }}
-                    transition={{ duration: 2, delay: 2.5 + i * 0.4 }} />
-                ))}
-              </motion.div>
-            ))}
-
-            {/* Sparkles around building */}
-            {[...Array(35)].map((_, i) => (
-              <motion.div key={`sk-${i}`} className="absolute text-3xl z-40"
-                style={{ left: `${32 + Math.random() * 36}%`, top: `${32 + Math.random() * 38}%` }}
-                animate={{ opacity: [0, 1, 0], scale: [0, 2, 0], rotate: [0, 180, 360] }}
-                transition={{ duration: 2, delay: 1 + i * 0.09, repeat: completed ? 0 : 2, repeatDelay: 1.5 }}>✨</motion.div>
-            ))}
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* ═══════════════════════════════════════════════════════════════════════
-          THE ONE PERSISTENT BUILDING — visible from sketch through reality
-          Never removed, only changes appearance based on stage
-      ═══════════════════════════════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {buildingVisible && (
-          <motion.div
-            key="the-building"
-            className="absolute left-1/2 -translate-x-1/2 z-20"
-            style={{
-              bottom: buildingReality ? '6.5%' : '12%',
-              width: buildingReality ? '300px' : '260px',
-            }}
-            initial={{ opacity: 0, scale: 0.88, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {/* 3-D depth shadow only in reality mode */}
-            {buildingReality && (
-              <motion.div
-                className="absolute -inset-4 rounded-t-2xl"
-                style={{ boxShadow: '0 -20px 80px rgba(245,158,11,0.55), 0 0 130px rgba(251,191,36,0.38)', zIndex: -1 }}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }} />
-            )}
-
-            <svg viewBox={`0 0 ${BW} ${BH}`} style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }}>
-
-              {/* ── Main body ────────────────────────────────────────────── */}
-              <motion.rect x="30" y="10" width="100" height="160"
-                fill={buildingColoured ? '#fbbf24' : 'none'}
-                stroke={buildingColoured ? '#92400e' : '#1e293b'}
-                strokeWidth={buildingColoured ? 3 : 4}
-                strokeLinecap="round" strokeLinejoin="round"
-                initial={{ pathLength: stage === 'sketch' ? 0 : 1, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 1,
-                  fill: buildingColoured ? '#fbbf24' : 'none',
-                  filter: buildingReality ? 'drop-shadow(0 4px 12px rgba(251,191,36,0.4))' : 'none' }}
-                transition={{ pathLength: { duration: 1.5, delay: 0.4, ease: 'easeInOut' }, fill: { duration: 0.8 }, opacity: { duration: 0.3 } }}
-              />
-
-              {/* ── Windows ──────────────────────────────────────────────── */}
-              {WINDOWS.map(({ col, row }, i) => (
-                <motion.rect key={`w-${i}`}
-                  x={45 + col * 18} y={25 + row * 20} width="10" height="12"
-                  fill={buildingColoured ? '#93c5fd' : 'none'}
-                  stroke={buildingColoured ? '#1e3a8a' : '#1e293b'}
-                  strokeWidth={buildingColoured ? 2 : 2}
-                  initial={{ pathLength: stage === 'sketch' ? 0 : 1, scale: 0 }}
-                  animate={{
-                    pathLength: 1, scale: 1,
-                    fill: buildingColoured ? (buildingReality && i % 3 === 0 ? undefined : '#93c5fd') : 'none',
-                    ...(buildingReality && i % 3 === 0
-                      ? { fill: ['#7dd3fc', '#fef08a', '#7dd3fc'] as any,
-                          boxShadow: ['0 0 4px rgba(254,240,138,0.4)', '0 0 12px rgba(254,240,138,1)', '0 0 4px rgba(254,240,138,0.4)'] as any }
-                      : {})
-                  }}
-                  transition={{ pathLength: { duration: 0.25, delay: stage === 'sketch' ? 1.8 + i * 0.04 : 0 },
-                    scale: { duration: 0.25, delay: stage === 'sketch' ? 1.8 + i * 0.04 : buildingColoured ? 2 + i * 0.03 : 0, type: 'spring', stiffness: 220 },
-                    fill: buildingReality ? { duration: 2, delay: i * 0.1, repeat: completed ? 0 : 4 } : { duration: 0.6, delay: buildingColoured ? 2 + i * 0.03 : 0 } }}
-                />
-              ))}
-
-              {/* ── Storefront base ──────────────────────────────────────── */}
-              <motion.rect x="30" y="170" width="100" height="30"
-                fill={buildingColoured ? '#1e40af' : 'none'}
-                stroke={buildingColoured ? '#1e3a8a' : '#1e293b'}
-                strokeWidth={buildingColoured ? 3 : 4}
-                initial={{ pathLength: stage === 'sketch' ? 0 : 1, scaleY: buildingColoured ? 0 : 1 }}
-                animate={{ pathLength: 1, scaleY: 1,
-                  fill: buildingColoured ? '#1e40af' : 'none' }}
-                transition={{ pathLength: { duration: 0.6, delay: stage === 'sketch' ? 2.8 : 0 },
-                  scaleY: { duration: 0.6, delay: buildingColoured ? 2.7 : 0, ease: 'backOut' },
-                  fill: { duration: 0.4, delay: buildingColoured ? 2.6 : 0 } }}
-              />
-
-              {/* ── Glass doors (coloured stages only) ───────────────────── */}
-              {buildingColoured && (<>
-                <motion.rect x="40" y="175" width="18" height="20" fill="#bae6fd" stroke="#0c4a6e" strokeWidth="1"
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 3 }} />
-                <motion.rect x="102" y="175" width="18" height="20" fill="#bae6fd" stroke="#0c4a6e" strokeWidth="1"
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 3 }} />
-                {/* Door divider */}
-                <motion.line x1="80" y1="170" x2="80" y2="200" stroke="#0c4a6e" strokeWidth="2"
-                  initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
-                  transition={{ duration: 0.3, delay: 3.1 }} />
-              </>)}
-
-              {/* ── Sign above door ───────────────────────────────────────── */}
-              <motion.rect x="50" y="155" width="60" height="12"
-                fill={buildingColoured ? '#fbbf24' : 'none'}
-                stroke={buildingColoured ? '#92400e' : '#1e293b'}
-                strokeWidth={2}
-                initial={{ pathLength: stage === 'sketch' ? 0 : 1, scale: 0 }}
-                animate={{ pathLength: 1, scale: 1, fill: buildingColoured ? '#fbbf24' : 'none' }}
-                transition={{ pathLength: { duration: 0.5, delay: stage === 'sketch' ? 3.2 : 0 },
-                  scale: { duration: 0.5, delay: stage === 'sketch' ? 3.2 : buildingColoured ? 3.2 : 0, type: 'spring', bounce: 0.4 },
-                  fill: { duration: 0.4, delay: 3 } }} />
-
-              {/* ── "YOUR SHOP" text on sign (reality only) ──────────────── */}
-              {buildingReality && (
-                <motion.text x="80" y="164" textAnchor="middle"
-                  fontSize="6" fontWeight="bold" fill="#78350f"
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4, duration: 0.5 }}>
-                  YOUR SHOP
-                </motion.text>
-              )}
-
-              {/* ── Awning stripes (coloured+) ─────────────────────────── */}
-              {buildingColoured && (
-                <motion.rect x="30" y="155" width="100" height="6" fill="#ef4444"
-                  style={{ clipPath: 'polygon(0 0, 100% 0, 95% 100%, 5% 100%)' }}
-                  initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
-                  transition={{ duration: 0.5, delay: 3.4, ease: 'backOut' }} />
-              )}
-            </svg>
-
-            {/* ── Ground shadow in reality mode ──────────────────────────── */}
-            {buildingReality && (
-              <motion.div
-                className="absolute bottom-0 left-0 right-0 h-3 rounded-full"
-                style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, transparent 70%)', zIndex: 2 }}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.4 }} />
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── TITLE stage ─────────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {stage === 'title' && capsuleTitle && (
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center z-50"
-            initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.8 }}>
-            <h2 className="text-4xl md:text-6xl font-bold text-purple-400 drop-shadow-2xl text-center px-8">
-              {capsuleTitle}
-            </h2>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── OUTRO ───────────────────────────────────────────────────────────── */}
+      {/* ── OUTRO: WHITE FADE ────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {stage === 'outro' && (
-          <motion.div className="absolute inset-0 bg-white z-[60]"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }} />
+          <motion.div
+            key="outro"
+            className="absolute inset-0 bg-white z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1.0 }}
+          />
         )}
       </AnimatePresence>
     </div>

@@ -1,19 +1,27 @@
 /**
- * Time Traveler - Time's Passage Ceremony (EPIC SPECTACULAR VERSION)
- * 
- * Breathtaking clock face dissolving into spiraling time streams with golden chrono-particles.
- * Features: Majestic ornate clock materializes → intricate gears spin → clock hands accelerate
- * → dissolution into swirling temporal ribbons → thousands of time particles spiral outward
- * → crystalline time shards burst → EPIC 48-ray cyan radiance with particle explosion
- * 
+ * Time Traveler - Clock Hands Reveal Ceremony
+ *
+ * CONCEPT: Time itself is being commanded. A grand clockface awakens from darkness,
+ * its hands sweep across eternity, golden radiance erupts, and the capsule title
+ * emerges as a monument to preserved time.
+ *
  * Stages:
- * 4. 6-8.5s: Clock dissolves into swirling temporal ribbons with trailing particles
- * 5. 8.5-11s: Ribbons explode into crystalline time shards spreading across space
- * 7. 13-14.5s: Constellation with hourglass symbol
- * 8. 14.5-17s: TRANSCENDENT 48-ray cyan supernova with 300+ particles (2.5 SECONDS!)
+ * 1. awakening  (0–3s):   Clock materializes, hands at 12, dust motes drift, glow pulses ring
+ * 2. hands      (3–8s):   Hour/minute/second hands sweep dramatically, pendulum swings, epoch labels,
+ *                          golden rays shoot at minute hand's halfway point
+ * 3. radiance   (8–13s):  Conic sweep, tick-emit dots, time-stream lines, concentric rings, text
+ * 4. reveal     (13–18s): Hourglass, capsule title, decorative ring border, floating hour markers
+ * 5. outro      (18–19s): Fade to black
+ *
+ * Rules observed:
+ * - All arrays via useMemo, Math.random() only inside useMemo
+ * - repeat: Infinity only on ambient elements with duration >3s
+ * - spring only supports 2 keyframes; 3+ keyframe arrays use ease: 'easeInOut' with times
+ * - Max ~22 simultaneous animated elements
+ * - Failsafe at 20s
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface TimeTravelerPassageCeremonyProps {
@@ -23,998 +31,961 @@ interface TimeTravelerPassageCeremonyProps {
   onComplete?: () => void;
 }
 
-interface TimeParticle {
-  id: number;
-  angle: number;
-  radius: number;
-  size: number;
-  speed: number;
-  delay: number;
-}
-
-interface TimeShard {
-  id: number;
-  x: number;
-  y: number;
-  rotation: number;
-  size: number;
-  delay: number;
-}
-
 export function TimeTravelerPassageCeremony({
   capsuleTitle,
   media = [],
   isPreview = false,
-  onComplete
+  onComplete,
 }: TimeTravelerPassageCeremonyProps) {
-  const [stage, setStage] = useState<'intro' | 'clock' | 'gears' | 'accelerate' | 'dissolve' | 'shards' | 'constellation' | 'radiance' | 'outro'>('intro');
-  const [particles, setParticles] = useState<TimeParticle[]>([]);
-  const [shards, setShards] = useState<TimeShard[]>([]);
+  const [stage, setStage] = useState<
+    'awakening' | 'hands' | 'radiance' | 'reveal' | 'outro'
+  >('awakening');
   const [completed, setCompleted] = useState(false);
 
-  // Animation timeline
-  useEffect(() => {
-    const timeline = [
-      { time: 0, action: () => setStage('intro') },
-      { time: 2000, action: () => setStage('clock') },
-      { time: 4000, action: () => setStage('gears') },
-      { time: 6000, action: () => setStage('accelerate') },
-      { time: 8500, action: () => setStage('dissolve') },
-      { time: 11000, action: () => setStage('shards') },
-      { time: 13000, action: () => setStage('constellation') },
-      { time: 14500, action: () => setStage('radiance') },  // Radiance shows for 2.5 seconds!
-      { time: 17000, action: () => setStage('outro') },
-      { time: 17500, action: () => onComplete?.() }
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const clockDiameter = isMobile ? 220 : 290;
+  const clockRadius = clockDiameter / 2;
+  // SVG canvas is clockDiameter + 20 for breathing room
+  const svgSize = clockDiameter + 20;
+  const cx = svgSize / 2; // center x
+  const cy = svgSize / 2; // center y
+
+  // ── useMemo data ────────────────────────────────────────────────────────────
+
+  // 12 ambient dust motes — fixed positions, repeat: Infinity (duration 5-8s)
+  const dustMotes = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => ({
+        id: i,
+        left: `${5 + Math.random() * 90}%`,
+        top: `${5 + Math.random() * 90}%`,
+        size: 2 + Math.random() * 3,
+        duration: 5 + Math.random() * 3,
+        delay: Math.random() * 4,
+      })),
+    []
+  );
+
+  // 8 outer glow pulses at cardinal + diagonal positions around clock
+  const glowPulses = useMemo(
+    () =>
+      Array.from({ length: 8 }, (_, i) => {
+        const angle = (i / 8) * Math.PI * 2 - Math.PI / 2;
+        const r = clockRadius + 28;
+        return {
+          id: i,
+          x: Math.cos(angle) * r,
+          y: Math.sin(angle) * r,
+          delay: i * 0.2,
+        };
+      }),
+    [clockRadius]
+  );
+
+  // 12 tick marks (4 main amber at 0/3/6/9, 8 minor silver)
+  const tickMarks = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => {
+        const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
+        const isMain = i % 3 === 0;
+        const outerR = clockRadius - 4;
+        const innerR = clockRadius - (isMain ? 20 : 10);
+        return {
+          x1: cx + Math.cos(angle) * innerR,
+          y1: cy + Math.sin(angle) * innerR,
+          x2: cx + Math.cos(angle) * outerR,
+          y2: cy + Math.sin(angle) * outerR,
+          isMain,
+        };
+      }),
+    [clockRadius, cx, cy]
+  );
+
+  // Roman numerals at XII / III / VI / IX
+  const romanNumerals = useMemo(() => {
+    const items = [
+      { label: 'XII', idx: 0 },
+      { label: 'III', idx: 3 },
+      { label: 'VI', idx: 6 },
+      { label: 'IX', idx: 9 },
     ];
+    const r = clockRadius - 30;
+    return items.map(({ label, idx }) => {
+      const angle = (idx / 12) * Math.PI * 2 - Math.PI / 2;
+      return { label, x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r };
+    });
+  }, [clockRadius, cx, cy]);
 
-    const timeouts = timeline.map(({ time, action }) =>
-      setTimeout(action, time)
-    );
+  // 4 epoch labels (PAST top, PRESENT right, FUTURE bottom, ALWAYS left)
+  const epochLabels = useMemo(
+    () => [
+      { text: 'PAST',    dx: 0,                   dy: -(clockRadius + 48), delay: 0 },
+      { text: 'PRESENT', dx: clockRadius + 52,     dy: 0,                  delay: 0.4 },
+      { text: 'FUTURE',  dx: 0,                    dy: clockRadius + 48,   delay: 0.8 },
+      { text: 'ALWAYS',  dx: -(clockRadius + 52),  dy: 0,                  delay: 1.2 },
+    ],
+    [clockRadius]
+  );
 
-    // Completion failsafe - ensure ceremony always completes
-    const failsafeTimeout = setTimeout(() => {
+  // 6 golden rays that shoot out when minute hand hits 360° (halfway through hands stage)
+  const goldenRays = useMemo(
+    () =>
+      Array.from({ length: 6 }, (_, i) => {
+        const angle = ((i * 60) * Math.PI) / 180;
+        const len = isMobile ? 100 : 140;
+        return {
+          x2: Math.cos(angle) * len,
+          y2: Math.sin(angle) * len,
+          delay: i * 0.08,
+        };
+      }),
+    [isMobile]
+  );
+
+  // 12 tick-emit dots that travel outward during radiance
+  const tickEmitDots = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => {
+        const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
+        const dist = clockRadius * 0.95;
+        return {
+          x: Math.cos(angle) * dist,
+          y: Math.sin(angle) * dist,
+          delay: i * 0.1,
+        };
+      }),
+    [clockRadius]
+  );
+
+  // 6 golden time-stream lines at 0°/60°/120°/180°/240°/300°
+  const timeStreamLines = useMemo(
+    () =>
+      Array.from({ length: 6 }, (_, i) => {
+        const angle = ((i * 60) * Math.PI) / 180;
+        const len = isMobile ? 130 : 190;
+        return {
+          x2: Math.cos(angle) * len,
+          y2: Math.sin(angle) * len,
+          delay: i * 0.12,
+        };
+      }),
+    [isMobile]
+  );
+
+  // 8 golden hour-marker dots for reveal stage (circular arrangement)
+  const hourMarkers = useMemo(
+    () =>
+      Array.from({ length: 8 }, (_, i) => {
+        const angle = (i / 8) * Math.PI * 2 - Math.PI / 2;
+        const r = isMobile ? 130 : 160;
+        return {
+          x: Math.cos(angle) * r,
+          y: Math.sin(angle) * r,
+          delay: i * 0.12,
+        };
+      }),
+    [isMobile]
+  );
+
+  // ── Stage timeline ──────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    const schedule = [
+      { time: 3000,  fn: () => setStage('hands') },
+      { time: 8000,  fn: () => setStage('radiance') },
+      { time: 13000, fn: () => setStage('reveal') },
+      { time: 18000, fn: () => setStage('outro') },
+      { time: 19000, fn: () => { setCompleted(true); onComplete?.(); } },
+    ];
+    const ids = schedule.map(({ time, fn }) => setTimeout(fn, time));
+
+    // Failsafe at 20s
+    const failsafe = setTimeout(() => {
+      setStage('outro');
       setCompleted(true);
       onComplete?.();
-    }, 18500);
+    }, 20000);
 
     return () => {
-      timeouts.forEach(clearTimeout);
-      clearTimeout(failsafeTimeout);
+      ids.forEach(clearTimeout);
+      clearTimeout(failsafe);
     };
-  }, []); // Only run once on mount - don't restart ceremony midway through
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Generate spiraling time particles
-  useEffect(() => {
-    if (stage === 'dissolve' || stage === 'shards') {
-      const newParticles: TimeParticle[] = [];
-      // Use stage-specific ID offset to prevent duplicate keys during AnimatePresence transitions
-      const idOffset = stage === 'dissolve' ? 0 : 1000;
-      for (let i = 0; i < 200; i++) {
-        newParticles.push({
-          id: idOffset + i,
-          angle: (i / 200) * Math.PI * 2,
-          radius: 50 + Math.random() * 150,
-          size: 2 + Math.random() * 3,
-          speed: 1.5 + Math.random() * 1.5,
-          delay: i * 0.01
-        });
-      }
-      setParticles(newParticles);
-    }
-  }, [stage]);
+  // ── Helpers ─────────────────────────────────────────────────────────────────
 
-  // Generate crystalline time shards
-  useEffect(() => {
-    if (stage === 'shards' || stage === 'constellation' || stage === 'radiance') {
-      const newShards: TimeShard[] = [];
-      // Use stage-specific ID offset to prevent duplicate keys during AnimatePresence transitions
-      const idOffset = stage === 'shards' ? 0 : stage === 'constellation' ? 100 : 200;
-      for (let i = 0; i < 40; i++) {
-        const angle = (i / 40) * Math.PI * 2;
-        const distance = 100 + Math.random() * 180;
-        newShards.push({
-          id: idOffset + i,
-          x: Math.cos(angle) * distance,
-          y: Math.sin(angle) * distance,
-          rotation: Math.random() * 360,
-          size: 0.8 + Math.random() * 0.6,
-          delay: i * 0.03
-        });
-      }
-      setShards(newShards);
-    }
-  }, [stage]);
+  const ClockFaceSVG = ({ opacity = 1 }: { opacity?: number }) => (
+    <svg
+      width={svgSize}
+      height={svgSize}
+      viewBox={`0 0 ${svgSize} ${svgSize}`}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        opacity,
+        filter: 'drop-shadow(0 0 18px rgba(147,197,253,0.5))',
+      }}
+    >
+      {/* Deep dark fill */}
+      <circle cx={cx} cy={cy} r={clockRadius} fill="rgba(10,12,25,0.85)" />
+      {/* Outer amber ring */}
+      <circle
+        cx={cx} cy={cy} r={clockRadius}
+        fill="none"
+        stroke="#f59e0b"
+        strokeWidth="3"
+        style={{ filter: 'drop-shadow(0 0 8px #f59e0b)' }}
+      />
+      {/* Inner decorative ring */}
+      <circle
+        cx={cx} cy={cy} r={clockRadius - 10}
+        fill="none"
+        stroke="rgba(245,158,11,0.25)"
+        strokeWidth="1"
+      />
+      {/* Second inner ring */}
+      <circle
+        cx={cx} cy={cy} r={clockRadius - 16}
+        fill="none"
+        stroke="rgba(147,197,253,0.12)"
+        strokeWidth="0.75"
+        strokeDasharray="4 8"
+      />
+      {/* Tick marks */}
+      {tickMarks.map((t, i) => (
+        <line
+          key={i}
+          x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
+          stroke={t.isMain ? '#f59e0b' : '#7ca8d4'}
+          strokeWidth={t.isMain ? 3.5 : 1.5}
+          strokeLinecap="round"
+          style={t.isMain ? { filter: 'drop-shadow(0 0 5px #f59e0b)' } : undefined}
+        />
+      ))}
+      {/* Roman numerals */}
+      {romanNumerals.map((rn, i) => (
+        <text
+          key={i}
+          x={rn.x} y={rn.y}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fill="#f59e0b"
+          fontSize={isMobile ? 12 : 15}
+          fontFamily="Georgia, serif"
+          style={{ filter: 'drop-shadow(0 0 5px rgba(245,158,11,0.7))' }}
+        >
+          {rn.label}
+        </text>
+      ))}
+    </svg>
+  );
+
+  // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#0a0e27] via-[#0f1535] to-[#1a1f3a]">
-      {/* Deep space gradient */}
-      <motion.div
-        className="absolute inset-0"
-        animate={{
-          background: stage === 'radiance'
-            ? 'radial-gradient(ellipse at 50% 50%, #0f2540 0%, #0a1628 60%, #050a14 100%)'
-            : 'radial-gradient(ellipse at 50% 50%, #0f1535 0%, #0a0e27 70%, #050812 100%)'
-        }}
-        transition={{ duration: 2 }}
-      />
-
-      {/* Cosmic star field */}
-      <div className="absolute inset-0">
-        {[...Array(120)].map((_, i) => (
-          <motion.div
-            key={`star-${i}`}
-            className="absolute rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: `${1 + Math.random() * 2}px`,
-              height: `${1 + Math.random() * 2}px`,
-              background: 'radial-gradient(circle, rgba(147, 197, 253, 1), rgba(96, 165, 250, 0.5))',
-              boxShadow: '0 0 6px rgba(147, 197, 253, 0.9)'
-            }}
-            animate={{
-              opacity: [0.2, 1, 0.2],
-              scale: [1, 1.5, 1]
-            }}
-            transition={{
-              duration: 2 + Math.random() * 3,
-              repeat: Infinity,
-              delay: Math.random() * 3,
-              ease: 'easeInOut'
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Ethereal cyan glow */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        animate={{
-          opacity: stage === 'radiance' ? 0.9 : 0.4
-        }}
-        transition={{ duration: 2 }}
-      >
-        <div
-          className="absolute inset-0"
+    <div
+      className="relative w-full h-full overflow-hidden"
+      style={{
+        background: 'radial-gradient(ellipse at 50% 40%, #1a1208 0%, #0d0b04 50%, #050403 100%)',
+        fontFamily: 'Georgia, serif',
+      }}
+    >
+      {/* ── AMBIENT DUST MOTES (all stages, repeat: Infinity, duration >3s) ── */}
+      {dustMotes.map((mote) => (
+        <motion.div
+          key={`mote-${mote.id}`}
           style={{
-            background: 'radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.4) 0%, rgba(14, 165, 233, 0.2) 40%, transparent 70%)',
-            filter: 'blur(120px)'
+            position: 'absolute',
+            left: mote.left,
+            top: mote.top,
+            width: mote.size,
+            height: mote.size,
+            borderRadius: '50%',
+            background: '#f59e0b',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+          animate={{ opacity: [0, 0.4, 0] }}
+          transition={{
+            duration: mote.duration,
+            delay: mote.delay,
+            repeat: Infinity,
+            ease: 'easeInOut',
           }}
         />
-      </motion.div>
+      ))}
 
-      {/* Title */}
-      <AnimatePresence mode="wait">
-        {stage === 'intro' && (
+      {/* ══════════════════════════════════════════════════════════════
+          STAGE 1: AWAKENING (0–3s)
+          Clock face materializes, "TIME AWAKENS", 8 outer glow pulses
+         ══════════════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {stage === 'awakening' && (
           <motion.div
-            initial={{ opacity: 0, y: -60, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -40, scale: 0.95 }}
-            transition={{ duration: 1.4, ease: [0.34, 1.56, 0.64, 1] }}
-            className="absolute top-12 sm:top-16 left-0 right-0 text-center z-20 px-4"
+            key="awakening"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="absolute inset-0 flex flex-col items-center justify-center z-20"
           >
-            <motion.h1 
-              className="text-4xl sm:text-5xl md:text-6xl font-bold text-cyan-200 drop-shadow-2xl mb-2"
-              animate={{
-                textShadow: [
-                  '0 0 30px rgba(56, 189, 248, 0.8)',
-                  '0 0 50px rgba(56, 189, 248, 1)',
-                  '0 0 30px rgba(56, 189, 248, 0.8)'
-                ]
+            {/* "TIME AWAKENS" title */}
+            <motion.div
+              style={{
+                color: '#f59e0b',
+                fontSize: isMobile ? 18 : 22,
+                fontFamily: 'Georgia, serif',
+                letterSpacing: '0.35em',
+                textTransform: 'uppercase',
+                textShadow: '0 0 20px #f59e0b, 0 0 50px rgba(245,158,11,0.5)',
+                marginBottom: isMobile ? 28 : 36,
               }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              initial={{ opacity: 0, y: -16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.2, delay: 0.3 }}
             >
-              Time's Passage
-            </motion.h1>
-            <p className="text-cyan-300/90 mt-2 text-sm sm:text-base font-mono">The river of moments flows eternal</p>
+              TIME AWAKENS
+            </motion.div>
+
+            {/* Clock face + outer glow pulses container */}
+            <div style={{ position: 'relative', width: svgSize, height: svgSize }}>
+              {/* Clock face — scale entrance: 0.4→1.05→1.0 (3 keyframes → ease, not spring) */}
+              <motion.div
+                style={{ position: 'absolute', top: 0, left: 0 }}
+                initial={{ scale: 0.4, opacity: 0 }}
+                animate={{ scale: [0.4, 1.05, 1.0], opacity: 1 }}
+                transition={{
+                  scale: { duration: 1.4, ease: 'easeInOut', times: [0, 0.7, 1] },
+                  opacity: { duration: 0.8 },
+                }}
+              >
+                <ClockFaceSVG />
+                {/* Center hub */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    background: '#f59e0b',
+                    marginTop: -5,
+                    marginLeft: -5,
+                    boxShadow: '0 0 12px #f59e0b, 0 0 24px rgba(245,158,11,0.6)',
+                    zIndex: 10,
+                  }}
+                />
+                {/* Both hands at 12 o'clock (rotate: 0 = pointing up) */}
+                {/* Hour hand at 12 */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: 5,
+                    height: clockRadius * 0.55,
+                    marginLeft: -2.5,
+                    marginTop: -(clockRadius * 0.55),
+                    background: 'linear-gradient(to top, #d97706, #fbbf24)',
+                    borderRadius: '3px 3px 1px 1px',
+                    transformOrigin: 'bottom center',
+                    transform: 'rotate(0deg)',
+                    boxShadow: '0 0 8px rgba(245,158,11,0.6)',
+                    zIndex: 6,
+                  }}
+                />
+                {/* Minute hand at 12 */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: 3.5,
+                    height: clockRadius * 0.8,
+                    marginLeft: -1.75,
+                    marginTop: -(clockRadius * 0.8),
+                    background: 'linear-gradient(to top, #60a5fa, #bfdbfe)',
+                    borderRadius: '2px 2px 1px 1px',
+                    transformOrigin: 'bottom center',
+                    transform: 'rotate(0deg)',
+                    boxShadow: '0 0 6px rgba(147,197,253,0.6)',
+                    zIndex: 5,
+                  }}
+                />
+              </motion.div>
+
+              {/* 8 outer glow pulses — blink in staggered */}
+              {glowPulses.map((gp) => (
+                <motion.div
+                  key={`gp-${gp.id}`}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: '#fbbf24',
+                    marginTop: gp.y - 4,
+                    marginLeft: gp.x - 4,
+                    boxShadow: '0 0 12px #f59e0b, 0 0 24px rgba(245,158,11,0.5)',
+                    pointerEvents: 'none',
+                  }}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: [0, 1.3, 1], opacity: [0, 1, 0.7] }}
+                  transition={{
+                    duration: 0.6,
+                    delay: 0.8 + gp.delay,
+                    ease: 'easeOut',
+                  }}
+                />
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main scene container */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        
-        {/* Magnificent ornate clock face */}
-        <AnimatePresence>
-          {(stage === 'clock' || stage === 'gears' || stage === 'accelerate' || stage === 'dissolve') && (
-            <motion.div
-              className="absolute z-30"
-              initial={{ scale: 0, opacity: 0, rotate: 0 }}
-              animate={{
-                scale: stage === 'dissolve' ? [1, 1.4, 0] : 1,
-                opacity: stage === 'dissolve' ? [1, 0.8, 0] : 1,
-                rotate: stage === 'accelerate' ? [0, 360] : stage === 'dissolve' ? [360, 540] : 0
-              }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{
-                scale: { duration: stage === 'dissolve' ? 2.5 : 1.8, ease: 'easeOut' },
-                opacity: { duration: stage === 'dissolve' ? 2.5 : 1.5 },
-                rotate: { duration: stage === 'accelerate' ? 2 : 2.5, ease: stage === 'dissolve' ? 'easeIn' : 'linear' }
-              }}
-            >
-              {/* Ornate clock mega-glow */}
+      {/* ══════════════════════════════════════════════════════════════
+          STAGE 2: HANDS (3–8s)
+          Hands sweep dramatically, pendulum swings, epoch labels fade in,
+          golden rays shoot at halfway point
+         ══════════════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {stage === 'hands' && (
+          <motion.div
+            key="hands"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 flex items-center justify-center z-20"
+          >
+            {/* Epoch labels — appear with stagger */}
+            {epochLabels.map((ep, i) => (
               <motion.div
-                className="absolute inset-0 -m-40"
-                animate={{
-                  scale: [1, 1.4, 1],
-                  opacity: [0.5, 0.8, 0.5]
+                key={`epoch-${i}`}
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: `translate(calc(-50% + ${ep.dx}px), calc(-50% + ${ep.dy}px))`,
+                  fontFamily: 'Georgia, serif',
+                  fontSize: isMobile ? 10 : 12,
+                  fontStyle: 'italic',
+                  color: '#f59e0b',
+                  letterSpacing: '0.2em',
+                  textShadow: '0 0 10px rgba(245,158,11,0.6)',
+                  pointerEvents: 'none',
+                  whiteSpace: 'nowrap',
                 }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: 'easeInOut'
-                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.85 }}
+                transition={{ duration: 0.7, delay: ep.delay }}
               >
-                <div
-                  className="w-96 h-96"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(56, 189, 248, 0.8) 0%, rgba(14, 165, 233, 0.5) 30%, rgba(56, 189, 248, 0.2) 60%, transparent 80%)',
-                    filter: 'blur(60px)'
-                  }}
-                />
+                {ep.text}
               </motion.div>
+            ))}
 
-              {/* Main clock structure */}
-              <div className="relative w-[400px] h-[400px]">
-                {/* Outer ornate ring with engravings */}
-                <div
-                  className="absolute inset-0 rounded-full"
+            {/* Clock face */}
+            <div style={{ position: 'relative', width: svgSize, height: svgSize }}>
+              <ClockFaceSVG />
+
+              {/* Hour hand: rotate 0→330 over 3s */}
+              <motion.div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: 5,
+                  height: clockRadius * 0.55,
+                  marginLeft: -2.5,
+                  marginTop: -(clockRadius * 0.55),
+                  background: 'linear-gradient(to top, #d97706, #fbbf24)',
+                  borderRadius: '3px 3px 1px 1px',
+                  transformOrigin: 'bottom center',
+                  boxShadow: '0 0 10px rgba(245,158,11,0.7)',
+                  zIndex: 6,
+                }}
+                initial={{ rotate: 0 }}
+                animate={{ rotate: 330 }}
+                transition={{ duration: 3, ease: 'easeInOut' }}
+              />
+
+              {/* Minute hand: rotate 0→720 (2 full rotations) over 3.5s */}
+              <motion.div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: 3.5,
+                  height: clockRadius * 0.8,
+                  marginLeft: -1.75,
+                  marginTop: -(clockRadius * 0.8),
+                  background: 'linear-gradient(to top, #60a5fa, #bfdbfe)',
+                  borderRadius: '2px 2px 1px 1px',
+                  transformOrigin: 'bottom center',
+                  boxShadow: '0 0 8px rgba(147,197,253,0.7)',
+                  zIndex: 5,
+                }}
+                initial={{ rotate: 0 }}
+                animate={{ rotate: 720 }}
+                transition={{ duration: 3.5, ease: 'easeInOut' }}
+              />
+
+              {/* Second hand: 2px red, rotate 0→1080 (3 rotations) over 2.5s */}
+              <motion.div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: 2,
+                  height: clockRadius * 0.9,
+                  marginLeft: -1,
+                  marginTop: -(clockRadius * 0.9),
+                  background: '#ef4444',
+                  borderRadius: '1px 1px 0 0',
+                  transformOrigin: 'bottom center',
+                  boxShadow: '0 0 6px rgba(239,68,68,0.8)',
+                  zIndex: 7,
+                }}
+                initial={{ rotate: 0 }}
+                animate={{ rotate: 1080 }}
+                transition={{ duration: 2.5, ease: 'linear' }}
+              />
+
+              {/* Center hub */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  background: '#f59e0b',
+                  marginTop: -5,
+                  marginLeft: -5,
+                  boxShadow: '0 0 12px #f59e0b, 0 0 24px rgba(245,158,11,0.6)',
+                  zIndex: 10,
+                }}
+              />
+
+              {/* 6 golden rays shoot from center when minute hand is at 360° (~1.75s delay) */}
+              {goldenRays.map((ray, i) => (
+                <svg
+                  key={`ray-${i}`}
                   style={{
-                    background: 'radial-gradient(circle, rgba(15, 37, 64, 0.95) 0%, rgba(10, 22, 40, 0.9) 100%)',
-                    border: '4px solid rgba(56, 189, 248, 0.8)',
-                    boxShadow: '0 0 80px rgba(56, 189, 248, 0.6), inset 0 0 80px rgba(56, 189, 248, 0.3), 0 0 0 8px rgba(14, 165, 233, 0.3)',
-                    backdropFilter: 'blur(30px)'
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    overflow: 'visible',
+                    width: 1,
+                    height: 1,
+                    pointerEvents: 'none',
+                    zIndex: 8,
                   }}
                 >
-                  {/* Decorative corner pieces */}
-                  {[0, 90, 180, 270].map((angle, idx) => (
-                    <div
-                      key={`corner-${idx}`}
-                      className="absolute"
-                      style={{
-                        left: '50%',
-                        top: '50%',
-                        width: '60px',
-                        height: '60px',
-                        marginLeft: '-30px',
-                        marginTop: '-30px',
-                        transform: `rotate(${angle}deg) translateY(-180px)`
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.6), rgba(14, 165, 233, 0.3))',
-                          clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-                          boxShadow: '0 0 20px rgba(56, 189, 248, 0.8)',
-                          filter: 'blur(1px)'
-                        }}
-                      />
-                    </div>
-                  ))}
-
-                  {/* Roman numerals */}
-                  {['XII', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'].map((numeral, i) => {
-                    const angle = (i * 30) * (Math.PI / 180);
-                    const x = Math.cos(angle - Math.PI / 2) * 155;
-                    const y = Math.sin(angle - Math.PI / 2) * 155;
-                    return (
-                      <motion.div
-                        key={`numeral-${i}`}
-                        className="absolute font-serif"
-                        style={{
-                          left: '50%',
-                          top: '50%',
-                          transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`,
-                          fontSize: numeral === 'XII' || numeral === 'III' || numeral === 'VI' || numeral === 'IX' ? '24px' : '20px',
-                          fontWeight: 'bold',
-                          color: 'rgba(147, 197, 253, 1)',
-                          textShadow: '0 0 15px rgba(147, 197, 253, 1), 0 0 30px rgba(56, 189, 248, 0.8)',
-                          letterSpacing: '1px'
-                        }}
-                        animate={{
-                          textShadow: [
-                            '0 0 15px rgba(147, 197, 253, 1), 0 0 30px rgba(56, 189, 248, 0.8)',
-                            '0 0 25px rgba(147, 197, 253, 1), 0 0 50px rgba(56, 189, 248, 1)',
-                            '0 0 15px rgba(147, 197, 253, 1), 0 0 30px rgba(56, 189, 248, 0.8)'
-                          ]
-                        }}
-                        transition={{
-                          duration: 3,
-                          repeat: Infinity,
-                          delay: i * 0.1,
-                          ease: 'easeInOut'
-                        }}
-                      >
-                        {numeral}
-                      </motion.div>
-                    );
-                  })}
-
-                  {/* Hour marks between numerals */}
-                  {[...Array(60)].map((_, i) => {
-                    if (i % 5 === 0) return null; // Skip where numerals are
-                    const angle = (i * 6) * (Math.PI / 180);
-                    const x = Math.cos(angle - Math.PI / 2) * 165;
-                    const y = Math.sin(angle - Math.PI / 2) * 165;
-                    return (
-                      <div
-                        key={`mark-${i}`}
-                        className="absolute"
-                        style={{
-                          left: '50%',
-                          top: '50%',
-                          width: '2px',
-                          height: '8px',
-                          background: 'rgba(56, 189, 248, 0.6)',
-                          transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${i * 6}deg)`,
-                          boxShadow: '0 0 4px rgba(56, 189, 248, 0.8)'
-                        }}
-                      />
-                    );
-                  })}
-
-                  {/* Visible gears - only in gears and accelerate stages */}
-                  <AnimatePresence>
-                    {(stage === 'gears' || stage === 'accelerate') && (
-                      <>
-                        {/* Large central gear */}
-                        <motion.div
-                          className="absolute left-1/2 top-1/2"
-                          style={{
-                            width: '120px',
-                            height: '120px',
-                            marginLeft: '-60px',
-                            marginTop: '-60px'
-                          }}
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{
-                            opacity: [0, 0.7, 0.7],
-                            scale: 1,
-                            rotate: stage === 'accelerate' ? [0, 360, 720] : [0, 360]
-                          }}
-                          transition={{
-                            opacity: { duration: 0.8 },
-                            rotate: { duration: stage === 'accelerate' ? 2 : 4, ease: stage === 'accelerate' ? 'easeIn' : 'linear', repeat: Infinity }
-                          }}
-                        >
-                          <svg viewBox="0 0 100 100" className="w-full h-full">
-                            <circle cx="50" cy="50" r="35" fill="rgba(14, 165, 233, 0.3)" stroke="rgba(56, 189, 248, 0.8)" strokeWidth="2" />
-                            {[...Array(12)].map((_, i) => {
-                              const angle = (i * 30) * (Math.PI / 180);
-                              const x1 = 50 + Math.cos(angle) * 30;
-                              const y1 = 50 + Math.sin(angle) * 30;
-                              const x2 = 50 + Math.cos(angle) * 40;
-                              const y2 = 50 + Math.sin(angle) * 40;
-                              return (
-                                <line
-                                  key={`gear-tooth-${i}`}
-                                  x1={x1}
-                                  y1={y1}
-                                  x2={x2}
-                                  y2={y2}
-                                  stroke="rgba(56, 189, 248, 0.9)"
-                                  strokeWidth="4"
-                                />
-                              );
-                            })}
-                            <circle cx="50" cy="50" r="10" fill="rgba(56, 189, 248, 1)" />
-                          </svg>
-                        </motion.div>
-
-                        {/* Side gears */}
-                        {[{ x: -80, y: -60, size: 70, speed: 3 }, { x: 80, y: -60, size: 70, speed: 3 }].map((gear, idx) => (
-                          <motion.div
-                            key={`side-gear-${idx}`}
-                            className="absolute left-1/2 top-1/2"
-                            style={{
-                              width: `${gear.size}px`,
-                              height: `${gear.size}px`,
-                              marginLeft: `${gear.x - gear.size / 2}px`,
-                              marginTop: `${gear.y - gear.size / 2}px`
-                            }}
-                            initial={{ opacity: 0, scale: 0 }}
-                            animate={{
-                              opacity: [0, 0.6, 0.6],
-                              scale: 1,
-                              rotate: stage === 'accelerate' ? [0, -720] : [0, -360]
-                            }}
-                            transition={{
-                              opacity: { duration: 0.8, delay: 0.3 },
-                              rotate: { duration: stage === 'accelerate' ? 2 : gear.speed, ease: stage === 'accelerate' ? 'easeIn' : 'linear', repeat: Infinity }
-                            }}
-                          >
-                            <svg viewBox="0 0 100 100" className="w-full h-full">
-                              <circle cx="50" cy="50" r="30" fill="rgba(14, 165, 233, 0.2)" stroke="rgba(56, 189, 248, 0.7)" strokeWidth="2" />
-                              {[...Array(8)].map((_, i) => {
-                                const angle = (i * 45) * (Math.PI / 180);
-                                const x1 = 50 + Math.cos(angle) * 25;
-                                const y1 = 50 + Math.sin(angle) * 25;
-                                const x2 = 50 + Math.cos(angle) * 35;
-                                const y2 = 50 + Math.sin(angle) * 35;
-                                return (
-                                  <line
-                                    key={`side-gear-tooth-${idx}-${i}`}
-                                    x1={x1}
-                                    y1={y1}
-                                    x2={x2}
-                                    y2={y2}
-                                    stroke="rgba(56, 189, 248, 0.8)"
-                                    strokeWidth="3"
-                                  />
-                                );
-                              })}
-                            </svg>
-                          </motion.div>
-                        ))}
-                      </>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Clock center hub */}
-                  <motion.div
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
-                    style={{
-                      width: '30px',
-                      height: '30px',
-                      borderRadius: '50%',
-                      background: 'radial-gradient(circle, rgba(147, 197, 253, 1), rgba(56, 189, 248, 0.8))',
-                      boxShadow: '0 0 40px rgba(147, 197, 253, 1)'
-                    }}
-                    animate={{
-                      boxShadow: [
-                        '0 0 40px rgba(147, 197, 253, 1)',
-                        '0 0 70px rgba(147, 197, 253, 1)',
-                        '0 0 40px rgba(147, 197, 253, 1)'
-                      ]
-                    }}
+                  <motion.line
+                    x1="0" y1="0"
+                    x2={ray.x2} y2={ray.y2}
+                    stroke="#fbbf24"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    style={{ filter: 'drop-shadow(0 0 8px #f59e0b)' }}
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: [0, 1, 1], opacity: [0, 1, 0] }}
                     transition={{
-                      duration: 2.5,
-                      repeat: Infinity,
-                      ease: 'easeInOut'
+                      duration: 1.2,
+                      delay: 1.75 + ray.delay,
+                      ease: 'easeOut',
                     }}
-                  />
-
-                  {/* Hour hand */}
-                  <motion.div
-                    className="absolute z-5"
-                    style={{
-                      width: '8px',
-                      height: '100px',
-                      background: 'linear-gradient(to top, rgba(147, 197, 253, 1), rgba(56, 189, 248, 0.9))',
-                      borderRadius: '4px',
-                      transformOrigin: '4px 100px',
-                      left: 'calc(50% - 4px)',
-                      top: 'calc(50% - 100px)',
-                      boxShadow: '0 0 20px rgba(147, 197, 253, 1)'
-                    }}
-                    animate={{
-                      rotate: stage === 'accelerate' 
-                        ? [0, 360, 1080]
-                        : stage === 'dissolve'
-                        ? [1080, 1800]
-                        : [0, 360]
-                    }}
-                    transition={{
-                      duration: stage === 'accelerate' ? 2 : stage === 'dissolve' ? 2.5 : 3,
-                      ease: stage === 'accelerate' ? 'easeIn' : stage === 'dissolve' ? 'easeOut' : 'linear',
-                      repeat: stage !== 'accelerate' && stage !== 'dissolve' ? Infinity : 0
-                    }}
-                  />
-
-                  {/* Minute hand */}
-                  <motion.div
-                    className="absolute z-5"
-                    style={{
-                      width: '6px',
-                      height: '140px',
-                      background: 'linear-gradient(to top, rgba(56, 189, 248, 1), rgba(14, 165, 233, 0.8))',
-                      borderRadius: '3px',
-                      transformOrigin: '3px 140px',
-                      left: 'calc(50% - 3px)',
-                      top: 'calc(50% - 140px)',
-                      boxShadow: '0 0 15px rgba(56, 189, 248, 1)'
-                    }}
-                    animate={{
-                      rotate: stage === 'accelerate'
-                        ? [0, 720, 2160]
-                        : stage === 'dissolve'
-                        ? [2160, 3600]
-                        : [0, 720]
-                    }}
-                    transition={{
-                      duration: stage === 'accelerate' ? 2 : stage === 'dissolve' ? 2.5 : 3,
-                      ease: stage === 'accelerate' ? 'easeIn' : stage === 'dissolve' ? 'easeOut' : 'linear',
-                      repeat: stage !== 'accelerate' && stage !== 'dissolve' ? Infinity : 0
-                    }}
-                  />
-
-                  {/* Second hand - ultra fast */}
-                  <motion.div
-                    className="absolute z-5"
-                    style={{
-                      width: '2px',
-                      height: '160px',
-                      background: 'linear-gradient(to top, rgba(239, 68, 68, 1), rgba(220, 38, 38, 0.8))',
-                      borderRadius: '1px',
-                      transformOrigin: '1px 160px',
-                      left: 'calc(50% - 1px)',
-                      top: 'calc(50% - 160px)',
-                      boxShadow: '0 0 10px rgba(239, 68, 68, 0.8)'
-                    }}
-                    animate={{
-                      rotate: stage === 'accelerate'
-                        ? [0, 3600, 10800]
-                        : stage === 'dissolve'
-                        ? [10800, 21600]
-                        : [0, 3600]
-                    }}
-                    transition={{
-                      duration: stage === 'accelerate' ? 2 : stage === 'dissolve' ? 2.5 : 3,
-                      ease: stage === 'accelerate' ? 'easeIn' : stage === 'dissolve' ? 'easeOut' : 'linear',
-                      repeat: stage !== 'accelerate' && stage !== 'dissolve' ? Infinity : 0
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Temporal ribbons during dissolve */}
-              {stage === 'dissolve' && (
-                <>
-                  {[0, 120, 240].map((angleOffset, idx) => (
-                    <motion.div
-                      key={`ribbon-${idx}`}
-                      className="absolute left-1/2 top-1/2"
-                      style={{
-                        width: '400px',
-                        height: '8px',
-                        marginLeft: '-200px',
-                        marginTop: '-4px',
-                        background: `linear-gradient(to right, transparent, rgba(56, 189, 248, ${0.9 - idx * 0.2}) 50%, transparent)`,
-                        transformOrigin: 'center center',
-                        filter: 'blur(2px)'
-                      }}
-                      initial={{ scaleX: 0, opacity: 0 }}
-                      animate={{
-                        scaleX: [0, 2, 3],
-                        opacity: [0, 1, 0],
-                        rotate: [angleOffset, angleOffset + 360]
-                      }}
-                      transition={{
-                        duration: 2.5,
-                        ease: 'easeOut',
-                        delay: idx * 0.15
-                      }}
-                    />
-                  ))}
-                </>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Spiraling time particles */}
-        <AnimatePresence>
-          {(stage === 'dissolve' || stage === 'shards') && particles.map((particle) => (
-            <motion.div
-              key={`particle-${particle.id}`}
-              className="absolute rounded-full"
-              style={{
-                width: `${particle.size}px`,
-                height: `${particle.size}px`,
-                background: 'radial-gradient(circle, rgba(56, 189, 248, 1) 0%, rgba(14, 165, 233, 0.8) 100%)',
-                boxShadow: '0 0 10px rgba(56, 189, 248, 1)'
-              }}
-              initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-              animate={{
-                x: Math.cos(particle.angle) * particle.radius * particle.speed,
-                y: Math.sin(particle.angle) * particle.radius * particle.speed,
-                scale: [0, 1.5, 1],
-                opacity: [0, 1, 0.8, 0]
-              }}
-              transition={{
-                duration: 3,
-                delay: particle.delay,
-                ease: 'easeOut'
-              }}
-            />
-          ))}
-        </AnimatePresence>
-
-        {/* Crystalline time shards */}
-        <AnimatePresence>
-          {(stage === 'shards' || stage === 'constellation' || stage === 'radiance') && shards.map((shard) => (
-            <motion.div
-              key={`shard-${shard.id}`}
-              className="absolute z-35"
-              initial={{
-                x: 0,
-                y: 0,
-                scale: 0,
-                opacity: 0,
-                rotate: 0
-              }}
-              animate={{
-                x: shard.x,
-                y: shard.y,
-                scale: shard.size,
-                opacity: [0, 1, 0.9, 1],
-                rotate: [shard.rotation, shard.rotation + 180]
-              }}
-              transition={{
-                delay: shard.delay,
-                duration: stage === 'constellation' ? 1.5 : 1.2,
-                rotate: { duration: 3, repeat: completed ? 0 : 2, ease: 'linear' },
-                opacity: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
-              }}
-            >
-              {/* Shard glow */}
-              <motion.div
-                className="absolute inset-0 -m-8"
-                animate={{
-                  scale: [1, 1.6, 1],
-                  opacity: [0.5, 1, 0.5]
-                }}
-                transition={{
-                  duration: 2.5,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                  delay: shard.delay
-                }}
-              >
-                <div
-                  className="w-20 h-20"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(56, 189, 248, 0.9) 0%, rgba(56, 189, 248, 0.4) 50%, transparent 80%)',
-                    filter: 'blur(15px)'
-                  }}
-                />
-              </motion.div>
-
-              {/* Crystalline shape */}
-              <div className="relative w-10 h-10">
-                <svg viewBox="0 0 40 40" className="w-full h-full">
-                  <polygon
-                    points="20,2 35,15 30,35 10,35 5,15"
-                    fill="rgba(56, 189, 248, 0.6)"
-                    stroke="rgba(147, 197, 253, 1)"
-                    strokeWidth="2"
-                    style={{
-                      filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 1))'
-                    }}
-                  />
-                  <polygon
-                    points="20,2 20,35"
-                    fill="none"
-                    stroke="rgba(147, 197, 253, 0.8)"
-                    strokeWidth="1"
-                  />
-                  <polygon
-                    points="5,15 35,15"
-                    fill="none"
-                    stroke="rgba(147, 197, 253, 0.8)"
-                    strokeWidth="1"
                   />
                 </svg>
-              </div>
-            </motion.div>
-          ))}
+              ))}
+            </div>
 
-          {/* Constellation connecting lines */}
-          {stage === 'constellation' && shards.length > 0 && (
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 34 }}>
-              <defs>
-                <linearGradient id="time-line-gradient">
-                  <stop offset="0%" stopColor="rgba(56, 189, 248, 0.3)" />
-                  <stop offset="50%" stopColor="rgba(56, 189, 248, 0.7)" />
-                  <stop offset="100%" stopColor="rgba(56, 189, 248, 0.3)" />
-                </linearGradient>
-              </defs>
-
-              {shards.slice(0, -1).map((shard, i) => {
-                const nextShard = shards[i + 1];
-                const centerX = typeof window !== 'undefined' ? window.innerWidth / 2 : 500;
-                const centerY = typeof window !== 'undefined' ? window.innerHeight / 2 : 300;
-
-                return (
-                  <motion.line
-                    key={`shard-line-${i}`}
-                    x1={centerX + shard.x}
-                    y1={centerY + shard.y}
-                    x2={centerX + nextShard.x}
-                    y2={centerY + nextShard.y}
-                    stroke="url(#time-line-gradient)"
-                    strokeWidth="2"
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 0.8 }}
-                    transition={{ duration: 0.6, delay: 0.3 + i * 0.04 }}
-                  />
-                );
-              })}
-            </svg>
-          )}
-
-          {/* Central hourglass symbol */}
-          {stage === 'constellation' && (
-            <motion.div
-              className="absolute z-36 text-8xl"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{
-                scale: 1.1,
-                opacity: 0.95,
-                y: -120
-              }}
-              transition={{
-                delay: 1.2,
-                duration: 1.5,
-                type: 'spring',
-                stiffness: 150,
-                damping: 10
-              }}
+            {/* Pendulum below clock: swings [-18, 18, -18], repeat: 3 (bounded) */}
+            <div
               style={{
-                filter: 'drop-shadow(0 0 40px rgba(56, 189, 248, 1))'
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                marginTop: svgSize / 2 - 4,
+                marginLeft: -2,
+                transformOrigin: 'top center',
+                pointerEvents: 'none',
+                zIndex: 20,
               }}
             >
-              ⏳
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* TRANSCENDENT radiance burst */}
-        <AnimatePresence>
-          {stage === 'radiance' && (
-            <>
-              {/* 48 cyan radial rays */}
-              {[...Array(48)].map((_, i) => {
-                const angle = (i / 48) * 360;
-
-                return (
-                  <motion.div
-                    key={`ray-${i}`}
-                    className="absolute"
-                    style={{
-                      left: '50%',
-                      top: '50%',
-                      width: '200vw',
-                      height: '8px',
-                      marginLeft: '-100vw',
-                      marginTop: '-4px',
-                      background: `linear-gradient(to right, transparent, rgba(56, 189, 248, ${i % 2 === 0 ? 1 : 0.85}) 50%, transparent)`,
-                      transformOrigin: 'center center',
-                      transform: `rotate(${angle}deg)`,
-                      filter: 'blur(2px)'
-                    }}
-                    initial={{ scaleX: 0, opacity: 0 }}
-                    animate={{
-                      scaleX: [0, 1.8, 1.6],
-                      opacity: [0, 1, 0.85, 1, 0.85]
-                    }}
-                    transition={{
-                      scaleX: { duration: 2, ease: 'easeOut' },
-                      opacity: { duration: 2.5, repeat: completed ? 0 : 2, ease: 'easeInOut' }
-                    }}
-                  />
-                );
-              })}
-
-              {/* Secondary white rays */}
-              {[...Array(24)].map((_, i) => {
-                const angle = (i / 24) * 360 + 7.5;
-
-                return (
-                  <motion.div
-                    key={`white-ray-${i}`}
-                    className="absolute"
-                    style={{
-                      left: '50%',
-                      top: '50%',
-                      width: '200vw',
-                      height: '5px',
-                      marginLeft: '-100vw',
-                      marginTop: '-2.5px',
-                      background: 'linear-gradient(to right, transparent, rgba(255, 255, 255, 0.9) 50%, transparent)',
-                      transformOrigin: 'center center',
-                      transform: `rotate(${angle}deg)`,
-                      filter: 'blur(3px)'
-                    }}
-                    initial={{ scaleX: 0, opacity: 0 }}
-                    animate={{
-                      scaleX: [0, 1.6, 1.4],
-                      opacity: [0, 0.8, 0.6, 0.8]
-                    }}
-                    transition={{
-                      scaleX: { duration: 2.2, ease: 'easeOut' },
-                      opacity: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' }
-                    }}
-                  />
-                );
-              })}
-
-              {/* Central cyan supernova */}
               <motion.div
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{
-                  scale: [0, 4.5, 4],
-                  opacity: [0, 1, 0.9]
-                }}
-                transition={{ duration: 2.5, ease: 'easeOut' }}
+                style={{ transformOrigin: 'top center' }}
+                animate={{ rotate: [-18, 18, -18] }}
+                transition={{ duration: 1.4, repeat: 3, ease: 'easeInOut' }}
               >
                 <div
-                  className="w-[32rem] h-[32rem] rounded-full"
                   style={{
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(224, 242, 254, 0.95) 8%, rgba(56, 189, 248, 0.9) 20%, rgba(14, 165, 233, 0.7) 40%, rgba(56, 189, 248, 0.5) 60%, rgba(8, 145, 178, 0.3) 75%, transparent 88%)',
-                    boxShadow: '0 0 250px rgba(56, 189, 248, 1), 0 0 400px rgba(255, 255, 255, 0.6)',
-                    filter: 'blur(70px)'
+                    width: 3,
+                    height: isMobile ? 44 : 60,
+                    background: 'linear-gradient(to bottom, rgba(245,158,11,0.4), #f59e0b)',
+                    borderRadius: 2,
+                    margin: '0 auto',
+                  }}
+                />
+                <div
+                  style={{
+                    width: isMobile ? 16 : 20,
+                    height: isMobile ? 16 : 20,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle at 35% 35%, #fbbf24, #d97706)',
+                    boxShadow: '0 0 12px #f59e0b, 0 0 24px rgba(245,158,11,0.5)',
+                    marginLeft: isMobile ? -6.5 : -8.5,
                   }}
                 />
               </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-              {/* Orbiting time particles */}
-              {(() => {
-                const allParticles = [];
-                for (let ring = 0; ring < 3; ring++) {
-                  const radius = 120 + ring * 65;
-                  const particleCount = 32 + ring * 12;
-
-                  for (let i = 0; i < particleCount; i++) {
-                    const angle = (i / particleCount) * 360;
-                    const uniqueKey = `orbit-${ring}-${i}`;
-
-                    allParticles.push(
-                      <motion.div
-                        key={uniqueKey}
-                        className="absolute rounded-full"
-                        style={{
-                          width: `${6 - ring}px`,
-                          height: `${6 - ring}px`,
-                          background: 'radial-gradient(circle, rgba(56, 189, 248, 1) 0%, rgba(14, 165, 233, 0.8) 100%)',
-                          boxShadow: '0 0 15px rgba(56, 189, 248, 1)',
-                          filter: 'blur(0.5px)'
-                        }}
-                        animate={{
-                          x: [
-                            Math.cos(angle * Math.PI / 180) * radius,
-                            Math.cos((angle + 360) * Math.PI / 180) * radius
-                          ],
-                          y: [
-                            Math.sin(angle * Math.PI / 180) * radius,
-                            Math.sin((angle + 360) * Math.PI / 180) * radius
-                          ],
-                          opacity: [0, 1, 0.9, 1, 0.9]
-                        }}
-                        transition={{
-                          delay: 0.5 + (ring * 50 + i) * 0.012,
-                          duration: 6 + ring * 2,
-                          repeat: Infinity,
-                          ease: 'linear',
-                          opacity: { duration: 2.5, repeat: completed ? 0 : 2, ease: 'easeInOut' }
-                        }}
-                      />
-                    );
-                  }
-                }
-                return allParticles;
-              })()}
-
-              {/* Expanding particle burst */}
-              {[...Array(120)].map((_, i) => {
-                const angle = (i / 120) * Math.PI * 2;
-                const distance = 80 + Math.random() * 230;
-                const x = Math.cos(angle) * distance;
-                const startY = Math.sin(angle) * distance - 100;
-
-                return (
-                  <motion.div
-                    key={`burst-particle-${i}`}
-                    className="absolute"
-                    initial={{ x: 0, y: -100, scale: 0, opacity: 0 }}
-                    animate={{
-                      x: x,
-                      y: [startY, startY + 260],
-                      scale: [0, 1.6, 1],
-                      opacity: [0, 1, 0.8, 1, 0]
-                    }}
-                    transition={{
-                      duration: 3.5,
-                      delay: i * 0.015,
-                      ease: 'easeOut'
-                    }}
-                  >
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{
-                        background: 'radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(56, 189, 248, 1) 100%)',
-                        boxShadow: '0 0 12px rgba(56, 189, 248, 1)',
-                        filter: 'blur(1px)'
-                      }}
-                    />
-                  </motion.div>
-                );
-              })}
-
-              {/* Crystalline shard burst */}
-              {[...Array(60)].map((_, i) => {
-                const angle = (i / 60) * Math.PI * 2;
-                const distance = 150 + Math.random() * 180;
-                const x = Math.cos(angle) * distance;
-                const y = Math.sin(angle) * distance;
-
-                return (
-                  <motion.div
-                    key={`radiance-shard-${i}`}
-                    className="absolute text-4xl"
-                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-                    animate={{
-                      x: x,
-                      y: y,
-                      scale: [0, 1.8, 1.4],
-                      opacity: [0, 1, 0.85, 1],
-                      rotate: [0, 360]
-                    }}
-                    transition={{
-                      duration: 2.8,
-                      delay: 0.4 + i * 0.022,
-                      opacity: { duration: 2.5, repeat: completed ? 0 : 2, ease: 'easeInOut' }
-                    }}
-                  >
-                    💎
-                  </motion.div>
-                );
-              })}
-
-              {/* Hourglass emoji burst */}
-              {[...Array(24)].map((_, i) => {
-                const angle = (i / 24) * Math.PI * 2;
-                const distance = 190 + Math.random() * 90;
-                const x = Math.cos(angle) * distance;
-                const y = Math.sin(angle) * distance;
-
-                return (
-                  <motion.div
-                    key={`hourglass-${i}`}
-                    className="absolute text-5xl"
-                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-                    animate={{
-                      x: x,
-                      y: y,
-                      scale: [0, 1.5, 1.2],
-                      opacity: [0, 1, 0.9],
-                      rotate: [0, 180]
-                    }}
-                    transition={{
-                      duration: 2.5,
-                      delay: 0.6 + i * 0.045,
-                      ease: 'easeOut'
-                    }}
-                  >
-                    ⏳
-                  </motion.div>
-                );
-              })}
-            </>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Success message */}
+      {/* ══════════════════════════════════════════════════════════════
+          STAGE 3: RADIANCE (8–13s)
+          Conic sweep, tick-emit dots, time-stream lines, 3 expanding rings,
+          "TIME FLOWS THROUGH ALL THINGS", clock fades to 50%
+         ══════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {stage === 'radiance' && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 50 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
+            key="radiance"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ delay: 0.8, duration: 1 }}
-            className="absolute bottom-20 left-0 right-0 text-center z-40"
+            transition={{ duration: 0.7 }}
+            className="absolute inset-0 flex items-center justify-center z-20"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-cyan-200 drop-shadow-2xl mb-3">
-              Time Flows Through Your Memory ⏳💎✨
-            </h2>
-            <p className="text-2xl text-blue-200 drop-shadow-lg font-mono">
-              Every moment crystallized in eternity
-            </p>
+            {/* Clock face fading to 50% */}
+            <motion.div
+              style={{ position: 'absolute' }}
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 0.5 }}
+              transition={{ duration: 3, ease: 'easeInOut' }}
+            >
+              <div style={{ position: 'relative', width: svgSize, height: svgSize }}>
+                <ClockFaceSVG />
+                {/* Center hub */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    background: '#f59e0b',
+                    marginTop: -5,
+                    marginLeft: -5,
+                    boxShadow: '0 0 12px #f59e0b',
+                    zIndex: 10,
+                  }}
+                />
+              </div>
+            </motion.div>
+
+            {/* Conic gradient sweep — 0→720deg over 4s, single-play */}
+            <motion.div
+              style={{
+                position: 'absolute',
+                width: clockDiameter,
+                height: clockDiameter,
+                borderRadius: '50%',
+                background:
+                  'conic-gradient(from 0deg, transparent 0%, rgba(245,158,11,0.55) 12%, rgba(251,191,36,0.3) 28%, transparent 44%)',
+                mixBlendMode: 'screen',
+                pointerEvents: 'none',
+                zIndex: 15,
+              }}
+              initial={{ rotate: 0, opacity: 0 }}
+              animate={{ rotate: 720, opacity: [0, 1, 0.85, 0] }}
+              transition={{ duration: 4, ease: 'linear' }}
+            />
+
+            {/* 12 tick-emit dots — travel outward, staggered */}
+            {tickEmitDots.map((dot, i) => (
+              <motion.div
+                key={`tdot-${i}`}
+                style={{
+                  position: 'absolute',
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  background: '#fbbf24',
+                  boxShadow: '0 0 10px #f59e0b, 0 0 20px rgba(245,158,11,0.5)',
+                  pointerEvents: 'none',
+                  zIndex: 16,
+                  marginTop: -3.5,
+                  marginLeft: -3.5,
+                }}
+                initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                animate={{
+                  x: dot.x,
+                  y: dot.y,
+                  scale: [0, 1.2, 0.8],
+                  opacity: [0, 1, 0],
+                }}
+                transition={{ duration: 2.5, delay: dot.delay, ease: 'easeOut' }}
+              />
+            ))}
+
+            {/* 6 golden time-stream lines — shoot outward */}
+            {timeStreamLines.map((line, i) => (
+              <svg
+                key={`ts-${i}`}
+                style={{
+                  position: 'absolute',
+                  overflow: 'visible',
+                  width: 1,
+                  height: 1,
+                  pointerEvents: 'none',
+                  zIndex: 17,
+                }}
+              >
+                <motion.line
+                  x1="0" y1="0"
+                  x2={line.x2} y2={line.y2}
+                  stroke="#fbbf24"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  style={{ filter: 'drop-shadow(0 0 8px #f59e0b)' }}
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: [0, 1], opacity: [0, 0.9, 0] }}
+                  transition={{ duration: 2.0, delay: 0.5 + line.delay, ease: 'easeOut' }}
+                />
+              </svg>
+            ))}
+
+            {/* 3 concentric expanding rings — single-play */}
+            {[0, 0.5, 1.0].map((ringDelay, i) => (
+              <motion.div
+                key={`ring-${i}`}
+                style={{
+                  position: 'absolute',
+                  width: clockDiameter * 0.4,
+                  height: clockDiameter * 0.4,
+                  borderRadius: '50%',
+                  border: '1px solid #f59e0b',
+                  pointerEvents: 'none',
+                  zIndex: 14,
+                }}
+                initial={{ scale: 0, opacity: 1 }}
+                animate={{ scale: [0, 2, 3], opacity: [1, 0.5, 0] }}
+                transition={{ duration: 2.5, delay: ringDelay, ease: 'easeOut' }}
+              />
+            ))}
+
+            {/* "TIME FLOWS THROUGH ALL THINGS" */}
+            <motion.div
+              style={{
+                position: 'absolute',
+                bottom: isMobile ? '12%' : '10%',
+                left: 0,
+                right: 0,
+                textAlign: 'center',
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: isMobile ? 11 : 13,
+                color: '#f59e0b',
+                letterSpacing: '0.15em',
+                textShadow: '0 0 12px rgba(245,158,11,0.6)',
+                pointerEvents: 'none',
+                zIndex: 20,
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1.2, delay: 1.5 }}
+            >
+              TIME FLOWS THROUGH ALL THINGS
+            </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ══════════════════════════════════════════════════════════════
+          STAGE 4: REVEAL (13–18s)
+          Hourglass, capsule title, golden ring border, hour markers,
+          "PRESERVED THROUGH TIME", "Time stands still for this moment"
+         ══════════════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {stage === 'reveal' && (
+          <motion.div
+            key="reveal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0 flex flex-col items-center justify-center z-30 px-6"
+          >
+            {/* Background amber radial pulse (100px→800px single-play) */}
+            <motion.div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                borderRadius: '50%',
+                background:
+                  'radial-gradient(circle, rgba(245,158,11,0.25) 0%, rgba(180,83,9,0.1) 50%, transparent 75%)',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none',
+              }}
+              initial={{ width: 100, height: 100, opacity: 0.8 }}
+              animate={{ width: 800, height: 800, opacity: 0 }}
+              transition={{ duration: 3, ease: 'easeOut' }}
+            />
+
+            {/* 8 golden hour-marker dots (2-keyframe spring = scale 0→1) */}
+            {hourMarkers.map((marker, i) => (
+              <motion.div
+                key={`hm-${i}`}
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  background: '#fbbf24',
+                  boxShadow: '0 0 12px #f59e0b, 0 0 24px rgba(245,158,11,0.4)',
+                  marginTop: marker.y - 5,
+                  marginLeft: marker.x - 5,
+                  pointerEvents: 'none',
+                  zIndex: 25,
+                }}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20, delay: marker.delay }}
+              />
+            ))}
+
+            {/* Hourglass — scale 0→1.3→1.0 (3 keyframes → ease with times) */}
+            <motion.div
+              style={{
+                fontSize: isMobile ? 56 : 72,
+                lineHeight: 1,
+                filter: 'drop-shadow(0 0 20px rgba(245,158,11,0.8)) drop-shadow(0 0 40px rgba(245,158,11,0.4))',
+                zIndex: 26,
+                marginBottom: isMobile ? 16 : 22,
+              }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: [0, 1.3, 1.0], opacity: 1 }}
+              transition={{
+                scale: { duration: 0.8, ease: 'easeInOut', times: [0, 0.65, 1] },
+                opacity: { duration: 0.5 },
+              }}
+            >
+              ⌛
+            </motion.div>
+
+            {/* Title wrapper with animated golden border ring */}
+            <div style={{ position: 'relative', zIndex: 26 }}>
+              {/* Animated ring border — scaleX 0→1 then scaleY 0→1 */}
+              <motion.div
+                style={{
+                  position: 'absolute',
+                  inset: isMobile ? '-14px -20px' : '-18px -28px',
+                  border: '1.5px solid rgba(245,158,11,0.6)',
+                  borderRadius: 12,
+                  boxShadow: '0 0 16px rgba(245,158,11,0.3), inset 0 0 16px rgba(245,158,11,0.08)',
+                  pointerEvents: 'none',
+                  scaleX: 0,
+                  scaleY: 0,
+                }}
+                animate={{ scaleX: [0, 1, 1], scaleY: [0, 0, 1] }}
+                transition={{
+                  duration: 1.0,
+                  delay: 0.4,
+                  ease: 'easeInOut',
+                  times: [0, 0.5, 1],
+                }}
+              />
+
+              {/* Capsule title — time-warp entrance (3 keyframes → ease with times) */}
+              <motion.h2
+                style={{
+                  color: '#f59e0b',
+                  fontFamily: 'Georgia, serif',
+                  fontSize: isMobile ? 28 : 42,
+                  fontWeight: 700,
+                  textAlign: 'center',
+                  textShadow:
+                    '0 0 20px #f59e0b, 0 0 50px rgba(245,158,11,0.6), 0 0 90px rgba(245,158,11,0.3)',
+                  lineHeight: 1.2,
+                  maxWidth: isMobile ? 300 : 520,
+                }}
+                initial={{ scale: 0.4, opacity: 0 }}
+                animate={{ scale: [0.4, 1.1, 1.0], opacity: 1 }}
+                transition={{
+                  scale: { duration: 0.9, ease: 'easeInOut', times: [0, 0.65, 1] },
+                  opacity: { duration: 0.6 },
+                }}
+              >
+                {capsuleTitle}
+              </motion.h2>
+            </div>
+
+            {/* "PRESERVED THROUGH TIME" */}
+            <motion.p
+              style={{
+                color: '#93c5fd',
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: isMobile ? 14 : 18,
+                letterSpacing: '0.12em',
+                marginTop: isMobile ? 18 : 24,
+                textShadow: '0 0 14px rgba(147,197,253,0.5)',
+                zIndex: 26,
+              }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
+              PRESERVED THROUGH TIME
+            </motion.p>
+
+            {/* "Time stands still for this moment" */}
+            <motion.p
+              style={{
+                color: 'rgba(245,158,11,0.7)',
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: isMobile ? 12 : 14,
+                marginTop: isMobile ? 10 : 12,
+                letterSpacing: '0.06em',
+                zIndex: 26,
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 1.1 }}
+            >
+              Time stands still for this moment
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ══════════════════════════════════════════════════════════════
+          STAGE 5: OUTRO (18–19s)
+          Fade to black
+         ══════════════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {stage === 'outro' && (
+          <motion.div
+            key="outro"
+            className="absolute inset-0 z-50"
+            style={{ background: '#000' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1 }}
+          />
         )}
       </AnimatePresence>
     </div>
