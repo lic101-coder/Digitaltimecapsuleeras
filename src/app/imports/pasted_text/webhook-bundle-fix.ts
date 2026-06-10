@@ -26,7 +26,7 @@ Example (TypeScript, Supabase Edge Function/webhook), recommended approach:
 import { createClient } 
 from
  
-'npm:@supabase/supabase-js@2.46.1'
+'npm:@supabase/supabase-js'
 
 const
  supabase = createClient(Deno.env.
