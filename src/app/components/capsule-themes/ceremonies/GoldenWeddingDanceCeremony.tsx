@@ -926,14 +926,32 @@ export function GoldenWeddingDanceCeremony({
 
             {/* Center content — z-10 so above sparkles */}
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
-              <div className="inline-flex gap-4 items-center whitespace-nowrap">
+              {/* Couple with 💍 ring overlaid between them */}
+              <div className="relative inline-flex gap-4 items-center whitespace-nowrap">
                 <span className="text-5xl md:text-7xl select-none">🤵</span>
                 <span className="text-5xl md:text-7xl select-none">💃</span>
+
+                {/* 💍 ring positioned at center-bottom of the couple, overlapping like a held ring */}
+                <motion.span
+                  className="absolute select-none pointer-events-none"
+                  style={{
+                    fontSize: 'clamp(22px, 6vw, 36px)',
+                    bottom: '-10px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    filter: 'drop-shadow(0 0 8px rgba(251,191,36,0.9))',
+                  }}
+                  initial={{ scale: 0, rotate: -30 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.65, type: 'spring', stiffness: 320, damping: 14 }}
+                >
+                  💍
+                </motion.span>
               </div>
 
               {/* "LOVE ETERNAL ✨" massive gold */}
               <motion.h2
-                className="text-3xl md:text-5xl font-bold text-center px-4"
+                className="text-3xl md:text-5xl font-bold text-center px-4 mt-4"
                 style={{
                   color: '#fbbf24',
                   fontFamily: 'Georgia, serif',
@@ -963,7 +981,7 @@ export function GoldenWeddingDanceCeremony({
                 LOVE IS FOREVER ♾
               </motion.p>
 
-              {/* 🥂 champagne toast bounce — y: 0→-20→0, single-play, delay 0.4s */}
+              {/* 🥂 champagne toast bounce */}
               <motion.span
                 className="text-4xl select-none"
                 initial={{ scale: 0, opacity: 0 }}
@@ -971,16 +989,6 @@ export function GoldenWeddingDanceCeremony({
                 transition={{ delay: 0.4, duration: 0.6, ease: 'easeInOut' }}
               >
                 🥂
-              </motion.span>
-
-              {/* 💍 ring bounces in */}
-              <motion.span
-                className="text-3xl select-none"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.65, type: 'spring', stiffness: 320, damping: 14 }}
-              >
-                💍
               </motion.span>
             </div>
           </motion.div>
@@ -1069,8 +1077,8 @@ export function GoldenWeddingDanceCeremony({
 
             {/* Main center content */}
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center z-10">
-              {/* Couple — ambient gentle sway, repeat:Infinity 6s */}
-              <div className="inline-flex gap-4 items-center whitespace-nowrap">
+              {/* Couple — ambient gentle sway, repeat:Infinity 6s — ring overlaid between them */}
+              <div className="relative inline-flex gap-4 items-center whitespace-nowrap">
                 <motion.span
                   className="text-5xl md:text-7xl select-none"
                   style={{ display: 'inline-block' }}
@@ -1086,6 +1094,23 @@ export function GoldenWeddingDanceCeremony({
                   transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
                 >
                   💃
+                </motion.span>
+
+                {/* 💍 ring overlaid at center-bottom of couple */}
+                <motion.span
+                  className="absolute select-none pointer-events-none"
+                  style={{
+                    fontSize: 'clamp(22px, 6vw, 36px)',
+                    bottom: '-12px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    filter: 'drop-shadow(0 0 10px rgba(251,191,36,1))',
+                  }}
+                  initial={{ scale: 0, rotate: -30 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.5, type: 'spring', stiffness: 260, damping: 15 }}
+                >
+                  💍
                 </motion.span>
               </div>
 
@@ -1108,16 +1133,6 @@ export function GoldenWeddingDanceCeremony({
               >
                 {capsuleTitle}
               </motion.h1>
-
-              {/* 💍 ring grows from center */}
-              <motion.span
-                className="text-3xl select-none"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.5, type: 'spring', stiffness: 260, damping: 15 }}
-              >
-                💍
-              </motion.span>
 
               {/* "YOUR LOVE STORY BEGINS NOW" */}
               <motion.p

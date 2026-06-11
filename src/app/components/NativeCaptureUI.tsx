@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Camera, Video, Mic, Square, Play, Pause, Check, X } from 'lucide-react';
+import { Camera, Video, Mic, Square, Check, X } from 'lucide-react';
 
 const MAX_FILE_SIZE = 500 * 1024 * 1024;
 
@@ -18,6 +18,7 @@ interface MediaItem {
 
 interface NativeCaptureUIProps {
   onMediaCaptured: (item: MediaItem) => void;
+  onClose?: () => void;
 }
 
 async function generateVideoThumbnail(file: File): Promise<string | undefined> {
@@ -47,7 +48,7 @@ async function generateVideoThumbnail(file: File): Promise<string | undefined> {
   });
 }
 
-export function NativeCaptureUI({ onMediaCaptured }: NativeCaptureUIProps) {
+export function NativeCaptureUI({ onMediaCaptured, onClose }: NativeCaptureUIProps) {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const blobUrlRef = useRef<string | null>(null);
@@ -116,7 +117,6 @@ export function NativeCaptureUI({ onMediaCaptured }: NativeCaptureUIProps) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
       streamRef.current = stream;
 
-      // Set up analyser for waveform
       const audioCtx = new AudioContext();
       const source = audioCtx.createMediaStreamSource(stream);
       const analyser = audioCtx.createAnalyser();
@@ -144,7 +144,7 @@ export function NativeCaptureUI({ onMediaCaptured }: NativeCaptureUIProps) {
       setRecordingSeconds(0);
       timerRef.current = setInterval(() => setRecordingSeconds(s => s + 1), 1000);
       drawWaveform();
-    } catch (err) {
+    } catch {
       setAudioError('Microphone access denied. Please allow microphone access and try again.');
     }
   };
@@ -205,102 +205,171 @@ export function NativeCaptureUI({ onMediaCaptured }: NativeCaptureUIProps) {
 
   const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
+  const handleClose = () => {
+    stopStream();
+    setAudioState('idle');
+    onClose?.();
+  };
+
   // Audio recording UI
   if (audioState !== 'idle') {
     return (
-      <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center gap-6 px-6">
-        <div className="text-center">
-          <h2 className="text-white text-2xl font-bold tracking-tight">
+      <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'linear-gradient(160deg, #0f0f14 0%, #13111c 100%)' }}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-14 pb-4">
+          <h2 className="text-white text-lg font-semibold tracking-tight">
             {audioState === 'preview' ? 'Review Recording' : 'Recording Audio'}
           </h2>
-          {audioState === 'recording' && (
-            <div className="flex items-center justify-center gap-2 mt-2">
-              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-red-400 text-sm font-mono">{formatTime(recordingSeconds)}</span>
-            </div>
-          )}
+          <button
+            onClick={handleClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+            style={{ background: 'rgba(255,255,255,0.1)' }}
+          >
+            <X className="w-4 h-4 text-white" />
+          </button>
         </div>
 
-        {audioState === 'recording' && (
-          <canvas ref={canvasRef} width={280} height={80} className="rounded-xl bg-purple-950/50 border border-purple-800/40" />
-        )}
-
-        {audioState === 'preview' && previewUrl && (
-          <div className="w-full max-w-xs">
-            <audio src={previewUrl} controls className="w-full rounded-xl" />
-          </div>
-        )}
-
-        <div className="flex gap-4">
+        {/* Content */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6">
           {audioState === 'recording' && (
-            <button
-              onClick={stopAudioRecording}
-              className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center shadow-lg shadow-red-500/40"
-            >
-              <Square className="w-6 h-6 text-white fill-white" />
-            </button>
-          )}
-          {audioState === 'preview' && (
             <>
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-red-400 text-base font-mono tracking-widest">{formatTime(recordingSeconds)}</span>
+              </div>
+              <canvas
+                ref={canvasRef}
+                width={300}
+                height={90}
+                className="rounded-2xl"
+                style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)' }}
+              />
               <button
-                onClick={discardAudio}
-                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-medium"
+                onClick={stopAudioRecording}
+                className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg transition-opacity active:opacity-80"
+                style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 0 32px rgba(239,68,68,0.4)' }}
               >
-                <X className="w-5 h-5" /> Redo
-              </button>
-              <button
-                onClick={confirmAudio}
-                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-semibold shadow-lg"
-              >
-                <Check className="w-5 h-5" /> Use This
+                <Square className="w-7 h-7 text-white fill-white" />
               </button>
             </>
           )}
-        </div>
 
-        <button onClick={() => { stopStream(); setAudioState('idle'); }} className="text-white/40 text-sm hover:text-white/60">
-          Cancel
-        </button>
+          {audioState === 'preview' && previewUrl && (
+            <>
+              <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <audio src={previewUrl} controls className="w-full" style={{ colorScheme: 'dark' }} />
+              </div>
+              <div className="flex gap-3 w-full max-w-sm">
+                <button
+                  onClick={discardAudio}
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-medium text-white transition-colors"
+                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
+                >
+                  <X className="w-4 h-4" /> Redo
+                </button>
+                <button
+                  onClick={confirmAudio}
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-semibold text-white transition-colors"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}
+                >
+                  <Check className="w-4 h-4" /> Use This
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   }
 
+  const options = [
+    {
+      icon: <Camera className="w-6 h-6" style={{ color: '#60a5fa' }} />,
+      iconBg: 'rgba(59,130,246,0.15)',
+      iconBorder: 'rgba(59,130,246,0.25)',
+      label: 'Take Photo',
+      description: 'Opens your camera',
+      onClick: () => photoInputRef.current?.click(),
+    },
+    {
+      icon: <Video className="w-6 h-6" style={{ color: '#f87171' }} />,
+      iconBg: 'rgba(239,68,68,0.15)',
+      iconBorder: 'rgba(239,68,68,0.25)',
+      label: 'Record Video',
+      description: 'Opens your camera',
+      onClick: () => videoInputRef.current?.click(),
+    },
+    {
+      icon: <Mic className="w-6 h-6" style={{ color: '#c084fc' }} />,
+      iconBg: 'rgba(168,85,247,0.15)',
+      iconBorder: 'rgba(168,85,247,0.25)',
+      label: 'Record Audio',
+      description: 'Uses your microphone',
+      onClick: startAudioRecording,
+    },
+  ];
+
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center gap-8 px-6">
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'linear-gradient(160deg, #0f0f14 0%, #13111c 100%)' }}>
       <input ref={photoInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileChange('photo')} />
       <input ref={videoInputRef} type="file" accept="video/*" capture="environment" className="hidden" onChange={handleFileChange('video')} />
 
-      <div className="text-center">
-        <h2 className="text-white text-2xl font-bold tracking-tight">Capture Media</h2>
-        <p className="text-white/50 text-sm mt-1">Choose what you'd like to capture</p>
+      {/* Header with close button */}
+      <div className="flex items-center justify-between px-5 pt-14 pb-2">
+        <div>
+          <h2 className="text-white text-xl font-bold tracking-tight">Capture Media</h2>
+          <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Choose what you'd like to capture</p>
+        </div>
+        <button
+          onClick={handleClose}
+          className="w-9 h-9 rounded-full flex items-center justify-center transition-colors active:opacity-70"
+          style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.08)' }}
+          aria-label="Close"
+        >
+          <X className="w-4 h-4 text-white" />
+        </button>
       </div>
 
-      {audioError && <p className="text-red-400 text-sm text-center max-w-xs">{audioError}</p>}
-
-      <div className="flex flex-col gap-4 w-full max-w-xs">
-        <button onClick={() => photoInputRef.current?.click()} className="flex items-center gap-4 w-full px-6 py-5 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 transition-colors border border-white/15">
-          <div className="p-3 rounded-xl bg-blue-500/20"><Camera className="w-6 h-6 text-blue-300" /></div>
-          <div className="text-left">
-            <div className="text-white font-semibold text-base">Take Photo</div>
-            <div className="text-white/50 text-xs mt-0.5">Opens your camera</div>
+      {/* Options */}
+      <div className="flex-1 flex flex-col justify-center px-5 gap-3 pb-12">
+        {audioError && (
+          <div className="mb-2 px-4 py-3 rounded-xl text-sm text-center" style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5' }}>
+            {audioError}
           </div>
-        </button>
+        )}
 
-        <button onClick={() => videoInputRef.current?.click()} className="flex items-center gap-4 w-full px-6 py-5 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 transition-colors border border-white/15">
-          <div className="p-3 rounded-xl bg-red-500/20"><Video className="w-6 h-6 text-red-300" /></div>
-          <div className="text-left">
-            <div className="text-white font-semibold text-base">Record Video</div>
-            <div className="text-white/50 text-xs mt-0.5">Opens your camera</div>
-          </div>
-        </button>
+        {options.map((opt) => (
+          <button
+            key={opt.label}
+            onClick={opt.onClick}
+            className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl text-left transition-all active:scale-[0.98]"
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.09)',
+            }}
+          >
+            {/* Icon */}
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: opt.iconBg, border: `1px solid ${opt.iconBorder}` }}
+            >
+              {opt.icon}
+            </div>
 
-        <button onClick={startAudioRecording} className="flex items-center gap-4 w-full px-6 py-5 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 transition-colors border border-white/15">
-          <div className="p-3 rounded-xl bg-purple-500/20"><Mic className="w-6 h-6 text-purple-300" /></div>
-          <div className="text-left">
-            <div className="text-white font-semibold text-base">Record Audio</div>
-            <div className="text-white/50 text-xs mt-0.5">Uses your microphone</div>
-          </div>
-        </button>
+            {/* Text — always stacked, never side-by-side */}
+            <div className="flex flex-col min-w-0">
+              <span className="text-white font-semibold text-base leading-snug">{opt.label}</span>
+              <span className="text-sm leading-snug mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{opt.description}</span>
+            </div>
+
+            {/* Chevron */}
+            <div className="ml-auto flex-shrink-0" style={{ color: 'rgba(255,255,255,0.2)' }}>
+              <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
+                <path d="M1 1l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </button>
+        ))}
       </div>
     </div>
   );

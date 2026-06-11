@@ -631,35 +631,6 @@ export function EternalFlamePassionateCeremony({
             exit={{ opacity: 0 }}
             transition={{ duration: 1 }}
           >
-            {/* Slowly rotating orbit ring of 12 items — repeat:Infinity ambient (8s) */}
-            <motion.div
-              className="absolute pointer-events-none"
-              style={{ width: 0, height: 0 }}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-            >
-              {orbitRing.map((item, i) => (
-                <span
-                  key={`orbit-${i}`}
-                  className="absolute select-none"
-                  style={{
-                    left: item.x,
-                    top: item.y,
-                    transform: 'translate(-50%, -50%)',
-                    fontSize: item.isEmoji
-                      ? isMobile ? '0.9rem' : '1.1rem'
-                      : isMobile ? '0.7rem' : '0.85rem',
-                    fontFamily: 'monospace',
-                    fontWeight: item.isEmoji ? 400 : 700,
-                    color: item.isEmoji ? undefined : item.color,
-                    textShadow: item.isEmoji ? undefined : `0 0 8px ${item.color}`,
-                    opacity: 0.85,
-                  }}
-                >
-                  {item.label}
-                </span>
-              ))}
-            </motion.div>
 
             {/* Ambient heart glow — slow pulse, safe repeat:Infinity */}
             <motion.div
@@ -692,20 +663,53 @@ export function EternalFlamePassionateCeremony({
               />
             ))}
 
-            {/* Large glowing heart */}
-            <motion.div
-              className="pointer-events-none select-none relative z-10"
-              style={{
-                fontSize: isMobile ? '7rem' : '10rem',
-                filter:
-                  'drop-shadow(0 0 40px #ff1744) drop-shadow(0 0 80px rgba(255,23,68,0.5))',
-              }}
-              initial={{ scale: 0.3, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 18, delay: 0.2 }}
-            >
-              ❤️
-            </motion.div>
+            {/* Large glowing heart + orbit ring centered on it */}
+            <div className="relative flex items-center justify-center" style={{ width: isMobile ? 240 : 320, height: isMobile ? 240 : 320 }}>
+              {/* Orbit ring — absolutely centered on heart */}
+              <motion.div
+                className="absolute pointer-events-none"
+                style={{ width: 0, height: 0, top: '50%', left: '50%' }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+              >
+                {orbitRing.map((item, i) => (
+                  <span
+                    key={`orbit-${i}`}
+                    className="absolute select-none"
+                    style={{
+                      left: item.x,
+                      top: item.y,
+                      transform: 'translate(-50%, -50%)',
+                      fontSize: item.isEmoji
+                        ? isMobile ? '0.9rem' : '1.1rem'
+                        : isMobile ? '0.7rem' : '0.85rem',
+                      fontFamily: 'monospace',
+                      fontWeight: item.isEmoji ? 400 : 700,
+                      color: item.isEmoji ? undefined : item.color,
+                      textShadow: item.isEmoji ? undefined : `0 0 8px ${item.color}`,
+                      opacity: 0.85,
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                ))}
+              </motion.div>
+
+              {/* Heart */}
+              <motion.div
+                className="pointer-events-none select-none relative z-10"
+                style={{
+                  fontSize: isMobile ? '7rem' : '10rem',
+                  filter:
+                    'drop-shadow(0 0 40px #ff1744) drop-shadow(0 0 80px rgba(255,23,68,0.5))',
+                }}
+                initial={{ scale: 0.3, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 18, delay: 0.2 }}
+              >
+                ❤️
+              </motion.div>
+            </div>
 
             {/* Capsule title with glow */}
             <motion.div

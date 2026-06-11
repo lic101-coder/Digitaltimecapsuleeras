@@ -4037,188 +4037,230 @@ const MainAppContent = React.memo(
                               </div>
                             </button>
 
-                            {/* Custom Dropdown Menu */}
+                            {/* ── Enhanced Dropdown Menu ──────────────────── */}
                             {showSettingsDropdown && (
                               <>
-                                {/* Backdrop to close dropdown */}
-                                <div 
+                                {/* Backdrop */}
+                                <div
                                   className="fixed inset-0 z-40"
-                                  onClick={() => setShowSettingsDropdown(false)}
+                                  onClick={() => { setShowSettingsDropdown(false); setShowTutorialsSubmenu(false); }}
                                 />
-                                
-                                {/* Dropdown content */}
-                                <div className="absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-visible">
-                                  {/* ✨ PREMIUM STORE - Moved to top for maximum visibility */}
+
+                                {/* Dropdown */}
+                                <div
+                                  className="absolute right-0 mt-3 z-50 flex flex-col overflow-hidden"
+                                  style={{
+                                    width: '288px',
+                                    background: '#0f1120',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    borderRadius: '16px',
+                                    boxShadow: '0 24px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)',
+                                  }}
+                                >
+                                  {/* ── 1. Premium Store hero row ── */}
                                   <button
                                     onClick={() => {
                                       console.log("⚙️ [DROPDOWN] Store clicked");
                                       setShowSettingsDropdown(false);
                                       handleTabChange("store");
                                     }}
-                                    className="w-full py-4 pl-4 pr-4 text-white hover:bg-gradient-to-r hover:from-purple-900/50 hover:to-pink-900/50 transition-all duration-300 flex items-center gap-3 group relative overflow-hidden border-b-2 border-purple-500/30"
+                                    className="w-full flex items-center gap-3 px-4 py-3.5 group relative overflow-hidden transition-opacity active:opacity-80"
+                                    style={{
+                                      background: 'linear-gradient(105deg, rgba(109,40,217,0.85) 0%, rgba(139,92,246,0.7) 50%, rgba(190,24,93,0.75) 100%)',
+                                      borderBottom: '1px solid rgba(255,255,255,0.08)',
+                                    }}
                                   >
-                                    {/* Epic background glow */}
-                                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600/30 to-pink-600/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                    
-                                    {/* Animated sparkle icon - ENHANCED */}
-                                    <span className="text-3xl w-8 flex-shrink-0 relative z-10 group-hover:scale-125 transition-transform duration-300 filter drop-shadow-[0_0_12px_rgba(147,51,234,0.8)]">
-                                      ✨
-                                    </span>
-                                    
-                                    {/* Text with ENHANCED gradient */}
-                                    <div className="flex flex-col items-start relative z-10">
-                                      <span className="text-lg font-black bg-gradient-to-r from-purple-200 via-pink-200 to-purple-200 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(147,51,234,0.5)]">
-                                        Premium Store
-                                      </span>
-                                      <span className="text-xs text-slate-300 group-hover:text-white font-medium transition-colors">
-                                        Unlock Epic Themes & Added Beneficiaries
-                                      </span>
+                                    <div
+                                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                      style={{ background: 'rgba(255,255,255,0.15)' }}
+                                    >
+                                      <span className="text-base leading-none">✨</span>
                                     </div>
-                                    
-                                    {/* Enhanced shine effect */}
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                                  </button>
-                                  
-                                  <button
-                                    onClick={() => {
-                                      console.log("⚙️ [DROPDOWN] Legacy Access clicked");
-                                      setShowSettingsDropdown(false);
-                                      handleTabChange("legacy-access");
-                                    }}
-                                    className="w-full py-3 pl-4 pr-4 text-slate-200 hover:bg-slate-700 transition-colors flex items-center"
-                                  >
-                                    <span className="text-lg w-8 flex-shrink-0">🔑</span>
-                                    <span className="text-base">Legacy Access</span>
+                                    <div className="flex flex-col items-start flex-1 min-w-0">
+                                      <span className="text-white font-bold text-sm leading-tight">Premium Store</span>
+                                      <span className="text-xs leading-tight mt-0.5" style={{ color: 'rgba(255,255,255,0.65)' }}>Themes, ceremonies & more</span>
+                                    </div>
+                                    <svg width="6" height="10" viewBox="0 0 6 10" fill="none" className="flex-shrink-0">
+                                      <path d="M1 1l4 4-4 4" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
                                   </button>
 
-                                  <button
-                                    onClick={() => {
-                                      console.log("⚙️ [DROPDOWN] Archive clicked");
-                                      setShowSettingsDropdown(false);
-                                      setShowArchiveModal(true);
-                                    }}
-                                    className="w-full py-3 pl-4 pr-4 text-slate-200 hover:bg-slate-700 transition-colors flex items-center"
-                                  >
-                                    <span className="text-lg w-8 flex-shrink-0">📦</span>
-                                    <span className="text-base">Archive</span>
-                                  </button>
-
+                                  {/* ── 2. Achievements ── */}
                                   <button
                                     onClick={() => {
                                       console.log("⚙️ [DROPDOWN] Achievements clicked");
                                       setShowSettingsDropdown(false);
                                       handleTabChange("achievements");
                                     }}
-                                    className="w-full py-3 pl-4 pr-4 text-slate-200 hover:bg-slate-700 transition-colors flex items-center"
+                                    className="w-full flex items-center gap-3 px-4 py-3 transition-colors"
+                                    style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = '')}
                                   >
-                                    <span className="text-lg w-8 flex-shrink-0">🏆</span>
-                                    <span className="text-base">Achievements</span>
+                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,158,11,0.15)' }}>
+                                      <span className="text-base leading-none">🏆</span>
+                                    </div>
+                                    <span className="text-sm font-medium text-white/85 flex-1 text-left">Achievements</span>
+                                    <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                                   </button>
 
-                                  <div className="relative">
-                                    <button
-                                      onClick={() => {
-                                        console.log("⚙️ [DROPDOWN] Tutorials clicked");
-                                        setShowTutorialsSubmenu(!showTutorialsSubmenu);
-                                      }}
-                                      className="w-full py-3 pl-4 pr-4 text-slate-200 hover:bg-slate-700 transition-colors flex items-center"
-                                    >
-                                      <span className="text-lg w-8 flex-shrink-0">🎓</span>
-                                      <span className="text-base flex-1">Tutorials</span>
-                                      <ChevronRight className={`w-4 h-4 transition-transform ${showTutorialsSubmenu ? 'rotate-90' : ''}`} />
-                                    </button>
-                                    {showTutorialsSubmenu && (
-                                      <div className="bg-slate-750">
-                                        <button
-                                          onClick={() => {
-                                            console.log("⚙️ [SUBMENU] Eras Odyssey tutorial clicked");
-                                            setShowSettingsDropdown(false);
-                                            setShowTutorialsSubmenu(false);
-                                            auth.setShowOnboarding(true);
-                                          }}
-                                          className="w-full py-2.5 pl-12 pr-4 text-sm text-slate-300 hover:bg-slate-700 transition-colors text-left"
-                                        >
-                                          Eras Odyssey
-                                        </button>
-                                        <button
-                                          onClick={() => {
-                                            console.log("⚙️ [SUBMENU] First Capsule tutorial clicked");
-                                            setShowSettingsDropdown(false);
-                                            setShowTutorialsSubmenu(false);
-                                            setShowOnboarding(true);
-                                            setOnboardingModule("first_capsule");
-                                          }}
-                                          className="w-full py-2.5 pl-12 pr-4 text-sm text-slate-300 hover:bg-slate-700 transition-colors text-left"
-                                        >
-                                          First Capsule
-                                        </button>
-                                        <button
-                                          onClick={() => {
-                                            console.log("⚙️ [SUBMENU] Vault Mastery tutorial clicked");
-                                            setShowSettingsDropdown(false);
-                                            setShowTutorialsSubmenu(false);
-                                            setShowOnboarding(true);
-                                            setOnboardingModule("vault_mastery");
-                                          }}
-                                          className="w-full py-2.5 pl-12 pr-4 text-sm text-slate-300 hover:bg-slate-700 transition-colors text-left"
-                                        >
-                                          Vault Mastery
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-
+                                  {/* ── 3. Legacy Access ── */}
                                   <button
                                     onClick={() => {
-                                      console.log("⚙️ [DROPDOWN] Help & Support clicked");
+                                      console.log("⚙️ [DROPDOWN] Legacy Access clicked");
                                       setShowSettingsDropdown(false);
-                                      setShowHelpModal(true);
+                                      handleTabChange("legacy-access");
                                     }}
-                                    className="w-full py-3 pl-4 pr-4 text-slate-200 hover:bg-slate-700 transition-colors flex items-center"
+                                    className="w-full flex items-center gap-3 px-4 py-3 transition-colors"
+                                    style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = '')}
                                   >
-                                    <span className="text-lg w-8 flex-shrink-0">💡</span>
-                                    <span className="text-base">Help & Support</span>
+                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(59,130,246,0.15)' }}>
+                                      <span className="text-base leading-none">🔑</span>
+                                    </div>
+                                    <span className="text-sm font-medium text-white/85 flex-1 text-left">Legacy Access</span>
+                                    <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                                   </button>
 
-                                  <button
-                                    onClick={() => {
-                                      console.log("⚙️ [DROPDOWN] Refer a Friend clicked");
-                                      setShowSettingsDropdown(false);
-                                      setShowReferralModal(true);
-                                    }}
-                                    className="w-full py-3 pl-4 pr-4 text-slate-200 hover:bg-slate-700 transition-colors flex items-center"
-                                  >
-                                    <span className="text-lg w-8 flex-shrink-0">🤝</span>
-                                    <span className="text-base">Refer a Friend</span>
-                                  </button>
-                                  
-                                  <div className="h-px bg-slate-700" />
-                                  
+                                  {/* ── 4. Settings ── */}
                                   <button
                                     onClick={() => {
                                       console.log("⚙️ [DROPDOWN] Settings clicked");
                                       setShowSettingsDropdown(false);
                                       handleTabChange("settings");
                                     }}
-                                    className="w-full py-3 pl-4 pr-4 text-slate-200 hover:bg-slate-700 transition-colors flex items-center"
+                                    className="w-full flex items-center gap-3 px-4 py-3 transition-colors"
+                                    style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = '')}
                                   >
-                                    <span className="text-lg w-8 flex-shrink-0">⚙️</span>
-                                    <span className="text-base">Settings</span>
+                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(148,163,184,0.12)' }}>
+                                      <span className="text-base leading-none">⚙️</span>
+                                    </div>
+                                    <span className="text-sm font-medium text-white/85 flex-1 text-left">Settings</span>
+                                    <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                                   </button>
-                                  
-                                  <div className="h-px bg-slate-700" />
-                                  
+
+                                  {/* ── Divider ── */}
+                                  <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '2px 0' }} />
+
+                                  {/* ── 5. Archive ── */}
+                                  <button
+                                    onClick={() => {
+                                      console.log("⚙️ [DROPDOWN] Archive clicked");
+                                      setShowSettingsDropdown(false);
+                                      setShowArchiveModal(true);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-3 transition-colors"
+                                    style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = '')}
+                                  >
+                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(251,191,36,0.12)' }}>
+                                      <span className="text-base leading-none">📦</span>
+                                    </div>
+                                    <span className="text-sm font-medium text-white/75 flex-1 text-left">Archive</span>
+                                    <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                  </button>
+
+                                  {/* ── 6. Tutorials (expandable) ── */}
+                                  <button
+                                    onClick={() => {
+                                      console.log("⚙️ [DROPDOWN] Tutorials clicked");
+                                      setShowTutorialsSubmenu(!showTutorialsSubmenu);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-3 transition-colors"
+                                    style={{ borderBottom: showTutorialsSubmenu ? 'none' : '1px solid rgba(255,255,255,0.06)' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = '')}
+                                  >
+                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(52,211,153,0.12)' }}>
+                                      <span className="text-base leading-none">🎓</span>
+                                    </div>
+                                    <span className="text-sm font-medium text-white/75 flex-1 text-left">Tutorials</span>
+                                    <ChevronRight
+                                      className={`w-3.5 h-3.5 transition-transform duration-200 ${showTutorialsSubmenu ? 'rotate-90' : ''}`}
+                                      style={{ color: 'rgba(255,255,255,0.25)' }}
+                                    />
+                                  </button>
+
+                                  {showTutorialsSubmenu && (
+                                    <div style={{ background: 'rgba(0,0,0,0.25)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                                      {[
+                                        { label: 'Eras Odyssey', onClick: () => { console.log("⚙️ [SUBMENU] Eras Odyssey tutorial clicked"); setShowSettingsDropdown(false); setShowTutorialsSubmenu(false); auth.setShowOnboarding(true); } },
+                                        { label: 'First Capsule', onClick: () => { console.log("⚙️ [SUBMENU] First Capsule tutorial clicked"); setShowSettingsDropdown(false); setShowTutorialsSubmenu(false); setShowOnboarding(true); setOnboardingModule("first_capsule"); } },
+                                        { label: 'Vault Mastery', onClick: () => { console.log("⚙️ [SUBMENU] Vault Mastery tutorial clicked"); setShowSettingsDropdown(false); setShowTutorialsSubmenu(false); setShowOnboarding(true); setOnboardingModule("vault_mastery"); } },
+                                      ].map((item, i, arr) => (
+                                        <button
+                                          key={item.label}
+                                          onClick={item.onClick}
+                                          className="w-full flex items-center gap-2 pl-[52px] pr-4 py-2.5 text-left transition-colors"
+                                          style={{ borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
+                                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                                          onMouseLeave={e => (e.currentTarget.style.background = '')}
+                                        >
+                                          <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '8px' }}>▸</span>
+                                          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>{item.label}</span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {/* ── 7. Help & Support ── */}
+                                  <button
+                                    onClick={() => {
+                                      console.log("⚙️ [DROPDOWN] Help & Support clicked");
+                                      setShowSettingsDropdown(false);
+                                      setShowHelpModal(true);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-3 transition-colors"
+                                    style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = '')}
+                                  >
+                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(96,165,250,0.12)' }}>
+                                      <span className="text-base leading-none">💡</span>
+                                    </div>
+                                    <span className="text-sm font-medium text-white/75 flex-1 text-left">Help & Support</span>
+                                    <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                  </button>
+
+                                  {/* ── 8. Refer a Friend ── */}
+                                  <button
+                                    onClick={() => {
+                                      console.log("⚙️ [DROPDOWN] Refer a Friend clicked");
+                                      setShowSettingsDropdown(false);
+                                      setShowReferralModal(true);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-3 transition-colors"
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = '')}
+                                  >
+                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(16,185,129,0.12)' }}>
+                                      <span className="text-base leading-none">🤝</span>
+                                    </div>
+                                    <span className="text-sm font-medium text-white/75 flex-1 text-left">Refer a Friend</span>
+                                    <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                  </button>
+
+                                  {/* ── Divider + Sign Out ── */}
+                                  <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '2px 0' }} />
+
                                   <button
                                     onClick={async () => {
                                       console.log("⚙️ [DROPDOWN] Sign Out clicked");
                                       setShowSettingsDropdown(false);
                                       await auth.handleLogout();
                                     }}
-                                    className="w-full py-3 pl-4 pr-4 text-red-400 hover:bg-slate-700 transition-colors flex items-center"
+                                    className="w-full px-4 py-3 text-sm font-medium text-left transition-colors"
+                                    style={{ color: 'rgba(248,113,113,0.85)' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.06)')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = '')}
                                   >
-                                    <span className="text-lg w-8 flex-shrink-0">🚪</span>
-                                    <span className="text-base">Sign Out</span>
+                                    Sign Out
                                   </button>
+
                                 </div>
                               </>
                             )}

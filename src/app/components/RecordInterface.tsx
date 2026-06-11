@@ -1196,6 +1196,7 @@ export function RecordInterface({ onMediaCaptured, onOpenVault, onClose, onRegis
               setCurrentMedia(item);
               setShowModal(true);
             }}
+            onClose={onClose}
           />
         )}
       </>
