@@ -301,21 +301,26 @@ export function CeremonyCard({ ceremony, isSelected, onSelect, onPreview }: Cere
         )}
         
         {/* Icon - FORCE VISIBLE with text-shadow */}
-        <div 
-          style={{ 
+        <div
+          style={{
             position: 'relative',
             zIndex: 20,
-            opacity: 1, 
+            opacity: 1,
             visibility: 'visible',
-            display: 'block',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            whiteSpace: 'nowrap',
             overflow: 'visible',
             textShadow: '0 2px 8px rgba(0,0,0,0.3)',
             lineHeight: 1,
             width: 'auto',
             height: 'auto',
-            flexShrink: 0
+            flexShrink: 0,
+            // Smaller font for multi-emoji icons so they stay side-by-side
+            fontSize: getEmoji().length > 2 ? 'clamp(1.1rem, 3.5vw, 3.5rem)' : undefined,
           }}
-          className="text-[2rem] md:text-[5rem]"  // Mobile: 32px, DESKTOP: 80px (150% increase)
+          className={getEmoji().length > 2 ? '' : 'text-[2rem] md:text-[5rem]'}
         >
           {ceremony.id === 'passionate' ? (
             // Unified heart with red-to-green gradient split

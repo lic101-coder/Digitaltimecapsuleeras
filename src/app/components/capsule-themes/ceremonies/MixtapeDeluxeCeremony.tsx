@@ -1,9 +1,9 @@
 /**
- * Mixtape - Neon Nights Ceremony (Deluxe Enhanced — Round 2)
+ * Mixtape - Neon Nights Ceremony (Deluxe Enhanced — Round 4)
  *
  * 80s synthwave aesthetic — dark purple/navy background, neon pink/cyan/magenta palette
  * Mobile-safe rebuild: all arrays via useMemo, Math.random() only in useMemo,
- * repeat:Infinity only on slow ambient elements (>3s, subtle), max ~20 simultaneous elements.
+ * repeat:Infinity only on slow ambient elements (>3s, subtle), max ~22 simultaneous elements.
  */
 
 import React, { useState, useEffect, useMemo } from 'react'
@@ -54,18 +54,19 @@ export function MixtapeDeluxeCeremony({
     }))
   }, [])
 
-  // ── Buildings for synthwave skyline — 8 total ─────────────────────────────
+  // ── Buildings for synthwave skyline — 10 total ─────────────────────────────
   const buildings = useMemo(() => {
-    // heights as percentage of container height, widths in px
     const specs = [
       { heightPct: 30, width: 38, left: '2%',  color: '#ff00ff', windows: 3, delay: 0.5 },
       { heightPct: 45, width: 28, left: '8%',  color: '#00ffff', windows: 4, delay: 0.6 },
       { heightPct: 60, width: 44, left: '14%', color: '#ff00ff', windows: 6, delay: 0.7 },
       { heightPct: 35, width: 22, left: '21%', color: '#aa00ff', windows: 3, delay: 0.8 },
+      { heightPct: 38, width: 26, left: '48%', color: '#ff00aa', windows: 4, delay: 0.75 },
       { heightPct: 50, width: 36, right: '21%', color: '#ff00aa', windows: 5, delay: 0.8 },
       { heightPct: 40, width: 26, right: '14%', color: '#00ffff', windows: 4, delay: 0.7 },
       { heightPct: 65, width: 46, right: '7%',  color: '#ff00ff', windows: 6, delay: 0.6 },
       { heightPct: 28, width: 20, right: '2%',  color: '#ffff00', windows: 2, delay: 0.5 },
+      { heightPct: 28, width: 20, left: '74%',  color: '#00ffcc', windows: 2, delay: 0.65 },
     ]
     return specs.map((s, i) => ({
       ...s,
@@ -78,11 +79,13 @@ export function MixtapeDeluxeCeremony({
     }))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Flying neon birds — 2 drifting across sky ────────────────────────────
+  // ── Flying neon birds — 4 drifting across sky ────────────────────────────
   const neonBirds = useMemo(() => {
     return [
       { id: 0, top: 8 + Math.random() * 10, duration: 6 + Math.random() * 2, delay: 0.5 },
       { id: 1, top: 16 + Math.random() * 8, duration: 5 + Math.random() * 3, delay: 2.5 },
+      { id: 2, top: 22, duration: 6 + Math.random() * 1, delay: 1.2 },
+      { id: 3, top: 28, duration: 7 + Math.random() * 1, delay: 3.5 },
     ]
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -95,9 +98,9 @@ export function MixtapeDeluxeCeremony({
     ]
   }, [])
 
-  // ── Stage 3: star-streak lines behind car — 14 total ─────────────────────
+  // ── Stage 3: star-streak lines behind car — 16 total ─────────────────────
   const starStreaks = useMemo(() => {
-    return Array.from({ length: 14 }, (_, i) => ({
+    return Array.from({ length: 16 }, (_, i) => ({
       id: i,
       top: 6 + i * 4.8,
       width: 35 + Math.random() * 65,
@@ -143,12 +146,14 @@ export function MixtapeDeluxeCeremony({
     }))
   }, [])
 
-  // ── Concert spotlights — 3 beams ─────────────────────────────────────────
+  // ── Concert spotlights — 5 beams ─────────────────────────────────────────
   const spotlights = useMemo(() => {
     return [
-      { id: 0, color: 'rgba(255,0,255,0.18)', angle: -20, left: '20%', delay: 0.2 },
-      { id: 1, color: 'rgba(0,255,255,0.16)', angle: 0,   left: '50%', delay: 0.5 },
-      { id: 2, color: 'rgba(255,0,128,0.18)', angle: 20,  left: '78%', delay: 0.8 },
+      { id: 0, color: 'rgba(255,0,255,0.18)',   angle: -35, left: '10%', delay: 0.1 },
+      { id: 1, color: 'rgba(255,0,255,0.18)',   angle: -20, left: '20%', delay: 0.2 },
+      { id: 2, color: 'rgba(0,255,255,0.16)',   angle: 0,   left: '50%', delay: 0.5 },
+      { id: 3, color: 'rgba(255,0,128,0.18)',   angle: 20,  left: '78%', delay: 0.8 },
+      { id: 4, color: 'rgba(170,0,255,0.16)',   angle: 35,  left: '90%', delay: 1.0 },
     ]
   }, [])
 
@@ -221,7 +226,6 @@ export function MixtapeDeluxeCeremony({
         background:
           'linear-gradient(180deg, #0a0015 0%, #12002a 40%, #1a0040 70%, #0d001a 100%)',
       }}
-      // Final neon frame — ambient inset box-shadow pulse on container
       animate={{
         boxShadow: [
           'inset 0 0 60px rgba(255,0,255,0.4)',
@@ -231,6 +235,46 @@ export function MixtapeDeluxeCeremony({
       }}
       transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
     >
+      {/* ── CSS keyframes ──────────────────────────────────────────────────── */}
+      <style>{`
+        @keyframes zap-flicker {
+          0%, 100% { opacity: 0; }
+          45%, 55% { opacity: 1; }
+        }
+        @keyframes neon-scan {
+          0%   { transform: translateY(-100%); }
+          100% { transform: translateY(100vh); }
+        }
+        @keyframes city-pulse {
+          0%, 100% { opacity: 0.5; }
+          50%       { opacity: 1; }
+        }
+        @keyframes road-rush {
+          0%   { background-position: 50% 0%; }
+          100% { background-position: 50% 100%; }
+        }
+        @keyframes sun-chromatic {
+          0%, 100% { filter: drop-shadow(0 0 20px #ff00ff) drop-shadow(0 0 40px rgba(255,0,255,0.5)); }
+          50%       { filter: drop-shadow(0 0 30px #ff6600) drop-shadow(0 0 60px rgba(255,100,0,0.6)); }
+        }
+        @keyframes palm-glow-pulse-l {
+          0%, 100% { filter: drop-shadow(0 0 16px #00ffff) drop-shadow(0 0 32px rgba(0,255,255,0.4)) drop-shadow(0 0 8px #ffffff); }
+          50%       { filter: drop-shadow(0 0 28px #00ffff) drop-shadow(0 0 56px rgba(0,255,255,0.7)) drop-shadow(0 0 14px #ffffff); }
+        }
+        @keyframes palm-glow-pulse-r {
+          0%, 100% { filter: drop-shadow(0 0 16px #ff00ff) drop-shadow(0 0 32px rgba(255,0,255,0.4)) drop-shadow(0 0 8px #ffffff); }
+          50%       { filter: drop-shadow(0 0 28px #ff00ff) drop-shadow(0 0 56px rgba(255,0,255,0.7)) drop-shadow(0 0 14px #ffffff); }
+        }
+        @keyframes trail-pulse {
+          0%, 100% { opacity: 0.8; }
+          50%       { opacity: 0.3; }
+        }
+        @keyframes neon-pulse {
+          0%, 100% { text-shadow: 0 0 24px #ff00ff, 0 0 48px #00ffff, 3px 3px 0 #00ffff; }
+          50%       { text-shadow: 0 0 40px #ff00ff, 0 0 80px #ff00ff, 0 0 16px #ffffff, 3px 3px 0 #00ffff; }
+        }
+      `}</style>
+
       {/* ── VHS scanline overlay — static, no animation ──────────────────── */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -241,7 +285,22 @@ export function MixtapeDeluxeCeremony({
         }}
       />
 
-      {/* ── CSS perspective grid — animates backgroundPosition for road rush ─ */}
+      {/* ── CRT neon scan sweep — single bar travelling top→bottom, CSS only ── */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '3px',
+          background: 'rgba(255,255,255,0.18)',
+          animation: 'neon-scan 4s linear infinite',
+          pointerEvents: 'none',
+          zIndex: 2,
+        }}
+      />
+
+      {/* ── CSS perspective grid — road-rush animation ─────────────────────── */}
       <AnimatePresence>
         {showGrid && (
           <motion.div
@@ -258,20 +317,19 @@ export function MixtapeDeluxeCeremony({
             exit={{ opacity: 0 }}
             transition={{ duration: 1.2 }}
           >
-            <motion.div
+            <div
               style={{
                 width: '100%',
                 height: '100%',
                 transform: 'rotateX(55deg)',
                 transformOrigin: '50% 0%',
                 backgroundImage: `
-                  linear-gradient(rgba(255,0,255,0.45) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(0,255,255,0.35) 1px, transparent 1px)
+                  linear-gradient(rgba(255,0,255,0.55) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(0,255,255,0.45) 1px, transparent 1px)
                 `,
                 backgroundSize: `${isMobile ? '60px' : '80px'} ${isMobile ? '40px' : '55px'}`,
+                animation: 'road-rush 0.8s linear infinite',
               }}
-              animate={{ backgroundPosition: ['50% 0%', '50% 100%'] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
             />
           </motion.div>
         )}
@@ -485,10 +543,10 @@ export function MixtapeDeluxeCeremony({
       </AnimatePresence>
 
       {/* ════════════════════════════════════════════════════════════════════
-          STAGE 2 — SYNTHWAVE (2–6s): sun rises, palm trees, 8 buildings, signs, birds
+          STAGE 2 — SYNTHWAVE (2–6s): sun rises, palm trees, 10 buildings, signs, birds
           ════════════════════════════════════════════════════════════════════ */}
 
-      {/* Neon sun — single SVG, rises once (no repeat) */}
+      {/* Neon sun — wrapped in chromatic CSS glow animation */}
       <AnimatePresence>
         {showSun && (
           <motion.div
@@ -496,9 +554,10 @@ export function MixtapeDeluxeCeremony({
             className="absolute pointer-events-none"
             style={{
               left: '50%',
-              top: '30%',
+              top: '18%',
               transform: 'translate(-50%, -50%)',
               zIndex: 12,
+              animation: 'sun-chromatic 4s ease-in-out infinite',
             }}
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -506,11 +565,40 @@ export function MixtapeDeluxeCeremony({
             transition={{ duration: 2.2, ease: 'easeOut' }}
           >
             <svg
-              width={isMobile ? 120 : 170}
-              height={isMobile ? 120 : 170}
+              width={isMobile ? 140 : 190}
+              height={isMobile ? 140 : 190}
               viewBox="0 0 170 170"
               overflow="visible"
             >
+              {/* Decorative rainbow ring */}
+              <defs>
+                <linearGradient id="sunRainbow" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%"   stopColor="#ff00ff" />
+                  <stop offset="33%"  stopColor="#ffff00" />
+                  <stop offset="66%"  stopColor="#00ffff" />
+                  <stop offset="100%" stopColor="#ff00ff" />
+                </linearGradient>
+                <linearGradient id="sunGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ffee00" />
+                  <stop offset="50%" stopColor="#ff00ff" />
+                  <stop offset="100%" stopColor="#cc0066" />
+                </linearGradient>
+                <clipPath id="sunClip">
+                  <circle cx="85" cy="85" r="72" />
+                </clipPath>
+              </defs>
+
+              {/* Second outer glow ring — larger, slow ambient pulse */}
+              <motion.circle
+                cx="85"
+                cy="85"
+                r="94"
+                fill="none"
+                stroke="rgba(255,100,0,0.15)"
+                strokeWidth="2"
+                animate={{ opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              />
               {/* Outer glow ring — slow ambient pulse, repeat:Infinity ok */}
               <motion.circle
                 cx="85"
@@ -522,20 +610,42 @@ export function MixtapeDeluxeCeremony({
                 animate={{ r: [82, 88, 82], opacity: [0.4, 0.7, 0.4] }}
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
               />
-              <defs>
-                <linearGradient id="sunGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ffee00" />
-                  <stop offset="50%" stopColor="#ff00ff" />
-                  <stop offset="100%" stopColor="#cc0066" />
-                </linearGradient>
-                <clipPath id="sunClip">
-                  <circle cx="85" cy="85" r="72" />
-                </clipPath>
-              </defs>
+              {/* Decorative rainbow ring at r=60 */}
+              <circle
+                cx="85"
+                cy="85"
+                r="60"
+                fill="none"
+                stroke="url(#sunRainbow)"
+                strokeWidth="2"
+                opacity="0.35"
+              />
+              {/* Static sun rays */}
+              {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, idx) => {
+                const rad = (angle * Math.PI) / 180
+                const innerR = 75
+                const outerR = 100
+                const x1 = 85 + innerR * Math.cos(rad)
+                const y1 = 85 + innerR * Math.sin(rad)
+                const x2 = 85 + outerR * Math.cos(rad)
+                const y2 = 85 + outerR * Math.sin(rad)
+                return (
+                  <line
+                    key={`ray-${idx}`}
+                    x1={x1}
+                    y1={y1}
+                    x2={x2}
+                    y2={y2}
+                    stroke="rgba(255,200,0,0.5)"
+                    strokeWidth="2"
+                  />
+                )
+              })}
               <circle cx="83" cy="85" r="72" fill="rgba(0,255,255,0.2)" clipPath="url(#sunClip)" />
               <circle cx="87" cy="85" r="72" fill="rgba(255,0,255,0.2)" clipPath="url(#sunClip)" />
               <circle cx="85" cy="85" r="72" fill="url(#sunGrad)" />
-              {[6, 16, 26, 36, 46, 56, 66, 76, 86, 93, 98].map((pct, idx) => (
+              {/* 10 scan lines inside the sun */}
+              {[5, 16, 27, 37, 47, 57, 67, 77, 87, 95].map((pct, idx) => (
                 <line
                   key={`sl-${idx}`}
                   x1="13"
@@ -583,7 +693,7 @@ export function MixtapeDeluxeCeremony({
         )}
       </AnimatePresence>
 
-      {/* 8 city buildings with neon-lit windows */}
+      {/* 10 city buildings with neon-lit windows + animated window lights */}
       <AnimatePresence>
         {showSun && (
           <>
@@ -599,7 +709,7 @@ export function MixtapeDeluxeCeremony({
                   height: `${b.heightPct * (isMobile ? 0.6 : 1)}px`,
                   background: '#000000',
                   border: `1.5px solid ${b.color}`,
-                  boxShadow: `0 0 8px ${b.color}, inset 0 0 8px rgba(0,0,0,0.8)`,
+                  boxShadow: `0 0 8px ${b.color}, inset 0 0 8px rgba(0,0,0,0.8), 0 2px 12px rgba(255,0,255,0.4)`,
                   zIndex: 11,
                   overflow: 'hidden',
                 }}
@@ -624,13 +734,45 @@ export function MixtapeDeluxeCeremony({
                     />
                   ) : null
                 )}
+                {/* Animated window lights for tall buildings (indices 0,2,4,6 → ids 0,2,4,6) */}
+                {[0, 2, 4, 6].includes(b.id) && (() => {
+                  const pulseDs = ['3.2s', '4.1s', '3.7s', '4.8s']
+                  const pd = pulseDs[[0, 2, 4, 6].indexOf(b.id)]
+                  return (
+                    <>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          left: '15%',
+                          top: '25%',
+                          width: '4px',
+                          height: '4px',
+                          background: 'rgba(255,255,0,0.8)',
+                          animation: `city-pulse ${pd} ease-in-out infinite`,
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: 'absolute',
+                          left: '55%',
+                          top: '60%',
+                          width: '4px',
+                          height: '4px',
+                          background: 'rgba(255,255,0,0.8)',
+                          animation: `city-pulse ${pd} ease-in-out infinite`,
+                          animationDelay: `${parseFloat(pd) / 2}s`,
+                        }}
+                      />
+                    </>
+                  )
+                })()}
               </motion.div>
             ))}
           </>
         )}
       </AnimatePresence>
 
-      {/* Flying neon birds — 2, ambient drift, repeat:Infinity (>5s) */}
+      {/* Flying neon birds — 4, ambient drift, repeat:Infinity (>5s) */}
       <AnimatePresence>
         {showSun && (
           <>
@@ -700,46 +842,131 @@ export function MixtapeDeluxeCeremony({
         )}
       </AnimatePresence>
 
-      {/* Palm trees (emoji, left & right) */}
+      {/* Palm trees — wrapped with CSS glow pulse animations + ground glow */}
       <AnimatePresence>
         {showPalms && (
           <>
-            <motion.div
-              key="palm-left"
-              className="absolute pointer-events-none select-none"
+            {/* Left palm wrapper */}
+            <div
               style={{
+                position: 'absolute',
                 left: isMobile ? '2%' : '6%',
-                top: '14%',
-                fontSize: isMobile ? '52px' : '72px',
+                bottom: '38%',
                 zIndex: 14,
-                filter: 'drop-shadow(0 0 10px rgba(0,255,255,0.6))',
-                lineHeight: 1,
+                animation: 'palm-glow-pulse-l 3.5s ease-in-out infinite',
               }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 0.85, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1, delay: 0.4 }}
             >
-              🌴
-            </motion.div>
-            <motion.div
-              key="palm-right"
-              className="absolute pointer-events-none select-none"
+              <motion.div
+                key="palm-left"
+                className="pointer-events-none select-none"
+                style={{
+                  fontSize: isMobile ? '64px' : '88px',
+                  lineHeight: 1,
+                  position: 'relative',
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 0.95, y: 0, rotate: [-3, 3, -3] }}
+                exit={{ opacity: 0 }}
+                transition={{
+                  opacity: { duration: 1, delay: 0.4 },
+                  y: { duration: 1, delay: 0.4 },
+                  rotate: { duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.4 },
+                }}
+              >
+                <span style={{ position: 'relative', display: 'inline-block' }}>
+                  🌴
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '-10px',
+                      right: '-8px',
+                      fontSize: '14px',
+                      animation: 'zap-flicker 2.5s ease-in-out infinite',
+                    }}
+                  >
+                    ⚡
+                  </span>
+                </span>
+              </motion.div>
+              {/* Ground glow — left palm */}
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '-6px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '60px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  background: '#00ffff',
+                  filter: 'blur(6px)',
+                  opacity: 0.6,
+                  pointerEvents: 'none',
+                }}
+              />
+            </div>
+
+            {/* Right palm wrapper */}
+            <div
               style={{
+                position: 'absolute',
                 right: isMobile ? '2%' : '6%',
-                top: '12%',
-                fontSize: isMobile ? '52px' : '72px',
+                bottom: '38%',
                 zIndex: 14,
-                filter: 'drop-shadow(0 0 10px rgba(255,0,255,0.6))',
-                lineHeight: 1,
+                animation: 'palm-glow-pulse-r 3.5s ease-in-out infinite',
+                animationDelay: '1.75s',
               }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 0.85, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1, delay: 0.6 }}
             >
-              🌴
-            </motion.div>
+              <motion.div
+                key="palm-right"
+                className="pointer-events-none select-none"
+                style={{
+                  fontSize: isMobile ? '64px' : '88px',
+                  lineHeight: 1,
+                  position: 'relative',
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 0.95, y: 0, rotate: [3, -3, 3] }}
+                exit={{ opacity: 0 }}
+                transition={{
+                  opacity: { duration: 1, delay: 0.6 },
+                  y: { duration: 1, delay: 0.6 },
+                  rotate: { duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.6 },
+                }}
+              >
+                <span style={{ position: 'relative', display: 'inline-block' }}>
+                  🌴
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '-10px',
+                      right: '-8px',
+                      fontSize: '14px',
+                      animation: 'zap-flicker 2.5s ease-in-out infinite',
+                      animationDelay: '1.25s',
+                    }}
+                  >
+                    ⚡
+                  </span>
+                </span>
+              </motion.div>
+              {/* Ground glow — right palm */}
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '-6px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '60px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  background: '#ff00ff',
+                  filter: 'blur(6px)',
+                  opacity: 0.6,
+                  pointerEvents: 'none',
+                }}
+              />
+            </div>
           </>
         )}
       </AnimatePresence>
@@ -777,6 +1004,8 @@ export function MixtapeDeluxeCeremony({
                   top: sign.top,
                   transform: `rotate(${sign.rotate}deg)`,
                   zIndex: 18,
+                  maxWidth: 'calc(100vw - 20px)',
+                  overflow: 'hidden',
                 }}
                 initial={{ opacity: 0, scale: 0.7 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -806,6 +1035,8 @@ export function MixtapeDeluxeCeremony({
                 top: '44%',
                 transform: 'translateX(-50%)',
                 zIndex: 18,
+                maxWidth: 'calc(100vw - 20px)',
+                overflow: 'hidden',
               }}
               initial={{ opacity: 0, scale: 0.7 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -835,14 +1066,40 @@ export function MixtapeDeluxeCeremony({
       </AnimatePresence>
 
       {/* ════════════════════════════════════════════════════════════════════
-          STAGE 3 — DELOREAN (6–10s): 🚙 on road + trail + 14 streaks + underglow
-          + tire tracks + sonic boom ring
-          Peak: car + underglow + trail + 14 streaks + 3 tire tracks + 1 boom = 20
+          STAGE 3 — DELOREAN (6–10s): SPEEDWAY + hero car + 2 bg cars
+          + trail + 16 streaks + underglow + tire tracks + dual sonic boom rings
           ════════════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {stage === 'delorean' && (
           <>
-            {/* 🚙 car — on road (bottom ~38%), facing RIGHT via scaleX(-1) */}
+            {/* SPEEDWAY neon sign */}
+            <motion.div
+              key="speedway-sign"
+              className="absolute pointer-events-none"
+              style={{
+                position: 'absolute',
+                top: '8%',
+                left: '4%',
+                zIndex: 25,
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 1, 0] }}
+              transition={{ duration: 3.5, delay: 0.3, ease: 'easeInOut' }}
+            >
+              <span
+                style={{
+                  fontFamily: 'Impact, "Arial Narrow", sans-serif',
+                  fontSize: 'clamp(14px, 3.5vw, 22px)',
+                  color: '#ff00ff',
+                  textShadow: '0 0 10px #ff00ff, 0 0 20px #ff00ff, 0 0 40px rgba(255,0,255,0.5)',
+                  letterSpacing: '3px',
+                }}
+              >
+                SPEEDWAY
+              </span>
+            </motion.div>
+
+            {/* 🚙 hero car */}
             <motion.div
               key="delorean"
               className="absolute pointer-events-none select-none"
@@ -859,7 +1116,25 @@ export function MixtapeDeluxeCeremony({
               <span style={{ display: 'inline-block', transform: 'scaleX(-1)' }}>🚙</span>
             </motion.div>
 
-            {/* Neon underglow — oval blur beneath car */}
+            {/* CSS trail-pulse gradient following car */}
+            <motion.div
+              key="car-trail-css"
+              className="absolute pointer-events-none"
+              style={{
+                bottom: isMobile ? 'calc(38% + 8px)' : 'calc(38% + 12px)',
+                left: 0,
+                width: '60px',
+                height: '20px',
+                background: 'linear-gradient(to left, rgba(0,255,255,0.5), transparent)',
+                animation: 'trail-pulse 1.8s ease-in-out infinite',
+                zIndex: 21,
+              }}
+              initial={{ x: -200 }}
+              animate={{ x: screenW + 200 }}
+              transition={{ duration: 3.2, ease: 'linear', delay: 0.3 }}
+            />
+
+            {/* Neon underglow */}
             <motion.div
               key="underglow"
               className="absolute pointer-events-none"
@@ -877,7 +1152,7 @@ export function MixtapeDeluxeCeremony({
               transition={{ duration: 3.2, ease: 'linear', delay: 0.3 }}
             />
 
-            {/* Headlight beams — 2 triangle divs in front of car */}
+            {/* Headlight beams */}
             <motion.div
               key="headlight-1"
               className="absolute pointer-events-none"
@@ -913,7 +1188,7 @@ export function MixtapeDeluxeCeremony({
               transition={{ duration: 3.2, ease: 'linear', delay: 0.3 }}
             />
 
-            {/* Light trail behind car */}
+            {/* Light trail behind hero car */}
             <motion.div
               key="car-trail"
               className="absolute pointer-events-none"
@@ -967,7 +1242,7 @@ export function MixtapeDeluxeCeremony({
               transition={{ duration: 3.2, ease: 'linear', delay: 0.4 }}
             />
 
-            {/* 3 tire track dots — appear one by one as car passes */}
+            {/* 3 tire track dots */}
             {tireTracks.map((tt) => (
               <motion.div
                 key={`tire-${tt.id}`}
@@ -987,7 +1262,7 @@ export function MixtapeDeluxeCeremony({
               />
             ))}
 
-            {/* Sonic boom ring — expands from center at delay 1.8s */}
+            {/* Sonic boom ring 1 — magenta, delay 1.8s */}
             <motion.div
               key="sonic-boom"
               className="absolute pointer-events-none"
@@ -998,7 +1273,7 @@ export function MixtapeDeluxeCeremony({
                 height: isMobile ? '60px' : '80px',
                 marginLeft: isMobile ? '-30px' : '-40px',
                 marginBottom: isMobile ? '-30px' : '-40px',
-                border: '2px solid rgba(0,255,255,0.8)',
+                border: '2px solid rgba(255,0,255,0.9)',
                 borderRadius: '50%',
                 zIndex: 24,
               }}
@@ -1007,7 +1282,97 @@ export function MixtapeDeluxeCeremony({
               transition={{ duration: 0.9, delay: 1.8, ease: 'easeOut' }}
             />
 
-            {/* 14 star streaks */}
+            {/* Sonic boom ring 2 — cyan, delay 2.0s */}
+            <motion.div
+              key="sonic-boom-2"
+              className="absolute pointer-events-none"
+              style={{
+                left: '50%',
+                bottom: '38%',
+                width: isMobile ? '60px' : '80px',
+                height: isMobile ? '60px' : '80px',
+                marginLeft: isMobile ? '-30px' : '-40px',
+                marginBottom: isMobile ? '-30px' : '-40px',
+                border: '2px solid #00ffff',
+                borderRadius: '50%',
+                zIndex: 24,
+              }}
+              initial={{ scale: 0, opacity: 0.5 }}
+              animate={{ scale: 2.5, opacity: 0 }}
+              transition={{ duration: 0.9, delay: 2.0, ease: 'easeOut' }}
+            />
+
+            {/* Car B */}
+            <motion.div
+              key="car-b"
+              className="absolute pointer-events-none select-none"
+              style={{
+                bottom: '26%',
+                fontSize: isMobile ? '20px' : '28px',
+                zIndex: 19,
+                lineHeight: 1,
+              }}
+              initial={{ x: -150 }}
+              animate={{ x: screenW + 150 }}
+              transition={{ duration: 4.5, ease: 'linear', delay: 0.8 }}
+            >
+              <span style={{ display: 'inline-block', transform: 'scaleX(-1)' }}>🚗</span>
+            </motion.div>
+
+            {/* Neon trace behind Car B */}
+            <motion.div
+              key="car-b-trace"
+              className="absolute pointer-events-none"
+              style={{
+                bottom: 'calc(26% + 4px)',
+                left: 0,
+                height: '2px',
+                width: '15%',
+                background: 'linear-gradient(to right, transparent, rgba(255,0,255,0.4), transparent)',
+                zIndex: 18,
+                transformOrigin: 'left center',
+              }}
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={{ scaleX: [0, 1, 0.5], opacity: [0, 0.6, 0] }}
+              transition={{ duration: 4.5, ease: 'linear', delay: 0.8 }}
+            />
+
+            {/* Car C */}
+            <motion.div
+              key="car-c"
+              className="absolute pointer-events-none select-none"
+              style={{
+                bottom: '20%',
+                fontSize: isMobile ? '20px' : '28px',
+                zIndex: 17,
+                lineHeight: 1,
+              }}
+              initial={{ x: -100 }}
+              animate={{ x: screenW + 100 }}
+              transition={{ duration: 5.5, ease: 'linear', delay: 1.4 }}
+            >
+              <span style={{ display: 'inline-block', transform: 'scaleX(-1)' }}>🚕</span>
+            </motion.div>
+
+            {/* Neon trace behind Car C */}
+            <motion.div
+              key="car-c-trace"
+              className="absolute pointer-events-none"
+              style={{
+                bottom: 'calc(20% + 4px)',
+                left: 0,
+                height: '2px',
+                width: '15%',
+                background: 'linear-gradient(to right, transparent, rgba(255,0,255,0.4), transparent)',
+                zIndex: 16,
+                transformOrigin: 'left center',
+              }}
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={{ scaleX: [0, 1, 0.5], opacity: [0, 0.6, 0] }}
+              transition={{ duration: 5.5, ease: 'linear', delay: 1.4 }}
+            />
+
+            {/* 16 star streaks */}
             {starStreaks.map((streak) => (
               <motion.div
                 key={`streak-${streak.id}`}
@@ -1042,7 +1407,7 @@ export function MixtapeDeluxeCeremony({
       <AnimatePresence>
         {(stage === 'friends' || stage === 'radiance') && (
           <>
-            {/* Retro TV border around friends section */}
+            {/* Retro TV border around friends section — primary cyan frame */}
             <motion.div
               key="tv-border"
               className="absolute pointer-events-none"
@@ -1063,6 +1428,20 @@ export function MixtapeDeluxeCeremony({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.6, ease: 'easeOut' }}
             >
+              {/* Second magenta inset frame */}
+              <motion.div
+                style={{
+                  position: 'absolute',
+                  inset: '2px',
+                  border: '1px solid rgba(255,0,255,0.4)',
+                  borderRadius: '6px',
+                  pointerEvents: 'none',
+                  zIndex: 30,
+                }}
+                animate={{ opacity: [0.3, 0.8, 0.3] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              />
+
               {/* Glitch copy 1 */}
               <motion.div
                 style={{
@@ -1077,6 +1456,11 @@ export function MixtapeDeluxeCeremony({
                   letterSpacing: 'clamp(2px, 1vw, 6px)',
                   mixBlendMode: 'screen',
                   pointerEvents: 'none',
+                  width: '92vw',
+                  maxWidth: '92vw',
+                  textAlign: 'center',
+                  wordBreak: 'break-word',
+                  overflow: 'hidden',
                 }}
                 animate={{ x: [-2, 2, -2], opacity: [0.6, 0, 0.6, 0, 0] }}
                 transition={{ duration: 0.18, repeat: 3, repeatDelay: 1.1 }}
@@ -1097,6 +1481,11 @@ export function MixtapeDeluxeCeremony({
                   letterSpacing: 'clamp(2px, 1vw, 6px)',
                   mixBlendMode: 'screen',
                   pointerEvents: 'none',
+                  width: '92vw',
+                  maxWidth: '92vw',
+                  textAlign: 'center',
+                  wordBreak: 'break-word',
+                  overflow: 'hidden',
                 }}
                 animate={{ x: [2, -2, 2], opacity: [0, 0.55, 0, 0.55, 0] }}
                 transition={{ duration: 0.18, repeat: 3, repeatDelay: 1.1, delay: 0.09 }}
@@ -1105,7 +1494,16 @@ export function MixtapeDeluxeCeremony({
               </motion.div>
 
               {/* Main title */}
-              <div style={{ textAlign: 'center', position: 'relative' }}>
+              <div
+                style={{
+                  textAlign: 'center',
+                  position: 'relative',
+                  width: '92vw',
+                  maxWidth: '92vw',
+                  wordBreak: 'break-word',
+                  overflow: 'hidden',
+                }}
+              >
                 <motion.div
                   style={{
                     fontFamily: 'Impact, "Arial Narrow", sans-serif',
@@ -1113,6 +1511,8 @@ export function MixtapeDeluxeCeremony({
                     color: '#ff00ff',
                     textShadow: '0 0 18px #ff00ff, 0 0 36px #ff00ff, 3px 3px 0 #00ffff',
                     letterSpacing: 'clamp(2px, 1vw, 6px)',
+                    textAlign: 'center',
+                    wordBreak: 'break-word',
                   }}
                   animate={{
                     textShadow: [
@@ -1126,48 +1526,59 @@ export function MixtapeDeluxeCeremony({
                   FRIENDS FOREVER
                 </motion.div>
 
-                {/* SINCE DAY ONE */}
+                {/* SINCE DAY ONE subtitle — neon yellow monospace */}
                 <motion.p
                   style={{
                     fontFamily: 'monospace',
                     fontSize: 'clamp(9px, 2vw, 14px)',
-                    color: '#00ffff',
-                    textShadow: '0 0 8px #00ffff',
-                    letterSpacing: 'clamp(2px, 0.8vw, 4px)',
+                    color: '#ffff00',
+                    textShadow: '0 0 8px #ffff00',
+                    letterSpacing: '0.2em',
                     marginTop: '4px',
                   }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.5 }}
+                  transition={{ duration: 0.6, delay: 0.6 }}
                 >
                   SINCE DAY ONE
                 </motion.p>
 
-                {/* Mixtape track listing — 3 lines staggered */}
-                {[
-                  { label: '01. THE NIGHT WE MET', color: '#00ffff', delay: 0.6 },
-                  { label: '02. NEON BOULEVARD',   color: '#ff00ff', delay: 0.9 },
-                  { label: '03. FOREVER ELECTRIC', color: '#ffff00', delay: 1.2 },
-                ].map((track) => (
-                  <motion.p
-                    key={track.label}
-                    style={{
-                      fontFamily: 'monospace',
-                      fontSize: 'clamp(8px, 1.6vw, 11px)',
-                      color: track.color,
-                      textShadow: `0 0 6px ${track.color}`,
-                      letterSpacing: '1px',
-                      marginTop: '4px',
-                      textAlign: 'left',
-                      paddingLeft: isMobile ? '4px' : '8px',
-                    }}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: track.delay }}
-                  >
-                    {track.label}
-                  </motion.p>
-                ))}
+                {/* Mixtape track listing — distinct neon colors per line */}
+                <div
+                  style={{
+                    maxWidth: '80vw',
+                    overflow: 'hidden',
+                    margin: '0 auto',
+                  }}
+                >
+                  {[
+                    { label: '01. THE NIGHT WE MET', color: '#ff00ff', delay: 0.6 },
+                    { label: '02. NEON BOULEVARD',   color: '#00ffff', delay: 0.9 },
+                    { label: '03. FOREVER ELECTRIC', color: '#ffff00', delay: 1.2 },
+                  ].map((track) => (
+                    <motion.p
+                      key={track.label}
+                      style={{
+                        fontFamily: 'monospace',
+                        fontSize: 'clamp(8px, 1.6vw, 11px)',
+                        color: track.color,
+                        textShadow: `0 0 6px ${track.color}`,
+                        letterSpacing: '1px',
+                        marginTop: '4px',
+                        textAlign: 'left',
+                        paddingLeft: isMobile ? '4px' : '8px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: track.delay }}
+                    >
+                      {track.label}
+                    </motion.p>
+                  ))}
+                </div>
 
                 {/* ★ BEST FRIENDS ★ ribbon */}
                 <motion.p
@@ -1190,7 +1601,7 @@ export function MixtapeDeluxeCeremony({
               </div>
             </motion.div>
 
-            {/* 6 neon confetti squares — pop in once, static after */}
+            {/* 6 neon confetti squares */}
             {confettiSquares.map((sq) => (
               <motion.div
                 key={`confetti-${sq.id}`}
@@ -1215,7 +1626,13 @@ export function MixtapeDeluxeCeremony({
             <motion.div
               key="sign-vibes"
               className="absolute pointer-events-none"
-              style={{ left: isMobile ? '8%' : '15%', top: '35%', zIndex: 26 }}
+              style={{
+                left: isMobile ? '8%' : '15%',
+                top: '35%',
+                zIndex: 26,
+                maxWidth: 'calc(100vw - 20px)',
+                overflow: 'hidden',
+              }}
               initial={{ opacity: 0, scale: 0.7 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
@@ -1238,7 +1655,13 @@ export function MixtapeDeluxeCeremony({
             <motion.div
               key="sign-forever2"
               className="absolute pointer-events-none"
-              style={{ right: isMobile ? '8%' : '15%', top: '38%', zIndex: 26 }}
+              style={{
+                right: isMobile ? '8%' : '15%',
+                top: '38%',
+                zIndex: 26,
+                maxWidth: 'calc(100vw - 20px)',
+                overflow: 'hidden',
+              }}
               initial={{ opacity: 0, scale: 0.7 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
@@ -1263,13 +1686,12 @@ export function MixtapeDeluxeCeremony({
       </AnimatePresence>
 
       {/* ════════════════════════════════════════════════════════════════════
-          STAGE 5 — RADIANCE (14–17s): spotlights + 10 columns + capsule title
-          + "YOUR MIXTAPE IS FOREVER"
+          STAGE 5 — RADIANCE (14–17s): 5 spotlights + stage floor + 10 columns + capsule title
           ════════════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {stage === 'radiance' && (
           <>
-            {/* 3 concert spotlight beams — conic gradient strips */}
+            {/* 5 concert spotlight beams */}
             {spotlights.map((sp) => (
               <motion.div
                 key={`spotlight-${sp.id}`}
@@ -1277,7 +1699,7 @@ export function MixtapeDeluxeCeremony({
                 style={{
                   left: sp.left,
                   bottom: '45%',
-                  width: isMobile ? '40px' : '55px',
+                  width: isMobile ? '50px' : '70px',
                   height: isMobile ? '220px' : '320px',
                   background: `linear-gradient(to top, ${sp.color}, transparent)`,
                   filter: 'blur(12px)',
@@ -1291,7 +1713,22 @@ export function MixtapeDeluxeCeremony({
               />
             ))}
 
-            {/* Outer ambient glow — single-play */}
+            {/* Stage floor glow */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: '80px',
+                background: 'linear-gradient(to top, rgba(255,0,255,0.3), transparent)',
+                filter: 'blur(20px)',
+                zIndex: 7,
+                pointerEvents: 'none',
+              }}
+            />
+
+            {/* Outer ambient glow */}
             <motion.div
               key="radiance-glow"
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
@@ -1333,7 +1770,7 @@ export function MixtapeDeluxeCeremony({
               />
             </motion.div>
 
-            {/* 10 light columns radiating upward */}
+            {/* 10 light columns */}
             {lightColumns.map((col) => (
               <motion.div
                 key={`col-${col.id}`}
@@ -1355,7 +1792,7 @@ export function MixtapeDeluxeCeremony({
               />
             ))}
 
-            {/* Capsule title */}
+            {/* Capsule title with CSS neon-pulse */}
             <motion.div
               key="capsule-title"
               className="absolute bottom-16 left-0 right-0 text-center z-40 px-4"
@@ -1368,10 +1805,9 @@ export function MixtapeDeluxeCeremony({
                   fontFamily: 'Impact, "Arial Narrow", sans-serif',
                   fontSize: 'clamp(24px, 7vw, 52px)',
                   color: '#ff00ff',
-                  textShadow:
-                    '0 0 24px #ff00ff, 0 0 48px #00ffff, 3px 3px 0 #00ffff',
                   letterSpacing: 'clamp(2px, 1vw, 6px)',
                   marginBottom: '8px',
+                  animation: 'neon-pulse 3s ease-in-out infinite',
                 }}
               >
                 NEVER ENDING

@@ -143,8 +143,8 @@ export function VaultFolder({
         ${isSelected ? 'opacity-30' : ''}
       `} />
       
-      {/* 3-dot menu - Simplified for mobile, premium for desktop */}
-      <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
+      {/* 3-dot menu - positioned in top-right corner, non-overlapping */}
+      <div className="absolute top-2 right-2 z-10">
         <DropdownMenu open={isMenuOpen} onOpenChange={onMenuOpenChange}>
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
             <button
@@ -281,24 +281,33 @@ export function VaultFolder({
         </DropdownMenu>
       </div>
       
+      {/* Coloured top accent bar */}
+      <div className={`absolute top-0 left-0 right-0 h-0.5 rounded-t-[inherit] ${
+        name === 'Photos' ? 'bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500'
+        : name === 'Videos' ? 'bg-gradient-to-r from-purple-500 via-purple-400 to-purple-500'
+        : name === 'Audio' ? 'bg-gradient-to-r from-pink-500 via-pink-400 to-pink-500'
+        : name === 'Documents' ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500'
+        : 'bg-gradient-to-r from-slate-600 via-slate-500 to-slate-600'
+      } opacity-80`} />
+
       <div className="relative p-3 sm:p-4">
         {/* CENTERED layout - everything stacked vertically */}
         <div className="flex flex-col items-center justify-center space-y-2 sm:space-y-2.5">
-          
+
           {/* Folder icon - PERFECTLY CENTERED with Template badge */}
-          <div className="flex flex-col items-center gap-1.5">
+          <div className="flex flex-col items-center gap-1.5 mt-1">
             <div className={`
-              p-2.5 sm:p-3 rounded-xl transition-all duration-300 shadow-lg
-              ${name === 'Photos' 
-                ? 'bg-gradient-to-br from-blue-500/30 to-blue-600/30 border-2 border-blue-400/50 shadow-blue-500/40'
+              p-3 sm:p-3.5 rounded-2xl transition-all duration-300 shadow-lg
+              ${name === 'Photos'
+                ? 'bg-gradient-to-br from-blue-500/25 to-blue-600/25 border border-blue-400/40 shadow-blue-500/30'
                 : name === 'Videos'
-                ? 'bg-gradient-to-br from-purple-500/30 to-purple-600/30 border-2 border-purple-400/50 shadow-purple-500/40'
+                ? 'bg-gradient-to-br from-purple-500/25 to-purple-600/25 border border-purple-400/40 shadow-purple-500/30'
                 : name === 'Audio'
-                ? 'bg-gradient-to-br from-pink-500/30 to-pink-600/30 border-2 border-pink-400/50 shadow-pink-500/40'
+                ? 'bg-gradient-to-br from-pink-500/25 to-pink-600/25 border border-pink-400/40 shadow-pink-500/30'
                 : name === 'Documents'
-                ? 'bg-gradient-to-br from-amber-500/30 to-amber-600/30 border-2 border-amber-400/50 shadow-amber-500/40'
-                : isTemplateFolder 
-                ? `bg-gradient-to-br ${colorScheme.bg} border-2 ${colorScheme.border} ${colorScheme.hover} ring-2 ring-white/10` 
+                ? 'bg-gradient-to-br from-amber-500/25 to-amber-600/25 border border-amber-400/40 shadow-amber-500/30'
+                : isTemplateFolder
+                ? `bg-gradient-to-br ${colorScheme.bg} border-2 ${colorScheme.border} ${colorScheme.hover} ring-2 ring-white/10`
                 : `bg-gradient-to-br ${colorScheme.bg} border ${colorScheme.border} ${colorScheme.hover}`
               }
             `}>
@@ -330,8 +339,8 @@ export function VaultFolder({
             )}
           </div>
           
-          {/* Folder name - ONE LINE ONLY with lock icon */}
-          <div className="flex items-center w-full px-2 min-w-0 justify-center">
+          {/* Folder name - ONE LINE ONLY with lock icon, padded away from 3-dot button */}
+          <div className="flex items-center w-full px-2 pr-8 min-w-0 justify-center">
             <div className="flex items-center gap-1 min-w-0 max-w-full">
               {isPermanentFolder && (
                 <Lock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 shrink-0" title="System folder" />
@@ -342,8 +351,8 @@ export function VaultFolder({
               <h3 className={`
                 text-sm sm:text-base font-semibold truncate min-w-0
                 transition-colors duration-300
-                ${isSelected 
-                  ? 'text-blue-100' 
+                ${isSelected
+                  ? 'text-blue-100'
                   : 'text-slate-200 group-hover:text-white'
                 }
               `}>

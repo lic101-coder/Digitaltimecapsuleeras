@@ -2071,42 +2071,84 @@ export function Auth({ onAuthenticated }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 overflow-y-auto">
-      <div className="min-h-screen flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 p-4 md:p-8 lg:p-12">
-        
-        {/* Left Side - Brand Section */}
-        <div className="w-full md:w-1/2 max-w-xl text-center md:text-left space-y-6 py-8 md:py-0">
-          {/* Animated Logo */}
-          <div className="flex justify-center md:justify-start mb-8">
-            <div className="relative">
-              <MomentPrismLogo size={160} forceAuthLayout={false} />
-              {/* Cosmic glow effect */}
-              <div 
-                className="absolute inset-0 blur-3xl opacity-30 animate-pulse"
-                style={{
-                  background: 'radial-gradient(circle, rgba(102, 126, 234, 0.4) 0%, rgba(118, 75, 162, 0.3) 50%, transparent 70%)',
-                  zIndex: -1
-                }}
-              />
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/40 to-slate-900 overflow-y-auto">
+      <div className="min-h-screen flex flex-col md:flex-row items-start md:items-center justify-center gap-0 md:gap-12 lg:gap-20 px-4 pt-6 pb-8 md:p-8 lg:p-12">
+
+        {/* ── Brand / Landing Panel ─────────────────────────────── */}
+        <div className="w-full md:w-1/2 max-w-xl flex flex-col items-center text-center pb-4 md:pb-0 md:py-8">
+
+          {/* Logo — always centered */}
+          <div className="relative mb-4 md:mb-6">
+            <MomentPrismLogo size={110} forceAuthLayout={false} />
+            <div
+              className="absolute inset-0 blur-3xl opacity-25 animate-pulse pointer-events-none"
+              style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.5) 0%, rgba(217,70,239,0.3) 50%, transparent 70%)', zIndex: -1 }}
+            />
           </div>
-          
-          {/* Tagline */}
-          <p className="text-xl md:text-2xl lg:text-3xl text-slate-700 dark:text-slate-200 leading-relaxed font-light">
-            Preserve your moments across time. Create digital time capsules for your future self and loved ones.
+
+          {/* App name + headline — centered */}
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight mb-1">
+            Digital Time Capsules
+          </h1>
+          <p className="text-base md:text-lg text-purple-300 font-medium mb-4 tracking-wide">
+            Capture Today. Unlock Tomorrow.
           </p>
-          
-          {/* Decorative particles (subtle cosmic theme) */}
-          <div className="hidden md:block relative h-20">
-            <div className="absolute top-0 left-0 w-2 h-2 bg-purple-400 rounded-full animate-ping opacity-40" style={{ animationDelay: '0s', animationDuration: '3s' }}></div>
-            <div className="absolute top-4 left-20 w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping opacity-30" style={{ animationDelay: '1s', animationDuration: '4s' }}></div>
-            <div className="absolute top-10 left-40 w-1 h-1 bg-pink-400 rounded-full animate-ping opacity-40" style={{ animationDelay: '2s', animationDuration: '3.5s' }}></div>
+
+          {/* Service description */}
+          <p className="text-base md:text-lg font-semibold leading-relaxed mb-5 max-w-sm md:max-w-none" style={{ color: '#e2e8f0' }}>
+            Eras lets you record messages, photos, videos, and audio — then schedule them to be delivered to yourself or loved ones on a future date. Preserve milestones, capture memories, and send moments across time.
+          </p>
+
+          {/* Feature grid — 2×2 */}
+          <div className="w-full max-w-sm md:max-w-none grid grid-cols-2 gap-3 mb-6">
+            {[
+              { icon: '📸', label: 'Capture',          desc: 'Photos, videos, audio & messages', accent: 'rgba(96,165,250,0.18)',  border: 'rgba(96,165,250,0.4)'  },
+              { icon: '📅', label: 'Schedule',         desc: 'Days, months, or years from now',  accent: 'rgba(167,139,250,0.18)', border: 'rgba(167,139,250,0.4)' },
+              { icon: '🎁', label: 'Deliver',          desc: 'Sent like a gift, right on time',  accent: 'rgba(244,114,182,0.18)', border: 'rgba(244,114,182,0.4)' },
+              { icon: '🔒', label: 'Private & Secure', desc: 'Only shared when you choose',      accent: 'rgba(52,211,153,0.18)',  border: 'rgba(52,211,153,0.4)'  },
+            ].map(({ icon, label, desc, accent, border }) => (
+              <div
+                key={label}
+                className="flex flex-col items-center justify-center gap-2 rounded-xl p-3.5 text-center"
+                style={{ background: accent, border: `1px solid ${border}` }}
+              >
+                <span className="text-2xl leading-none">{icon}</span>
+                <div>
+                  <p className="text-sm font-bold leading-tight" style={{ color: '#f8fafc' }}>{label}</p>
+                  <p className="text-sm leading-snug mt-1 font-medium" style={{ color: '#e2e8f0' }}>{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Legal links — centered, prominent */}
+          <div
+            className="w-full max-w-sm md:max-w-none pt-4 flex flex-col items-center"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            <p className="text-sm font-semibold mb-3" style={{ color: '#cbd5e1' }}>Legal</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <button
+                onClick={() => { window.history.pushState({}, '', '/terms'); window.dispatchEvent(new PopStateEvent('popstate')); }}
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-95 cursor-pointer border-0"
+                style={{ background: 'rgba(139,92,246,0.22)', border: '1px solid rgba(139,92,246,0.5)', color: '#ddd6fe' }}
+              >
+                Terms of Service ↗
+              </button>
+              <button
+                onClick={() => { window.history.pushState({}, '', '/privacy'); window.dispatchEvent(new PopStateEvent('popstate')); }}
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-95 cursor-pointer border-0"
+                style={{ background: 'rgba(139,92,246,0.22)', border: '1px solid rgba(139,92,246,0.5)', color: '#ddd6fe' }}
+              >
+                Privacy Policy ↗
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Right Side - Auth Card */}
+        {/* ── Auth Card ─────────────────────────────────────────── */}
         <div className="w-full md:w-1/2 max-w-md">
-          <Card className="w-full shadow-xl">
+          <Card className="w-full shadow-2xl" style={{ background: 'rgba(15,12,30,0.95)', border: '1px solid rgba(139,92,246,0.2)', backdropFilter: 'blur(20px)' }}>
             <CardContent className="px-6 pt-6">
           <Tabs value={currentView} onValueChange={setCurrentView}>
             <TabsList className="!w-full grid grid-cols-2 h-10 md:h-[34px] !flex-none !bg-transparent !p-0 gap-2">
