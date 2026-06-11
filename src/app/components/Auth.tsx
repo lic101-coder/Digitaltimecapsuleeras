@@ -2086,14 +2086,6 @@ export function Auth({ onAuthenticated }) {
             />
           </div>
 
-          {/* App name + headline — centered */}
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight mb-1">
-            Digital Time Capsules
-          </h1>
-          <p className="text-base md:text-lg text-purple-300 font-medium mb-4 tracking-wide">
-            Capture Today. Unlock Tomorrow.
-          </p>
-
           {/* Service description */}
           <p className="text-base md:text-lg font-semibold leading-relaxed mb-5 max-w-sm md:max-w-none" style={{ color: '#e2e8f0' }}>
             Eras lets you record messages, photos, videos, and audio — then schedule them to be delivered to yourself or loved ones on a future date. Preserve milestones, capture memories, and send moments across time.
@@ -2127,17 +2119,17 @@ export function Auth({ onAuthenticated }) {
             style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}
           >
             <p className="text-sm font-semibold mb-3" style={{ color: '#cbd5e1' }}>Legal</p>
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="grid grid-cols-2 gap-3 w-full">
               <button
                 onClick={() => { window.history.pushState({}, '', '/terms'); window.dispatchEvent(new PopStateEvent('popstate')); }}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-95 cursor-pointer border-0"
+                className="py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-95 cursor-pointer border-0 whitespace-nowrap"
                 style={{ background: 'rgba(139,92,246,0.22)', border: '1px solid rgba(139,92,246,0.5)', color: '#ddd6fe' }}
               >
                 Terms of Service ↗
               </button>
               <button
                 onClick={() => { window.history.pushState({}, '', '/privacy'); window.dispatchEvent(new PopStateEvent('popstate')); }}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-95 cursor-pointer border-0"
+                className="py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-95 cursor-pointer border-0 whitespace-nowrap"
                 style={{ background: 'rgba(139,92,246,0.22)', border: '1px solid rgba(139,92,246,0.5)', color: '#ddd6fe' }}
               >
                 Privacy Policy ↗
@@ -2240,27 +2232,25 @@ export function Auth({ onAuthenticated }) {
                 </div>
 
                 {/* Remember Me Checkbox - Now below password field */}
-                <div className="remember-me-container" style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.5rem',
-                  height: '20px'
-                }}>
-                  <Checkbox 
-                    id="remember-me" 
+                <div className="remember-me-container" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                  <Checkbox
+                    id="remember-me"
                     checked={rememberMe}
                     onCheckedChange={(checked) => {
                       setRememberMe(checked);
                       console.log('🔐 Remember Me toggled:', checked);
                     }}
                     style={{
-                      width: '16px',
-                      height: '16px',
-                      minWidth: '16px',
-                      minHeight: '16px',
+                      width: '22px',
+                      height: '22px',
+                      minWidth: '22px',
+                      minHeight: '22px',
                       flexShrink: 0,
                       margin: 0,
-                      padding: 0
+                      padding: 0,
+                      borderWidth: '2px',
+                      borderColor: rememberMe ? '#a855f7' : 'rgba(255,255,255,0.4)',
+                      background: rememberMe ? '#7c3aed' : 'rgba(255,255,255,0.08)',
                     }}
                   />
                   <label
@@ -2271,12 +2261,10 @@ export function Auth({ onAuthenticated }) {
                       userSelect: 'none',
                       touchAction: 'manipulation',
                       fontWeight: 600,
-                      lineHeight: '16px',
-                      height: '16px',
-                      display: 'flex',
-                      alignItems: 'center',
+                      color: '#ffffff',
+                      lineHeight: 1.4,
                       margin: 0,
-                      padding: 0
+                      padding: 0,
                     }}
                     title="Stay signed in for 30 days and save your email for next time"
                   >
