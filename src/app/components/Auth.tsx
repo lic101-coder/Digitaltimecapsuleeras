@@ -2072,10 +2072,14 @@ export function Auth({ onAuthenticated }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/40 to-slate-900 overflow-y-auto">
-      <div className="min-h-screen flex flex-col md:flex-row items-start md:items-center justify-center gap-0 md:gap-12 lg:gap-20 px-4 pt-6 pb-8 md:p-8 lg:p-12">
+      {/*
+        Mobile:  flex-col-reverse → auth card on top, brand panel below
+        Desktop: flex-row         → brand panel left, auth card right
+      */}
+      <div className="min-h-screen flex flex-col-reverse md:flex-row items-start md:items-center justify-center gap-0 md:gap-12 lg:gap-20 px-4 pt-4 pb-8 md:p-8 lg:p-12">
 
-        {/* ── Brand / Landing Panel ─────────────────────────────── */}
-        <div className="w-full md:w-1/2 max-w-xl flex flex-col items-center text-center pb-4 md:pb-0 md:py-8">
+        {/* ── Brand / Landing Panel — bottom on mobile, left on desktop ── */}
+        <div className="w-full md:w-1/2 max-w-xl flex flex-col items-center text-center pt-6 pb-2 md:pt-0 md:pb-0 md:py-8">
 
           {/* Logo — always centered */}
           <div className="relative mb-4 md:mb-6">
@@ -2138,14 +2142,14 @@ export function Auth({ onAuthenticated }) {
           </div>
         </div>
 
-        {/* ── Auth Card ─────────────────────────────────────────── */}
-        <div className="w-full md:w-1/2 max-w-md">
-          <Card className="w-full shadow-2xl" style={{ background: 'rgba(15,12,30,0.95)', border: '1px solid rgba(139,92,246,0.2)', backdropFilter: 'blur(20px)' }}>
+        {/* ── Auth Card — top on mobile, right on desktop ────────── */}
+        <div className="w-full md:w-1/2 max-w-md pt-6 md:pt-0">
+          <Card className="w-full shadow-2xl" style={{ background: '#ffffff', border: '1px solid rgba(139,92,246,0.25)' }}>
             <CardContent className="px-6 pt-6">
           <Tabs value={currentView} onValueChange={setCurrentView}>
-            <TabsList className="!w-full grid grid-cols-2 h-10 md:h-[34px] !flex-none !bg-transparent !p-0 gap-2">
-              <TabsTrigger value="signin" className="!rounded-lg data-[state=active]:!bg-black data-[state=active]:!text-white data-[state=inactive]:!bg-muted">Sign In</TabsTrigger>
-              <TabsTrigger value="signup" className="!rounded-lg data-[state=active]:!bg-black data-[state=active]:!text-white data-[state=inactive]:!bg-muted">Sign Up</TabsTrigger>
+            <TabsList className="!w-full grid grid-cols-2 h-10 md:h-[34px] !flex-none !bg-slate-100 !p-1 gap-1 rounded-xl">
+              <TabsTrigger value="signin" className="!rounded-lg data-[state=active]:!bg-violet-600 data-[state=active]:!text-white data-[state=inactive]:!bg-transparent data-[state=inactive]:!text-slate-600 font-semibold">Sign In</TabsTrigger>
+              <TabsTrigger value="signup" className="!rounded-lg data-[state=active]:!bg-violet-600 data-[state=active]:!text-white data-[state=inactive]:!bg-transparent data-[state=inactive]:!text-slate-600 font-semibold">Sign Up</TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin" className="space-y-4 mt-6">
@@ -2261,7 +2265,7 @@ export function Auth({ onAuthenticated }) {
                       userSelect: 'none',
                       touchAction: 'manipulation',
                       fontWeight: 600,
-                      color: '#ffffff',
+                      color: '#1e1b4b',
                       lineHeight: 1.4,
                       margin: 0,
                       padding: 0,
@@ -2274,7 +2278,7 @@ export function Auth({ onAuthenticated }) {
 
                 <Button 
                   type="submit" 
-                  className="w-full min-h-[48px] auth-button active:scale-[0.98] transition-all border border-white/20 bg-black text-white hover:bg-black/90" 
+                  className="w-full min-h-[48px] auth-button active:scale-[0.98] transition-all bg-violet-600 text-white hover:bg-violet-700" 
                   disabled={isLoading}
                   style={{
                     fontSize: '16px', // Prevent iOS zoom
@@ -2316,7 +2320,7 @@ export function Auth({ onAuthenticated }) {
                 {/* OR Divider */}
                 <div className="relative my-4">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-white/10"></div>
+                    <div className="w-full border-t border-slate-200"></div>
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
                     <span className="bg-white px-2 text-black font-medium">Or continue with</span>
@@ -2404,7 +2408,7 @@ export function Auth({ onAuthenticated }) {
                         window.dispatchEvent(new Event('navigate'));
                       }}
                       style={{ display: 'inline' }}
-                      className="underline hover:text-white transition-colors cursor-pointer bg-transparent border-0 p-0 font-inherit"
+                      className="underline hover:text-violet-800 transition-colors cursor-pointer bg-transparent border-0 p-0 font-inherit"
                     >
                       Terms of Service
                     </button>
@@ -2417,7 +2421,7 @@ export function Auth({ onAuthenticated }) {
                         window.dispatchEvent(new Event('navigate'));
                       }}
                       style={{ display: 'inline' }}
-                      className="underline hover:text-white transition-colors cursor-pointer bg-transparent border-0 p-0 font-inherit"
+                      className="underline hover:text-violet-800 transition-colors cursor-pointer bg-transparent border-0 p-0 font-inherit"
                     >
                       Privacy Policy
                     </button>
@@ -2670,7 +2674,7 @@ export function Auth({ onAuthenticated }) {
 
                 <Button 
                   type="submit" 
-                  className="w-full min-h-[48px] touch-manipulation transition-all border border-white/20 bg-black text-white hover:bg-black/90" 
+                  className="w-full min-h-[48px] touch-manipulation transition-all bg-violet-600 text-white hover:bg-violet-700" 
                   disabled={isLoading}
                   style={{
                     opacity: isLoading ? 0.7 : 1,
@@ -2692,7 +2696,7 @@ export function Auth({ onAuthenticated }) {
               {/* OR Divider */}
               <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/10"></div>
+                  <div className="w-full border-t border-slate-200"></div>
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-white px-2 text-black font-medium">Or continue with</span>
@@ -2742,7 +2746,7 @@ export function Auth({ onAuthenticated }) {
                         window.dispatchEvent(new Event('navigate'));
                       }}
                       style={{ display: 'inline' }}
-                      className="underline hover:text-white transition-colors cursor-pointer bg-transparent border-0 p-0 font-inherit"
+                      className="underline hover:text-violet-800 transition-colors cursor-pointer bg-transparent border-0 p-0 font-inherit"
                     >
                       Terms of Service
                     </button>
@@ -2755,7 +2759,7 @@ export function Auth({ onAuthenticated }) {
                         window.dispatchEvent(new Event('navigate'));
                       }}
                       style={{ display: 'inline' }}
-                      className="underline hover:text-white transition-colors cursor-pointer bg-transparent border-0 p-0 font-inherit"
+                      className="underline hover:text-violet-800 transition-colors cursor-pointer bg-transparent border-0 p-0 font-inherit"
                     >
                       Privacy Policy
                     </button>

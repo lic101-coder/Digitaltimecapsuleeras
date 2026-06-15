@@ -11,7 +11,7 @@
  * FINALE: "Dual Reality Harmony" (14.5-15s) - Split screen real/virtual
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface FreshStartDigitalAvatarCeremonyProps {
@@ -29,6 +29,53 @@ export function FreshStartDigitalAvatarCeremony({
 }: FreshStartDigitalAvatarCeremonyProps) {
   const [stage, setStage] = useState<'title' | 'homeoffice' | 'bootsequence' | 'avatar' | 'welcome' | 'workspace' | 'dualreality' | 'outro'>('title');
   const [completed, setCompleted] = useState(false);
+
+  // Pre-compute all random values to avoid Math.random() in render
+  const steamParticles = useMemo(() => Array.from({ length: 15 }, () => ({
+    width: 3 + Math.random() * 2,
+    height: 3 + Math.random() * 2,
+    r: 200 + Math.random() * 55,
+    g: 200 + Math.random() * 55,
+    opacity: 0.4 + Math.random() * 0.3,
+    yEnd: -35 - Math.random() * 20,
+    xStart: (Math.random() - 0.5) * 8,
+    xEnd: (Math.random() - 0.5) * 25,
+    duration: 1.5 + Math.random() * 1,
+    scale: 1.3 + Math.random() * 0.5
+  })), []);
+
+  const dustMotes = useMemo(() => Array.from({ length: 20 }, () => ({
+    right: `${15 + Math.random() * 20}%`,
+    top: `${20 + Math.random() * 40}%`,
+    xMove: (Math.random() - 0.5) * 10,
+    xMove2: (Math.random() - 0.5) * 10,
+    duration: 4 + Math.random() * 2,
+    delay: Math.random() * 2
+  })), []);
+
+  const materializeParticles = useMemo(() => Array.from({ length: 100 }, (_, i) => ({
+    x: (Math.random() - 0.5) * 200,
+    y: (Math.random() - 0.5) * 200,
+    isEven: i % 2 === 0
+  })), []);
+
+  const productivityParticles = useMemo(() => Array.from({ length: 30 }, () => ({
+    yEnd: -50 - Math.random() * 50,
+    xEnd: (Math.random() - 0.5) * 150
+  })), []);
+
+  const burstParticles = useMemo(() => Array.from({ length: 100 }, (_, i) => ({
+    x: (Math.random() - 0.5) * 400,
+    y: (Math.random() - 0.5) * 400,
+    isEven: i % 2 === 0
+  })), []);
+
+  const matrixChars = useMemo(() => {
+    const chars = ['0', '1', 'ア', 'カ', 'サ', 'タ', 'ナ', 'ハ', 'マ', 'ヤ'];
+    return Array.from({ length: 50 }, () =>
+      Array.from({ length: 20 }, () => chars[Math.floor(Math.random() * chars.length)])
+    );
+  }, []);
 
   useEffect(() => {
     const timeline = [
@@ -115,9 +162,10 @@ export function FreshStartDigitalAvatarCeremony({
               🧑‍💻
             </motion.div>
 
-            {/* Coffee mug with steam */}
+            {/* Coffee mug with steam — positioned on the desk to the right of center */}
             <motion.div
-              className="absolute left-[35%] bottom-[30%] text-6xl z-20"
+              className="absolute text-6xl z-20"
+              style={{ left: '58%', bottom: '26%' }}
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.4 }}
@@ -125,24 +173,24 @@ export function FreshStartDigitalAvatarCeremony({
               ☕
               
               {/* Enhanced steam particles with varied speeds */}
-              {[...Array(15)].map((_, i) => (
+              {steamParticles.map((p, i) => (
                 <motion.div
                   key={`steam-${i}`}
                   className="absolute left-1/2 -translate-x-1/2 rounded-full"
                   style={{
-                    width: 3 + Math.random() * 2,
-                    height: 3 + Math.random() * 2,
+                    width: p.width,
+                    height: p.height,
                     bottom: '100%',
-                    backgroundColor: `rgba(${200 + Math.random() * 55}, ${200 + Math.random() * 55}, ${255}, ${0.4 + Math.random() * 0.3})`
+                    backgroundColor: `rgba(${p.r}, ${p.g}, ${255}, ${p.opacity})`
                   }}
                   animate={{
-                    y: [-5, -35 - Math.random() * 20],
-                    x: [(Math.random() - 0.5) * 8, (Math.random() - 0.5) * 25],
+                    y: [-5, p.yEnd],
+                    x: [p.xStart, p.xEnd],
                     opacity: [0.6, 0.4, 0],
-                    scale: [0.8, 1.3 + Math.random() * 0.5, 2]
+                    scale: [0.8, p.scale, 2]
                   }}
                   transition={{
-                    duration: 1.5 + Math.random() * 1,
+                    duration: p.duration,
                     repeat: completed ? 0 : 3,
                     delay: i * 0.2,
                     ease: 'easeOut'
@@ -190,23 +238,23 @@ export function FreshStartDigitalAvatarCeremony({
             </motion.div>
 
             {/* Ambient morning dust motes */}
-            {[...Array(20)].map((_, i) => (
+            {dustMotes.map((d, i) => (
               <motion.div
                 key={`dust-${i}`}
                 className="absolute w-1 h-1 rounded-full bg-yellow-200/40"
                 style={{
-                  right: `${15 + Math.random() * 20}%`,
-                  top: `${20 + Math.random() * 40}%`
+                  right: d.right,
+                  top: d.top
                 }}
                 animate={{
                   opacity: [0.2, 0.5, 0.2],
                   y: [0, -30, 0],
-                  x: [(Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10]
+                  x: [d.xMove, d.xMove2]
                 }}
                 transition={{
-                  duration: 4 + Math.random() * 2,
+                  duration: d.duration,
                   repeat: Infinity,
-                  delay: Math.random() * 2,
+                  delay: d.delay,
                   ease: 'easeInOut'
                 }}
               />
@@ -239,7 +287,7 @@ export function FreshStartDigitalAvatarCeremony({
             </motion.div>
 
             {/* Falling Matrix code */}
-            {[...Array(50)].map((_, col) => (
+            {matrixChars.map((colChars, col) => (
               <div
                 key={`matrix-col-${col}`}
                 className="absolute top-0 bottom-0"
@@ -248,14 +296,14 @@ export function FreshStartDigitalAvatarCeremony({
                   width: '2%'
                 }}
               >
-                {[...Array(20)].map((_, char) => (
+                {colChars.map((char, charIdx) => (
                   <motion.div
-                    key={`char-${char}`}
+                    key={`char-${charIdx}`}
                     className="absolute text-sm font-mono font-bold"
                     style={{
-                      top: `${char * 5}%`,
+                      top: `${charIdx * 5}%`,
                       left: 0,
-                      color: char === 0 ? '#00ff41' : `rgba(0, 255, 65, ${1 - char * 0.05})`
+                      color: charIdx === 0 ? '#00ff41' : `rgba(0, 255, 65, ${1 - charIdx * 0.05})`
                     }}
                     initial={{ opacity: 0 }}
                     animate={{
@@ -264,11 +312,11 @@ export function FreshStartDigitalAvatarCeremony({
                     }}
                     transition={{
                       duration: 2,
-                      delay: col * 0.02 + char * 0.05,
+                      delay: col * 0.02 + charIdx * 0.05,
                       ease: 'linear'
                     }}
                   >
-                    {['0', '1', 'ア', 'カ', 'サ', 'タ', 'ナ', 'ハ', 'マ', 'ヤ'][Math.floor(Math.random() * 10)]}
+                    {char}
                   </motion.div>
                 ))}
               </div>
@@ -385,21 +433,21 @@ export function FreshStartDigitalAvatarCeremony({
               </motion.div>
 
               {/* Materialization particles */}
-              {[...Array(100)].map((_, i) => (
+              {materializeParticles.map((p, i) => (
                 <motion.div
                   key={`materialize-${i}`}
                   className="absolute w-1 h-1 rounded-full"
                   style={{
                     left: '50%',
                     top: '50%',
-                    background: i % 2 === 0 ? '#00ffff' : '#ff00ff'
+                    background: p.isEven ? '#00ffff' : '#ff00ff'
                   }}
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{
                     opacity: [0, 1, 0],
                     scale: [0, 1.5, 0],
-                    x: (Math.random() - 0.5) * 200,
-                    y: (Math.random() - 0.5) * 200
+                    x: p.x,
+                    y: p.y
                   }}
                   transition={{
                     duration: 2,
@@ -628,7 +676,7 @@ export function FreshStartDigitalAvatarCeremony({
             ))}
 
             {/* Productivity particles */}
-            {[...Array(30)].map((_, i) => (
+            {productivityParticles.map((p, i) => (
               <motion.div
                 key={`prod-${i}`}
                 className="absolute w-1 h-1 rounded-full bg-cyan-400"
@@ -639,8 +687,8 @@ export function FreshStartDigitalAvatarCeremony({
                 animate={{
                   opacity: [0, 1, 0],
                   scale: [0, 1, 0],
-                  y: [0, -50 - Math.random() * 50],
-                  x: [(Math.random() - 0.5) * 100, (Math.random() - 0.5) * 150]
+                  y: [0, p.yEnd],
+                  x: [0, p.xEnd]
                 }}
                 transition={{
                   duration: 2,
@@ -784,21 +832,21 @@ export function FreshStartDigitalAvatarCeremony({
             </motion.div>
 
             {/* Particle burst from center line */}
-            {[...Array(100)].map((_, i) => (
+            {burstParticles.map((p, i) => (
               <motion.div
                 key={`burst-${i}`}
                 className="absolute w-1 h-1 rounded-full"
                 style={{
                   left: '50%',
                   top: '50%',
-                  background: i % 2 === 0 ? '#00ffff' : '#ff00ff'
+                  background: p.isEven ? '#00ffff' : '#ff00ff'
                 }}
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{
                   opacity: [0, 1, 0],
                   scale: [0, 1.5, 0],
-                  x: (Math.random() - 0.5) * 400,
-                  y: (Math.random() - 0.5) * 400
+                  x: p.x,
+                  y: p.y
                 }}
                 transition={{
                   duration: 2,
