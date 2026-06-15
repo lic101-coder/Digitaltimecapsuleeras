@@ -1,0 +1,119 @@
+🎬 Rendering Record with triggerSlideAnimation: false (ref: false state: false )
+index-vofSq99q.js:1629 📡 [Dashboard] Cleaning up real-time listener
+index-vofSq99q.js:1629 📡 [Dashboard] Channel subscription status: CLOSED
+index-vofSq99q.js:2352 🎬 MainAppContent unmounting (ID: w8zqms)
+index-vofSq99q.js:1817 🔄 RecordInterface: Comprehensive layout reset starting...
+index-vofSq99q.js:1817 ✅ Layout state reset complete
+index-vofSq99q.js:1817 🔒 Body scroll locked
+index-vofSq99q.js:2356 🎬 Record motion.div animation STARTED, shouldAnimate: false
+index-vofSq99q.js:2352 💾 Persisted active tab to sessionStorage: record
+index-vofSq99q.js:2352 🔗 Updated URL hash and browser history: #record
+index-vofSq99q.js:2354 📊 Active tab changed: home → record {timestamp: '2026-06-15T22:38:51.310Z', isAuthenticated: true, hasEditingCapsule: false, createCapsuleKey: 0, workflowStep: 'record', …}
+index-vofSq99q.js:2356 📋 Tab validation check: {isAuthenticated: true, isLoading: false, hasValidated: 'true', activeTab: 'record'}
+index-vofSq99q.js:2356 🎬 Record motion.div animation COMPLETED
+index-vofSq99q.js:2356 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: true, hasGateAuthData: false, isOAuthCallback: false, …}
+index-vofSq99q.js:2356 🎬 Rendering Record with triggerSlideAnimation: false (ref: false state: false )
+index-vofSq99q.js:1817 🎥 Initializing camera...
+index-vofSq99q.js:1817 Platform: Other, Desktop: true
+index-vofSq99q.js:1817 📹 Requesting camera with constraints: {video: {…}, audio: true}
+index-vofSq99q.js:1817 [Violation] Permissions policy violation: microphone is not allowed in this document.
+oe @ index-vofSq99q.js:1817
+(anonymous) @ index-vofSq99q.js:1817
+await in (anonymous)
+(anonymous) @ index-vofSq99q.js:1817
+oh @ index-vofSq99q.js:40
+jc @ index-vofSq99q.js:40
+A5 @ index-vofSq99q.js:40
+zo @ index-vofSq99q.js:38
+W$ @ index-vofSq99q.js:40
+Il @ index-vofSq99q.js:40
+T5 @ index-vofSq99q.js:40
+E @ index-vofSq99q.js:25
+O @ index-vofSq99q.js:25
+postMessage
+B @ index-vofSq99q.js:25
+re @ index-vofSq99q.js:25
+t.unstable_scheduleCallback @ index-vofSq99q.js:25
+B5 @ index-vofSq99q.js:40
+Sn @ index-vofSq99q.js:40
+pi @ index-vofSq99q.js:40
+C$ @ index-vofSq99q.js:38
+(anonymous) @ index-vofSq99q.js:969
+index-vofSq99q.js:1817 [Violation] Permissions policy violation: camera is not allowed in this document.
+oe @ index-vofSq99q.js:1817
+(anonymous) @ index-vofSq99q.js:1817
+await in (anonymous)
+(anonymous) @ index-vofSq99q.js:1817
+oh @ index-vofSq99q.js:40
+jc @ index-vofSq99q.js:40
+A5 @ index-vofSq99q.js:40
+zo @ index-vofSq99q.js:38
+W$ @ index-vofSq99q.js:40
+Il @ index-vofSq99q.js:40
+T5 @ index-vofSq99q.js:40
+E @ index-vofSq99q.js:25
+O @ index-vofSq99q.js:25
+postMessage
+B @ index-vofSq99q.js:25
+re @ index-vofSq99q.js:25
+t.unstable_scheduleCallback @ index-vofSq99q.js:25
+B5 @ index-vofSq99q.js:40
+Sn @ index-vofSq99q.js:40
+pi @ index-vofSq99q.js:40
+C$ @ index-vofSq99q.js:38
+(anonymous) @ index-vofSq99q.js:969
+index-vofSq99q.js:1817 ❌ Camera error: NotAllowedError: Permission denied
+oe @ index-vofSq99q.js:1817
+await in oe
+(anonymous) @ index-vofSq99q.js:1817
+await in (anonymous)
+(anonymous) @ index-vofSq99q.js:1817
+oh @ index-vofSq99q.js:40
+jc @ index-vofSq99q.js:40
+A5 @ index-vofSq99q.js:40
+zo @ index-vofSq99q.js:38
+W$ @ index-vofSq99q.js:40
+Il @ index-vofSq99q.js:40
+T5 @ index-vofSq99q.js:40
+E @ index-vofSq99q.js:25
+O @ index-vofSq99q.js:25
+postMessage
+B @ index-vofSq99q.js:25
+re @ index-vofSq99q.js:25
+t.unstable_scheduleCallback @ index-vofSq99q.js:25
+B5 @ index-vofSq99q.js:40
+Sn @ index-vofSq99q.js:40
+pi @ index-vofSq99q.js:40
+C$ @ index-vofSq99q.js:38
+(anonymous) @ index-vofSq99q.js:969
+index-vofSq99q.js:1033 🌐 Response status (attempt 1): 200 
+index-vofSq99q.js:1033 ✅ Database request successful on attempt 1/1 (took 343ms)
+index-vofSq99q.js:1036 ✅ Fetched 66 capsules from API
+index-vofSq99q.js:1033 ✅ Access token retrieved
+index-vofSq99q.js:1038 📨 Fetching received capsules from server endpoint...
+index-vofSq99q.js:1033 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/received
+index-vofSq99q.js:1033 🌐 Request options: {method: 'GET', hasBody: false, timeout: '30s', maxRetries: 2}
+index-vofSq99q.js:1033 ✅ Access token retrieved
+index-vofSq99q.js:1033 ✅ Using authenticated request
+index-vofSq99q.js:1817 📸 Loaded most recent media thumbnail from backend: b2e09b6c-1395-4a78-b80f-358709f29214
+index-vofSq99q.js:1033 🌐 Response status (attempt 1): 200 
+index-vofSq99q.js:1033 ✅ Database request successful on attempt 1/2 (took 1523ms)
+index-vofSq99q.js:1038 ✅ Fetched 60 received capsules with sender names from server
+index-vofSq99q.js:1033 ✅ Access token retrieved
+index-vofSq99q.js:1036 📊 Fetching capsule stats from server for user d70db3e0-6fd8-484a-856c-dead04599ed5...
+index-vofSq99q.js:1033 🌐 Making database request to: https://apdfvpgaznpqlordkipw.supabase.co/functions/v1/make-server-f9be53a7/api/capsules/stats
+index-vofSq99q.js:1033 🌐 Request options: {method: 'GET', hasBody: false, timeout: '15s', maxRetries: 1}
+index-vofSq99q.js:1033 ✅ Access token retrieved
+index-vofSq99q.js:1033 ✅ Using authenticated request
+index-vofSq99q.js:2356 🔐 [AUTH CHECK] Auth screen decision: {isAuthenticated: true, isLoggingOut: false, hasPendingAuthData: true, hasGateAuthData: false, isOAuthCallback: false, …}
+index-vofSq99q.js:2356 🎬 Rendering Record with triggerSlideAnimation: false (ref: false state: false )
+index-vofSq99q.js:2356 🔔 [Notifications] Using unified Notification Center for all echo notifications
+index-vofSq99q.js:2356 📊 [Notifications] Current notification count: 41, Unread: 0
+index-vofSq99q.js:2356 📊 [Notifications] UNIFIED unreadCount: 0
+index-vofSq99q.js:2356 📊 [Notifications] UNIFIED notifications: 133
+index-vofSq99q.js:2356 🔔 [BADGE CHECK] Should show badge: NO
+index-vofSq99q.js:1033 🌐 Response status (attempt 1): 200 
+index-vofSq99q.js:1033 ✅ Database request successful on attempt 1/1 (took 380ms)
+index-vofSq99q.js:1036 📊 Raw stats response: {scheduled: 1, delivered: 9, selfOnlyDelivered: 47, draft: 9, failed: 0, …}
+index-vofSq99q.js:1036 ✅ Server stats loaded successfully: {scheduled: 1, delivered: 9, selfOnlyDelivered: 47, draft: 9, failed: 0, …}
+index-vofSq99q.js:1629 📊 Real-time stats update: {scheduled: 1, delivered: 9, selfOnlyDelivered: 47, draft: 9, failed: 0, …}
