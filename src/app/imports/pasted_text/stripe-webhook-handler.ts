@@ -228,7 +228,7 @@ Common pitfalls to double-check
 No middleware that reads or modifies the body before constructEvent.
 No JSON.stringify/encoding changes before verification.
 Using stripe.webhooks.constructEvent with Buffer of raw bytes, not a string that’s been re-encoded.
-Using the server SDK: import Stripe from "npm:stripe@13.10.0".
+Using the server SDK: import Stripe from "npm:stripe".
 apiVersion on the Stripe client can be any server-supported version; it doesn’t affect signature verification, which relies on raw payload + header + secret.
 If you’re already using raw body
 If your code already matches the above pattern, share it here and I’ll pinpoint the issue. Also confirm:
