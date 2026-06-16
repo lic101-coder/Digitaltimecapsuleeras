@@ -4,7 +4,7 @@
 // This is a diagnostic version to help debug the signature verification issue
 // ============================================================================
 
-import Stripe from 'npm:stripe@17.4.0';
+import Stripe from 'npm:stripe';
 
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
 const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET');

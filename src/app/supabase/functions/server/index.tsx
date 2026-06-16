@@ -2,7 +2,7 @@ import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import { randomBytes } from "node:crypto";
-import Stripe from "npm:stripe@14.0.0";
+import Stripe from "npm:stripe";
 import { supabase } from "./supabase-client.tsx";
 import * as kv from "./kv_store.tsx";
 import { DeliveryService } from "./delivery-service.tsx";

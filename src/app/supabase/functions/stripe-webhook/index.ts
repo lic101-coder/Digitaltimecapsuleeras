@@ -7,8 +7,8 @@
 // Stripe calls: https://<project>.supabase.co/functions/v1/stripe-webhook
 // ============================================================================
 
-import Stripe from 'npm:stripe@17.4.0';
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import Stripe from 'npm:stripe';
+import { createClient } from 'jsr:@supabase/supabase-js';
 
 // ============================================================================
 // ENVIRONMENT VARIABLES

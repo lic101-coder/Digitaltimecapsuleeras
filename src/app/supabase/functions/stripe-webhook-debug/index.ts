@@ -5,7 +5,7 @@
 // Then use "Send test webhook" from your EXACT Live endpoint in Stripe Dashboard
 // ============================================================================
 
-import Stripe from 'npm:stripe@17.4.0';
+import Stripe from 'npm:stripe';
 import { createHash } from 'node:crypto';
 
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');

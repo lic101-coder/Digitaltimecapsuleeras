@@ -1,4 +1,4 @@
-import { Resend } from 'npm:resend@4.0.0';
+import { Resend } from 'npm:resend';
 import { resendRateLimiter } from './rate-limiter.tsx';
 import * as kv from './kv_store.tsx';
 
