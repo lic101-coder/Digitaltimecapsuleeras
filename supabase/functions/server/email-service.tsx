@@ -1337,17 +1337,15 @@ export class EmailService {
         text: plainText, // ✅ Plain text version added
         // Add headers to prioritize immediate delivery and improve deliverability
         headers: {
-          'X-Priority': '1',
-          'X-MSMail-Priority': 'High',
-          'Importance': 'high',
-          'List-Unsubscribe': '<mailto:unsubscribe@yourdomain.com>', // ✅ Required for inbox placement
+          'List-Unsubscribe': `<https://www.erastimecapsule.com/unsubscribe?email=${encodeURIComponent(recipientEmail)}>`, // ✅ Required for inbox placement
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click', // ✅ RFC 8058 one-click unsubscribe
           'X-Entity-Ref-ID': capsuleData.capsule_id || capsuleData.id || '' // ✅ Tracking header
         }
       });
 
       console.log(`📧 [EMAIL SERVICE] Resend API response:`, JSON.stringify(result, null, 2));
       console.log(`🕐 [EMAIL SERVICE] Email submitted successfully at ${new Date().toISOString()}`);
-      
+
       // CRITICAL FIX: Check if Resend returned an error
       // Resend returns { data: {...}, error: null } on success
       // or { data: null, error: {...} } on failure
@@ -1356,7 +1354,7 @@ export class EmailService {
         if (result.error.message?.includes('domain is not verified') && fromEmail !== 'Eras <onboarding@resend.dev>') {
           console.warn(`⚠️ [EMAIL SERVICE] Domain verification failed for ${fromEmail}`);
           console.warn(`⚠️ [EMAIL SERVICE] Auto-retrying with Resend test domain: onboarding@resend.dev`);
-          
+
           // Retry with the default Resend test domain
           fromEmail = 'Eras <onboarding@resend.dev>';
           result = await resend.emails.send({
@@ -1366,10 +1364,8 @@ export class EmailService {
             html: html,
             text: plainText,
             headers: {
-              'X-Priority': '1',
-              'X-MSMail-Priority': 'High',
-              'Importance': 'high',
-              'List-Unsubscribe': '<mailto:unsubscribe@yourdomain.com>',
+              'List-Unsubscribe': `<https://www.erastimecapsule.com/unsubscribe?email=${encodeURIComponent(recipientEmail)}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
               'X-Entity-Ref-ID': capsuleData.capsule_id || capsuleData.id || ''
             }
           });
@@ -1486,8 +1482,8 @@ export class EmailService {
         html: html,
         text: plainText, // ✅ Plain text added
         headers: {
-          'List-Unsubscribe': '<mailto:unsubscribe@yourdomain.com>',
-          'X-Priority': '1'
+          'List-Unsubscribe': `<https://www.erastimecapsule.com/unsubscribe?email=${encodeURIComponent(recipientEmail)}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
         }
       });
 
@@ -1592,7 +1588,8 @@ export class EmailService {
         html: html,
         text: plainText, // ✅ Plain text added
         headers: {
-          'List-Unsubscribe': '<mailto:unsubscribe@yourdomain.com>'
+          'List-Unsubscribe': `<https://www.erastimecapsule.com/unsubscribe?email=${encodeURIComponent(userEmail)}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
         }
       });
 
@@ -1675,7 +1672,8 @@ export class EmailService {
         html: html,
         text: plainText,
         headers: {
-          'List-Unsubscribe': '<mailto:unsubscribe@yourdomain.com>'
+          'List-Unsubscribe': `<https://www.erastimecapsule.com/unsubscribe?email=${encodeURIComponent(email)}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
         }
       });
 
@@ -1788,7 +1786,8 @@ export class EmailService {
         html: html,
         text: plainText, // ✅ Plain text added
         headers: {
-          'List-Unsubscribe': '<mailto:unsubscribe@yourdomain.com>'
+          'List-Unsubscribe': `<https://www.erastimecapsule.com/unsubscribe?email=${encodeURIComponent(email)}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
         }
       });
 

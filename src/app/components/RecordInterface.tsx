@@ -304,31 +304,66 @@ export function RecordInterface({ onMediaCaptured, onOpenVault, onClose, onRegis
       setCameraReady(false);
 
       console.log('🎥 Initializing camera...');
-      
+
+      // Check mediaDevices API availability
+      console.log('🔍 mediaDevices check:', {
+        hasMediaDevices: !!navigator.mediaDevices,
+        hasGetUserMedia: !!(navigator.mediaDevices?.getUserMedia),
+        protocol: window.location.protocol,
+        hostname: window.location.hostname,
+        userAgent: navigator.userAgent.substring(0, 80),
+      });
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error('❌ navigator.mediaDevices.getUserMedia not available — page must be served over HTTPS');
+        setError('PERMISSION_DENIED');
+        return;
+      }
+
       // Detect platform
       const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
       const isDesktop = !/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      
+
       console.log(`Platform: ${isMac ? 'macOS/iOS' : 'Other'}, Desktop: ${isDesktop}`);
 
-      // Request the widest field of view possible
-      // For desktop (especially macOS), use simpler constraints to ensure compatibility
-      const constraints: any = {
-        video: isDesktop ? {
-          facingMode: facingMode,
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        } : {
-          facingMode: facingMode,
-          width: { ideal: 1920, max: 3840 },
-          height: { ideal: 1080, max: 2160 }
+      // Try progressively simpler constraints — Windows/Edge can reject complex ones
+      const constraintSets: any[] = [
+        // Attempt 1: full constraints
+        {
+          video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: mode === 'video',
         },
-        audio: mode === 'video'
-      };
+        // Attempt 2: video only, no facingMode (Windows sometimes rejects facingMode)
+        {
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: mode === 'video',
+        },
+        // Attempt 3: bare minimum
+        { video: true, audio: mode === 'video' },
+        // Attempt 4: video only, no audio (in case mic causes the block)
+        { video: true, audio: false },
+      ];
 
-      console.log('📹 Requesting camera with constraints:', constraints);
+      let stream: MediaStream | null = null;
+      let lastErr: any = null;
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      for (const constraints of constraintSets) {
+        try {
+          console.log('📹 Requesting camera with constraints:', constraints);
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          console.log('✅ Camera stream obtained with constraints:', constraints);
+          break;
+        } catch (err: any) {
+          lastErr = err;
+          console.warn('⚠️ Camera attempt failed, trying simpler constraints:', err.name, err.message);
+          if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            // Permission denied — no point retrying with simpler constraints
+            throw err;
+          }
+        }
+      }
+
+      if (!stream) throw lastErr;
       streamRef.current = stream;
 
       // Check zoom capabilities
@@ -351,14 +386,26 @@ export function RecordInterface({ onMediaCaptured, onOpenVault, onClose, onRegis
       }
     } catch (err: any) {
       console.error('❌ Camera error:', err);
-      
+
       // Don't show error for aborted operations (happens during rapid mode switching)
       if (err.name === 'AbortError' || err.message?.includes('aborted')) {
         console.log('⚠️ Camera initialization was aborted (likely due to mode switch)');
         return;
       }
-      
-      setError(err.message || 'Failed to access camera');
+
+      const isPermissionDenied =
+        err.name === 'NotAllowedError' ||
+        err.name === 'PermissionDeniedError' ||
+        err.message?.toLowerCase().includes('permission') ||
+        err.message?.toLowerCase().includes('not allowed');
+
+      if (isPermissionDenied) {
+        setError(
+          'PERMISSION_DENIED'
+        );
+      } else {
+        setError(err.message || 'Failed to access camera');
+      }
     }
   };
 
@@ -1334,38 +1381,58 @@ export function RecordInterface({ onMediaCaptured, onOpenVault, onClose, onRegis
 
           {/* Error State */}
           {error && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
-              <div className="text-center space-y-4 p-6 max-w-md mx-auto relative">
-                {/* Close button in error state */}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/90 z-20">
+              <div className="text-center p-6 max-w-sm mx-auto relative">
+                {/* Close button */}
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => {
-                    if (onClose) onClose();
-                  }}
-                  className="absolute -top-2 -right-2 rounded-full bg-red-500/80 hover:bg-red-600 text-white"
+                  onClick={() => { if (onClose) onClose(); }}
+                  className="absolute -top-2 -right-2 rounded-full bg-white/20 hover:bg-white/30 text-white"
                 >
                   <X className="w-5 h-5" />
                 </Button>
-                
-                <p className="text-white text-lg">{error}</p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button 
-                    onClick={() => mode === 'audio' ? initAudio() : initCamera()}
-                    variant="default"
-                  >
-                    Try Again
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      if (onClose) onClose();
-                    }}
-                    variant="outline"
-                    className="bg-white/10 hover:bg-white/20 text-white border-white/30"
-                  >
-                    Go Back
-                  </Button>
-                </div>
+
+                {error === 'PERMISSION_DENIED' ? (
+                  <>
+                    <div className="text-4xl mb-3">🔒</div>
+                    <h3 className="text-white text-lg font-bold mb-2">Camera & Microphone Blocked</h3>
+                    <p className="text-white/80 text-sm mb-4 leading-relaxed">
+                      Your browser has blocked camera access for this site. To fix it:
+                    </p>
+                    <div className="bg-white/10 rounded-xl p-4 text-left text-sm text-white/90 space-y-3 mb-5">
+                      <div>
+                        <p className="text-yellow-300 font-semibold mb-1">🪟 Windows PC (most common fix):</p>
+                        <p>Settings → Privacy &amp; Security → <strong>Camera</strong> → turn on <em>"Allow desktop apps to access your camera"</em>. Repeat for <strong>Microphone</strong>.</p>
+                      </div>
+                      <div>
+                        <p className="text-yellow-300 font-semibold mb-1">🌐 Browser permission blocked:</p>
+                        <p>Click the 🔒 lock in the address bar → Site settings → set Camera &amp; Microphone to <strong>Allow</strong>, then refresh.</p>
+                      </div>
+                    </div>
+                    <p className="text-white/50 text-xs mb-4">After changing either setting, refresh the page and try again.</p>
+                    <div className="flex flex-col gap-2">
+                      <Button onClick={() => { setError(null); mode === 'audio' ? initAudio() : initCamera(); }} variant="default" className="bg-white text-black hover:bg-white/90 font-semibold">
+                        Try Again
+                      </Button>
+                      <Button onClick={() => { if (onClose) onClose(); }} variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/30">
+                        Go Back
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-white text-lg mb-4">{error}</p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Button onClick={() => mode === 'audio' ? initAudio() : initCamera()} variant="default">
+                        Try Again
+                      </Button>
+                      <Button onClick={() => { if (onClose) onClose(); }} variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/30">
+                        Go Back
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}

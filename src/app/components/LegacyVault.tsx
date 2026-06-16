@@ -181,7 +181,7 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
   // Folder system state
   const [folders, setFolders] = useState<any[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
-  const [uploadDestinationId, setUploadDestinationId] = useState<string | null>(null); // Track where to upload
+  const uploadDestinationRef = useRef<string | null>(null); // Track where to upload (ref to avoid stale closure)
   const [showFolderDialog, setShowFolderDialog] = useState(false);
   const [folderDialogMode, setFolderDialogMode] = useState<'create' | 'rename'>('create');
   const [editingFolder, setEditingFolder] = useState<any | null>(null);
@@ -2017,15 +2017,18 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
         
         // ✅ SYNC: Reload folders and vault to ensure cross-device consistency
         // Small delay to let backend writes complete
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
         console.log('🔄 Syncing vault and folders from backend after upload...');
         await Promise.all([
           loadVault(),
           loadFolders()
         ]);
         console.log('✅ Upload complete - vault and folders synced from backend');
-        
+
+        // Clear stale upload destination after upload session completes
+        uploadDestinationRef.current = null;
+
         // 🔄 CRITICAL FIX: Force UI update after background sync
         // Update lastSyncTime to ensure displayedItems useMemo recalculates
         setLastSyncTime(Date.now());
@@ -2034,6 +2037,7 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
       // No background tasks - unlock immediately
       uploadInProgressRef.current = false;
       cleanupBlockedUntilRef.current = Date.now() + 500;
+      uploadDestinationRef.current = null; // Clear stale destination after upload
       console.log('🔓 No background tasks - loadVault() unblocked');
       console.log('🔒 Folder cleanup blocked for 500ms');
     }
@@ -4070,7 +4074,7 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
           multiple
           accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm,video/ogg,audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/aac,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.csv,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/rtf,text/csv"
           className="hidden"
-          onChange={(e) => handleFileUpload(e.target.files, uploadDestinationId)}
+          onChange={(e) => handleFileUpload(e.target.files, uploadDestinationRef.current)}
         />
         
         {/* Header */}
@@ -4104,7 +4108,7 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onSelect={() => {
-                      setUploadDestinationId(null);
+                      uploadDestinationRef.current = null;
                       setTimeout(() => fileInputRef.current?.click(), 0);
                     }}
                   >
@@ -4117,7 +4121,7 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
                       <DropdownMenuItem
                         key={folder.id}
                         onSelect={() => {
-                          setUploadDestinationId(folder.id);
+                          uploadDestinationRef.current = folder.id;
                           setTimeout(() => fileInputRef.current?.click(), 0);
                         }}
                       >
@@ -4202,7 +4206,7 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onSelect={() => {
-                        setUploadDestinationId(null);
+                        uploadDestinationRef.current = null;
                         setTimeout(() => fileInputRef.current?.click(), 0);
                       }}
                     >
@@ -4215,7 +4219,7 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
                         <DropdownMenuItem
                           key={folder.id}
                           onSelect={() => {
-                            setUploadDestinationId(folder.id);
+                            uploadDestinationRef.current = folder.id;
                             setTimeout(() => fileInputRef.current?.click(), 0);
                           }}
                         >

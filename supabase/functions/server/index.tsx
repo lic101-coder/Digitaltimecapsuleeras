@@ -34,7 +34,7 @@ globalThis.addEventListener('unhandledrejection', (event) => {
 });
 
 console.log('🛡️ Global error handlers installed');
-console.log('🚀 [Startup] Initializing Hono app... v2026-06-10-retry-fix');
+console.log('🚀 [Startup] Initializing Hono app... v2026-06-17-email-spam-fix');
 
 const app = new Hono();
 
@@ -12384,7 +12384,7 @@ app.post("/make-server-f9be53a7/api/legacy-access/test-email", async (c) => {
       // Test beneficiary unlock notification email
       result = await sendEmail({
         to: recipientEmail,
-        subject: '🔓 A Legacy Vault Has Been Unlocked for You - Eras',
+        subject: 'A Legacy Vault Has Been Unlocked for You - Eras',
         template: 'beneficiary-unlock-notification',
         variables: {
           beneficiaryName: 'Test User',
@@ -13198,7 +13198,7 @@ async function triggerManualUnlock(userId: string): Promise<void> {
     
     const result = await sendEmail({
       to: beneficiary.email,
-      subject: '🔓 Legacy Vault Unlocked - Eras',
+      subject: 'Legacy Vault Unlocked - Eras',
       template: 'beneficiary-unlock-notification-complete',
       variables: {
         ownerName,
