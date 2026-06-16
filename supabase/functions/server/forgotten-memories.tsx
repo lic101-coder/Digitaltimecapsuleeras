@@ -29,11 +29,23 @@ app.use('*', cors({
 // Helper: Get user ID from access token
 async function getUserId(accessToken: string | undefined): Promise<string | null> {
   if (!accessToken) return null;
-  
-  const { data: { user }, error } = await supabase.auth.getUser(accessToken);
-  if (error || !user?.id) return null;
-  
-  return user.id;
+
+  // Decode JWT directly — service-role client cannot validate user tokens via getUser()
+  try {
+    const parts = accessToken.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(atob(parts[1]));
+    const userId = payload.sub;
+    if (!userId) return null;
+    // Check token expiry
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      console.warn('⚠️ [forgotten-memories] Expired token for user:', userId);
+      return null;
+    }
+    return userId;
+  } catch {
+    return null;
+  }
 }
 
 // GET /forgotten-memories - List deleted items
