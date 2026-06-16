@@ -320,88 +320,88 @@ export const LegacyVault = React.memo(function LegacyVault({ onUseMedia, onEdit,
   }, [vaultItems]);
 
   // 🔍 SYNC DIAGNOSTIC: Detect and auto-fix sync issues between devices
+  // ⚠️ IMPORTANT: Never run cleanup while an upload is in progress — folder mediaIds
+  // update before vaultItems refreshes, making new items look "orphaned" briefly.
   useEffect(() => {
-    if (vaultItems.length > 0 && folders.length > 0) {
+    if (vaultItems.length === 0 || folders.length === 0) return;
+
+    // Debounce: wait 6s before acting, so vault items can fully reload after uploads
+    const debounceTimer = setTimeout(async () => {
+      // Double-check: skip if an upload started during the debounce window
+      if (isUploading) {
+        console.log('⏭️ Skipping orphan cleanup — upload in progress');
+        return;
+      }
+
       const allFolderMediaIds = folders.flatMap(f => f.mediaIds || []);
       const vaultItemIds = vaultItems.map(item => item.id);
-      
+
       // Check for orphaned IDs in folders (IDs in folders but not in vault)
       const orphanedIds = allFolderMediaIds.filter(id => !vaultItemIds.includes(id));
-      if (orphanedIds.length > 0) {
-        console.warn('⚠️ SYNC ISSUE: Orphaned IDs in folders (in folder but not in vault):', orphanedIds);
-        console.log('🧹 Auto-cleaning orphaned IDs from folders...');
-        
-        // Clean up orphaned IDs
-        const cleanOrphanedIds = async () => {
-          try {
-            const vaultItemIdSet = new Set(vaultItemIds);
-            let hasChanges = false;
-            
-            const cleanedFolders = folders.map(folder => {
-              const originalMediaIds = folder.mediaIds || [];
-              const cleanedMediaIds = originalMediaIds.filter(id => vaultItemIdSet.has(id));
-              
-              if (cleanedMediaIds.length !== originalMediaIds.length) {
-                hasChanges = true;
-                const orphanedCount = originalMediaIds.length - cleanedMediaIds.length;
-                console.log(`🧹 Cleaning folder "${folder.name}": removed ${orphanedCount} orphaned ID(s)`);
-              }
-              
-              return {
-                ...folder,
-                mediaIds: cleanedMediaIds
-              };
-            });
-            
-            if (hasChanges) {
-              // 🔥 CRITICAL FIX: Use new backend endpoint for safe cleanup
-              const { data: { session } } = await supabase.auth.getSession();
-              if (session) {
-                const response = await fetch(
-                  `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/vault/folders`,
-                  {
-                    method: 'POST',
-                    headers: {
-                      'Authorization': `Bearer ${session.access_token}`,
-                      'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                      action: 'clean_orphaned_ids',
-                      validMediaIds: vaultItemIds // Send list of valid IDs to backend
-                    })
-                  }
-                );
-                
-                if (response.ok) {
-                  const result = await response.json();
-                  console.log(`��� Orphaned IDs cleaned via backend: ${result.cleanedCount} orphaned ID(s) removed`);
-                  // Update local state with cleaned folders
-                  setFolders(cleanedFolders);
-                } else {
-                  const errorText = await response.text();
-                  console.error('❌ Failed to clean orphaned IDs via backend:', response.status, errorText);
-                }
-              }
-            }
-          } catch (error) {
-            console.error('❌ Error cleaning orphaned IDs:', error);
-          }
-        };
-        
-        cleanOrphanedIds();
-      }
-      
-      // Check for items in vault that aren't tracked by folders
+
+      // Log sync status regardless
       const unsortedItems = vaultItems.filter(item => !allFolderMediaIds.includes(item.id));
       console.log('🔍 SYNC STATUS:', {
         totalVaultItems: vaultItems.length,
         totalFolders: folders.length,
         itemsInFolders: allFolderMediaIds.length,
         unsortedItems: unsortedItems.length,
-        orphanedFolderIds: orphanedIds.length
+        orphanedFolderIds: orphanedIds.length,
       });
-    }
-  }, [vaultItems.length, folders.length]);
+
+      if (orphanedIds.length === 0) return;
+
+      console.warn('⚠️ SYNC ISSUE: Orphaned IDs in folders (in folder but not in vault):', orphanedIds);
+      console.log('🧹 Auto-cleaning orphaned IDs from folders...');
+
+      try {
+        const vaultItemIdSet = new Set(vaultItemIds);
+        let hasChanges = false;
+
+        const cleanedFolders = folders.map(folder => {
+          const originalMediaIds = folder.mediaIds || [];
+          const cleanedMediaIds = originalMediaIds.filter(id => vaultItemIdSet.has(id));
+          if (cleanedMediaIds.length !== originalMediaIds.length) {
+            hasChanges = true;
+            console.log(`🧹 Cleaning folder "${folder.name}": removed ${originalMediaIds.length - cleanedMediaIds.length} orphaned ID(s)`);
+          }
+          return { ...folder, mediaIds: cleanedMediaIds };
+        });
+
+        if (hasChanges) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            const response = await fetch(
+              `https://${projectId}.supabase.co/functions/v1/make-server-f9be53a7/vault/folders`,
+              {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${session.access_token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  action: 'clean_orphaned_ids',
+                  validMediaIds: vaultItemIds,
+                }),
+              }
+            );
+            if (response.ok) {
+              const result = await response.json();
+              console.log(`🧹 Orphaned IDs cleaned via backend: ${result.cleanedCount} orphaned ID(s) removed`);
+              setFolders(cleanedFolders);
+            } else {
+              const errorText = await response.text();
+              console.error('❌ Failed to clean orphaned IDs via backend:', response.status, errorText);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error cleaning orphaned IDs:', error);
+      }
+    }, 6000); // 6s debounce — gives vault items time to fully reload after uploads
+
+    return () => clearTimeout(debounceTimer);
+  }, [vaultItems.length, folders.length, isUploading]);
 
   // Debounce search query (300ms)
   useEffect(() => {
