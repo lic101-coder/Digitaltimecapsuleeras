@@ -255,7 +255,12 @@ export function BirthdayClassicCeremony({
                       {stage !== 'blowout' && stage !== 'smoke' && stage !== 'radiance' && (
                         <motion.div
                           className="absolute left-1/2 -translate-x-1/2"
-                          style={{ bottom: '62px' }}
+                          style={{
+                            bottom: '62px',
+                            ...(stage === 'flicker'
+                              ? { animation: `candle-flicker ${1.3 + i * 0.17}s ease-in-out infinite` }
+                              : {}),
+                          }}
                           animate={
                             stage === 'breath'
                               ? { scaleX: [1, 0.35, 0.3, 0.45], x: [0, -2, -4, -2], y: [0, -6, -10, -7], opacity: [1, 0.65, 0.5, 0.6] }
@@ -267,9 +272,6 @@ export function BirthdayClassicCeremony({
                               ? { duration: 1.3, ease: 'easeInOut' }
                               : { duration: 0.45 }
                           }
-                          style={stage === 'flicker' ? {
-                            animation: `candle-flicker ${1.3 + i * 0.17}s ease-in-out infinite`
-                          } : {}}
                         >
                           {/* Outer glow */}
                           <div style={{
