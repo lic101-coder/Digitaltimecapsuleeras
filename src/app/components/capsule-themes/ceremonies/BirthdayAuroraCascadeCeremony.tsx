@@ -296,7 +296,7 @@ export function BirthdayAuroraCascadeCeremony({
                 style={{
                   height: '260px',
                   top: `${-5 + i * 20}%`,
-                  background: `linear-gradient(to bottom, transparent 0%, ${color.glow}60 25%, ${color.glow}90 50%, ${color.glow}60 75%, transparent 100%)`,
+                  background: `linear-gradient(to bottom, transparent 0%, ${color.main}99 25%, ${color.main}e6 50%, ${color.main}99 75%, transparent 100%)`,
                   filter: mobile ? 'blur(12px)' : 'blur(60px)',
                   transformOrigin: 'center',
                   zIndex: 1
@@ -324,7 +324,7 @@ export function BirthdayAuroraCascadeCeremony({
                 style={{
                   height: '200px',
                   top: `${5 + i * 18}%`,
-                  background: `linear-gradient(to bottom, transparent 0%, ${color.glow}70 30%, ${color.glow} 55%, ${color.glow}70 75%, transparent 100%)`,
+                  background: `linear-gradient(to bottom, transparent 0%, ${color.main}b3 30%, ${color.main}e6 55%, ${color.main}b3 75%, transparent 100%)`,
                   filter: mobile ? 'blur(8px)' : 'blur(40px)',
                   transformOrigin: 'center',
                   zIndex: 2
@@ -359,7 +359,7 @@ export function BirthdayAuroraCascadeCeremony({
                 style={{
                   height: '180px',
                   top: `${-15 + i * 13}%`,
-                  background: `linear-gradient(135deg, transparent 0%, ${color.glow}80 20%, ${color.glow} 50%, ${color.glow}60 75%, transparent 100%)`,
+                  background: `linear-gradient(135deg, transparent 0%, ${color.main}cc 20%, ${color.main}f0 50%, ${color.main}99 75%, transparent 100%)`,
                   filter: mobile ? 'blur(8px)' : 'blur(35px)',
                   transformOrigin: 'left top',
                   zIndex: 3
@@ -397,7 +397,7 @@ export function BirthdayAuroraCascadeCeremony({
                 style={{
                   width: '120px',
                   left: `${5 + i * 10}%`,
-                  background: `linear-gradient(to bottom, transparent 0%, ${auroraColors[i % auroraColors.length].glow}80 25%, ${auroraColors[i % auroraColors.length].glow} 55%, ${auroraColors[i % auroraColors.length].glow}50 80%, transparent 100%)`,
+                  background: `linear-gradient(to bottom, transparent 0%, ${auroraColors[i % auroraColors.length].main}cc 25%, ${auroraColors[i % auroraColors.length].main}f0 55%, ${auroraColors[i % auroraColors.length].main}80 80%, transparent 100%)`,
                   filter: mobile ? 'blur(8px)' : 'blur(35px)',
                   transformOrigin: 'top center',
                   zIndex: 4
