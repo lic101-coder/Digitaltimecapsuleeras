@@ -485,7 +485,7 @@ export function CalendarView({ onClose, onViewCapsule, onCreateCapsule }: Calend
             ) : (
               <>
                 {/* Calendar Header - MOBILE ONLY */}
-                <div className="flex md:hidden items-center justify-center gap-2 mb-3">
+                <div className="flex md:hidden items-center justify-between gap-1.5 mb-3 px-1">
                   {/* Left: Previous */}
                   <button
                     onClick={goToPreviousMonth}
@@ -495,8 +495,8 @@ export function CalendarView({ onClose, onViewCapsule, onCreateCapsule }: Calend
                     ‹
                   </button>
 
-                  {/* Center: Month + Year */}
-                  <div className="flex items-center gap-2">
+                  {/* Center: Month + Year — flex-1 so they fill available space */}
+                  <div className="flex items-center gap-1.5 flex-1 justify-center">
                     <Select
                       value={currentMonth.toString()}
                       onValueChange={(value) => {
@@ -504,7 +504,7 @@ export function CalendarView({ onClose, onViewCapsule, onCreateCapsule }: Calend
                         setCurrentDate(setMonth(setYear(new Date(), currentYear), monthIndex));
                       }}
                     >
-                      <SelectTrigger className="h-9 w-[140px] bg-slate-800 border-slate-700 text-white text-xs font-medium">
+                      <SelectTrigger className="h-9 min-w-[118px] bg-slate-800 border-slate-700 text-white text-sm font-medium">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -525,7 +525,7 @@ export function CalendarView({ onClose, onViewCapsule, onCreateCapsule }: Calend
                         setCurrentDate(setMonth(setYear(new Date(), year), currentMonth));
                       }}
                     >
-                      <SelectTrigger className="h-9 w-[70px] bg-slate-800 border-slate-700 text-white text-xs">
+                      <SelectTrigger className="h-9 min-w-[88px] bg-slate-800 border-slate-700 text-white text-sm font-medium">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -593,7 +593,7 @@ export function CalendarView({ onClose, onViewCapsule, onCreateCapsule }: Calend
                         setCurrentDate(setMonth(setYear(new Date(), year), currentMonth));
                       }}
                     >
-                      <SelectTrigger className="w-24 h-8 text-sm bg-slate-800 border-slate-700 text-white">
+                      <SelectTrigger className="min-w-[88px] h-8 text-sm bg-slate-800 border-slate-700 text-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

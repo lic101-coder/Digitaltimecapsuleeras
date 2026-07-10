@@ -621,7 +621,6 @@ export function EternalFlameEpicCeremony({
             <h2 className="text-5xl md:text-6xl font-bold text-amber-100 drop-shadow-2xl mb-4">
               Symphony Complete
             </h2>
-            <p className="text-3xl text-yellow-200 drop-shadow-lg">{capsuleTitle}</p>
           </motion.div>
         )}
       </AnimatePresence>

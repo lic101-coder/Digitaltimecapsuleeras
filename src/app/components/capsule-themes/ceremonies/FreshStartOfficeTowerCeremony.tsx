@@ -78,22 +78,6 @@ export function FreshStartOfficeTowerCeremony({
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-slate-800 via-blue-900 to-slate-900">
-      {/* Title */}
-      <AnimatePresence>
-        {stage === 'title' && capsuleTitle && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.1 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-0 flex items-center justify-center z-50"
-          >
-            <h2 className="text-4xl md:text-6xl font-bold text-blue-400 drop-shadow-2xl text-center px-8">
-              {capsuleTitle}
-            </h2>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* SCENE 1: THRESHOLD OF GIANTS (0-2.5s) */}
       <AnimatePresence>
@@ -118,37 +102,24 @@ export function FreshStartOfficeTowerCeremony({
               {/* Glass reflection shimmer */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent"
-                animate={{
-                  opacity: [0.2, 0.5, 0.2],
-                  x: [-50, 50]
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: 'easeInOut'
-                }}
+                animate={{ opacity: [0.2, 0.5, 0.2], x: [-50, 50] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               />
-
-              {/* Windows grid - properly positioned with margins */}
+              {/* Windows grid */}
               {[...Array(60)].map((_, i) => {
-                const col = i % 5; // 5 columns
-                const row = Math.floor(i / 5); // 12 rows
-                const windowWidth = 8; // percentage
-                const windowHeight = 3; // percentage
-                const marginLeft = 12; // left edge margin %
-                const marginRight = 12; // right edge margin %
-                const availableWidth = 100 - marginLeft - marginRight; // 76%
-                const horizontalSpacing = availableWidth / 5; // space per column
-                const verticalSpacing = 6; // space between rows
-                const topMargin = 8; // top margin %
-                
+                const col = i % 5;
+                const row = Math.floor(i / 5);
+                const marginLeft = 12, marginRight = 12;
+                const availableWidth = 100 - marginLeft - marginRight;
+                const horizontalSpacing = availableWidth / 5;
+                const windowWidth = 8;
                 return (
                   <motion.div
                     key={`window-${i}`}
                     className="absolute w-2 h-3 bg-sky-200 rounded-sm"
                     style={{
                       left: `${marginLeft + col * horizontalSpacing + (horizontalSpacing - windowWidth) / 2}%`,
-                      top: `${topMargin + row * verticalSpacing}%`,
+                      top: `${8 + row * 6}%`,
                     }}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: [0, 0.6, 0.8] }}
@@ -156,16 +127,6 @@ export function FreshStartOfficeTowerCeremony({
                   />
                 );
               })}
-
-              {/* Company logo at top */}
-              <motion.div
-                className="absolute top-[3%] left-1/2 -translate-x-1/2 text-4xl"
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 1.2, type: 'spring' }}
-              >
-                🏢
-              </motion.div>
             </motion.div>
 
             {/* Building name sign */}
@@ -735,69 +696,88 @@ export function FreshStartOfficeTowerCeremony({
 
             {/* THE HERO BUILDING - Center, glowing */}
             <motion.div
-              className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[12%] h-[280px] bg-gradient-to-b from-amber-400 to-orange-600 rounded-t-lg border-4 border-amber-500 z-20"
+              className="absolute left-1/2 -translate-x-1/2 bottom-0 z-20"
+              style={{
+                width: '13%',
+                height: '280px',
+                background: 'linear-gradient(180deg, #334155 0%, #1e3a5f 35%, #1e293b 100%)',
+                borderRadius: '4px 4px 0 0',
+                border: '1.5px solid rgba(148,163,184,0.25)',
+                boxShadow: '0 0 50px rgba(251,191,36,0.5), 0 0 100px rgba(251,191,36,0.2)'
+              }}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              style={{
-                boxShadow: '0 0 60px rgba(251, 191, 36, 0.9)'
-              }}
             >
-              {/* Windows */}
+              {/* Rooftop mechanical penthouse */}
+              <div style={{
+                position: 'absolute', top: '-12px', left: '15%', right: '15%', height: '14px',
+                background: '#475569', borderRadius: '3px 3px 0 0',
+                borderTop: '2px solid rgba(148,163,184,0.4)'
+              }} />
+              {/* Antenna mast — thin, architectural */}
+              <div style={{
+                position: 'absolute', top: '-38px', left: '50%', transform: 'translateX(-50%)',
+                width: '3px', height: '28px',
+                background: 'linear-gradient(180deg,#94a3b8 0%,#64748b 100%)',
+                borderRadius: '2px'
+              }} />
+              {/* Antenna beacon */}
+              <motion.div
+                style={{ position: 'absolute', top: '-44px', left: '50%', transform: 'translateX(-50%)', width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444' }}
+                animate={{ opacity: [1, 0.2, 1] }}
+                transition={{ duration: 1.4, repeat: Infinity }}
+              />
+
+              {/* Windows — grid */}
               {[...Array(20)].map((_, i) => (
                 <div
                   key={`hero-window-${i}`}
-                  className="absolute w-2 h-3 bg-yellow-200/80 rounded-sm"
+                  className="absolute w-2 h-3 bg-yellow-100/70 rounded-sm"
                   style={{
-                    left: `${25 + (i % 3) * 25}%`,
-                    top: `${15 + Math.floor(i / 3) * 10}%`
+                    left: `${18 + (i % 3) * 28}%`,
+                    top: `${20 + Math.floor(i / 3) * 11}%`
                   }}
                 />
               ))}
 
-              {/* THE GLOWING WINDOW */}
+              {/* One lit window — YOUR office */}
               <motion.div
-                className="absolute left-1/2 -translate-x-1/2 top-[40%] w-6 h-6 rounded-sm"
+                className="absolute w-3 h-4 rounded-sm"
                 style={{
-                  background: 'radial-gradient(circle, #fbbf24, #f59e0b)',
-                  boxShadow: '0 0 30px rgba(251, 191, 36, 1)'
+                  left: '50%', top: '55%', transform: 'translateX(-50%)',
+                  background: '#fbbf24',
+                  boxShadow: '0 0 12px rgba(251,191,36,0.9), 0 0 24px rgba(251,191,36,0.5)'
                 }}
-                animate={{
-                  opacity: [0.8, 1, 0.8],
-                  scale: [1, 1.2, 1]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity
-                }}
-              >
-                {/* Light rays */}
-                {[...Array(8)].map((_, i) => (
-                  <motion.div
-                    key={`window-ray-${i}`}
-                    className="absolute left-1/2 top-1/2 w-0.5 h-16 bg-gradient-to-t from-yellow-300 to-transparent origin-bottom"
-                    style={{ transform: `rotate(${i * 45}deg) translateX(-50%)` }}
-                    animate={{
-                      opacity: [0.3, 0.7, 0.3],
-                      scaleY: [1, 1.4, 1]
-                    }}
-                    transition={{
-                      duration: 2,
-                      delay: i * 0.2,
-                      repeat: completed ? 0 : 6
-                    }}
-                  />
-                ))}
-              </motion.div>
+                animate={{ opacity: [0.8, 1, 0.8] }}
+                transition={{ duration: 1.8, repeat: Infinity }}
+              />
             </motion.div>
 
-            {/* Divine light beam from sky */}
+            {/* Divine light beam from sky — layered for tapered elegance */}
+            {/* Outer diffuse glow */}
             <motion.div
-              className="absolute left-1/2 -translate-x-1/2 top-0 w-32 h-full bg-gradient-to-b from-yellow-200/40 via-yellow-300/20 to-transparent"
-              style={{ filter: 'blur(20px)' }}
+              className="absolute left-1/2 -translate-x-1/2 top-0 h-full"
+              style={{ width: '80px', background: 'linear-gradient(180deg,rgba(255,243,180,0.22) 0%,rgba(251,191,36,0.10) 40%,transparent 80%)', filter: 'blur(18px)' }}
               initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 0.8, 0.6] }}
+              animate={{ opacity: [0, 1, 0.8] }}
               transition={{ duration: 1.5 }}
+            />
+            {/* Mid glow */}
+            <motion.div
+              className="absolute left-1/2 -translate-x-1/2 top-0 h-full"
+              style={{ width: '20px', background: 'linear-gradient(180deg,rgba(255,250,220,0.55) 0%,rgba(251,191,36,0.25) 50%,transparent 85%)', filter: 'blur(6px)' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 0.9] }}
+              transition={{ duration: 1.2, delay: 0.2 }}
+            />
+            {/* Inner core line */}
+            <motion.div
+              className="absolute left-1/2 -translate-x-1/2 top-0 h-[60%]"
+              style={{ width: '3px', background: 'linear-gradient(180deg,rgba(255,255,240,0.95) 0%,rgba(253,230,138,0.6) 60%,transparent 100%)', filter: 'blur(1px)', borderRadius: '2px' }}
+              initial={{ opacity: 0, scaleY: 0 }}
+              animate={{ opacity: [0, 1, 0.85], scaleY: 1 }}
+              transition={{ duration: 1, delay: 0.3 }}
             />
 
             {/* "YOUR JOURNEY BEGINS!" text */}

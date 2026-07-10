@@ -780,7 +780,6 @@ export function CareerSkyscraperCeremony({
             >
               Summit Reached
             </h2>
-            <p className="text-2xl text-blue-200 drop-shadow-lg">{capsuleTitle}</p>
           </motion.div>
         )}
       </AnimatePresence>

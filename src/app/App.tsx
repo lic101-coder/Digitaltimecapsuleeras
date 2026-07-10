@@ -2256,6 +2256,11 @@ const MainAppContent = React.memo(
         window.removeEventListener("resize", handleResize);
     }, []);
 
+    const isDarkHorizon = [
+      'Night Owl', 'Legacy Architect', 'Futurist', 'Dream Weaver',
+      'Sevenfold Sage', 'Time Lord', 'Decade Dreamer', 'Chronicle Master', 'Time Traveler'
+    ].includes(titleProfile?.equipped_title ?? '');
+
     // Monitor active tab changes for debugging with detailed context
     React.useEffect(() => {
       if (activeTab !== lastLoggedTab.current) {
@@ -3797,6 +3802,7 @@ const MainAppContent = React.memo(
                       size={isMobile ? 80 : 120}
                       showSubtitle={true}
                       onClick={() => setShowTitleCarousel(true)}
+                      isDarkHorizon={isDarkHorizon}
                     />
                   </div>
 
@@ -3820,7 +3826,13 @@ const MainAppContent = React.memo(
                             damping: 25,
                             duration: 0.5,
                           }}
-                          className="text-base font-bold whitespace-nowrap inline-flex items-baseline gap-0 text-black dark:text-white"
+                          className="text-base font-bold whitespace-nowrap inline-flex items-baseline gap-0"
+                          style={{
+                            color: isDarkHorizon ? 'rgba(255,255,255,0.95)' : undefined,
+                            textShadow: isDarkHorizon
+                              ? '0 0 10px rgba(167,139,250,1), 0 0 24px rgba(139,92,246,0.85), 0 0 48px rgba(99,102,241,0.6), 0 1px 3px rgba(0,0,0,0.9)'
+                              : undefined,
+                          }}
                         >
                           <span>Welcome,&nbsp;</span>
                           <button
@@ -3863,19 +3875,31 @@ const MainAppContent = React.memo(
                   <div className="sm:hidden">
                     {/* Row 1: Welcome, User! + Avatar - Positioned right, left of Bell */}
                     <div className="absolute top-1 right-16 z-20 flex flex-row flex-nowrap items-center gap-1 whitespace-nowrap">
-                      <span className="text-xs font-bold text-black dark:text-white">
+                      <span
+                        className="text-xs font-bold"
+                        style={{
+                          color: isDarkHorizon ? 'rgba(255,255,255,0.95)' : undefined,
+                          textShadow: isDarkHorizon
+                            ? '0 0 10px rgba(167,139,250,1), 0 0 24px rgba(139,92,246,0.85), 0 0 48px rgba(99,102,241,0.6), 0 1px 3px rgba(0,0,0,0.9)'
+                            : undefined,
+                        }}
+                      >
                         Welcome,&nbsp;
                       </span>
                       <button
                         onClick={() =>
                           setShowTitleCarousel(true)
                         }
-                        className="cursor-pointer font-bold text-black dark:text-white text-xs flex-shrink-0 whitespace-nowrap"
+                        className="cursor-pointer font-bold text-xs flex-shrink-0 whitespace-nowrap"
                         style={{
                           padding: 0,
                           margin: 0,
                           border: "none",
                           background: "none",
+                          color: isDarkHorizon ? 'rgba(255,255,255,0.95)' : undefined,
+                          textShadow: isDarkHorizon
+                            ? '0 0 10px rgba(167,139,250,1), 0 0 24px rgba(139,92,246,0.85), 0 0 48px rgba(99,102,241,0.6), 0 1px 3px rgba(0,0,0,0.9)'
+                            : undefined,
                         }}
                       >
                         {auth.user?.firstName || "User"}

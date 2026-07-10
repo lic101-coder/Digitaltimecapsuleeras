@@ -739,9 +739,6 @@ export function VoyageEpicCeremony({
             >
               Stars Aligned
             </h2>
-            <p className="text-2xl text-cyan-300 drop-shadow-lg" style={{ textShadow: '0 0 20px rgba(103, 232, 249, 0.8)' }}>
-              {capsuleTitle}
-            </p>
           </motion.div>
         )}
       </AnimatePresence>

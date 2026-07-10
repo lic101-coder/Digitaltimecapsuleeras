@@ -167,23 +167,6 @@ export function PetStarlitCeremony({
         ))}
       </div>
 
-      {/* Title */}
-      <AnimatePresence>
-        {stage === 'intro' && capsuleTitle && (
-          <motion.div
-            initial={{ opacity: 0, y: -30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-x-0 top-[15%] z-30 text-center px-8"
-          >
-            <h2 className="text-3xl md:text-5xl font-bold text-blue-100 drop-shadow-2xl">
-              {capsuleTitle}
-            </h2>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Constellation stars appearing */}
       <AnimatePresence>
         {(stage === 'stars' || stage === 'connecting' || stage === 'constellation' || stage === 'moon' || stage === 'shooting' || stage === 'radiance') && (

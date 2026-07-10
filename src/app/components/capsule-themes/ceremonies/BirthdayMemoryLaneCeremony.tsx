@@ -248,14 +248,6 @@ export function BirthdayMemoryLaneCeremony({
                 >
                   Here's to another beautiful year
                 </motion.p>
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.5 }}
-                  className="text-2xl font-serif text-amber-800 text-center px-8 mt-4"
-                >
-                  {capsuleTitle}
-                </motion.p>
               </motion.div>
               
               {/* Sparkles around the heart */}

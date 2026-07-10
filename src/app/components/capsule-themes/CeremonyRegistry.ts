@@ -124,15 +124,15 @@ export const CEREMONY_REGISTRY: Record<string, CeremonyConfig[]> = {
     },
     {
       id: 'genesis',
-      name: 'Genesis - Birth of a World',
-      description: 'Your world begins today',
-      duration: 20,
-      mood: 'Epic & Primordial',
-      visualStyle: 'Big Bang ignition, molten planet forms, meteor bombardment, oceans fill with torrential rain, first life sparks, Earth-like continents green with biodiversity explosion, view from space',
+      name: 'The First Heartbeat',
+      description: 'Where life first stirs',
+      duration: 23,
+      mood: 'Sacred & Luminous',
+      visualStyle: 'Pure darkness — a single amber pulse at 150 BPM, glowing EKG thread draws across the void, cells divide from the central beat, an organic heart forms and radiates luminous vein-threads, world warms from void-black to amber to rose to living green',
       preview: {
-        primaryColor: '#3b82f6',
-        secondaryColor: '#10b981',
-        icon: '🌍'
+        primaryColor: '#FF7820',
+        secondaryColor: '#FF4010',
+        icon: '🫀'
       }
     }
   ],
@@ -517,15 +517,15 @@ export const CEREMONY_REGISTRY: Record<string, CeremonyConfig[]> = {
     },
     {
       id: 'digital-avatar',
-      name: 'Digital Avatar Boot-Up',
-      description: 'First Day Remote Work',
-      duration: 15,
-      mood: 'Futuristic & Tech',
-      visualStyle: 'Home office with coffee, Matrix code rain, avatar pixelation to smooth render, video call grid welcome, dual reality split screen harmony',
+      name: 'The Hourglass Flip',
+      description: 'Your time begins now',
+      duration: 23,
+      mood: 'Timeless & Ceremonial',
+      visualStyle: 'Ornate brass hourglass heavy with ashen past-sand, dramatic pause in the void — then the glass turns on its own, dark sand scatters like ash, pure gold pours and cascades, luminous grains fill the chamber as warmth blooms',
       preview: {
-        primaryColor: '#00ffff',
-        secondaryColor: '#ff00ff',
-        icon: '💻'
+        primaryColor: '#D4A020',
+        secondaryColor: '#FFD840',
+        icon: '⏳'
       }
     },
     {

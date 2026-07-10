@@ -1,22 +1,97 @@
 /**
- * Birthday - Balloon Celebration Ceremony (CLEAR & FUN)
- * 
- * Birthday balloons float up, multiply, then pop into brilliant radiance.
- * Features: Balloons rise from bottom → more balloons join → they bounce and sway
- * → balloons pop in sequence with sparkles → final massive radiance burst
- * 
- * Stages:
+ * Birthday - Balloon Celebration Ceremony (MOBILE-SAFE REBUILD)
+ *
+ * Colorful balloons float up, sway, pop like fireworks, radiance finale.
+ * Performance: all Math.random() in useMemo, CSS keyframes for balloon sway,
+ * pop sparkles capped and staggered, max ~20 simultaneous animated elements.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { getOptimalParticleCount } from './ceremonyOptimization';
 
 interface BirthdayPartyCeremonyProps {
   capsuleTitle: string;
   media: any[];
   isPreview?: boolean;
   onComplete?: () => void;
+}
+
+const CSS = `
+@keyframes balloon-sway-a {
+  0%,100% { transform: rotate(-6deg) translateX(-6px); }
+  50%      { transform: rotate(6deg) translateX(6px); }
+}
+@keyframes balloon-sway-b {
+  0%,100% { transform: rotate(5deg) translateX(5px); }
+  50%      { transform: rotate(-5deg) translateX(-5px); }
+}
+@keyframes balloon-sway-c {
+  0%,100% { transform: rotate(-4deg) translateX(-4px); }
+  50%      { transform: rotate(7deg) translateX(7px); }
+}
+@keyframes pop-shockwave {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.9; }
+  60%  { opacity: 0.5; }
+  100% { transform: translate(-50%,-50%) scale(2.4); opacity: 0; }
+}
+@keyframes orbit-ring-spin {
+  from { transform: translate(-50%,-50%) rotate(0deg); }
+  to   { transform: translate(-50%,-50%) rotate(360deg); }
+}
+@keyframes confetti-pulse {
+  0%,100% { opacity: 0.88; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.03); }
+}
+`;
+
+const BALLOON_COLORS = [
+  { main: '#ef4444', light: '#fca5a5', dark: '#dc2626', shadow: 'rgba(239,68,68,0.55)' },
+  { main: '#f59e0b', light: '#fcd34d', dark: '#d97706', shadow: 'rgba(245,158,11,0.55)' },
+  { main: '#eab308', light: '#fde047', dark: '#ca8a04', shadow: 'rgba(234,179,8,0.55)' },
+  { main: '#22c55e', light: '#86efac', dark: '#16a34a', shadow: 'rgba(34,197,94,0.55)' },
+  { main: '#3b82f6', light: '#93c5fd', dark: '#2563eb', shadow: 'rgba(59,130,246,0.55)' },
+  { main: '#a855f7', light: '#d8b4fe', dark: '#9333ea', shadow: 'rgba(168,85,247,0.55)' },
+  { main: '#ec4899', light: '#f9a8d4', dark: '#db2777', shadow: 'rgba(236,72,153,0.55)' }
+];
+
+const SWAY_ANIMS = ['balloon-sway-a', 'balloon-sway-b', 'balloon-sway-c'];
+
+function BalloonShape({ color, size = 80 }: { color: typeof BALLOON_COLORS[0]; size?: number }) {
+  return (
+    <div style={{ position: 'relative', width: size, height: size * 1.18 }}>
+      {/* Shine */}
+      <div style={{
+        position: 'absolute', top: '20%', left: '28%',
+        width: size * 0.36, height: size * 0.42,
+        background: 'radial-gradient(ellipse at 30% 30%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.25) 55%, transparent 70%)',
+        borderRadius: '50%', filter: 'blur(3px)'
+      }} />
+      {/* Body */}
+      <div style={{
+        width: size, height: size * 1.18,
+        background: `radial-gradient(ellipse at 35% 35%, ${color.light} 0%, ${color.main} 50%, ${color.dark} 100%)`,
+        borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+        boxShadow: `0 5px 22px ${color.shadow}, inset -8px -8px 18px rgba(0,0,0,0.18)`,
+        position: 'relative'
+      }}>
+        {/* Knot */}
+        <div style={{
+          position: 'absolute', bottom: '-10px', left: '50%',
+          transform: 'translateX(-50%)',
+          width: '14px', height: '10px',
+          background: color.dark, borderRadius: '50%',
+          boxShadow: `0 2px 5px ${color.shadow}`
+        }} />
+      </div>
+      {/* String */}
+      <div style={{
+        position: 'absolute', bottom: '-75px', left: '50%',
+        transform: 'translateX(-50%)',
+        width: '2px', height: '72px',
+        background: `linear-gradient(to bottom, ${color.dark}, rgba(255,255,255,0.25))`,
+      }} />
+    </div>
+  );
 }
 
 export function BirthdayPartyCeremony({
@@ -29,47 +104,101 @@ export function BirthdayPartyCeremony({
 
   useEffect(() => {
     const timeline = [
-      { time: 0, action: () => setStage('intro') },
-      { time: 600, action: () => setStage('float1') },
-      { time: 2200, action: () => setStage('float2') },
-      { time: 4200, action: () => setStage('bounce') },
-      { time: 7200, action: () => setStage('pop') },
-      { time: 9200, action: () => setStage('radiance') },
+      { time: 0,     action: () => setStage('intro') },
+      { time: 600,   action: () => setStage('float1') },
+      { time: 2200,  action: () => setStage('float2') },
+      { time: 4200,  action: () => setStage('bounce') },
+      { time: 7200,  action: () => setStage('pop') },
+      { time: 9200,  action: () => setStage('radiance') },
       { time: 12500, action: () => setStage('outro') },
       { time: 13000, action: () => onComplete?.() }
     ];
-
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
     return () => timeouts.forEach(clearTimeout);
-  }, []); // Only run once on mount - don't restart ceremony midway through
+  }, []);
 
-  const balloonColors = [
-    { main: '#ef4444', light: '#fca5a5', dark: '#dc2626', shadow: 'rgba(239, 68, 68, 0.6)' },     // red
-    { main: '#f59e0b', light: '#fcd34d', dark: '#d97706', shadow: 'rgba(245, 158, 11, 0.6)' },    // orange
-    { main: '#eab308', light: '#fde047', dark: '#ca8a04', shadow: 'rgba(234, 179, 8, 0.6)' },     // yellow
-    { main: '#22c55e', light: '#86efac', dark: '#16a34a', shadow: 'rgba(34, 197, 94, 0.6)' },     // green
-    { main: '#3b82f6', light: '#93c5fd', dark: '#2563eb', shadow: 'rgba(59, 130, 246, 0.6)' },    // blue
-    { main: '#a855f7', light: '#d8b4fe', dark: '#9333ea', shadow: 'rgba(168, 85, 247, 0.6)' },    // purple
-    { main: '#ec4899', light: '#f9a8d4', dark: '#db2777', shadow: 'rgba(236, 72, 153, 0.6)' }     // pink
-  ];
+  // Wave 1: 7 balloons, pre-computed positions
+  const wave1 = useMemo(() => Array.from({ length: 7 }, (_, i) => ({
+    xPos: 15 + i * 10,
+    floatHeight: 340 + (i % 3) * 35,
+    swayAnim: SWAY_ANIMS[i % 3],
+    swayDuration: 2.8 + i * 0.25,
+    delay: i * 0.14,
+    colorIdx: i % BALLOON_COLORS.length
+  })), []);
+
+  // Wave 2: 6 balloons
+  const wave2 = useMemo(() => Array.from({ length: 6 }, (_, i) => ({
+    xPos: 20 + i * 10,
+    floatHeight: 310 + (i % 2) * 40,
+    swayAnim: SWAY_ANIMS[(i + 1) % 3],
+    swayDuration: 3.1 + i * 0.2,
+    delay: i * 0.12,
+    colorIdx: (i + 3) % BALLOON_COLORS.length
+  })), []);
+
+  // Pop sparkles: 8 balloons × 8 sparkles = 64, staggered
+  const popSparkles = useMemo(() => {
+    const balloons = [...wave1.slice(0, 5), ...wave2.slice(0, 3)];
+    return balloons.flatMap((b, balloonIdx) =>
+      Array.from({ length: 8 }, (_, sparkleIdx) => {
+        const angle = (sparkleIdx / 8) * Math.PI * 2;
+        const dist = 35 + (sparkleIdx % 3) * 25;
+        return {
+          balloonIdx,
+          xCenter: (b.xPos - 50) * 6,
+          yCenter: -(b.floatHeight * 0.85),
+          dx: Math.cos(angle) * dist,
+          dy: Math.sin(angle) * dist,
+          colorIdx: b.colorIdx,
+          delay: balloonIdx * 0.12 + sparkleIdx * 0.025
+        };
+      })
+    );
+  }, []);
+
+  // Pop shockwave positions — one per balloon
+  const popShockwaves = useMemo(() => wave1.slice(0, 5).map((b, i) => ({
+    xCenter: `${b.xPos}%`,
+    yOffset: b.floatHeight * 0.85,
+    delay: i * 0.12,
+    colorIdx: b.colorIdx
+  })), []);
+
+  // 24 rays
+  const rays = useMemo(() => Array.from({ length: 24 }, (_, i) => ({
+    angle: (i / 24) * 360,
+    height: i % 3 === 0 ? 10 : i % 3 === 1 ? 6 : 8,
+    colorIdx: i % BALLOON_COLORS.length
+  })), []);
+
+  // 18 burst particles — deterministic
+  const burstParticles = useMemo(() => Array.from({ length: 18 }, (_, i) => {
+    const angle = (i / 18) * Math.PI * 2;
+    const dist = 110 + (i % 4) * 55;
+    return {
+      x: Math.cos(angle) * dist,
+      y: Math.sin(angle) * dist,
+      colorIdx: i % BALLOON_COLORS.length,
+      size: 10 + (i % 4) * 3,
+      isCircle: i % 3 === 0,
+      delay: i * 0.04
+    };
+  }), []);
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#0f0a1a] via-[#1a1028] to-[#0a0510]">
-      {/* Dynamic background */}
+      <style>{CSS}</style>
+
+      {/* Background */}
       <motion.div
         className="absolute inset-0"
         animate={{
           background: stage === 'radiance'
-            ? [
-                'radial-gradient(ellipse at 50% 50%, #3a2050 0%, #1a1028 50%, #0f0a1a 100%)',
-                'radial-gradient(ellipse at 50% 50%, #5a3080 0%, #1a1028 50%, #0f0a1a 100%)'
-              ]
+            ? 'radial-gradient(ellipse at 50% 50%, #5a3080 0%, #1a1028 50%, #0f0a1a 100%)'
             : 'radial-gradient(ellipse at 50% 50%, #1a1028 0%, #0f0a1a 70%, #050208 100%)'
         }}
-        transition={{ 
-          duration: stage === 'radiance' ? 0.7 : 2,
-          repeat: stage === 'radiance' ? Infinity : 0
-        }}
+        transition={{ duration: 1.2 }}
       />
 
       {/* Title */}
@@ -82,7 +211,7 @@ export function BirthdayPartyCeremony({
             transition={{ duration: 0.6 }}
             className="absolute top-16 left-0 right-0 text-center z-20"
           >
-            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-red-300 via-yellow-300 via-green-300 to-blue-300 bg-clip-text text-transparent drop-shadow-2xl">
+            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-red-300 via-yellow-300 to-blue-300 bg-clip-text text-transparent drop-shadow-2xl">
               Balloon Celebration
             </h1>
             <p className="text-purple-200/80 mt-3 text-base">Let's celebrate!</p>
@@ -90,426 +219,194 @@ export function BirthdayPartyCeremony({
         )}
       </AnimatePresence>
 
-      {/* Main scene */}
       <div className="absolute inset-0">
-        
-        {/* First wave of balloons */}
+
+        {/* Wave 1 balloons */}
         <AnimatePresence>
-          {(stage === 'float1' || stage === 'float2' || stage === 'bounce') && 
-            [...Array(7)].map((_, i) => {
-              const color = balloonColors[i];
-              // PERFECTLY CENTERED: Spread 7 balloons evenly across the modal
-              // Distribution: 15%, 25%, 35%, 45%, 55%, 65%, 75%
-              const xPos = 15 + i * 10; // Start at 15%, increment by 10%
-              
-              return (
-                <motion.div
-                  key={`balloon-1-${i}`}
-                  className="absolute z-30"
-                  style={{
-                    left: `${xPos}%`, // Percentage positioning relative to modal
-                    bottom: '-120px', // Start from below the screen
-                    transform: 'translateX(-50%)' // Center each balloon on its position
-                  }}
-                  initial={{ y: 0, opacity: 0, scale: 0 }}
-                  animate={stage === 'bounce' ? {
-                    y: [`-${350 + (i % 3) * 35}px`, `-${365 + (i % 3) * 35}px`, `-${335 + (i % 3) * 35}px`, `-${365 + (i % 3) * 35}px`],
-                    x: [0, 15, -10, 15],
-                    rotate: [0, 8, -6, 8],
-                    scale: 1,
-                    opacity: 1
-                  } : {
-                    y: `-${350 + (i % 3) * 35}px`, // Float UP
-                    x: [0, 10, -5, 10],
-                    rotate: [0, 5, -3, 5],
-                    opacity: 1,
-                    scale: 1
-                  }}
-                  exit={{ 
-                    scale: 0,
-                    opacity: 0,
-                    y: `-${550 + (i % 3) * 35}px` // Exit upwards
-                  }}
-                  transition={{
-                    y: { duration: stage === 'bounce' ? 2.5 + i * 0.2 : 2, delay: i * 0.15, ease: stage === 'bounce' ? 'easeInOut' : 'easeOut', repeat: stage === 'bounce' ? Infinity : 0 },
-                    x: { duration: 3 + i * 0.3, repeat: Infinity, ease: 'easeInOut', delay: i * 0.1 },
-                    rotate: { duration: 3 + i * 0.3, repeat: Infinity, ease: 'easeInOut', delay: i * 0.1 },
-                    opacity: { duration: 0.6, delay: i * 0.15 },
-                    scale: { duration: 0.6, delay: i * 0.15 },
-                    exit: { duration: 0.8, delay: i * 0.08 }
-                  }}
-                >
-                  {/* Balloon string */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '-80px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: '2px',
-                      height: '80px',
-                      background: `linear-gradient(to bottom, ${color.dark}, rgba(255, 255, 255, 0.3))`,
-                      transformOrigin: 'top center'
-                    }}
-                  />
-
-                  {/* Balloon shine */}
-                  <motion.div
-                    className="absolute"
-                    style={{
-                      top: '20%',
-                      left: '30%',
-                      width: '30px',
-                      height: '35px',
-                      background: 'radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.3) 50%, transparent 70%)',
-                      borderRadius: '50%',
-                      filter: 'blur(4px)'
-                    }}
-                  />
-
-                  {/* Balloon body */}
-                  <div
-                    style={{
-                      width: '80px',
-                      height: '95px',
-                      background: `radial-gradient(ellipse at 35% 35%, ${color.light} 0%, ${color.main} 50%, ${color.dark} 100%)`,
-                      borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
-                      boxShadow: `0 5px 25px ${color.shadow}, inset -10px -10px 20px rgba(0, 0, 0, 0.2)`,
-                      position: 'relative'
-                    }}
-                  >
-                    {/* Balloon knot */}
-                    <div
-                      style={{
-                        position: 'absolute',
-                        bottom: '-12px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: '16px',
-                        height: '12px',
-                        background: color.dark,
-                        borderRadius: '50%',
-                        boxShadow: `0 2px 6px ${color.shadow}`
-                      }}
-                    />
-                  </div>
-                </motion.div>
-              );
-            })
+          {(stage === 'float1' || stage === 'float2' || stage === 'bounce') &&
+            wave1.map((b, i) => (
+              <motion.div
+                key={`b1-${i}`}
+                className="absolute z-30"
+                style={{ left: `${b.xPos}%`, bottom: '-120px', transform: 'translateX(-50%)' }}
+                initial={{ y: 0, opacity: 0, scale: 0 }}
+                animate={{ y: -b.floatHeight, opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0, y: -(b.floatHeight + 180) }}
+                transition={{
+                  y: { duration: 1.9, delay: b.delay, ease: 'easeOut' },
+                  opacity: { duration: 0.55, delay: b.delay },
+                  scale: { duration: 0.55, delay: b.delay },
+                  exit: { duration: 0.7, delay: i * 0.07 }
+                }}
+              >
+                <div style={{
+                  animation: stage === 'bounce'
+                    ? `${b.swayAnim} ${b.swayDuration}s ease-in-out infinite`
+                    : undefined,
+                  transformOrigin: 'bottom center'
+                }}>
+                  <BalloonShape color={BALLOON_COLORS[b.colorIdx]} />
+                </div>
+              </motion.div>
+            ))
           }
         </AnimatePresence>
 
-        {/* Second wave of balloons */}
+        {/* Wave 2 balloons */}
         <AnimatePresence>
-          {(stage === 'float2' || stage === 'bounce') && 
-            [...Array(6)].map((_, i) => {
-              const color = balloonColors[(i + 3) % balloonColors.length];
-              // Second wave centered: 20%, 30%, 40%, 50%, 60%, 70%
-              const xPos = 20 + i * 10; // Start at 20%, increment by 10%
-              
-              return (
-                <motion.div
-                  key={`balloon-2-${i}`}
-                  className="absolute z-28"
-                  style={{
-                    left: `${xPos}%`,
-                    bottom: '-120px', // Start from below the screen
-                    transform: 'translateX(-50%)' // Center each balloon on its position
-                  }}
-                  initial={{ y: 0, opacity: 0, scale: 0 }}
-                  animate={stage === 'bounce' ? {
-                    y: [`-${320 + (i % 2) * 40}px`, `-${335 + (i % 2) * 40}px`, `-${305 + (i % 2) * 40}px`, `-${335 + (i % 2) * 40}px`],
-                    x: [0, -12, 8, -12],
-                    rotate: [0, -7, 5, -7],
-                    scale: 1,
-                    opacity: 1
-                  } : {
-                    y: `-${320 + (i % 2) * 40}px`, // Float UP
-                    x: [0, -8, 5, -8],
-                    rotate: [0, -4, 3, -4],
-                    opacity: 1,
-                    scale: 1
-                  }}
-                  exit={{ 
-                    scale: 0,
-                    opacity: 0,
-                    y: `-${520 + (i % 2) * 40}px` // Exit upwards
-                  }}
-                  transition={{
-                    y: { duration: stage === 'bounce' ? 2.8 + i * 0.25 : 1.8, delay: i * 0.12, ease: stage === 'bounce' ? 'easeInOut' : 'easeOut', repeat: stage === 'bounce' ? Infinity : 0 },
-                    x: { duration: 3.5 + i * 0.25, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 },
-                    rotate: { duration: 3.5 + i * 0.25, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 },
-                    opacity: { duration: 0.6, delay: i * 0.12 },
-                    scale: { duration: 0.6, delay: i * 0.12 },
-                    exit: { duration: 0.8, delay: 0.3 + i * 0.08 }
-                  }}
-                >
-                  {/* Balloon string */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '-80px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: '2px',
-                      height: '80px',
-                      background: `linear-gradient(to bottom, ${color.dark}, rgba(255, 255, 255, 0.3))`,
-                      transformOrigin: 'top center'
-                    }}
-                  />
-
-                  {/* Balloon shine */}
-                  <motion.div
-                    className="absolute"
-                    style={{
-                      top: '20%',
-                      left: '30%',
-                      width: '30px',
-                      height: '35px',
-                      background: 'radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.3) 50%, transparent 70%)',
-                      borderRadius: '50%',
-                      filter: 'blur(4px)'
-                    }}
-                  />
-
-                  {/* Balloon body */}
-                  <div
-                    style={{
-                      width: '80px',
-                      height: '95px',
-                      background: `radial-gradient(ellipse at 35% 35%, ${color.light} 0%, ${color.main} 50%, ${color.dark} 100%)`,
-                      borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
-                      boxShadow: `0 5px 25px ${color.shadow}, inset -10px -10px 20px rgba(0, 0, 0, 0.2)`,
-                      position: 'relative'
-                    }}
-                  >
-                    {/* Balloon knot */}
-                    <div
-                      style={{
-                        position: 'absolute',
-                        bottom: '-12px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: '16px',
-                        height: '12px',
-                        background: color.dark,
-                        borderRadius: '50%',
-                        boxShadow: `0 2px 6px ${color.shadow}`
-                      }}
-                    />
-                  </div>
-                </motion.div>
-              );
-            })
+          {(stage === 'float2' || stage === 'bounce') &&
+            wave2.map((b, i) => (
+              <motion.div
+                key={`b2-${i}`}
+                className="absolute z-28"
+                style={{ left: `${b.xPos}%`, bottom: '-120px', transform: 'translateX(-50%)' }}
+                initial={{ y: 0, opacity: 0, scale: 0 }}
+                animate={{ y: -b.floatHeight, opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0, y: -(b.floatHeight + 180) }}
+                transition={{
+                  y: { duration: 1.7, delay: b.delay, ease: 'easeOut' },
+                  opacity: { duration: 0.5, delay: b.delay },
+                  scale: { duration: 0.5, delay: b.delay },
+                  exit: { duration: 0.7, delay: 0.25 + i * 0.07 }
+                }}
+              >
+                <div style={{
+                  animation: stage === 'bounce'
+                    ? `${b.swayAnim} ${b.swayDuration}s ease-in-out infinite`
+                    : undefined,
+                  transformOrigin: 'bottom center'
+                }}>
+                  <BalloonShape color={BALLOON_COLORS[b.colorIdx]} size={72} />
+                </div>
+              </motion.div>
+            ))
           }
         </AnimatePresence>
 
-        {/* Balloon popping sparkles */}
+        {/* Pop shockwave rings — one per balloon */}
         <AnimatePresence>
-          {stage === 'pop' && (
-            <>
-              {/* Pop sparkles from each balloon position */}
-              {[...Array(13)].map((_, balloonIdx) => {
-                // Match the PERFECTLY CENTERED balloon positions
-                const xPos = balloonIdx < 7 
-                  ? 26 + balloonIdx * 8  // First wave: 26, 34, 42, 50, 58, 66, 74
-                  : 27 + (balloonIdx - 7) * 10; // Second wave: 27, 37, 47, 57, 67, 77
-                const yOffset = balloonIdx < 7 
-                  ? (balloonIdx % 3) * 35
-                  : ((balloonIdx - 7) % 2) * 40;
-                
-                // Generate sparkles for this balloon
-                return [...Array(15)].map((_, sparkleIdx) => {
-                  const angle = (sparkleIdx / 15) * Math.PI * 2;
-                  const distance = 40 + Math.random() * 70;
-                  const color = balloonColors[balloonIdx % balloonColors.length];
-                  
-                  return (
-                    <motion.div
-                      key={`sparkle-${balloonIdx}-${sparkleIdx}`}
-                      className="absolute z-32 left-1/2 top-1/2"
-                      initial={{ 
-                        x: 0,
-                        y: 0,
-                        scale: 0,
-                        opacity: 0
-                      }}
-                      animate={{
-                        x: [(xPos - 50) * 10, (xPos - 50) * 10 + Math.cos(angle) * distance], // Convert % to pixels relative to center
-                        y: [-yOffset, -yOffset + Math.sin(angle) * distance],
-                        scale: [0, 2, 1.5, 0],
-                        opacity: [0, 1, 0.8, 0],
-                        rotate: [0, Math.random() * 360]
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        delay: balloonIdx * 0.1 + sparkleIdx * 0.02,
-                        ease: 'easeOut'
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: `${8 + Math.random() * 8}px`,
-                          height: '3px',
-                          background: `linear-gradient(90deg, transparent, ${color.main}, transparent)`,
-                          boxShadow: `0 0 10px ${color.shadow}`,
-                          filter: 'blur(1px)'
-                        }}
-                      />
-                    </motion.div>
-                  );
-                });
-              }).flat()}
-            </>
-          )}
+          {stage === 'pop' && popShockwaves.map((s, i) => (
+            <div
+              key={`shock-${i}`}
+              className="absolute pointer-events-none"
+              style={{
+                left: s.xCenter,
+                bottom: `${s.yOffset}px`,
+                width: '80px', height: '80px',
+                border: `2px solid ${BALLOON_COLORS[s.colorIdx].main}`,
+                borderRadius: '50%',
+                boxShadow: `0 0 14px ${BALLOON_COLORS[s.colorIdx].shadow}`,
+                animation: `pop-shockwave 0.7s ease-out ${s.delay}s forwards`,
+                opacity: 0
+              }}
+            />
+          ))}
         </AnimatePresence>
 
-        {/* EXPLOSIVE radiance */}
+        {/* Pop sparkles — 64 total, staggered so max ~20 at once */}
+        <AnimatePresence>
+          {stage === 'pop' && popSparkles.map((s, i) => (
+            <motion.div
+              key={`spark-${i}`}
+              className="absolute z-32 left-1/2 top-1/2 pointer-events-none"
+              initial={{ x: s.xCenter, y: s.yCenter, scale: 0, opacity: 0 }}
+              animate={{
+                x: s.xCenter + s.dx,
+                y: s.yCenter + s.dy,
+                scale: [0, 1.8, 1.4, 0],
+                opacity: [0, 1, 0.75, 0]
+              }}
+              transition={{ duration: 1.2, delay: s.delay, ease: 'easeOut' }}
+            >
+              <div style={{
+                width: '10px', height: '3px',
+                background: `linear-gradient(90deg, transparent, ${BALLOON_COLORS[s.colorIdx].main}, transparent)`,
+                boxShadow: `0 0 8px ${BALLOON_COLORS[s.colorIdx].shadow}`,
+                filter: 'blur(0.5px)'
+              }} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        {/* Radiance */}
         <AnimatePresence>
           {stage === 'radiance' && (
             <>
-              {/* 48 colorful rays */}
-              {[...Array(48)].map((_, i) => {
-                const angle = (i / 48) * 360;
-                const color = balloonColors[i % balloonColors.length];
-
-                return (
-                  <motion.div
+              {/* 24 rays — static wrapper */}
+              <motion.div
+                className="absolute inset-0 pointer-events-none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6 }}
+              >
+                {rays.map((r, i) => (
+                  <div
                     key={`ray-${i}`}
-                    className="absolute"
                     style={{
-                      left: '50%',
-                      top: '50%',
-                      width: '200vw',
-                      height: i % 3 === 0 ? '11px' : i % 3 === 1 ? '7px' : '9px',
-                      marginLeft: '-100vw',
-                      marginTop: i % 3 === 0 ? '-5.5px' : i % 3 === 1 ? '-3.5px' : '-4.5px',
-                      background: `linear-gradient(to right, transparent, ${color.main.replace(')', ', 0.95)')} 50%, transparent)`,
+                      position: 'absolute',
+                      left: '50%', top: '50%',
+                      width: '200vw', height: `${r.height}px`,
+                      marginLeft: '-100vw', marginTop: `${-r.height / 2}px`,
+                      background: `linear-gradient(to right, transparent, ${BALLOON_COLORS[r.colorIdx].main} 50%, transparent)`,
                       transformOrigin: 'center center',
-                      transform: `rotate(${angle}deg)`,
+                      transform: `rotate(${r.angle}deg)`,
                       filter: 'blur(2px)'
                     }}
-                    initial={{ scaleX: 0, opacity: 0 }}
-                    animate={{
-                      scaleX: [0, 2.8, 2.5],
-                      opacity: [0, 1, 0.95]
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      ease: 'easeOut'
-                    }}
                   />
-                );
-              })}
+                ))}
+              </motion.div>
 
-              {/* Massive radiant core */}
+              {/* Radiant core — single element, CSS pulse */}
               <motion.div
                 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                 initial={{ scale: 0, opacity: 0 }}
-                animate={{
-                  scale: [0, 7.5, 7],
-                  opacity: [0, 1, 0.98],
-                  rotate: [0, 180]
-                }}
-                transition={{ duration: 1.8, ease: 'easeOut' }}
+                animate={{ scale: [0, 5.5, 5.2], opacity: [0, 1, 0.96] }}
+                transition={{ duration: 1.6, ease: 'easeOut' }}
               >
-                <div
-                  className="w-[48rem] h-[48rem] rounded-full"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(254, 226, 226, 0.98) 5%, rgba(253, 230, 138, 0.96) 12%, rgba(134, 239, 172, 0.92) 20%, rgba(147, 197, 253, 0.88) 30%, rgba(216, 180, 254, 0.82) 42%, rgba(249, 168, 212, 0.72) 58%, rgba(251, 146, 60, 0.58) 76%, rgba(239, 68, 68, 0.38) 90%, transparent 98%)',
-                    boxShadow: '0 0 500px rgba(168, 85, 247, 1), 0 0 700px rgba(236, 72, 153, 0.8)',
-                    filter: 'blur(120px)'
-                  }}
-                />
+                <div style={{
+                  width: '400px', height: '400px', borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(253,230,138,0.95) 10%, rgba(134,239,172,0.88) 22%, rgba(147,197,253,0.82) 36%, rgba(216,180,254,0.75) 50%, rgba(249,168,212,0.6) 65%, transparent 85%)',
+                  filter: 'blur(80px)',
+                  animation: 'confetti-pulse 2.5s ease-in-out infinite'
+                }} />
               </motion.div>
 
-              {/* Orbiting confetti pieces */}
-              {(() => {
-                const particles = [];
-                for (let ring = 0; ring < 3; ring++) {
-                  const radius = 200 + ring * 120;
-                  const desktopCount = 50 + ring * 25;
-                  const count = getOptimalParticleCount(desktopCount);
-                  
-                  for (let i = 0; i < count; i++) {
-                    const angle = (i / count) * 360;
-                    const color = balloonColors[i % balloonColors.length].main;
-                    
-                    particles.push(
-                      <motion.div
-                        key={`orbit-${ring}-${i}`}
-                        className="absolute"
-                        style={{
-                          width: i % 3 === 0 ? '12px' : '8px',
-                          height: i % 3 === 0 ? '8px' : '12px',
-                          borderRadius: i % 2 === 0 ? '50%' : '2px',
-                          background: color,
-                          boxShadow: `0 0 15px ${color}`,
-                          filter: 'blur(1px)'
-                        }}
-                        animate={{
-                          x: [
-                            Math.cos(angle * Math.PI / 180) * radius,
-                            Math.cos((angle + 360) * Math.PI / 180) * radius
-                          ],
-                          y: [
-                            Math.sin(angle * Math.PI / 180) * radius,
-                            Math.sin((angle + 360) * Math.PI / 180) * radius
-                          ],
-                          rotate: [0, 360]
-                        }}
-                        transition={{
-                          delay: 0.5 + (ring * 75 + i) * 0.003,
-                          duration: 8 + ring * 2,
-                          repeat: Infinity,
-                          ease: 'linear'
-                        }}
-                      />
-                    );
-                  }
-                }
-                return particles;
-              })()}
+              {/* CSS orbit ring */}
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  left: '50%', top: '50%',
+                  width: '360px', height: '360px',
+                  border: '2px solid rgba(168,85,247,0.45)',
+                  borderRadius: '50%',
+                  boxShadow: '0 0 16px rgba(168,85,247,0.35)',
+                  animation: 'orbit-ring-spin 10s linear infinite'
+                }}
+              />
 
-              {/* Expanding burst */}
-              {[...Array(getOptimalParticleCount(90))].map((_, i) => {
-                const angle = (i / getOptimalParticleCount(90)) * Math.PI * 2;
-                const distance = 140 + Math.random() * 340;
-                const x = Math.cos(angle) * distance;
-                const y = Math.sin(angle) * distance;
-                const color = balloonColors[i % balloonColors.length].main;
-
-                return (
-                  <motion.div
-                    key={`burst-${i}`}
-                    className="absolute"
-                    initial={{ x: 0, y: 0, scale: 0, opacity: 0, rotate: 0 }}
-                    animate={{
-                      x: x,
-                      y: [y, y + 160],
-                      scale: [0, 2.2, 1.8],
-                      opacity: [0, 1, 0.9, 0],
-                      rotate: [0, Math.random() * 720]
-                    }}
-                    transition={{
-                      duration: 3,
-                      delay: i * 0.006,
-                      ease: 'easeOut'
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: i % 2 === 0 ? '16px' : '12px',
-                        height: i % 2 === 0 ? '12px' : '16px',
-                        borderRadius: i % 3 === 0 ? '50%' : '2px',
-                        background: color,
-                        boxShadow: `0 0 12px ${color}`,
-                        filter: 'brightness(1.2)'
-                      }}
-                    />
-                  </motion.div>
-                );
-              })}
+              {/* 18 burst particles — deterministic */}
+              {burstParticles.map((p, i) => (
+                <motion.div
+                  key={`burst-${i}`}
+                  className="absolute left-1/2 top-1/2 pointer-events-none"
+                  initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                  animate={{
+                    x: p.x, y: [p.y, p.y + 100],
+                    scale: [0, 2, 1.6],
+                    opacity: [0, 1, 0.85, 0]
+                  }}
+                  transition={{ duration: 2.6, delay: p.delay, ease: 'easeOut' }}
+                >
+                  <div style={{
+                    width: p.isCircle ? `${p.size}px` : `${p.size + 4}px`,
+                    height: p.isCircle ? `${p.size}px` : '4px',
+                    borderRadius: p.isCircle ? '50%' : '2px',
+                    background: BALLOON_COLORS[p.colorIdx].main,
+                    boxShadow: `0 0 10px ${BALLOON_COLORS[p.colorIdx].shadow}`,
+                    filter: 'brightness(1.15)'
+                  }} />
+                </motion.div>
+              ))}
             </>
           )}
         </AnimatePresence>
@@ -519,16 +416,15 @@ export function BirthdayPartyCeremony({
       <AnimatePresence>
         {stage === 'radiance' && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
             className="absolute bottom-20 left-0 right-0 text-center z-40"
           >
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-red-200 via-yellow-200 via-green-200 to-blue-200 bg-clip-text text-transparent drop-shadow-2xl mb-3">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-red-200 via-yellow-200 to-blue-200 bg-clip-text text-transparent drop-shadow-2xl mb-3">
               Let's Celebrate!
             </h2>
-            <p className="text-2xl text-purple-200 drop-shadow-lg">{capsuleTitle}</p>
           </motion.div>
         )}
       </AnimatePresence>

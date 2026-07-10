@@ -916,15 +916,6 @@ export function TimeTravelerSingularityCeremony({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.7 }}
           >
-            <motion.h2
-              className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-wider"
-              style={{ color: '#00e5ff', textShadow: '0 0 28px rgba(0,229,255,0.8), 0 0 6px rgba(0,229,255,0.4)' }}
-              initial={{ scale: 0.85 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
-            >
-              {capsuleTitle}
-            </motion.h2>
             <motion.p
               className="text-xs sm:text-sm tracking-[0.2em] text-[#7c3aed]"
               style={{ textShadow: '0 0 12px rgba(124,58,237,0.7)' }}

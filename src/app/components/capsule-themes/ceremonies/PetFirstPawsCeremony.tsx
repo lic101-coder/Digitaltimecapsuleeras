@@ -60,22 +60,6 @@ export function PetFirstPawsCeremony({
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-sky-100 via-blue-50 to-amber-50">
-      {/* Title */}
-      <AnimatePresence>
-        {stage === 'title' && capsuleTitle && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.1 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-0 flex items-center justify-center z-50"
-          >
-            <h2 className="text-4xl md:text-6xl font-bold text-amber-800 drop-shadow-2xl text-center px-8">
-              {capsuleTitle}
-            </h2>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* STAGE 1: LONELY PERSON - ENHANCED EMOTIONAL DEPTH */}
       <AnimatePresence>

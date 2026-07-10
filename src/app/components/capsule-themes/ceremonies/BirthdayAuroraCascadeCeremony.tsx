@@ -21,9 +21,9 @@
  * 
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { getOptimalParticleCount } from './ceremonyOptimization';
+import { getOptimalParticleCount, isMobile } from './ceremonyOptimization';
 
 interface BirthdayAuroraCascadeCeremonyProps {
   capsuleTitle: string;
@@ -41,6 +41,7 @@ export function BirthdayAuroraCascadeCeremony({
   onComplete
 }: BirthdayAuroraCascadeCeremonyProps) {
   const [stage, setStage] = useState<'void' | 'pulse' | 'spark' | 'aurora_birth' | 'cascade' | 'symphony' | 'supernova' | 'outro'>('void');
+  const mobile = isMobile();
 
   useEffect(() => {
     const timeline = [
@@ -76,59 +77,88 @@ export function BirthdayAuroraCascadeCeremony({
   // Smooth easing function for cinematic feel
   const cinematicEase = [0.43, 0.13, 0.23, 0.96];
 
+  const bgStars = useMemo(() => Array.from({ length: getOptimalParticleCount(60) }, (_, i) => ({
+    id: i,
+    size: Math.random() * 1.5 + 0.5,
+    left: Math.random() * 100,
+    top: Math.random() * 100,
+    dur: 3 + Math.random() * 4,
+    delay: Math.random() * 2
+  })), []);
+
+  const fgStars = useMemo(() => Array.from({ length: getOptimalParticleCount(40) }, (_, i) => ({
+    id: i,
+    size: Math.random() * 3 + 1,
+    left: Math.random() * 100,
+    top: Math.random() * 100,
+    dur: 2 + Math.random() * 2,
+    delay: Math.random() * 2
+  })), []);
+
+  const vortexParticles = useMemo(() => {
+    const count = getOptimalParticleCount(24);
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i / count) * Math.PI * 2;
+      const layer = i % 4;
+      const radius = 120 + layer * 50;
+      return { id: i, angle, layer, radius };
+    });
+  }, []);
+
+  const curtainData = useMemo(() => Array.from({ length: getOptimalParticleCount(10) }, (_, i) => ({
+    id: i,
+    dur: 3 + Math.random() * 1.5,
+    xShift: (Math.random() - 0.5) * 60
+  })), []);
+
+  const explosionParticles = useMemo(() => {
+    const count = getOptimalParticleCount(48);
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i / count) * Math.PI * 2;
+      return { id: i, angle, distance: 200 + Math.random() * 350 };
+    });
+  }, []);
+
+  const starCss = `
+    @keyframes bac-twinkle-slow{0%,100%{opacity:0.2;transform:scale(1)}50%{opacity:0.5;transform:scale(1.2)}}
+    @keyframes bac-twinkle-fast{0%,100%{opacity:0.4;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+    @keyframes bac-beam-pulse{0%,100%{transform:scaleX(0.6);opacity:0.3}50%{transform:scaleX(1);opacity:0.8}}
+    @keyframes bac-title-shift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+    @keyframes bac-ray-in{0%{transform:scaleX(0);opacity:0}20%{opacity:1}100%{transform:scaleX(1);opacity:0.75}}
+    @keyframes bac-ray-fade{0%,100%{opacity:0.75}50%{opacity:0.45}}
+  `;
+
   if (!isVisible) return null;
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#000000] via-[#0a0118] to-[#000308]">
-      
-      {/* Deep space starfield with depth layers */}
+      <style>{starCss}</style>
+
+      {/* Deep space starfield with depth layers — CSS-animated, no repeat:Infinity on motion */}
       <div className="absolute inset-0">
-        {/* Background stars (distant, slower) */}
-        {[...Array(getOptimalParticleCount(60))].map((_, i) => (
-          <motion.div
-            key={`bg-star-${i}`}
+        {bgStars.map(s => (
+          <div
+            key={`bg-star-${s.id}`}
             className="absolute bg-white rounded-full opacity-30"
             style={{
-              width: Math.random() * 1.5 + 0.5 + 'px',
-              height: Math.random() * 1.5 + 0.5 + 'px',
-              left: Math.random() * 100 + '%',
-              top: Math.random() * 100 + '%',
-              boxShadow: '0 0 2px rgba(255, 255, 255, 0.4)'
-            }}
-            animate={{
-              opacity: [0.2, 0.5, 0.2],
-              scale: [1, 1.2, 1]
-            }}
-            transition={{
-              duration: 3 + Math.random() * 4,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-              ease: 'easeInOut'
+              width: s.size + 'px', height: s.size + 'px',
+              left: s.left + '%', top: s.top + '%',
+              boxShadow: '0 0 2px rgba(255,255,255,0.4)',
+              animation: `bac-twinkle-slow ${s.dur}s ease-in-out infinite`,
+              animationDelay: `${s.delay}s`
             }}
           />
         ))}
-        
-        {/* Foreground stars (closer, brighter) */}
-        {[...Array(getOptimalParticleCount(40))].map((_, i) => (
-          <motion.div
-            key={`fg-star-${i}`}
+        {fgStars.map(s => (
+          <div
+            key={`fg-star-${s.id}`}
             className="absolute bg-white rounded-full"
             style={{
-              width: Math.random() * 3 + 1 + 'px',
-              height: Math.random() * 3 + 1 + 'px',
-              left: Math.random() * 100 + '%',
-              top: Math.random() * 100 + '%',
-              boxShadow: '0 0 6px rgba(255, 255, 255, 0.8)'
-            }}
-            animate={{
-              opacity: [0.4, 1, 0.4],
-              scale: [1, 1.4, 1]
-            }}
-            transition={{
-              duration: 2 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-              ease: 'easeInOut'
+              width: s.size + 'px', height: s.size + 'px',
+              left: s.left + '%', top: s.top + '%',
+              boxShadow: '0 0 6px rgba(255,255,255,0.8)',
+              animation: `bac-twinkle-fast ${s.dur}s ease-in-out infinite`,
+              animationDelay: `${s.delay}s`
             }}
           />
         ))}
@@ -183,7 +213,7 @@ export function BirthdayAuroraCascadeCeremony({
                 className="w-32 h-32 rounded-full"
                 style={{
                   background: 'radial-gradient(circle, rgba(168,85,247,0.8) 0%, rgba(217,70,239,0.4) 50%, transparent 80%)',
-                  filter: 'blur(25px)'
+                  filter: mobile ? 'none' : 'blur(25px)'
                 }}
               />
             </motion.div>
@@ -210,7 +240,7 @@ export function BirthdayAuroraCascadeCeremony({
                 className="w-48 h-48 rounded-full"
                 style={{
                   background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(251,191,36,0.95) 20%, rgba(217,70,239,0.7) 50%, rgba(168,85,247,0.4) 80%, transparent 100%)',
-                  filter: 'blur(20px)',
+                  filter: mobile ? 'none' : 'blur(20px)',
                   boxShadow: '0 0 120px rgba(251, 191, 36, 1), 0 0 240px rgba(168, 85, 247, 0.8)'
                 }}
               />
@@ -264,10 +294,10 @@ export function BirthdayAuroraCascadeCeremony({
                 key={`aurora-bg-${i}`}
                 className="absolute left-0 right-0"
                 style={{
-                  height: '220px',
+                  height: '260px',
                   top: `${-5 + i * 20}%`,
-                  background: `linear-gradient(to bottom, ${color.glow}80, transparent)`,
-                  filter: 'blur(60px)',
+                  background: `linear-gradient(to bottom, transparent 0%, ${color.glow}60 25%, ${color.glow}90 50%, ${color.glow}60 75%, transparent 100%)`,
+                  filter: mobile ? 'blur(12px)' : 'blur(60px)',
                   transformOrigin: 'center',
                   zIndex: 1
                 }}
@@ -292,10 +322,10 @@ export function BirthdayAuroraCascadeCeremony({
                 key={`aurora-fg-${i}`}
                 className="absolute left-0 right-0"
                 style={{
-                  height: '180px',
+                  height: '200px',
                   top: `${5 + i * 18}%`,
-                  background: `linear-gradient(to bottom, ${color.glow}, transparent 70%)`,
-                  filter: 'blur(40px)',
+                  background: `linear-gradient(to bottom, transparent 0%, ${color.glow}70 30%, ${color.glow} 55%, ${color.glow}70 75%, transparent 100%)`,
+                  filter: mobile ? 'blur(8px)' : 'blur(40px)',
                   transformOrigin: 'center',
                   zIndex: 2
                 }}
@@ -327,10 +357,10 @@ export function BirthdayAuroraCascadeCeremony({
                 key={`cascade-${i}`}
                 className="absolute left-0 right-0"
                 style={{
-                  height: '160px',
+                  height: '180px',
                   top: `${-15 + i * 13}%`,
-                  background: `linear-gradient(135deg, ${color.glow}, transparent 60%)`,
-                  filter: 'blur(35px)',
+                  background: `linear-gradient(135deg, transparent 0%, ${color.glow}80 20%, ${color.glow} 50%, ${color.glow}60 75%, transparent 100%)`,
+                  filter: mobile ? 'blur(8px)' : 'blur(35px)',
                   transformOrigin: 'left top',
                   zIndex: 3
                 }}
@@ -344,31 +374,31 @@ export function BirthdayAuroraCascadeCeremony({
                 transition={{
                   opacity: { duration: 2, delay: i * 0.12 },
                   scaleX: { duration: 2.5, delay: i * 0.12, ease: cinematicEase },
-                  x: { 
-                    duration: stage === 'symphony' ? 4 : 5, 
+                  x: {
+                    duration: stage === 'symphony' ? 4 : 5,
                     delay: i * 0.15,
-                    repeat: stage === 'symphony' ? Infinity : 0,
+                    repeat: stage === 'symphony' ? 4 : 0,
                     ease: 'easeInOut'
                   },
                   rotate: {
                     duration: 5,
-                    repeat: stage === 'symphony' ? Infinity : 0,
+                    repeat: stage === 'symphony' ? 4 : 0,
                     ease: 'easeInOut'
                   }
                 }}
               />
             ))}
 
-            {/* Vertical flowing curtains */}
-            {[...Array(getOptimalParticleCount(10))].map((_, i) => (
+            {/* Vertical flowing curtains — precomputed, no repeat:Infinity */}
+            {curtainData.map((c, i) => (
               <motion.div
-                key={`curtain-${i}`}
+                key={`curtain-${c.id}`}
                 className="absolute top-0 bottom-0"
                 style={{
                   width: '120px',
                   left: `${5 + i * 10}%`,
-                  background: `linear-gradient(to bottom, ${auroraColors[i % auroraColors.length].glow}, transparent 65%)`,
-                  filter: 'blur(35px)',
+                  background: `linear-gradient(to bottom, transparent 0%, ${auroraColors[i % auroraColors.length].glow}80 25%, ${auroraColors[i % auroraColors.length].glow} 55%, ${auroraColors[i % auroraColors.length].glow}50 80%, transparent 100%)`,
+                  filter: mobile ? 'blur(8px)' : 'blur(35px)',
                   transformOrigin: 'top center',
                   zIndex: 4
                 }}
@@ -376,12 +406,12 @@ export function BirthdayAuroraCascadeCeremony({
                 animate={{
                   opacity: stage === 'symphony' ? [0.4, 0.95, 0.6] : [0, 0.75],
                   scaleY: [0, 1.3, 1.1],
-                  x: stage === 'symphony' ? [0, (Math.random() - 0.5) * 60, 0] : 0
+                  x: stage === 'symphony' ? [0, c.xShift, 0] : 0
                 }}
                 transition={{
-                  duration: 3 + Math.random() * 1.5,
+                  duration: c.dur,
                   delay: 0.3 + i * 0.15,
-                  repeat: stage === 'symphony' ? Infinity : 0,
+                  repeat: stage === 'symphony' ? 3 : 0,
                   ease: cinematicEase
                 }}
               />
@@ -394,53 +424,48 @@ export function BirthdayAuroraCascadeCeremony({
       <AnimatePresence>
         {stage === 'symphony' && (
           <>
-            {/* Swirling energy vortex */}
-            {[...Array(getOptimalParticleCount(60))].map((_, i) => {
-              const angle = (i / getOptimalParticleCount(60)) * Math.PI * 2;
-              const layer = i % 4;
-              const radius = 120 + layer * 50;
-              return (
-                <motion.div
-                  key={`vortex-${i}`}
-                  className="absolute left-1/2 top-1/2"
-                  style={{
-                    width: '12px',
-                    height: '12px',
-                    borderRadius: '50%',
-                    background: auroraColors[i % auroraColors.length].main,
-                    boxShadow: `0 0 18px ${auroraColors[i % auroraColors.length].glow}`,
-                    filter: 'blur(3px)',
-                    zIndex: 10
-                  }}
-                  animate={{
-                    x: [
-                      Math.cos(angle) * radius,
-                      Math.cos(angle + Math.PI) * radius,
-                      Math.cos(angle) * radius
-                    ],
-                    y: [
-                      Math.sin(angle) * radius,
-                      Math.sin(angle + Math.PI) * radius,
-                      Math.sin(angle) * radius
-                    ],
-                    opacity: [0.5, 1, 0.5],
-                    scale: [0.7, 1.6, 0.7]
-                  }}
-                  transition={{
-                    duration: 4 + layer * 0.5,
-                    repeat: Infinity,
-                    ease: 'linear',
-                    delay: i * 0.02
-                  }}
-                />
-              );
-            })}
+            {/* Swirling energy vortex — skip on mobile */}
+            {!mobile && vortexParticles.map(({ id, angle, layer, radius }) => (
+              <motion.div
+                key={`vortex-${id}`}
+                className="absolute left-1/2 top-1/2"
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  background: auroraColors[id % auroraColors.length].main,
+                  boxShadow: `0 0 18px ${auroraColors[id % auroraColors.length].glow}`,
+                  filter: 'blur(3px)',
+                  zIndex: 10
+                }}
+                animate={{
+                  x: [
+                    Math.cos(angle) * radius,
+                    Math.cos(angle + Math.PI) * radius,
+                    Math.cos(angle) * radius
+                  ],
+                  y: [
+                    Math.sin(angle) * radius,
+                    Math.sin(angle + Math.PI) * radius,
+                    Math.sin(angle) * radius
+                  ],
+                  opacity: [0.5, 1, 0.5],
+                  scale: [0.7, 1.6, 0.7]
+                }}
+                transition={{
+                  duration: 4 + layer * 0.5,
+                  repeat: 4,
+                  ease: 'linear',
+                  delay: id * 0.04
+                }}
+              />
+            ))}
 
-            {/* Dancing light beams */}
-            {[...Array(getOptimalParticleCount(20))].map((_, i) => {
-              const angle = (i / getOptimalParticleCount(20)) * 360;
+            {/* Dancing light beams — skip on mobile */}
+            {!mobile && [...Array(getOptimalParticleCount(16))].map((_, i) => {
+              const angle = (i / getOptimalParticleCount(16)) * 360;
               return (
-                <motion.div
+                <div
                   key={`beam-${i}`}
                   className="absolute left-1/2 top-1/2 origin-left"
                   style={{
@@ -449,18 +474,9 @@ export function BirthdayAuroraCascadeCeremony({
                     background: `linear-gradient(to right, ${auroraColors[i % auroraColors.length].glow}, transparent 50%)`,
                     transform: `rotate(${angle}deg)`,
                     filter: 'blur(5px)',
-                    zIndex: 5
-                  }}
-                  animate={{
-                    scaleX: [0.6, 1, 0.6],
-                    opacity: [0.3, 0.8, 0.3],
-                    rotate: [angle, angle + 10, angle]
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    delay: i * 0.1,
-                    ease: 'easeInOut'
+                    zIndex: 5,
+                    animation: `bac-beam-pulse ${2.5 + (i % 4) * 0.3}s ease-in-out infinite`,
+                    animationDelay: `${i * 0.1}s`
                   }}
                 />
               );
@@ -473,33 +489,24 @@ export function BirthdayAuroraCascadeCeremony({
       <AnimatePresence>
         {stage === 'supernova' && (
           <>
-            {/* Intense rainbow rays explosion */}
-            {[...Array(getOptimalParticleCount(100))].map((_, i) => {
-              const angle = (i / getOptimalParticleCount(100)) * 360;
-              const colorIndex = Math.floor((i / getOptimalParticleCount(100)) * auroraColors.length);
-              const rayLength = 120 + (i % 3) * 20;
+            {/* Intense rainbow rays — skip on mobile */}
+            {!mobile && Array.from({ length: 36 }, (_, i) => {
+              const angle = (i / 36) * 360;
+              const colorIndex = i % auroraColors.length;
+              const rayLength = 110 + (i % 3) * 20;
+              const delay = i * 0.022;
               return (
-                <motion.div
+                <div
                   key={`ray-${i}`}
                   className="absolute left-1/2 top-1/2 origin-left"
                   style={{
                     width: `${rayLength}%`,
-                    height: '14px',
+                    height: '12px',
                     background: `linear-gradient(to right, ${auroraColors[colorIndex].glow}, transparent 65%)`,
                     transform: `rotate(${angle}deg)`,
                     filter: 'blur(4px)',
-                    zIndex: 20
-                  }}
-                  initial={{ scaleX: 0, opacity: 0 }}
-                  animate={{ 
-                    scaleX: 1, 
-                    opacity: [0, 1, 0.8],
-                    height: ['14px', '18px', '14px']
-                  }}
-                  transition={{
-                    scaleX: { duration: 0.8, delay: i * 0.002, ease: 'easeOut' },
-                    opacity: { duration: 0.8, delay: i * 0.002 },
-                    height: { duration: 1.5, delay: i * 0.002, repeat: Infinity, ease: 'easeInOut' }
+                    zIndex: 20,
+                    animation: `bac-ray-in 0.7s ${delay}s ease-out forwards, bac-ray-fade 1.8s ${delay + 0.7}s ease-in-out 3`
                   }}
                 />
               );
@@ -516,32 +523,21 @@ export function BirthdayAuroraCascadeCeremony({
               transition={{ duration: 1.5, ease: cinematicEase }}
               style={{ zIndex: 25 }}
             >
-              <motion.div
-                className="w-[600px] h-[600px] rounded-full"
+              <div
+                className="w-[400px] h-[400px] rounded-full"
                 style={{
                   background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(251,191,36,0.95) 12%, rgba(217,70,239,0.8) 25%, rgba(168,85,247,0.6) 40%, rgba(6,182,212,0.4) 60%, rgba(16,185,129,0.2) 80%, transparent 95%)',
-                  filter: 'blur(90px)'
-                }}
-                animate={{
-                  scale: [1, 1.15, 1],
-                  opacity: [1, 0.9, 1]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: 'easeInOut'
+                  filter: mobile ? 'none' : 'blur(50px)'
                 }}
               />
             </motion.div>
 
-            {/* Explosive rainbow particles */}
-            {[...Array(getOptimalParticleCount(80))].map((_, i) => {
-              const angle = (i / getOptimalParticleCount(80)) * Math.PI * 2;
-              const distance = 250 + Math.random() * 450;
-              const colorIndex = Math.floor(Math.random() * auroraColors.length);
+            {/* Explosive rainbow particles — skip on mobile */}
+            {!mobile && explosionParticles.map(({ id, angle, distance }) => {
+              const colorIndex = id % auroraColors.length;
               return (
                 <motion.div
-                  key={`explosion-${i}`}
+                  key={`explosion-${id}`}
                   className="absolute left-1/2 top-1/2"
                   style={{
                     width: '16px',
@@ -561,7 +557,7 @@ export function BirthdayAuroraCascadeCeremony({
                   }}
                   transition={{
                     duration: 2.2,
-                    delay: i * 0.008,
+                    delay: id * 0.008,
                     ease: cinematicEase
                   }}
                 />
@@ -571,10 +567,10 @@ export function BirthdayAuroraCascadeCeremony({
             {/* Title reveal with epic entrance */}
             <motion.div
               className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-40 text-center px-8"
-              initial={{ opacity: 0, scale: 0.3, y: 100, rotateX: 45 }}
-              animate={{ 
-                opacity: 1, 
-                scale: 1, 
+              initial={{ opacity: 0, scale: 0.3, y: 100, rotateX: mobile ? 0 : 45 }}
+              animate={{
+                opacity: 1,
+                scale: 1,
                 y: 0,
                 rotateX: 0
               }}
@@ -584,27 +580,6 @@ export function BirthdayAuroraCascadeCeremony({
                 ease: cinematicEase 
               }}
             >
-              <motion.h2 
-                className="text-4xl md:text-7xl font-bold mb-4"
-                style={{
-                  background: 'linear-gradient(135deg, #fbbf24, #d946ef, #06b6d4, #10b981, #f97316, #ff1744)',
-                  backgroundSize: '300% 300%',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  filter: 'drop-shadow(0 0 40px rgba(251, 191, 36, 0.9))',
-                }}
-                animate={{
-                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: 'linear'
-                }}
-              >
-                {capsuleTitle}
-              </motion.h2>
               <motion.p
                 className="text-xl md:text-3xl text-white font-light tracking-wider"
                 initial={{ opacity: 0, y: 30 }}

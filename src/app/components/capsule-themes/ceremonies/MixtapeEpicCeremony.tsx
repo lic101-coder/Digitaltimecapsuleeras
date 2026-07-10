@@ -498,21 +498,6 @@ export function MixtapeEpicCeremony({
               ARCADE
             </motion.div>
 
-            {/* Capsule title */}
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              style={{
-                fontSize: isMobile ? '13px' : '16px',
-                color: '#00ffff',
-                letterSpacing: '3px',
-                textTransform: 'uppercase',
-                textShadow: '0 0 10px #00ffff',
-              }}
-            >
-              {capsuleTitle}
-            </motion.div>
 
             {/* INSERT COIN blink */}
             <motion.div
@@ -1296,21 +1281,6 @@ export function MixtapeEpicCeremony({
               GAME OVER
             </motion.div>
 
-            {/* Capsule title */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.5 }}
-              style={{
-                fontSize: isMobile ? '12px' : '15px',
-                color: '#00ffff',
-                letterSpacing: '3px',
-                textShadow: '0 0 8px #00ffff',
-                textTransform: 'uppercase',
-              }}
-            >
-              {capsuleTitle}
-            </motion.div>
 
             {/* Score counter */}
             <motion.div
@@ -1580,17 +1550,6 @@ export function MixtapeEpicCeremony({
                 <span style={{ position: 'absolute', top: -2, right: 2, color: '#00ffff', fontSize: isMobile ? '10px' : '13px', lineHeight: 1 }}>¬</span>
                 <span style={{ position: 'absolute', bottom: -2, left: 2, color: '#00ffff', fontSize: isMobile ? '10px' : '13px', lineHeight: 1 }}>L</span>
                 <span style={{ position: 'absolute', bottom: -2, right: 2, color: '#00ffff', fontSize: isMobile ? '10px' : '13px', lineHeight: 1 }}>J</span>
-                <span
-                  style={{
-                    fontSize: isMobile ? '13px' : '17px',
-                    color: '#00ffff',
-                    letterSpacing: '3px',
-                    textShadow: '0 0 8px #00ffff',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {capsuleTitle}
-                </span>
               </motion.div>
 
               {/* PRESS START blinking line */}
@@ -1625,20 +1584,6 @@ export function MixtapeEpicCeremony({
                 height: isMobile ? '22px' : '28px',
               }}
             >
-              <div
-                style={{
-                  display: 'inline-block',
-                  whiteSpace: 'nowrap',
-                  fontSize: isMobile ? '13px' : '17px',
-                  color: '#ffff00',
-                  letterSpacing: '4px',
-                  textShadow: '0 0 12px #ffff00, 0 0 24px #ffff00',
-                  textTransform: 'uppercase',
-                  animation: 'arc-marquee 3s linear 1 forwards',
-                }}
-              >
-                {capsuleTitle}
-              </div>
             </div>
           </motion.div>
         )}

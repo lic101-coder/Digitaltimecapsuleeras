@@ -54,22 +54,6 @@ export function PetEternalPlayCeremony({
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a]">
-      {/* Title */}
-      <AnimatePresence>
-        {stage === 'intro' && capsuleTitle && (
-          <motion.div
-            initial={{ opacity: 0, y: -30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 30 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-x-0 top-[20%] z-30 text-center px-8"
-          >
-            <h2 className="text-3xl md:text-5xl font-bold text-white drop-shadow-2xl">
-              {capsuleTitle}
-            </h2>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Starfield for space stage */}
       <AnimatePresence>

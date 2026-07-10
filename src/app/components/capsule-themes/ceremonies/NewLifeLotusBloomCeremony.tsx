@@ -704,16 +704,6 @@ export function NewLifeLotusBloomCeremony({
               ease: [0.4, 0, 0.2, 1]
             }}
           >
-            <h1
-              className="text-4xl md:text-6xl font-bold mb-3"
-              style={{
-                color: '#fef9c3',
-                textShadow: '0 0 40px rgba(251, 191, 36, 1), 0 0 80px rgba(251, 191, 36, 0.7), 0 5px 18px rgba(0, 0, 0, 1)',
-                WebkitTextStroke: '1px rgba(251, 191, 36, 0.3)'
-              }}
-            >
-              {capsuleTitle}
-            </h1>
             <motion.p
               className="text-xl md:text-2xl font-medium"
               style={{

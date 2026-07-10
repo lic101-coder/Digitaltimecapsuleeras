@@ -84,15 +84,6 @@ export function NewNestTimeLapseCeremony({
             transition={{ duration: 0.8 }}
             className="absolute top-20 left-0 right-0 text-center z-50"
           >
-            <motion.h1
-              className="text-5xl md:text-6xl font-bold mb-4"
-              style={{
-                color: '#ea580c',
-                textShadow: '0 4px 20px rgba(234, 88, 12, 0.4)'
-              }}
-            >
-              {capsuleTitle}
-            </motion.h1>
             <p className="text-orange-700 text-xl">The Story Begins</p>
           </motion.div>
         )}

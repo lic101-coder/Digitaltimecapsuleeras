@@ -1311,13 +1311,17 @@ export function RecordInterface({ onMediaCaptured, onOpenVault, onClose, onRegis
               {!isRecording && (
                 <div className="absolute inset-0 flex items-center justify-center z-10">
                   <div className="flex flex-col items-center justify-center gap-6 sm:gap-8 px-4">
-                    {/* Cosmic Mic Icon */}
-                    <div className="relative flex items-center justify-center">
+                    {/* Cosmic Mic Icon — tappable to start recording */}
+                    <button
+                      onClick={startRecording}
+                      className="relative flex items-center justify-center focus:outline-none"
+                      aria-label="Start recording"
+                    >
                       <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full blur-2xl opacity-60 animate-pulse" />
-                      <div className="relative p-6 sm:p-8 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl">
+                      <div className="relative p-6 sm:p-8 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl hover:bg-white/20 active:scale-95 transition-all">
                         <Mic className="w-14 h-14 sm:w-20 sm:h-20 text-white" />
                       </div>
-                    </div>
+                    </button>
                     
                     {/* Idle Waveform */}
                     <div className="flex items-center justify-center gap-1.5 sm:gap-2 h-12 sm:h-16">
@@ -1339,10 +1343,14 @@ export function RecordInterface({ onMediaCaptured, onOpenVault, onClose, onRegis
                 </div>
               )}
 
-              {/* Recording Bar - Center */}
+              {/* Recording Bar - Center — tappable to stop recording */}
               {isRecording && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                  <div className="bg-black/40 backdrop-blur-xl rounded-3xl px-8 py-6 shadow-2xl border border-white/20">
+                <button
+                  onClick={stopRecording}
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 focus:outline-none"
+                  aria-label="Stop recording"
+                >
+                  <div className="bg-black/40 backdrop-blur-xl rounded-3xl px-8 py-6 shadow-2xl border border-white/20 hover:bg-black/60 active:scale-95 transition-all">
                     <div className="flex items-center gap-6">
                       {/* Pulsing Red Dot with Glow */}
                       <div className="relative flex items-center justify-center">
@@ -1371,7 +1379,7 @@ export function RecordInterface({ onMediaCaptured, onOpenVault, onClose, onRegis
                       </div>
                     </div>
                   </div>
-                </div>
+                </button>
               )}
             </div>
           )}

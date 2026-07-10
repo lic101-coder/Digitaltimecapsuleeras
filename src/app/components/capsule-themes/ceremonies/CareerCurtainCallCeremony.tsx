@@ -1091,16 +1091,6 @@ export function CareerCurtainCallCeremony({
               >
                 STANDING OVATION
               </h2>
-              <p 
-                className="text-3xl md:text-4xl text-amber-100"
-                style={{ 
-                  fontFamily: 'Georgia, serif',
-                  textShadow: '0 4px 20px rgba(0, 0, 0, 1), 0 0 40px rgba(251, 191, 36, 0.5)',
-                  letterSpacing: '0.05em'
-                }}
-              >
-                {capsuleTitle}
-              </p>
             </motion.div>
           )}
         </AnimatePresence>

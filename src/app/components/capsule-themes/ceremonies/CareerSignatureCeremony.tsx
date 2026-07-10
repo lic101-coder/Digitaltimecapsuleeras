@@ -585,9 +585,6 @@ export function CareerSignatureCeremony({
                   boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6), 0 0 40px rgba(251, 191, 36, 0.4)'
                 }}
               >
-                <div className="text-3xl font-bold text-amber-100 text-center mb-1">
-                  {capsuleTitle}
-                </div>
                 <div className="text-lg text-amber-300 text-center italic">
                   Inducted {new Date().getFullYear()}
                 </div>
@@ -758,7 +755,6 @@ export function CareerSignatureCeremony({
               >
                 Legend Enshrined
               </h2>
-              <p className="text-2xl text-purple-200 drop-shadow-lg font-serif">{capsuleTitle}</p>
             </motion.div>
           )}
         </AnimatePresence>

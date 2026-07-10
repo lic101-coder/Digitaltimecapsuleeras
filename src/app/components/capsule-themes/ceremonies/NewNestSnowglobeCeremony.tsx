@@ -68,15 +68,6 @@ export function NewNestSnowglobeCeremony({
             transition={{ duration: 0.8 }}
             className="absolute top-1/4 left-0 right-0 text-center z-50"
           >
-            <motion.h1
-              className="text-5xl md:text-6xl font-bold mb-4"
-              style={{
-                color: '#60a5fa',
-                textShadow: '0 4px 20px rgba(96, 165, 250, 0.6)'
-              }}
-            >
-              {capsuleTitle}
-            </motion.h1>
             <p className="text-blue-200 text-xl">Your New Beginning</p>
           </motion.div>
         )}

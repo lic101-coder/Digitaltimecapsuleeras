@@ -164,7 +164,7 @@ const PREMIUM_THEMES: ThemeConfig[] = [
     ceremonies: [
       { icon: '🌅', name: 'Sunrise Symphony', description: 'Cinematic & Radiant', color: '#fbbf24' },
       { icon: '👶', name: 'Special Delivery', description: 'Epic & Devoted', color: '#fb923c' },
-      { icon: '🌍', name: 'Genesis - Birth of a World', description: 'Epic & Primordial', color: '#3b82f6' },
+      { icon: '🫀', name: 'The First Heartbeat', description: 'Sacred & Luminous', color: '#FF7820' },
     ],
     features: ['Gentle animations', 'Soft pastel effects', 'Lifetime access']
   },

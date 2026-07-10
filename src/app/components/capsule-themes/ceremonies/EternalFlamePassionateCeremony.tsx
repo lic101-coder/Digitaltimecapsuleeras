@@ -281,19 +281,6 @@ export function EternalFlamePassionateCeremony({
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 1, ease: 'easeOut' }}
           >
-            <h1
-              style={{
-                color: '#fff',
-                fontSize: isMobile ? '1.5rem' : '2.2rem',
-                fontWeight: 700,
-                letterSpacing: '0.06em',
-                textShadow: '0 0 24px rgba(255,105,180,0.7)',
-                padding: '0 1rem',
-                margin: 0,
-              }}
-            >
-              {capsuleTitle}
-            </h1>
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -718,20 +705,6 @@ export function EternalFlamePassionateCeremony({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7, duration: 1.2, ease: 'easeOut' }}
             >
-              <h2
-                style={{
-                  color: '#fff',
-                  fontSize: isMobile ? '1.5rem' : '2.2rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.06em',
-                  textShadow:
-                    '0 0 32px rgba(255,105,180,0.9), 0 0 16px rgba(255,23,68,0.7)',
-                  marginBottom: '0.5rem',
-                  margin: 0,
-                }}
-              >
-                {capsuleTitle}
-              </h2>
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

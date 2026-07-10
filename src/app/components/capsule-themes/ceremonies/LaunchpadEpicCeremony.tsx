@@ -842,7 +842,6 @@ export function LaunchpadEpicCeremony({
             <h2 className="text-4xl md:text-5xl font-bold text-purple-100 drop-shadow-2xl mb-3">
               Reach for the Stars
             </h2>
-            <p className="text-2xl text-blue-200 drop-shadow-lg">{capsuleTitle}</p>
           </motion.div>
         )}
       </AnimatePresence>

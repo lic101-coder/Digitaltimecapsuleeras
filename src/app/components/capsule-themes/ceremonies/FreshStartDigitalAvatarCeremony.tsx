@@ -1,17 +1,16 @@
 /**
- * Fresh Start - Digital Avatar Boot-Up Ceremony
- * 
- * 
- * Scene Flow:
- * 1. "Home Office Sanctuary" (0-2.5s) - Cozy pajamas, coffee steam, laptop
- * 2. "Boot Sequence" (2.5-6s) - Dark terminal background, falling Matrix code
- * 3. "Avatar Materialization" (6-9s) - Pixelation to smooth avatar
- * 4. "The Welcome Matrix" (9-12s) - Video grid, chat messages flood
- * 5. "Digital Workspace Expands" (12-14.5s) - Monitors appear, productivity
- * FINALE: "Dual Reality Harmony" (14.5-15s) - Split screen real/virtual
+ * Fresh Start — "The Hourglass Flip"
+ *
+ * Story: An ornate brass hourglass hangs in the void, heavy with
+ * ashen sand (the past). Ancient weight settles. A long beat of
+ * silence — then the hourglass tilts, rotates on its own, and rights
+ * itself. Dark sand scatters like ash. Pure gold cascades from above.
+ * Light blooms. The capsule title rises from the warmth.
+ *
+ * No hands. The glass moves of its own accord — time chooses itself.
  */
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface FreshStartDigitalAvatarCeremonyProps {
@@ -21,853 +20,548 @@ interface FreshStartDigitalAvatarCeremonyProps {
   onComplete?: () => void;
 }
 
-export function FreshStartDigitalAvatarCeremony({
-  capsuleTitle,
-  media,
-  isPreview = false,
-  onComplete
-}: FreshStartDigitalAvatarCeremonyProps) {
-  const [stage, setStage] = useState<'title' | 'homeoffice' | 'bootsequence' | 'avatar' | 'welcome' | 'workspace' | 'dualreality' | 'outro'>('title');
-  const [completed, setCompleted] = useState(false);
+/* ─────────────────────── CSS ─────────────────────── */
+const CSS = `
+@keyframes dust-float {
+  0%   { transform: translateY(0) scale(1);       opacity: 0; }
+  15%  { opacity: 0.55; }
+  85%  { opacity: 0.30; }
+  100% { transform: translateY(-70px) scale(0.35); opacity: 0; }
+}
+@keyframes grain-gold {
+  0%   { transform: translateY(0);     opacity: 0; }
+  6%   { opacity: 0.95; }
+  94%  { opacity: 0.80; }
+  100% { transform: translateY(224px); opacity: 0; }
+}
+@keyframes grain-sparkle {
+  0%   { transform: translateY(0) scale(1);       opacity: 0; }
+  6%   { opacity: 1; }
+  50%  { transform: translateY(112px) scale(1.7); opacity: 1; }
+  94%  { opacity: 0.85; }
+  100% { transform: translateY(224px) scale(0.7); opacity: 0; }
+}
+@keyframes glass-glow-pulse {
+  0%,100% { opacity: 0.45; }
+  50%     { opacity: 1; }
+}
+@keyframes mote-rise {
+  0%   { transform: translateY(0) scale(1);        opacity: 0; }
+  10%  { opacity: 0.8; }
+  100% { transform: translateY(-160px) scale(0.4); opacity: 0; }
+}
+@keyframes gold-shimmer {
+  0%,100% { text-shadow: 0 0 22px rgba(255,200,55,0.75), 0 0 55px rgba(255,175,25,0.4); }
+  50%     { text-shadow: 0 0 40px rgba(255,225,90,1),   0 0 90px rgba(255,210,60,0.7); }
+}
+@keyframes sand-settle {
+  from { transform: scaleY(0); transform-origin: bottom; }
+  to   { transform: scaleY(1); transform-origin: bottom; }
+}
+@keyframes neck-trickle {
+  0%,100% { opacity: 0; }
+  10%,80%  { opacity: 0.8; }
+}
+@keyframes sand-spin-out {
+  0%   { opacity: 1; }
+  55%  { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+@keyframes gold-pool-fill {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+@keyframes bg-breathe {
+  0%,100% { opacity: 0.6; }
+  50%     { opacity: 1; }
+}
+@keyframes frame-glow-ring {
+  0%   { transform: translate(-50%,-50%) scale(0.95); opacity: 0.6; }
+  100% { transform: translate(-50%,-50%) scale(2.2);  opacity: 0; }
+}
+`;
 
-  // Pre-compute all random values to avoid Math.random() in render
-  const steamParticles = useMemo(() => Array.from({ length: 15 }, () => ({
-    width: 3 + Math.random() * 2,
-    height: 3 + Math.random() * 2,
-    r: 200 + Math.random() * 55,
-    g: 200 + Math.random() * 55,
-    opacity: 0.4 + Math.random() * 0.3,
-    yEnd: -35 - Math.random() * 20,
-    xStart: (Math.random() - 0.5) * 8,
-    xEnd: (Math.random() - 0.5) * 25,
-    duration: 1.5 + Math.random() * 1,
-    scale: 1.3 + Math.random() * 0.5
-  })), []);
+/* ─────────────────────── Unique ID ─────────────────────── */
+const uid = Math.random().toString(36).slice(2, 8);
 
-  const dustMotes = useMemo(() => Array.from({ length: 20 }, () => ({
-    right: `${15 + Math.random() * 20}%`,
-    top: `${20 + Math.random() * 40}%`,
-    xMove: (Math.random() - 0.5) * 10,
-    xMove2: (Math.random() - 0.5) * 10,
-    duration: 4 + Math.random() * 2,
-    delay: Math.random() * 2
-  })), []);
+/* ─────────────────────── Types ─────────────────────── */
+interface GrainDef {
+  cx: number;
+  cy: number;
+  r: number;
+  dur: number;
+  delay: number;
+  sparkle: boolean;
+  color: string;
+}
 
-  const materializeParticles = useMemo(() => Array.from({ length: 100 }, (_, i) => ({
-    x: (Math.random() - 0.5) * 200,
-    y: (Math.random() - 0.5) * 200,
-    isEven: i % 2 === 0
-  })), []);
+type Stage = 'void' | 'weight' | 'settle' | 'flip' | 'cascade' | 'bloom' | 'reveal' | 'outro';
 
-  const productivityParticles = useMemo(() => Array.from({ length: 30 }, () => ({
-    yEnd: -50 - Math.random() * 50,
-    xEnd: (Math.random() - 0.5) * 150
-  })), []);
-
-  const burstParticles = useMemo(() => Array.from({ length: 100 }, (_, i) => ({
-    x: (Math.random() - 0.5) * 400,
-    y: (Math.random() - 0.5) * 400,
-    isEven: i % 2 === 0
-  })), []);
-
-  const matrixChars = useMemo(() => {
-    const chars = ['0', '1', 'ア', 'カ', 'サ', 'タ', 'ナ', 'ハ', 'マ', 'ヤ'];
-    return Array.from({ length: 50 }, () =>
-      Array.from({ length: 20 }, () => chars[Math.floor(Math.random() * chars.length)])
-    );
-  }, []);
-
-  useEffect(() => {
-    const timeline = [
-      { time: 0, action: () => setStage('title') },
-      { time: 1000, action: () => setStage('homeoffice') },
-      { time: 3500, action: () => setStage('bootsequence') },
-      { time: 6000, action: () => setStage('avatar') },
-      { time: 9000, action: () => setStage('welcome') },
-      { time: 12000, action: () => setStage('workspace') },
-      { time: 14500, action: () => setStage('dualreality') },
-      { time: 16000, action: () => setStage('outro') },
-      { time: 17000, action: () => onComplete?.() }
-    ];
-
-    const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-
-    // Completion failsafe - ensure ceremony always completes
-    const failsafeTimeout = setTimeout(() => {
-      setCompleted(true);
-      onComplete?.();
-    }, 18000);
-
-    return () => {
-      timeouts.forEach(clearTimeout);
-      clearTimeout(failsafeTimeout);
-    };
-  }, []); // Only run once on mount - don't restart ceremony midway through
+/* ─────────────────────── Hourglass SVG ─────────────────────── */
+/*
+ * viewBox 0 0 160 280 — ornate brass frame with:
+ *   Top/bottom caps (y=0–26 / y=254–280), beveled
+ *   Left pillar x=5–19, right x=141–155
+ *   Neck band y=128–152
+ *   4 ornate corner rivets
+ *   Glass bulbs (curves, neck at y=140/142)
+ */
+function HourglassSVG({
+  showOldSand,
+  showCascade,
+  grains,
+  glowAmt,
+  stage,
+}: {
+  showOldSand: boolean;
+  showCascade: boolean;
+  grains: GrainDef[];
+  glowAmt: number;
+  stage: Stage;
+}) {
+  const brass   = '#B8860B';
+  const brassLt = '#D4A020';
+  const brassHi = '#F2C840';
+  const brassDeep = '#7A5800';
+  const glassFill = 'rgba(210,235,255,0.055)';
+  const glassStk  = 'rgba(200,225,255,0.32)';
+  const glowOpacity = 0.35 + glowAmt * 0.65;
+  const glowColor   = `rgba(255,205,65,${glowOpacity})`;
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-slate-900 via-indigo-900 to-purple-900">
-      {/* Title */}
+    <svg viewBox="0 0 160 280" width="160" height="280"
+      style={{ overflow: 'visible', display: 'block' }}>
+      <defs>
+        <clipPath id={`glassFull-${uid}`}>
+          <path d="M 30,24 C 30,85 73,115 73,140 L 73,142 C 73,168 30,205 30,258 L 130,258 C 130,205 87,168 87,142 L 87,140 C 87,115 130,85 130,24 Z" />
+        </clipPath>
+        <clipPath id={`topBulb-${uid}`}>
+          <path d="M 30,24 C 30,85 73,115 73,140 L 87,140 C 87,115 130,85 130,24 Z" />
+        </clipPath>
+        <clipPath id={`botBulb-${uid}`}>
+          <path d="M 73,142 C 73,168 30,205 30,258 L 130,258 C 130,205 87,168 87,142 Z" />
+        </clipPath>
+
+        <linearGradient id={`darkSand-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#7A4410" stopOpacity="0.5" />
+          <stop offset="40%"  stopColor="#4A2008" stopOpacity="0.88" />
+          <stop offset="100%" stopColor="#160602" stopOpacity="1" />
+        </linearGradient>
+        <linearGradient id={`goldSand-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#FFE890" stopOpacity="0.9" />
+          <stop offset="50%"  stopColor="#FFB820" stopOpacity="0.95" />
+          <stop offset="100%" stopColor="#C87800" stopOpacity="1" />
+        </linearGradient>
+        <linearGradient id={`frameGrad-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor={brassHi} />
+          <stop offset="50%"  stopColor={brass} />
+          <stop offset="100%" stopColor={brassDeep} />
+        </linearGradient>
+        <linearGradient id={`capGrad-${uid}`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%"   stopColor={brassDeep} />
+          <stop offset="25%"  stopColor={brassLt} />
+          <stop offset="50%"  stopColor={brassHi} />
+          <stop offset="75%"  stopColor={brassLt} />
+          <stop offset="100%" stopColor={brassDeep} />
+        </linearGradient>
+        <radialGradient id={`innerGlow-${uid}`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stopColor="rgba(255,205,65,0.45)" />
+          <stop offset="100%" stopColor="rgba(255,180,20,0)" />
+        </radialGradient>
+        <filter id={`glow-${uid}`}>
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        <filter id={`softGlow-${uid}`}>
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        <linearGradient id={`glassSheen-${uid}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%"   stopColor="rgba(255,255,255,0.14)" />
+          <stop offset="45%"  stopColor="rgba(255,255,255,0.04)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+        </linearGradient>
+      </defs>
+
+      {/* ─── Old sand — pre-loaded; spins out (fades) during flip ─── */}
+      {showOldSand && (
+        <g clipPath={`url(#botBulb-${uid})`}
+          style={{ animation: stage === 'flip' ? 'sand-spin-out 2.6s ease-in forwards' : 'none' }}>
+          <rect x="0" y="142" width="160" height="116"
+            fill={`url(#darkSand-${uid})`}
+          />
+          <path d="M 73,143 Q 80,140 87,143"
+            stroke="rgba(150,90,45,0.5)" strokeWidth="1.5" fill="none" />
+        </g>
+      )}
+
+      {/* ─── Neck trickle — CSS pulse, no repeat:Infinity on motion ─── */}
+      {(stage === 'weight' || stage === 'settle') && (
+        <g clipPath={`url(#glassFull-${uid})`}>
+          <ellipse cx="80" cy="141" rx="1.5" ry="3"
+            fill="rgba(80,40,10,0.6)"
+            style={{ animation: 'neck-trickle 2.5s ease-in-out infinite' }}
+          />
+        </g>
+      )}
+
+      {/* ─── Gold cascade ─── */}
+      {showCascade && (
+        <g clipPath={`url(#glassFull-${uid})`}>
+          {/* Accumulating gold pool — scaleY from bottom via CSS */}
+          <rect x="30" y="174" width="100" height="84"
+            fill={`url(#goldSand-${uid})`}
+            style={{
+              animation: 'gold-pool-fill 6s cubic-bezier(0.4,0,0.2,1) forwards',
+              transformOrigin: '80px 258px',
+            }}
+          />
+
+          {/* Glow bloom in top bulb */}
+          <ellipse cx="80" cy="82" rx="52" ry="65"
+            fill={`url(#innerGlow-${uid})`}
+            style={{ animation: 'glass-glow-pulse 1.8s ease-in-out infinite', opacity: glowOpacity }}
+          />
+
+          {/* Gold grains */}
+          {grains.map((g, i) => (
+            <circle key={i} cx={g.cx} cy={g.cy} r={g.r} fill={g.color}
+              style={{ animation: `${g.sparkle ? 'grain-sparkle' : 'grain-gold'} ${g.dur}s linear ${g.delay}s infinite` }}
+            />
+          ))}
+
+          {/* Glass sheen on top */}
+          <path d="M 30,24 C 30,85 73,115 73,140 L 73,142 C 73,168 30,205 30,258 L 130,258 C 130,205 87,168 87,142 L 87,140 C 87,115 130,85 130,24 Z"
+            fill={`url(#glassSheen-${uid})`} />
+        </g>
+      )}
+
+      {/* ─── Glass outline ─── */}
+      <path
+        d="M 30,24 C 30,85 73,115 73,140 L 73,142 C 73,168 30,205 30,258 L 130,258 C 130,205 87,168 87,142 L 87,140 C 87,115 130,85 130,24 Z"
+        fill={glassFill} stroke={glassStk} strokeWidth="1.2"
+      />
+      <path d="M 73,140 L 73,142 M 87,140 L 87,142"
+        stroke="rgba(220,240,255,0.45)" strokeWidth="1" fill="none" />
+
+      {/* ─── Pillars ─── */}
+      <rect x="5"   y="22" width="14" height="236" rx="2" fill={`url(#frameGrad-${uid})`} />
+      <rect x="141" y="22" width="14" height="236" rx="2" fill={`url(#frameGrad-${uid})`} />
+      <line x1="7"   y1="24" x2="7"   y2="254" stroke={brassHi}             strokeWidth="1"   opacity="0.5" />
+      <line x1="153" y1="24" x2="153" y2="254" stroke={brassHi}             strokeWidth="1"   opacity="0.5" />
+      <line x1="18"  y1="24" x2="18"  y2="254" stroke="rgba(0,0,0,0.3)"    strokeWidth="1" />
+      <line x1="142" y1="24" x2="142" y2="254" stroke="rgba(0,0,0,0.3)"    strokeWidth="1" />
+      {/* Pillar engraving */}
+      <line x1="12" y1="60"  x2="12" y2="220" stroke={brassHi} strokeWidth="0.5" opacity="0.3" strokeDasharray="4 6" />
+      <line x1="148" y1="60" x2="148" y2="220" stroke={brassHi} strokeWidth="0.5" opacity="0.3" strokeDasharray="4 6" />
+
+      {/* ─── Neck band ─── */}
+      <rect x="5" y="128" width="150" height="24" rx="4" fill={`url(#capGrad-${uid})`} />
+      <rect x="5" y="128" width="150" height="24" rx="4" fill="rgba(0,0,0,0.16)" />
+      <line x1="5" y1="136" x2="155" y2="136" stroke={brassHi} strokeWidth="0.6" opacity="0.4" />
+      <line x1="5" y1="143" x2="155" y2="143" stroke="rgba(0,0,0,0.28)" strokeWidth="0.6" />
+
+      {/* ─── Top cap ─── */}
+      <rect x="5" y="0" width="150" height="26" rx="6" fill={`url(#capGrad-${uid})`} />
+      <rect x="8" y="2" width="144" height="22" rx="5" fill="none" stroke={brassHi} strokeWidth="0.8" opacity="0.45" />
+      <line x1="20" y1="13" x2="140" y2="13" stroke={brassHi} strokeWidth="0.5" opacity="0.35" />
+      {/* Ornamental divots on cap */}
+      {[38, 60, 80, 100, 122].map((x, i) => (
+        <ellipse key={i} cx={x} cy="13" rx="3" ry="2" fill={brass} stroke={brassHi} strokeWidth="0.4" opacity="0.6" />
+      ))}
+
+      {/* ─── Bottom cap ─── */}
+      <rect x="5" y="254" width="150" height="26" rx="6" fill={`url(#capGrad-${uid})`} />
+      <rect x="8" y="256" width="144" height="22" rx="5" fill="none" stroke={brassHi} strokeWidth="0.8" opacity="0.45" />
+      <line x1="20" y1="267" x2="140" y2="267" stroke={brassHi} strokeWidth="0.5" opacity="0.35" />
+      {[38, 60, 80, 100, 122].map((x, i) => (
+        <ellipse key={i} cx={x} cy="267" rx="3" ry="2" fill={brass} stroke={brassHi} strokeWidth="0.4" opacity="0.6" />
+      ))}
+
+      {/* ─── Ornamental rivets ─── */}
+      {([[12, 18], [148, 18], [12, 262], [148, 262]] as [number, number][]).map(([cx, cy], i) => (
+        <g key={i}>
+          <circle cx={cx} cy={cy} r="6.5" fill={brass} />
+          <circle cx={cx} cy={cy} r="6.5" fill="none" stroke={brassHi} strokeWidth="1.2" opacity="0.6" />
+          <circle cx={cx} cy={cy} r="2.5" fill={brassHi} opacity="0.8" />
+          <circle cx={cx} cy={cy} r="1"   fill="rgba(255,255,220,0.9)" />
+        </g>
+      ))}
+
+      {/* ─── Frame glow ring when cascade active ─── */}
+      {showCascade && (
+        <path
+          d="M 30,24 C 30,85 73,115 73,140 L 73,142 C 73,168 30,205 30,258 L 130,258 C 130,205 87,168 87,142 L 87,140 C 87,115 130,85 130,24 Z"
+          fill="none" stroke={glowColor} strokeWidth="4"
+          filter={`url(#glow-${uid})`}
+          style={{ animation: 'glass-glow-pulse 1.8s ease-in-out infinite' }}
+        />
+      )}
+    </svg>
+  );
+}
+
+/* ─────────────────────── Main Component ─────────────────────── */
+export function FreshStartDigitalAvatarCeremony({
+  capsuleTitle,
+  onComplete,
+}: FreshStartDigitalAvatarCeremonyProps) {
+  const [stage, setStage] = useState<Stage>('void');
+
+  useEffect(() => {
+    const ts: { t: number; s: Stage }[] = [
+      { t: 0,     s: 'void' },
+      { t: 600,   s: 'weight' },
+      { t: 3400,  s: 'settle' },
+      { t: 5800,  s: 'flip' },
+      { t: 9400,  s: 'cascade' },
+      { t: 14800, s: 'bloom' },
+      { t: 18200, s: 'reveal' },
+      { t: 22500, s: 'outro' },
+    ];
+    const ids = ts.map(({ t, s }) => setTimeout(() => setStage(s), t));
+    const done = setTimeout(() => onComplete?.(), 23500);
+    return () => { ids.forEach(clearTimeout); clearTimeout(done); };
+  }, []);
+
+  /* ── Gold grains (cascade) ── */
+  const grains = useMemo<GrainDef[]>(() =>
+    Array.from({ length: 72 }, (_, i) => {
+      const cx = 55 + Math.cos(i * 2.39) * 28;
+      const r  = 1.2 + (i % 4) * 0.7;
+      const dur   = 0.9 + (i % 5) * 0.2;
+      const delay = (i * 0.09) % 3.0;
+      const sparkle = i % 7 === 0;
+      const startY  = 26 + (i % 8) * 4;
+      const colors  = ['#FFD83A', '#FFE060', '#FFF080', '#FFD020', '#FFFFFF', '#FFB810'];
+      return { cx, cy: startY, r, dur, delay, sparkle, color: colors[i % colors.length] };
+    }),
+  []);
+
+  /* ── Scatter particles — ash erupting during flip ── */
+  const scatterParticles = useMemo(() =>
+    Array.from({ length: 44 }, (_, i) => {
+      const angle = (i / 44) * Math.PI * 2;
+      const dist  = 55 + (i % 6) * 20;
+      return {
+        sx: Math.cos(angle) * dist,
+        sy: Math.sin(angle) * dist,
+        size: 1.5 + (i % 5) * 1.2,
+        dur: 0.5 + (i % 4) * 0.1,
+        delay: (i % 6) * 0.03,
+        color: i % 3 === 0 ? 'rgba(120,80,30,0.75)' : i % 3 === 1 ? 'rgba(80,50,20,0.6)' : 'rgba(180,130,60,0.5)',
+      };
+    }),
+  []);
+
+  /* ── Ambient dust ── */
+  const dustMotes = useMemo(() =>
+    Array.from({ length: 24 }, (_, i) => ({
+      x:   28 + (i * 37) % 46,
+      y:   20 + (i * 23) % 62,
+      size: 1.2 + (i % 3) * 0.9,
+      dur:  4.2 + (i % 5) * 1.0,
+      delay: (i * 0.38) % 5,
+      opacity: 0.2 + (i % 4) * 0.1,
+    })),
+  []);
+
+  /* ── Rising motes ── */
+  const risingMotes = useMemo(() =>
+    Array.from({ length: 18 }, (_, i) => ({
+      x:  36 + Math.cos(i * 1.55) * 16,
+      delay: (i * 0.22) % 3.2,
+      dur: 2.0 + (i % 4) * 0.6,
+      size: 1.5 + (i % 3) * 0.8,
+      color: i % 4 === 0 ? 'rgba(255,230,100,0.95)' : 'rgba(255,200,50,0.85)',
+    })),
+  []);
+
+  // Sand rotates WITH the glass during the flip
+  const showOldSand = ['weight', 'settle', 'flip'].includes(stage);
+  const showFlip    = stage === 'flip';
+  const showCascade = ['cascade', 'bloom', 'reveal'].includes(stage);
+  const showReveal  = ['bloom', 'reveal'].includes(stage);
+  const glowAmt     = showCascade ? 1 : 0;
+
+  return (
+    <div className="relative w-full h-full overflow-hidden"
+      style={{ background: 'linear-gradient(165deg, #1a0e00 0%, #2f1900 40%, #1a0c00 100%)' }}>
+      <style>{CSS}</style>
+
+      {/* Depth vignette */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse 85% 75% at 50% 50%, transparent 25%, rgba(8,3,0,0.8) 100%)' }} />
+
+      {/* Warm atmosphere haze */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 60% 55% at 50% 52%, rgba(180,110,20,0.08) 0%, transparent 70%)',
+          opacity: showCascade ? 1 : 0.3,
+          transition: 'opacity 3s ease',
+        }} />
+
+      {/* ── Ambient dust motes ── */}
+      {stage !== 'void' && dustMotes.map((m, i) => (
+        <div key={i} className="absolute rounded-full pointer-events-none"
+          style={{
+            left: `${m.x}%`, top: `${m.y}%`,
+            width: `${m.size}px`, height: `${m.size}px`,
+            background: 'rgba(190,140,65,0.75)',
+            animation: `dust-float ${m.dur}s ease-in-out ${m.delay}s infinite`,
+            opacity: m.opacity,
+          }} />
+      ))}
+
+      {/* ── Floor warmth ── */}
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none"
+        style={{
+          height: '30%',
+          background: 'linear-gradient(to top, rgba(160,95,10,0.22) 0%, transparent 100%)',
+          opacity: showCascade ? 1 : 0.4,
+          transition: 'opacity 3s ease',
+        }} />
+
+      {/* ══════════════════════════════════════════
+          HOURGLASS — rotates on its own
+          ══════════════════════════════════════════ */}
+      <div className="absolute" style={{
+        left: '50%', top: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '160px', height: '280px',
+      }}>
+
+        {/* Glow rings behind hourglass (cascade) */}
+        {showCascade && [0, 1, 2].map(i => (
+          <div key={i}
+            className="absolute pointer-events-none"
+            style={{
+              left: '50%', top: '50%',
+              width: '180px', height: '180px',
+              borderRadius: '50%',
+              border: '1px solid rgba(255,185,30,0.3)',
+              animation: `frame-glow-ring 3.5s ease-out ${i * 1.1}s infinite`,
+            }} />
+        ))}
+
+        {/* ─── GLASS + FRAME ─── */}
+        <motion.div
+          className="absolute inset-0"
+          style={{ transformOrigin: 'center center' }}
+          animate={
+            showFlip || showCascade
+              ? { rotate: 360, y: 0 }
+              : stage === 'settle'
+              ? { rotate: [0, -4, 4, -2, 0], y: 0 }
+              : stage === 'weight'
+              ? { rotate: [-1.5, 1.5, -1, 0], y: 0 }
+              : { rotate: 0, y: 0 }
+          }
+          transition={
+            showFlip
+              /* Single uninterrupted arc — slow start, peak mid, slow settle */
+              ? { duration: 2.6, delay: 0.5, ease: [0.4, 0.0, 0.2, 1.0] }
+              : showCascade
+              /* Already at 360°, hold with no movement */
+              ? { duration: 0 }
+              : { duration: 2.5, ease: 'easeInOut' }
+          }
+        >
+          <HourglassSVG
+            showOldSand={showOldSand}
+            showCascade={showCascade}
+            grains={grains}
+            glowAmt={glowAmt}
+            stage={stage}
+          />
+        </motion.div>
+      </div>
+
+      {/* ── Ash scatter (during flip) ── */}
       <AnimatePresence>
-        {stage === 'title' && capsuleTitle && (
+        {showFlip && (
+          <div className="absolute pointer-events-none"
+            style={{ left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }}>
+            {scatterParticles.map((p, i) => (
+              <motion.div key={i}
+                className="absolute rounded-full"
+                style={{ width: `${p.size}px`, height: `${p.size}px`, background: p.color }}
+                initial={{ x: 0, y: 0, scale: 1, opacity: 0.85 }}
+                animate={{ x: p.sx, y: p.sy, scale: 0.1, opacity: 0 }}
+                transition={{ duration: p.dur, delay: p.delay + 0.8, ease: 'easeOut' }}
+              />
+            ))}
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Rising gold motes (cascade) ── */}
+      <AnimatePresence>
+        {showCascade && risingMotes.map((m, i) => (
+          <div key={i} className="absolute rounded-full pointer-events-none"
+            style={{
+              left: `${m.x}%`, top: '48%',
+              width: `${m.size}px`, height: `${m.size}px`,
+              background: m.color,
+              boxShadow: '0 0 5px rgba(255,200,50,0.7)',
+              animation: `mote-rise ${m.dur}s ease-out ${m.delay}s infinite`,
+            }} />
+        ))}
+      </AnimatePresence>
+
+      {/* ── TITLE REVEAL ── */}
+      <AnimatePresence>
+        {showReveal && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.1 }}
+            className="absolute z-40 text-center pointer-events-none"
+            style={{ left: '50%', transform: 'translateX(-50%)', bottom: '8%', width: '90%', maxWidth: '360px' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
-            className="absolute inset-0 flex items-center justify-center z-50"
           >
-            <h2 className="text-4xl md:text-6xl font-bold text-cyan-400 drop-shadow-2xl text-center px-8">
-              {capsuleTitle}
-            </h2>
+            <motion.p
+              style={{
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontSize: '9.5px',
+                letterSpacing: '0.5em',
+                color: 'rgba(200,162,65,0.7)',
+                textTransform: 'uppercase',
+                marginBottom: '14px',
+              }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.9 }}
+            >
+              YOUR TIME BEGINS NOW
+            </motion.p>
+
+
+            <motion.p
+              style={{
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontSize: '11px',
+                letterSpacing: '0.22em',
+                color: 'rgba(200,162,65,0.5)',
+                marginTop: '16px',
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5, duration: 1.2 }}
+            >
+              — a fresh chapter —
+            </motion.p>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* SCENE 1: HOME OFFICE SANCTUARY (0-2.5s) */}
-      <AnimatePresence>
-        {stage === 'homeoffice' && (
-          <>
-            {/* Cozy room background */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-b from-amber-100 to-orange-50"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-            />
-
-            {/* "Good Morning, Remote Life Begins" label */}
-            <motion.div
-              className="absolute left-1/2 -translate-x-1/2 top-[10%] bg-gradient-to-r from-amber-500 to-orange-600 px-8 py-3 rounded-full border-2 border-white shadow-2xl"
-              initial={{ opacity: 0, y: -30, scale: 0.8 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.8, delay: 0.3, type: 'spring', damping: 10 }}
-            >
-              <span className="text-xl font-black text-white drop-shadow-lg">Good Morning, Remote Life Begins ☕</span>
-            </motion.div>
-
-            {/* Window with morning light */}
-            <div className="absolute right-[10%] top-[15%] w-32 h-40 bg-gradient-to-br from-sky-200 to-blue-300 rounded-lg border-4 border-amber-800 opacity-80" />
-
-            {/* Desk */}
-            <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-b from-amber-800 to-amber-900 rounded-t-3xl shadow-2xl" />
-
-            {/* Person in pajamas */}
-            <motion.div
-              className="absolute left-1/2 bottom-[35%] -translate-x-1/2 text-8xl z-20"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1 }}
-            >
-              🧑‍💻
-            </motion.div>
-
-            {/* Coffee mug with steam — positioned on the desk to the right of center */}
-            <motion.div
-              className="absolute text-6xl z-20"
-              style={{ left: '58%', bottom: '26%' }}
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              ☕
-              
-              {/* Enhanced steam particles with varied speeds */}
-              {steamParticles.map((p, i) => (
-                <motion.div
-                  key={`steam-${i}`}
-                  className="absolute left-1/2 -translate-x-1/2 rounded-full"
-                  style={{
-                    width: p.width,
-                    height: p.height,
-                    bottom: '100%',
-                    backgroundColor: `rgba(${p.r}, ${p.g}, ${255}, ${p.opacity})`
-                  }}
-                  animate={{
-                    y: [-5, p.yEnd],
-                    x: [p.xStart, p.xEnd],
-                    opacity: [0.6, 0.4, 0],
-                    scale: [0.8, p.scale, 2]
-                  }}
-                  transition={{
-                    duration: p.duration,
-                    repeat: completed ? 0 : 3,
-                    delay: i * 0.2,
-                    ease: 'easeOut'
-                  }}
-                />
-              ))}
-
-              {/* Coffee warmth glow */}
-              <motion.div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: 'radial-gradient(circle, rgba(251, 191, 36, 0.3), transparent 70%)',
-                  filter: 'blur(15px)'
-                }}
-                animate={{
-                  opacity: [0.4, 0.7, 0.4],
-                  scale: [1, 1.2, 1]
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: completed ? 0 : 3,
-                  ease: 'easeInOut'
-                }}
-              />
-            </motion.div>
-
-            {/* Laptop (closed, about to open) with better animation */}
-            <motion.div
-              className="absolute left-1/2 -translate-x-1/2 bottom-[25%] w-48 h-32 bg-gradient-to-b from-slate-600 to-slate-800 rounded-lg border-4 border-slate-700 shadow-xl z-10"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-            >
-              {/* Screen about to glow */}
-              <motion.div
-                className="absolute inset-2 bg-slate-900 rounded"
-                animate={{
-                  boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 20px rgba(59, 130, 246, 0.3)']
-                }}
-                transition={{
-                  duration: 1.5,
-                  delay: 1.5
-                }}
-              />
-            </motion.div>
-
-            {/* Ambient morning dust motes */}
-            {dustMotes.map((d, i) => (
-              <motion.div
-                key={`dust-${i}`}
-                className="absolute w-1 h-1 rounded-full bg-yellow-200/40"
-                style={{
-                  right: d.right,
-                  top: d.top
-                }}
-                animate={{
-                  opacity: [0.2, 0.5, 0.2],
-                  y: [0, -30, 0],
-                  x: [d.xMove, d.xMove2]
-                }}
-                transition={{
-                  duration: d.duration,
-                  repeat: Infinity,
-                  delay: d.delay,
-                  ease: 'easeInOut'
-                }}
-              />
-            ))}
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* SCENE 2: BOOT SEQUENCE (2.5-6s) */}
-      <AnimatePresence>
-        {stage === 'bootsequence' && (
-          <>
-            {/* Dark terminal background */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            />
-
-            {/* "Initializing Your Digital Presence..." label */}
-            <motion.div
-              className="absolute left-1/2 -translate-x-1/2 top-[10%] bg-gradient-to-r from-cyan-500 to-blue-600 px-8 py-3 rounded-full border-2 border-cyan-300 shadow-2xl z-50"
-              initial={{ opacity: 0, y: -30, scale: 0.8 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.6, delay: 0.3, type: 'spring', damping: 10 }}
-            >
-              <span className="text-xl font-black text-white drop-shadow-lg">Initializing Your Digital Presence... 🔌</span>
-            </motion.div>
-
-            {/* Falling Matrix code */}
-            {matrixChars.map((colChars, col) => (
-              <div
-                key={`matrix-col-${col}`}
-                className="absolute top-0 bottom-0"
-                style={{
-                  left: `${(col * 2)}%`,
-                  width: '2%'
-                }}
-              >
-                {colChars.map((char, charIdx) => (
-                  <motion.div
-                    key={`char-${charIdx}`}
-                    className="absolute text-sm font-mono font-bold"
-                    style={{
-                      top: `${charIdx * 5}%`,
-                      left: 0,
-                      color: charIdx === 0 ? '#00ff41' : `rgba(0, 255, 65, ${1 - charIdx * 0.05})`
-                    }}
-                    initial={{ opacity: 0 }}
-                    animate={{
-                      opacity: [0, 1, 0.3],
-                      y: ['0%', '500%']
-                    }}
-                    transition={{
-                      duration: 2,
-                      delay: col * 0.02 + charIdx * 0.05,
-                      ease: 'linear'
-                    }}
-                  >
-                    {char}
-                  </motion.div>
-                ))}
-              </div>
-            ))}
-
-            {/* Hidden messages in code */}
-            <motion.div
-              className="absolute left-1/2 top-[30%] -translate-x-1/2 text-xl font-mono font-bold text-green-400"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 1, 0] }}
-              transition={{ duration: 1, delay: 0.8 }}
-            >
-              WELCOME
-            </motion.div>
-
-            <motion.div
-              className="absolute left-1/2 top-[50%] -translate-x-1/2 text-xl font-mono font-bold text-green-400"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 1, 0] }}
-              transition={{ duration: 1, delay: 1.3 }}
-            >
-              INITIALIZE
-            </motion.div>
-
-            {/* Screen glow on face */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-t from-transparent via-green-500/10 to-transparent pointer-events-none"
-              animate={{
-                opacity: [0.3, 0.6, 0.3]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: 'easeInOut'
-              }}
-            />
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* SCENE 3: AVATAR MATERIALIZATION (6-9s) */}
-      <AnimatePresence>
-        {stage === 'avatar' && (
-          <>
-            {/* Virtual space background */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-b from-purple-950 via-indigo-900 to-purple-950"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            />
-
-            {/* Grid floor */}
-            <div className="absolute bottom-0 left-0 right-0 h-[50%] opacity-30">
-              {[...Array(10)].map((_, i) => (
-                <div
-                  key={`grid-h-${i}`}
-                  className="absolute left-0 right-0 border-b border-cyan-400/30"
-                  style={{ bottom: `${i * 10}%` }}
-                />
-              ))}
-              {[...Array(20)].map((_, i) => (
-                <div
-                  key={`grid-v-${i}`}
-                  className="absolute top-0 bottom-0 border-r border-cyan-400/30"
-                  style={{ left: `${i * 5}%` }}
-                />
-              ))}
-            </div>
-
-            {/* Avatar materializing - pixelation phases */}
-            <motion.div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
-            >
-              {/* Phase 1: Chunky pixels (0-1.2s) */}
-              <motion.div
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-                initial={{ opacity: 1, scale: 1 }}
-                animate={{ opacity: [1, 0], scale: [1, 1.1] }}
-                transition={{ duration: 1.2 }}
-              >
-                <div className="grid grid-cols-8 grid-rows-8 gap-1">
-                  {[...Array(64)].map((_, i) => (
-                    <motion.div
-                      key={`pixel-${i}`}
-                      className="w-3 h-3 rounded-sm"
-                      style={{
-                        background: i % 3 === 0 ? '#3b82f6' : i % 2 === 0 ? '#8b5cf6' : '#60a5fa'
-                      }}
-                      animate={{
-                        opacity: [0, 1],
-                        scale: [0, 1, 1]
-                      }}
-                      transition={{
-                        duration: 0.3,
-                        delay: i * 0.01
-                      }}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* Phase 2: Higher resolution (1.2s+) */}
-              <motion.div
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl"
-                initial={{ opacity: 0, filter: 'blur(10px)' }}
-                animate={{ 
-                  opacity: [0, 1],
-                  filter: ['blur(10px)', 'blur(0px)']
-                }}
-                transition={{ duration: 1.5, delay: 1.2 }}
-              >
-                🧑‍💼
-              </motion.div>
-
-              {/* Materialization particles */}
-              {materializeParticles.map((p, i) => (
-                <motion.div
-                  key={`materialize-${i}`}
-                  className="absolute w-1 h-1 rounded-full"
-                  style={{
-                    left: '50%',
-                    top: '50%',
-                    background: p.isEven ? '#00ffff' : '#ff00ff'
-                  }}
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{
-                    opacity: [0, 1, 0],
-                    scale: [0, 1.5, 0],
-                    x: p.x,
-                    y: p.y
-                  }}
-                  transition={{
-                    duration: 2,
-                    delay: 1 + i * 0.01,
-                    ease: 'easeOut'
-                  }}
-                />
-              ))}
-
-              {/* Completion burst */}
-              <motion.div
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full border-4 border-cyan-400"
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: [0, 0.8, 0], scale: [0, 2, 3] }}
-                transition={{ duration: 1, delay: 2.5 }}
-              />
-            </motion.div>
-
-            {/* Floating geometric shapes */}
-            {[
-              { x: 20, y: 20, size: 40, delay: 0.5 },
-              { x: 80, y: 30, size: 30, delay: 0.8 },
-              { x: 15, y: 70, size: 35, delay: 1.1 }
-            ].map((shape, i) => (
-              <motion.div
-                key={`shape-${i}`}
-                className="absolute border-2 border-magenta-400/50 rounded"
-                style={{
-                  left: `${shape.x}%`,
-                  top: `${shape.y}%`,
-                  width: shape.size,
-                  height: shape.size
-                }}
-                initial={{ opacity: 0, rotate: 0 }}
-                animate={{
-                  opacity: [0, 0.5, 0.5],
-                  rotate: 360,
-                  y: [0, -20, 0]
-                }}
-                transition={{
-                  duration: 3,
-                  delay: shape.delay,
-                  repeat: Infinity,
-                  ease: 'linear'
-                }}
-              />
-            ))}
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* SCENE 4: THE WELCOME MATRIX (9-12s) */}
-      <AnimatePresence>
-        {stage === 'welcome' && (
-          <>
-            {/* Virtual space maintained */}
-            <motion.div className="absolute inset-0 bg-gradient-to-b from-purple-950 via-indigo-900 to-purple-950" />
-
-            {/* Grid floor */}
-            <div className="absolute bottom-0 left-0 right-0 h-[50%] opacity-20">
-              {[...Array(10)].map((_, i) => (
-                <div key={`grid-h2-${i}`} className="absolute left-0 right-0 border-b border-cyan-400/30" style={{ bottom: `${i * 10}%` }} />
-              ))}
-            </div>
-
-            {/* Avatar center */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-7xl z-20">
-              🧑‍💼
-            </div>
-
-            {/* Video call grid appearing around avatar */}
-            {[
-              { x: -25, y: -20, emoji: '👨‍💼', delay: 0.2 },
-              { x: 0, y: -25, emoji: '👩‍💻', delay: 0.35 },
-              { x: 25, y: -20, emoji: '🧑‍💼', delay: 0.5 },
-              { x: -25, y: 20, emoji: '👨‍💻', delay: 0.65 },
-              { x: 0, y: 25, emoji: '👩‍💼', delay: 0.8 },
-              { x: 25, y: 20, emoji: '🧑‍💻', delay: 0.95 }
-            ].map((coworker, i) => (
-              <motion.div
-                key={`coworker-${i}`}
-                className="absolute w-20 h-20 bg-gradient-to-br from-cyan-900 to-purple-900 rounded-lg border-2 border-cyan-400 flex items-center justify-center shadow-xl"
-                style={{
-                  left: `calc(50% + ${coworker.x}%)`,
-                  top: `calc(50% + ${coworker.y}%)`,
-                  transform: 'translate(-50%, -50%)'
-                }}
-                initial={{ opacity: 0, scale: 0, rotateY: 90 }}
-                animate={{
-                  opacity: 1,
-                  scale: 1,
-                  rotateY: 0
-                }}
-                transition={{
-                  duration: 0.5,
-                  delay: coworker.delay,
-                  type: 'spring'
-                }}
-              >
-                <motion.div
-                  className="text-3xl"
-                  animate={i % 2 === 0 ? { rotate: [-10, 10, -10] } : { scale: [1, 1.2, 1] }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    delay: coworker.delay + 0.5
-                  }}
-                >
-                  {coworker.emoji}
-                </motion.div>
-
-                {/* Sparkle on appear */}
-                <motion.div
-                  className="absolute -top-2 -right-2 text-xl"
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: [0, 1, 0], scale: [0, 1.5, 0] }}
-                  transition={{ duration: 0.6, delay: coworker.delay + 0.2 }}
-                >
-                  ✨
-                </motion.div>
-              </motion.div>
-            ))}
-
-            {/* Chat messages panel */}
-            <motion.div
-              className="absolute right-[5%] top-1/2 -translate-y-1/2 w-64 h-80 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg border-2 border-cyan-400 shadow-2xl overflow-hidden p-4"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-            >
-              <div className="text-cyan-400 font-bold mb-2 text-sm">Team Chat</div>
-              
-              {/* Messages flooding in */}
-              {[
-                { text: 'Welcome! 🎉', delay: 0.7 },
-                { text: 'So excited! 💪', delay: 1.0 },
-                { text: 'Let\'s do this! 🙌', delay: 1.3 },
-                { text: 'Coffee soon? ☕', delay: 1.6 }
-              ].map((msg, i) => (
-                <motion.div
-                  key={`msg-${i}`}
-                  className="bg-purple-800/50 rounded px-2 py-1 mb-2 text-xs text-white"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: msg.delay }}
-                >
-                  {msg.text}
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {/* Connection lines */}
-            {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={`line-${i}`}
-                className="absolute left-1/2 top-1/2 w-px h-24 bg-gradient-to-t from-cyan-400 to-transparent origin-bottom"
-                style={{
-                  transform: `rotate(${i * 60}deg)`
-                }}
-                initial={{ opacity: 0, scaleY: 0 }}
-                animate={{ opacity: [0, 0.5], scaleY: [0, 1] }}
-                transition={{ duration: 0.5, delay: 0.2 + i * 0.15 }}
-              />
-            ))}
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* SCENE 5: DIGITAL WORKSPACE EXPANDS (12-14.5s) */}
-      <AnimatePresence>
-        {stage === 'workspace' && (
-          <>
-            <motion.div className="absolute inset-0 bg-gradient-to-b from-purple-950 via-indigo-900 to-purple-950" />
-
-            {/* Avatar at desk */}
-            <div className="absolute left-1/2 bottom-[35%] -translate-x-1/2 text-6xl z-20">
-              🧑‍💻
-            </div>
-
-            {/* Virtual desk */}
-            <motion.div
-              className="absolute left-1/2 bottom-[25%] -translate-x-1/2 w-96 h-4 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent rounded-full"
-              initial={{ opacity: 0, scaleX: 0 }}
-              animate={{ opacity: 1, scaleX: 1 }}
-              transition={{ duration: 0.8 }}
-            />
-
-            {/* Three floating monitors */}
-            {[
-              { x: -40, scale: 0.9, delay: 0.3, content: '📊', label: 'Dashboard' },
-              { x: 0, scale: 1.1, delay: 0.5, content: '💻', label: 'Code Editor' },
-              { x: 40, scale: 0.9, delay: 0.7, content: '💬', label: 'Messages' }
-            ].map((monitor, i) => (
-              <motion.div
-                key={`monitor-${i}`}
-                className="absolute left-1/2 top-[30%] -translate-x-1/2 w-32 h-24 bg-gradient-to-br from-cyan-900/50 to-purple-900/50 rounded-lg border-2 border-cyan-400/50 shadow-2xl flex flex-col items-center justify-center"
-                style={{
-                  marginLeft: `${monitor.x}%`,
-                  transform: `translate(-50%, -50%) scale(${monitor.scale})`
-                }}
-                initial={{ opacity: 0, y: -50, rotateX: -45 }}
-                animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                transition={{ duration: 0.6, delay: monitor.delay, type: 'spring' }}
-              >
-                <div className="text-4xl mb-1">{monitor.content}</div>
-                <div className="text-xs text-cyan-300">{monitor.label}</div>
-
-                {/* Screen activity lines */}
-                {[...Array(3)].map((_, j) => (
-                  <motion.div
-                    key={`activity-${j}`}
-                    className="absolute left-2 right-2 h-0.5 bg-cyan-400/50 rounded"
-                    style={{ top: `${40 + j * 15}%` }}
-                    animate={{
-                      opacity: [0.3, 0.7, 0.3],
-                      scaleX: [0.5, 1, 0.5]
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      delay: monitor.delay + j * 0.2,
-                      repeat: Infinity
-                    }}
-                  />
-                ))}
-              </motion.div>
-            ))}
-
-            {/* Productivity particles */}
-            {productivityParticles.map((p, i) => (
-              <motion.div
-                key={`prod-${i}`}
-                className="absolute w-1 h-1 rounded-full bg-cyan-400"
-                style={{
-                  left: '50%',
-                  top: '35%'
-                }}
-                animate={{
-                  opacity: [0, 1, 0],
-                  scale: [0, 1, 0],
-                  y: [0, p.yEnd],
-                  x: [0, p.xEnd]
-                }}
-                transition={{
-                  duration: 2,
-                  delay: 1 + i * 0.05,
-                  ease: 'easeOut'
-                }}
-              />
-            ))}
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* FINALE: DUAL REALITY HARMONY (14.5-15s) */}
-      <AnimatePresence>
-        {stage === 'dualreality' && (
-          <>
-            {/* Split screen divider */}
-            <motion.div
-              className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 via-magenta-400 to-cyan-400 z-30"
-              initial={{ opacity: 0, scaleY: 0 }}
-              animate={{ opacity: 1, scaleY: 1 }}
-              transition={{ duration: 0.8 }}
-            />
-
-            {/* LEFT SIDE: Real World */}
-            <div className="absolute left-0 top-0 bottom-0 right-1/2 bg-gradient-to-b from-amber-100 to-orange-50">
-              {/* Person at home desk */}
-              <div className="absolute left-1/2 bottom-[35%] -translate-x-1/2 text-6xl">
-                🧑‍💻
-              </div>
-              
-              {/* Laptop */}
-              <div className="absolute left-1/2 bottom-[25%] -translate-x-1/2 w-24 h-16 bg-slate-700 rounded border-2 border-slate-600" />
-              
-              {/* Coffee */}
-              <div className="absolute left-[30%] bottom-[30%] text-3xl">☕</div>
-              
-              {/* String lights ON (success!) */}
-              {[...Array(5)].map((_, i) => (
-                <motion.div
-                  key={`light-${i}`}
-                  className="absolute top-[10%] w-2 h-2 rounded-full bg-yellow-400"
-                  style={{
-                    left: `${30 + i * 10}%`,
-                    boxShadow: '0 0 10px rgba(250, 204, 21, 0.8)'
-                  }}
-                  animate={{
-                    opacity: [0.8, 1, 0.8]
-                  }}
-                  transition={{
-                    duration: 2,
-                    delay: i * 0.2,
-                    repeat: completed ? 0 : 5
-                  }}
-                />
-              ))}
-
-              {/* Label */}
-              <motion.div
-                className="absolute top-4 left-4 text-sm font-bold text-amber-800 bg-white/50 px-3 py-1 rounded-full"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                Real
-              </motion.div>
-            </div>
-
-            {/* RIGHT SIDE: Virtual World */}
-            <div className="absolute right-0 top-0 bottom-0 left-1/2 bg-gradient-to-b from-purple-950 via-indigo-900 to-purple-950">
-              {/* Avatar at desk */}
-              <div className="absolute left-1/2 bottom-[35%] -translate-x-1/2 text-6xl">
-                🧑‍💼
-              </div>
-              
-              {/* Virtual monitors */}
-              {[-15, 0, 15].map((offset, i) => (
-                <motion.div
-                  key={`v-monitor-${i}`}
-                  className="absolute left-1/2 top-[25%] w-16 h-12 bg-cyan-900/50 rounded border border-cyan-400/50"
-                  style={{ marginLeft: `${offset}%`, transform: 'translate(-50%, -50%)' }}
-                  animate={{
-                    opacity: [0.7, 1, 0.7]
-                  }}
-                  transition={{
-                    duration: 2,
-                    delay: i * 0.3,
-                    repeat: Infinity
-                  }}
-                />
-              ))}
-
-              {/* Success glow */}
-              <motion.div
-                className="absolute left-1/2 bottom-[35%] -translate-x-1/2 w-32 h-32 rounded-full bg-cyan-400/20"
-                style={{ filter: 'blur(30px)' }}
-                animate={{
-                  scale: [1, 1.3, 1],
-                  opacity: [0.3, 0.6, 0.3]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity
-                }}
-              />
-
-              {/* Label */}
-              <motion.div
-                className="absolute top-4 right-4 text-sm font-bold text-cyan-400 bg-black/50 px-3 py-1 rounded-full"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                Virtual
-              </motion.div>
-            </div>
-
-            {/* "THE FUTURE IS NOW!" text */}
-            <motion.div
-              className="absolute bottom-[10%] left-1/2 -translate-x-1/2 text-center z-50"
-              initial={{ opacity: 0, y: 50, scale: 0.5 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.8, type: 'spring' }}
-            >
-              <motion.h1
-                className="text-4xl md:text-6xl font-black bg-gradient-to-r from-cyan-400 via-magenta-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-2xl"
-                style={{
-                  WebkitTextStroke: '1px rgba(255, 255, 255, 0.3)'
-                }}
-                animate={{
-                  backgroundPosition: ['0%', '100%', '0%']
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: 'linear'
-                }}
-              >
-                THE FUTURE IS NOW!
-              </motion.h1>
-            </motion.div>
-
-            {/* Particle burst from center line */}
-            {burstParticles.map((p, i) => (
-              <motion.div
-                key={`burst-${i}`}
-                className="absolute w-1 h-1 rounded-full"
-                style={{
-                  left: '50%',
-                  top: '50%',
-                  background: p.isEven ? '#00ffff' : '#ff00ff'
-                }}
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{
-                  opacity: [0, 1, 0],
-                  scale: [0, 1.5, 0],
-                  x: p.x,
-                  y: p.y
-                }}
-                transition={{
-                  duration: 2,
-                  delay: 1 + i * 0.01,
-                  ease: 'easeOut'
-                }}
-              />
-            ))}
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Outro fade */}
+      {/* ── Outro fade ── */}
       <AnimatePresence>
         {stage === 'outro' && (
-          <motion.div
-            className="absolute inset-0 bg-white z-60"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
-          />
+          <motion.div className="absolute inset-0 z-50"
+            style={{ background: '#1a0e00' }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ duration: 1.4 }} />
         )}
       </AnimatePresence>
     </div>

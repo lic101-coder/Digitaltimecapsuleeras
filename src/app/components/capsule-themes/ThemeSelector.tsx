@@ -103,8 +103,8 @@ function ThemeCard({
           )}
         </AnimatePresence>
 
-        {/* Owned premium sparkle badge */}
-        {!isLocked && !FREE_THEME_IDS.includes(theme.id) && (
+        {/* Owned premium sparkle badge — hidden when selected (checkmark takes that slot) */}
+        {!isSelected && !isLocked && !FREE_THEME_IDS.includes(theme.id) && (
           <motion.div
             className="absolute top-3 right-3 z-10"
             animate={{ rotate: [-12, 12] }}

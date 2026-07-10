@@ -1812,17 +1812,6 @@ export function MixtapeDeluxeCeremony({
               >
                 NEVER ENDING
               </h2>
-              <p
-                style={{
-                  fontFamily: 'monospace',
-                  fontSize: 'clamp(14px, 3.5vw, 22px)',
-                  color: '#00ffff',
-                  textShadow: '0 0 12px rgba(0,255,255,0.9)',
-                  letterSpacing: '2px',
-                }}
-              >
-                {capsuleTitle}
-              </p>
               {/* YOUR MIXTAPE IS FOREVER */}
               <motion.p
                 style={{

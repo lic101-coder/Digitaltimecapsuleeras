@@ -379,13 +379,12 @@ export function CeremonyCard({ ceremony, isSelected, onSelect, onPreview }: Cere
         </div>
       </div>
       
-      {/* Preview button - explicit, never auto-fires */}
+      {/* Preview button - only previews, never changes selection */}
       <div
         className="relative w-full px-2 pb-2"
         style={{ zIndex: 20 }}
         onClick={(e) => {
           e.stopPropagation();
-          onSelect();
           onPreview();
         }}
       >

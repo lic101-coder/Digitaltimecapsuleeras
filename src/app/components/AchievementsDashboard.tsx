@@ -84,9 +84,9 @@ export function AchievementsDashboard() {
       const unlockRecord = achievements.find(a => a.achievementId === def.id);
       const progress = isUnlocked ? 100 : getProgress(def);
       
-      // Mark as "New" if unlocked within last 3 days
-      const isNew = isUnlocked && unlockRecord?.unlockedAt 
-        ? (Date.now() - new Date(unlockRecord.unlockedAt).getTime()) < 3 * 24 * 60 * 60 * 1000
+      // Mark as "New" if unlocked within last 10 days
+      const isNew = isUnlocked && unlockRecord?.unlockedAt
+        ? (Date.now() - new Date(unlockRecord.unlockedAt).getTime()) < 10 * 24 * 60 * 60 * 1000
         : false;
 
       return {

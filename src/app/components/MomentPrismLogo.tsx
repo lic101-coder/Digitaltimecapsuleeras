@@ -7,6 +7,7 @@ interface MomentPrismLogoProps {
   forceAuthLayout?: boolean;
   onClick?: () => void;
   colorScheme?: 'scheduled' | 'delivered' | 'received' | 'draft' | 'all' | 'eclipse' | 'aurora';
+  isDarkHorizon?: boolean;
 }
 
 // 6 Color Schemes matching capsule statuses
@@ -69,13 +70,14 @@ const colorSchemes = {
   },
 };
 
-export function MomentPrismLogo({ 
-  size = 40, 
-  className = "", 
-  showSubtitle = true, 
-  forceAuthLayout = false, 
+export function MomentPrismLogo({
+  size = 40,
+  className = "",
+  showSubtitle = true,
+  forceAuthLayout = false,
   onClick,
-  colorScheme = 'aurora' 
+  colorScheme = 'aurora',
+  isDarkHorizon = false,
 }: MomentPrismLogoProps) {
   // Breathing animation state
   const [isBreathing, setIsBreathing] = React.useState(false);
@@ -264,14 +266,17 @@ export function MomentPrismLogo({
           </div>
           
           <div className="relative">
-            <p 
-              className="logo-subtitle-enhanced text-black dark:text-black font-black tracking-wide leading-tight animate-fade-in-glow"
-              style={{ 
+            <p
+              className="logo-subtitle-enhanced font-black tracking-wide leading-tight animate-fade-in-glow"
+              style={{
                 fontSize: `${logoSubSize}px`,
                 fontFamily: '"SF Pro Text", "Inter", system-ui, sans-serif',
                 letterSpacing: '0.05em',
                 animation: 'fadeInWithGlow 0.8s ease-out 0.5s both',
-                textShadow: '0 2px 4px rgba(0, 0, 0, 0.9), 0 4px 12px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 255, 255, 0.4)'
+                color: isDarkHorizon ? 'rgba(255,255,255,0.95)' : 'black',
+                textShadow: isDarkHorizon
+                  ? '0 0 10px rgba(167,139,250,1), 0 0 24px rgba(139,92,246,0.85), 0 0 48px rgba(99,102,241,0.6), 0 1px 3px rgba(0,0,0,0.9)'
+                  : '0 2px 4px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.6), 0 0 20px rgba(255,255,255,0.4)',
               }}
             >
               {forceAuthLayout ? (

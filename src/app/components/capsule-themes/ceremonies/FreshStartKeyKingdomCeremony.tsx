@@ -421,15 +421,45 @@ export function FreshStartKeyKingdomCeremony({
               👷
             </motion.div>
 
-            {/* Crane descending from top-right */}
+            {/* CONSTRUCTION CRANE — right of center, jib faces left toward building */}
             <motion.div
-              className="absolute text-4xl"
-              style={{ top: '4%', right: '8%' }}
-              initial={{ y: -80, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 120, damping: 16, delay: 0.8 }}
+              className="absolute bottom-0 z-10"
+              style={{ right: '12%' }}
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.8, ease: 'easeOut' }}
             >
-              🏗️
+              <svg width="120" height="300" viewBox="0 0 180 420" style={{ display: 'block', transform: 'scaleX(-1)' }}>
+                <rect x="62" y="408" width="56" height="12" rx="3" fill="#92400e" />
+                <rect x="70" y="400" width="40" height="10" rx="2" fill="#b45309" />
+                <rect x="79" y="80" width="22" height="322" fill="#f59e0b" />
+                {[0,1,2,3,4,5,6,7,8,9].map(r => (
+                  <g key={r}>
+                    <line x1="79" y1={90 + r * 32} x2="101" y2={90 + r * 32 + 16} stroke="#92400e" strokeWidth="2.5" />
+                    <line x1="101" y1={90 + r * 32} x2="79" y2={90 + r * 32 + 16} stroke="#92400e" strokeWidth="2.5" />
+                  </g>
+                ))}
+                <rect x="74" y="60" width="32" height="26" rx="3" fill="#d97706" />
+                <rect x="77" y="64" width="10" height="8" rx="1" fill="#bfdbfe" opacity="0.85" />
+                <rect x="90" y="64" width="10" height="8" rx="1" fill="#bfdbfe" opacity="0.85" />
+                <rect x="18" y="56" width="62" height="10" rx="2" fill="#f59e0b" />
+                <line x1="80" y1="56" x2="18" y2="66" stroke="#f59e0b" strokeWidth="2" />
+                <rect x="14" y="59" width="20" height="16" rx="2" fill="#78350f" />
+                <rect x="100" y="56" width="78" height="10" rx="2" fill="#f59e0b" />
+                <line x1="100" y1="66" x2="178" y2="66" stroke="#f59e0b" strokeWidth="1.5" />
+                <line x1="90" y1="58" x2="145" y2="58" stroke="#d1d5db" strokeWidth="1.5" opacity="0.8" />
+                <line x1="90" y1="58" x2="172" y2="60" stroke="#d1d5db" strokeWidth="1.2" opacity="0.6" />
+                <line x1="90" y1="58" x2="28" y2="60" stroke="#d1d5db" strokeWidth="1.2" opacity="0.6" />
+                <rect x="148" y="63" width="14" height="8" rx="2" fill="#78350f" />
+                <line x1="155" y1="71" x2="155" y2="155" stroke="#d1d5db" strokeWidth="1.5" />
+                <path d="M150 155 Q148 163 153 167 Q160 171 162 163 Q163 157 158 155" fill="none" stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round" />
+                <rect x="79" y="80" width="3" height="322" fill="#d97706" opacity="0.6" />
+                <rect x="98" y="80" width="3" height="322" fill="#d97706" opacity="0.6" />
+                {[0,1,2,3].map(s => (
+                  <rect key={s} x={104 + s * 18} y="56" width="8" height="10" fill="#1e3a5f" opacity="0.4" rx="1" />
+                ))}
+                <circle cx="176" cy="58" r="4" fill="#ef4444" opacity="0.9" />
+              </svg>
             </motion.div>
           </motion.div>
         )}
@@ -447,16 +477,40 @@ export function FreshStartKeyKingdomCeremony({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
           >
-            {/* Crane (persistent) */}
-            <motion.div
-              className="absolute text-4xl"
-              style={{ top: '4%', right: '8%' }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              🏗️
-            </motion.div>
+            {/* CONSTRUCTION CRANE — right of center, jib faces left toward building */}
+            <div className="absolute bottom-0 z-10" style={{ right: '12%' }}>
+              <svg width="120" height="300" viewBox="0 0 180 420" style={{ display: 'block', transform: 'scaleX(-1)' }}>
+                <rect x="62" y="408" width="56" height="12" rx="3" fill="#92400e" />
+                <rect x="70" y="400" width="40" height="10" rx="2" fill="#b45309" />
+                <rect x="79" y="80" width="22" height="322" fill="#f59e0b" />
+                {[0,1,2,3,4,5,6,7,8,9].map(r => (
+                  <g key={r}>
+                    <line x1="79" y1={90 + r * 32} x2="101" y2={90 + r * 32 + 16} stroke="#92400e" strokeWidth="2.5" />
+                    <line x1="101" y1={90 + r * 32} x2="79" y2={90 + r * 32 + 16} stroke="#92400e" strokeWidth="2.5" />
+                  </g>
+                ))}
+                <rect x="74" y="60" width="32" height="26" rx="3" fill="#d97706" />
+                <rect x="77" y="64" width="10" height="8" rx="1" fill="#bfdbfe" opacity="0.85" />
+                <rect x="90" y="64" width="10" height="8" rx="1" fill="#bfdbfe" opacity="0.85" />
+                <rect x="18" y="56" width="62" height="10" rx="2" fill="#f59e0b" />
+                <line x1="80" y1="56" x2="18" y2="66" stroke="#f59e0b" strokeWidth="2" />
+                <rect x="14" y="59" width="20" height="16" rx="2" fill="#78350f" />
+                <rect x="100" y="56" width="78" height="10" rx="2" fill="#f59e0b" />
+                <line x1="100" y1="66" x2="178" y2="66" stroke="#f59e0b" strokeWidth="1.5" />
+                <line x1="90" y1="58" x2="145" y2="58" stroke="#d1d5db" strokeWidth="1.5" opacity="0.8" />
+                <line x1="90" y1="58" x2="172" y2="60" stroke="#d1d5db" strokeWidth="1.2" opacity="0.6" />
+                <line x1="90" y1="58" x2="28" y2="60" stroke="#d1d5db" strokeWidth="1.2" opacity="0.6" />
+                <rect x="148" y="63" width="14" height="8" rx="2" fill="#78350f" />
+                <line x1="155" y1="71" x2="155" y2="155" stroke="#d1d5db" strokeWidth="1.5" />
+                <path d="M150 155 Q148 163 153 167 Q160 171 162 163 Q163 157 158 155" fill="none" stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round" />
+                <rect x="79" y="80" width="3" height="322" fill="#d97706" opacity="0.6" />
+                <rect x="98" y="80" width="3" height="322" fill="#d97706" opacity="0.6" />
+                {[0,1,2,3].map(s => (
+                  <rect key={s} x={104 + s * 18} y="56" width="8" height="10" fill="#1e3a5f" opacity="0.4" rx="1" />
+                ))}
+                <circle cx="176" cy="58" r="4" fill="#ef4444" opacity="0.9" />
+              </svg>
+            </div>
 
             {/* Left worker */}
             <motion.div
@@ -542,16 +596,16 @@ export function FreshStartKeyKingdomCeremony({
               />
             </div>
 
-            {/* Floor counter */}
-            <AnimatePresence mode="wait">
+            {/* Floor counter — no mode="wait" so all 6 floors display without skipping */}
+            <AnimatePresence>
               {floorCount > 0 && (
                 <motion.div
                   key={`fc-${floorCount}`}
                   className="absolute top-8 left-1/2 -translate-x-1/2 text-center"
-                  initial={{ opacity: 0, scale: 0.7, y: -6 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 1.2 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18, ease: 'easeOut' }}
                 >
                   <span
                     className="text-2xl font-black tabular-nums"
@@ -647,10 +701,10 @@ export function FreshStartKeyKingdomCeremony({
                 ⭐
               </motion.div>
 
-              {/* Flag at peak */}
+              {/* Flag at peak — centered directly above star */}
               <motion.div
                 className="absolute text-2xl"
-                style={{ top: -52, left: '56%' }}
+                style={{ top: -62, left: '50%', transform: 'translateX(-50%)' }}
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5, type: 'spring', stiffness: 260, damping: 18 }}
@@ -771,7 +825,7 @@ export function FreshStartKeyKingdomCeremony({
             <div
               className="absolute left-1/2 -translate-x-1/2 flex flex-col-reverse"
               style={{
-                bottom: '8%',
+                bottom: 0,
                 width: '50%',
                 maxWidth: 280,
               }}
@@ -828,21 +882,6 @@ export function FreshStartKeyKingdomCeremony({
               >
                 Your New Chapter Begins
               </motion.p>
-              {capsuleTitle && (
-                <motion.h2
-                  className="text-3xl md:text-5xl font-black text-white"
-                  style={{
-                    textShadow:
-                      '0 0 30px rgba(251,191,36,0.7), 0 2px 8px rgba(0,0,0,0.8)',
-                    lineHeight: 1.1,
-                  }}
-                  initial={{ opacity: 0, scale: 0.88, y: 8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ delay: 0.7, type: 'spring', stiffness: 160, damping: 18 }}
-                >
-                  {capsuleTitle}
-                </motion.h2>
-              )}
               <motion.div
                 className="h-0.5 rounded-full"
                 style={{

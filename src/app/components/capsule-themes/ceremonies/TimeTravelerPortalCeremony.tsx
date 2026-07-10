@@ -238,15 +238,6 @@ export function TimeTravelerPortalCeremony({
               INITIALIZING ARCHIVE SYSTEM...
             </motion.p>
 
-            <motion.h2
-              className="font-mono text-xl md:text-3xl font-bold text-center"
-              style={{ color: '#00e5ff', textShadow: '0 0 16px #00e5ff', letterSpacing: '0.08em' }}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.9 }}
-            >
-              MEMORY FILE: {capsuleTitle}
-            </motion.h2>
 
             <motion.p
               className="font-mono text-xs"
@@ -612,21 +603,6 @@ export function TimeTravelerPortalCeremony({
               transition={{ duration: 2.5, ease: [0.22, 1, 0.36, 1] }}
             />
 
-            {/* Title with neon cyan glow */}
-            <motion.h2
-              className="font-mono font-bold text-center relative z-10"
-              style={{
-                color: '#00e5ff',
-                fontSize: isMobile ? 22 : 36,
-                letterSpacing: '0.12em',
-                textShadow: '0 0 20px #00e5ff, 0 0 50px #00e5ff80, 0 0 100px #00e5ff40',
-              }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
-            >
-              MEMORY FILE: {capsuleTitle}
-            </motion.h2>
 
             <motion.p
               className="font-mono text-base md:text-xl font-bold text-center relative z-10"

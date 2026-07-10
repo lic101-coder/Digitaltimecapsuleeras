@@ -14,6 +14,15 @@ import { LegacyArchitectHorizon } from './horizons/LegacyArchitectHorizon';
 import { DimensionalRiftPortal } from './horizons/DimensionalRiftPortal';
 import { HourglassUniverse } from './horizons/HourglassUniverse';
 import { PrecisionTargetReticle } from './horizons/PrecisionTargetReticle';
+import { NightOwlHorizon } from './horizons/NightOwlHorizon';
+import { MemorySharerHorizon } from './horizons/MemorySharerHorizon';
+import { EchoPioneerHorizon } from './horizons/EchoPioneerHorizon';
+import { PastReceiverHorizon } from './horizons/PastReceiverHorizon';
+import { FutureMessengerHorizon } from './horizons/FutureMessengerHorizon';
+import { GoldenHourKeeperHorizon } from './horizons/GoldenHourKeeperHorizon';
+import { CinemaPioneerHorizon } from './horizons/CinemaPioneerHorizon';
+import { HabitBuilderHorizon } from './horizons/HabitBuilderHorizon';
+import { VoiceKeeperHorizon } from './horizons/VoiceKeeperHorizon';
 
 interface HeaderBackgroundProps {
   titleName: string;
@@ -422,380 +431,11 @@ export function HeaderBackground({ titleName, titleRarity, preview = false }: He
   }
   
   if (titleName === 'Future Messenger') {
-    const envelopes = useMemo(() => Array.from({ length: 5 }, (_, i) => ({
-      id: i,
-      left: -10 + i * 5,
-      top: 20 + i * 12,
-      delay: i * 0.9,
-      duration: 5 + i * 0.3
-    })), []);
-    
-    const dataPackets = useMemo(() => Array.from({ length: 12 }, (_, i) => ({
-      id: i,
-      left: 10 + i * 8,
-      top: 15 + (i % 4) * 20,
-      delay: i * 0.2,
-      duration: 2 + (i % 3) * 0.5
-    })), []);
-
-    return (
-      <motion.div 
-        className={`top-0 left-0 right-0 ${height} overflow-hidden z-0 ${positioning}`}
-        initial={variants.initial}
-        animate={variants.animate}
-        exit={variants.exit}
-        style={performanceStyle}
-      >
-        {/* Deep purple space tunnel - warp speed aesthetic */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(90deg, #1a0a2e 0%, #6D28D9 50%, #A78BFA 100%)`,
-          }}
-        />
-        
-        {/* Warp speed light streaks */}
-        <div className="absolute inset-0">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <motion.div
-              key={`streak-${i}`}
-              className="absolute h-px bg-purple-300/60"
-              style={{
-                top: `${15 + i * 10}%`,
-                left: '0%',
-                width: '100%',
-              }}
-              animate={{
-                x: ['-100%', '200%'],
-                opacity: [0, 0.8, 0]
-              }}
-              transition={{
-                duration: 1.5 + i * 0.2,
-                repeat: Infinity,
-                delay: i * 0.3,
-                ease: 'linear'
-              }}
-            />
-          ))}
-        </div>
-        
-        {/* Central glowing envelope traveling */}
-        <motion.div
-          className="absolute top-1/2 text-5xl sm:text-6xl"
-          style={{
-            filter: 'drop-shadow(0 0 20px rgba(167, 139, 250, 0.8))'
-          }}
-          animate={{ 
-            x: ['-10%', '110%'],
-            y: [0, -10, 0],
-            rotate: [0, 360]
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-        >
-          📨
-        </motion.div>
-        
-        {/* Shooting star messages */}
-        {envelopes.map((e) => (
-          <motion.div
-            key={e.id}
-            className="absolute text-base sm:text-lg"
-            style={{
-              left: `${e.left}%`,
-              top: `${e.top}%`
-            }}
-            animate={{ 
-              x: ['0%', '120%'],
-              opacity: [0, 0.7, 0]
-            }}
-            transition={{
-              duration: e.duration,
-              repeat: Infinity,
-              delay: e.delay,
-              ease: 'easeOut'
-            }}
-          >
-            ✉️
-          </motion.div>
-        ))}
-        
-        {/* Data packets flowing */}
-        {dataPackets.map((d) => (
-          <motion.div
-            key={`packet-${d.id}`}
-            className="absolute w-1 h-1 sm:w-1.5 sm:h-1.5 bg-cyan-300 rounded-sm"
-            style={{
-              left: `${d.left}%`,
-              top: `${d.top}%`
-            }}
-            animate={{ 
-              x: ['0%', '100%'],
-              opacity: [0, 1, 0],
-              scale: [0.5, 1, 0.5]
-            }}
-            transition={{
-              duration: d.duration,
-              repeat: Infinity,
-              delay: d.delay,
-              ease: 'linear'
-            }}
-          />
-        ))}
-        
-        {/* Holographic mail icons orbiting */}
-        {Array.from({ length: 4 }).map((_, i) => (
-          <motion.div
-            key={`hologram-${i}`}
-            className="absolute text-sm opacity-30"
-            style={{
-              left: '50%',
-              top: '50%',
-            }}
-            animate={{ 
-              x: [Math.cos(i * Math.PI / 2) * 60, Math.cos((i * Math.PI / 2) + Math.PI * 2) * 60],
-              y: [Math.sin(i * Math.PI / 2) * 40, Math.sin((i * Math.PI / 2) + Math.PI * 2) * 40],
-              opacity: [0.2, 0.5, 0.2]
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              delay: i * 1.5,
-              ease: 'linear'
-            }}
-          >
-            📧
-          </motion.div>
-        ))}
-        
-        {/* Purple neon trail particles */}
-        {Array.from({ length: 10 }).map((_, i) => (
-          <motion.div
-            key={`trail-${i}`}
-            className="absolute w-0.5 h-0.5 bg-purple-400/80 rounded-full"
-            style={{
-              left: `${10 + i * 9}%`,
-              top: `${40 + (i % 3) * 10}%`
-            }}
-            animate={{ 
-              scale: [0, 2, 0],
-              opacity: [0, 0.8, 0]
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              delay: i * 0.2
-            }}
-          />
-        ))}
-        
-        {/* Cosmic effects */}
-        {Object.values(effects).map(effect => effect)}
-        
-        {/* 🌌 RANDOM COSMIC EVENTS */}
-        {cosmicEvents}
-        
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent" />
-      </motion.div>
-    );
+    return <FutureMessengerHorizon height={height} positioning={positioning} variants={variants} performanceStyle={performanceStyle} effects={effects} cosmicEvents={cosmicEvents} />;
   }
   
   if (titleName === 'Past Receiver') {
-    const letters = useMemo(() => Array.from({ length: 5 }, (_, i) => ({
-      id: i,
-      left: 20 + i * 15,
-      delay: i * 0.8,
-      duration: 4 + i * 0.4
-    })), []);
-    
-    const polaroids = useMemo(() => Array.from({ length: 6 }, (_, i) => ({
-      id: i,
-      left: 15 + i * 14,
-      top: 20 + (i % 3) * 15,
-      delay: i * 0.5,
-      rotation: -15 + i * 6
-    })), []);
-
-    return (
-      <motion.div 
-        className={`top-0 left-0 right-0 ${height} overflow-hidden z-0 ${positioning}`}
-        initial={variants.initial}
-        animate={variants.animate}
-        exit={variants.exit}
-        style={performanceStyle}
-      >
-        {/* Warm amber glow - nostalgic past aesthetic */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(135deg, #FCD34D 0%, #FBBF24 40%, #F59E0B 70%, #D97706 100%)`,
-          }}
-        />
-        
-        {/* Golden light rays bursting from center */}
-        <div className="absolute inset-0">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <motion.div
-              key={`ray-${i}`}
-              className="absolute w-px h-full bg-amber-200/20 origin-bottom"
-              style={{
-                left: '50%',
-                bottom: '40%',
-                transform: `rotate(${i * 30}deg)`,
-              }}
-              animate={{
-                opacity: [0.1, 0.4, 0.1],
-                height: ['40%', '100%', '40%']
-              }}
-              transition={{
-                duration: 3 + i * 0.2,
-                repeat: Infinity,
-                delay: i * 0.2,
-                ease: 'easeInOut'
-              }}
-            />
-          ))}
-        </div>
-        
-        {/* Vintage mailbox with opening animation */}
-        <motion.div
-          className="absolute bottom-1/4 left-1/2 -translate-x-1/2 text-6xl sm:text-7xl"
-          style={{
-            filter: 'drop-shadow(0 10px 30px rgba(217, 119, 6, 0.5))'
-          }}
-          animate={{ 
-            scale: [1, 1.08, 1],
-            y: [0, -5, 0]
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-        >
-          📬
-        </motion.div>
-        
-        {/* Scattered polaroid photos floating */}
-        {polaroids.map((p) => (
-          <motion.div
-            key={`polaroid-${p.id}`}
-            className="absolute w-6 h-7 sm:w-8 sm:h-9 bg-white/20 border border-amber-100/30 opacity-30"
-            style={{
-              left: `${p.left}%`,
-              top: `${p.top}%`,
-              rotate: p.rotation
-            }}
-            animate={{ 
-              y: [0, -15, 0],
-              rotate: [p.rotation, p.rotation + 5, p.rotation],
-              opacity: [0.2, 0.4, 0.2]
-            }}
-            transition={{
-              duration: 4 + p.id * 0.3,
-              repeat: Infinity,
-              delay: p.delay,
-              ease: 'easeInOut'
-            }}
-          >
-            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-px bg-amber-300/40" />
-          </motion.div>
-        ))}
-        
-        {/* Letters bursting out */}
-        {letters.map((l) => (
-          <motion.div
-            key={l.id}
-            className="absolute text-lg sm:text-xl"
-            style={{
-              left: `${l.left}%`,
-              bottom: '25%'
-            }}
-            animate={{ 
-              y: [0, -70, -70],
-              x: [0, (l.id - 2) * 20, (l.id - 2) * 20],
-              opacity: [0, 0.7, 0],
-              rotate: [0, (l.id - 2) * 20, (l.id - 2) * 20]
-            }}
-            transition={{
-              duration: l.duration,
-              repeat: Infinity,
-              delay: l.delay
-            }}
-          >
-            📧
-          </motion.div>
-        ))}
-        
-        {/* Sepia-toned memory fragments */}
-        <div className="absolute inset-0 opacity-15">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <motion.div
-              key={`fragment-${i}`}
-              className="absolute w-2 h-2 bg-amber-100 rounded-full"
-              style={{
-                left: `${15 + i * 12}%`,
-                top: `${25 + (i % 4) * 18}%`,
-                filter: 'sepia(0.8)'
-              }}
-              animate={{ 
-                scale: [0.8, 1.3, 0.8],
-                opacity: [0.3, 0.7, 0.3]
-              }}
-              transition={{
-                duration: 3 + i * 0.2,
-                repeat: Infinity,
-                delay: i * 0.4,
-                ease: 'easeInOut'
-              }}
-            />
-          ))}
-        </div>
-        
-        {/* Old film grain texture overlay */}
-        <div 
-          className="absolute inset-0 opacity-10 pointer-events-none"
-          style={{
-            backgroundImage: `
-              repeating-linear-gradient(0deg, rgba(0,0,0,0.05) 0px, transparent 1px, transparent 2px, rgba(0,0,0,0.05) 3px),
-              repeating-linear-gradient(90deg, rgba(0,0,0,0.05) 0px, transparent 1px, transparent 2px, rgba(0,0,0,0.05) 3px)
-            `,
-          }}
-        />
-        
-        {/* Golden nostalgic sparkles */}
-        {Array.from({ length: 10 }).map((_, i) => (
-          <motion.div
-            key={`gold-${i}`}
-            className="absolute w-1 h-1 bg-yellow-200 rounded-full"
-            style={{
-              left: `${15 + i * 10}%`,
-              top: `${30 + (i % 4) * 12}%`
-            }}
-            animate={{ 
-              scale: [0, 1.8, 0],
-              opacity: [0, 0.9, 0]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              delay: i * 0.3
-            }}
-          />
-        ))}
-        
-        {/* Cosmic effects */}
-        {Object.values(effects).map(effect => effect)}
-        
-        {/* 🌌 RANDOM COSMIC EVENTS */}
-        {cosmicEvents}
-        
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent" />
-      </motion.div>
-    );
+    return <PastReceiverHorizon height={height} positioning={positioning} variants={variants} performanceStyle={performanceStyle} effects={effects} cosmicEvents={cosmicEvents} />;
   }
   
   if (titleName === 'Snapshot Keeper') {
@@ -939,892 +579,23 @@ export function HeaderBackground({ titleName, titleRarity, preview = false }: He
   }
   
   if (titleName === 'Cinema Pioneer') {
-    const filmFrames = useMemo(() => Array.from({ length: 12 }, (_, i) => ({
-      id: i,
-      delay: i * 0.12
-    })), []);
-    
-    const sparkles = useMemo(() => Array.from({ length: 8 }, (_, i) => ({
-      id: i,
-      left: 20 + i * 10,
-      top: 25 + (i % 3) * 18,
-      delay: i * 0.4
-    })), []);
-
-    return (
-      <motion.div 
-        className={`top-0 left-0 right-0 ${height} overflow-hidden z-0 ${positioning}`}
-        initial={variants.initial}
-        animate={variants.animate}
-        exit={variants.exit}
-        style={performanceStyle}
-      >
-        {/* 🎥 Cinema Pioneer - Deep ruby red to golden amber, vintage movie theater */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(135deg, #7C2D12 0%, #DC2626 40%, #F59E0B 100%)`,
-          }}
-        />
-        
-        {/* Ornate curtain texture - top */}
-        <div className="absolute top-0 left-0 right-0 h-20 opacity-25">
-          <div className="absolute inset-0 bg-gradient-to-b from-red-900/60 to-transparent" />
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute top-0 h-full w-8 sm:w-10 bg-red-800/40"
-              style={{ left: `${i * 12.5}%` }}
-              animate={{
-                scaleY: [1, 0.95, 1]
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                delay: i * 0.2,
-                ease: 'easeInOut'
-              }}
-            />
-          ))}
-        </div>
-        
-        {/* Film reel - larger and more detailed */}
-        <motion.div
-          className="absolute top-1/4 right-1/5 w-20 h-20 sm:w-28 sm:h-28 rounded-full opacity-30"
-          animate={{ rotate: 360 }}
-          transition={{
-            duration: 12,
-            repeat: Infinity,
-            ease: 'linear'
-          }}
-        >
-          <div className="absolute inset-0 rounded-full border-4 border-amber-300/50" />
-          <div className="absolute inset-2 rounded-full border-2 border-orange-200/40" />
-          {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
-            <div
-              key={angle}
-              className="absolute w-2.5 h-2.5 sm:w-3 sm:h-3 bg-amber-200/50 rounded-full"
-              style={{
-                top: '50%',
-                left: '50%',
-                transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-24px)`
-              }}
-            />
-          ))}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 border-orange-300/40" />
-        </motion.div>
-        
-        {/* Dual film strips scrolling */}
-        <motion.div
-          className="absolute left-3 top-0 w-10 sm:w-12 h-[250%] opacity-20"
-          animate={{ y: ['0%', '-33.33%'] }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: 'linear'
-          }}
-        >
-          {filmFrames.map((f) => (
-            <div
-              key={f.id}
-              className="w-full mb-1.5 border-2 border-amber-200/70 bg-orange-900/20"
-              style={{ height: '24px' }}
-            >
-              <div className="flex justify-between px-0.5 h-full">
-                <div className="w-1 bg-amber-300/50" />
-                <div className="w-1 bg-amber-300/50" />
-              </div>
-            </div>
-          ))}
-        </motion.div>
-        
-        <motion.div
-          className="absolute right-3 top-0 w-10 sm:w-12 h-[250%] opacity-20"
-          animate={{ y: ['-33.33%', '0%'] }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: 'linear'
-          }}
-        >
-          {filmFrames.map((f) => (
-            <div
-              key={f.id}
-              className="w-full mb-1.5 border-2 border-amber-200/70 bg-orange-900/20"
-              style={{ height: '24px' }}
-            >
-              <div className="flex justify-between px-0.5 h-full">
-                <div className="w-1 bg-amber-300/50" />
-                <div className="w-1 bg-amber-300/50" />
-              </div>
-            </div>
-          ))}
-        </motion.div>
-        
-        {/* Projector beam cone */}
-        <motion.div
-          className="absolute top-1/3 left-6 opacity-20"
-          style={{
-            width: 0,
-            height: 0,
-            borderLeft: '50px solid transparent',
-            borderRight: '50px solid transparent',
-            borderTop: '80px solid rgba(251, 191, 36, 0.4)',
-            transform: 'rotate(90deg)',
-            filter: 'blur(4px)'
-          }}
-          animate={{
-            opacity: [0.15, 0.3, 0.15]
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-        />
-        
-        {/* Golden sparkles - movie magic */}
-        {sparkles.map((s) => (
-          <motion.div
-            key={s.id}
-            className="absolute text-base sm:text-lg"
-            style={{
-              left: `${s.left}%`,
-              top: `${s.top}%`
-            }}
-            animate={{
-              scale: [0, 1, 0],
-              opacity: [0, 0.8, 0],
-              rotate: [0, 180, 360]
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              delay: s.delay
-            }}
-          >
-            ✨
-          </motion.div>
-        ))}
-        
-        {/* Cosmic effects */}
-        {Object.values(effects).map(effect => effect)}
-        
-        {/* 🌌 RANDOM COSMIC EVENTS */}
-        {cosmicEvents}
-        
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent" />
-      </motion.div>
-    );
+    return <CinemaPioneerHorizon height={height} positioning={positioning} variants={variants} performanceStyle={performanceStyle} effects={effects} cosmicEvents={cosmicEvents} />;
   }
   
   if (titleName === 'Voice Keeper') {
-    const notes = useMemo(() => Array.from({ length: 7 }, (_, i) => ({
-      id: i,
-      left: 15 + i * 12,
-      delay: i * 0.5,
-      duration: 4 + i * 0.3
-    })), []);
-    
-    const waveformBars = useMemo(() => Array.from({ length: 32 }, (_, i) => ({
-      id: i,
-      height: 20 + Math.random() * 60,
-      delay: i * 0.05
-    })), []);
-
-    return (
-      <motion.div 
-        className={`top-0 left-0 right-0 ${height} overflow-hidden z-0 ${positioning}`}
-        initial={variants.initial}
-        animate={variants.animate}
-        exit={variants.exit}
-        style={performanceStyle}
-      >
-        {/* 🎙️ Voice Keeper - Deep magenta to vibrant pink, audio waveform aesthetic */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(135deg, #86198F 0%, #DB2777 50%, #F472B6 100%)`,
-          }}
-        />
-        
-        {/* Animated waveform visualization */}
-        <div className="absolute bottom-16 left-0 right-0 flex items-end justify-center gap-0.5 sm:gap-1 px-4 opacity-25">
-          {waveformBars.map((bar) => (
-            <motion.div
-              key={bar.id}
-              className="w-1 sm:w-1.5 bg-pink-200/70 rounded-t-full"
-              animate={{
-                height: [`${bar.height * 0.3}%`, `${bar.height}%`, `${bar.height * 0.3}%`]
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                delay: bar.delay,
-                ease: 'easeInOut'
-              }}
-            />
-          ))}
-        </div>
-        
-        {/* Vintage microphone silhouette */}
-        <motion.div
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 opacity-20"
-          animate={{ 
-            scale: [1, 1.08, 1]
-          }}
-          transition={{
-            duration: 2.5,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-        >
-          <div className="relative">
-            {/* Mic body */}
-            <div className="w-8 h-16 sm:w-10 sm:h-20 bg-pink-100/60 rounded-full mx-auto" />
-            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-pink-100/50 rounded-full mx-auto mt-1" />
-            {/* Mic stand */}
-            <div className="w-1 h-12 sm:h-16 bg-pink-100/50 mx-auto" />
-            <div className="w-8 sm:w-10 h-1 bg-pink-100/50 rounded-full mx-auto" />
-            {/* Grill lines */}
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="absolute top-2 left-1/2 -translate-x-1/2 w-6 sm:w-7 h-px bg-magenta-200/40"
-                style={{ top: `${8 + i * 6}px` }}
-              />
-            ))}
-          </div>
-        </motion.div>
-        
-        {/* Sound wave circular pulses */}
-        {[0, 1, 2, 3].map((i) => (
-          <motion.div
-            key={`pulse-${i}`}
-            className="absolute left-1/2 -translate-x-1/2 bottom-16 rounded-full border-2 border-pink-200/25"
-            animate={{
-              width: ['80px', '200px', '200px'],
-              height: ['80px', '200px', '200px'],
-              opacity: [0.5, 0, 0]
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              delay: i * 1,
-              ease: 'easeOut'
-            }}
-          />
-        ))}
-        
-        {/* Musical notes floating upward */}
-        {notes.map((n) => (
-          <motion.div
-            key={n.id}
-            className="absolute text-lg sm:text-2xl"
-            style={{
-              left: `${n.left}%`,
-              bottom: '25%'
-            }}
-            animate={{ 
-              y: [0, -90, -90],
-              x: [0, (n.id - 3) * 12, (n.id - 3) * 12],
-              opacity: [0, 0.8, 0],
-              rotate: [0, n.id % 2 === 0 ? 25 : -25, n.id % 2 === 0 ? 25 : -25]
-            }}
-            transition={{
-              duration: n.duration,
-              repeat: Infinity,
-              delay: n.delay,
-              ease: 'easeOut'
-            }}
-          >
-            {n.id % 3 === 0 ? '♪' : n.id % 3 === 1 ? '♫' : '♬'}
-          </motion.div>
-        ))}
-        
-        {/* Frequency circles */}
-        <div className="absolute inset-0 opacity-10">
-          {[30, 50, 70].map((size) => (
-            <motion.div
-              key={size}
-              className="absolute left-1/2 bottom-16 -translate-x-1/2 rounded-full border border-pink-100/60"
-              style={{ width: `${size}%`, paddingBottom: `${size}%` }}
-              animate={{
-                scale: [1, 1.05, 1],
-                opacity: [0.3, 0.6, 0.3]
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                delay: size * 0.01
-              }}
-            />
-          ))}
-        </div>
-        
-        {/* Cosmic effects */}
-        {Object.values(effects).map(effect => effect)}
-        
-        {/* 🌌 RANDOM COSMIC EVENTS */}
-        {cosmicEvents}
-        
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent" />
-      </motion.div>
-    );
+    return <VoiceKeeperHorizon height={height} positioning={positioning} variants={variants} performanceStyle={performanceStyle} effects={effects} cosmicEvents={cosmicEvents} />;
   }
   
   if (titleName === 'Habit Builder') {
-    const embers = useMemo(() => Array.from({ length: 10 }, (_, i) => ({
-      id: i,
-      left: 30 + i * 6,
-      delay: i * 0.3,
-      duration: 3 + i * 0.2
-    })), []);
-    
-    const bricks = useMemo(() => Array.from({ length: 15 }, (_, i) => ({
-      id: i,
-      col: i % 5,
-      row: Math.floor(i / 5),
-      delay: i * 0.15
-    })), []);
-
-    return (
-      <motion.div 
-        className={`top-0 left-0 right-0 ${height} overflow-hidden z-0 ${positioning}`}
-        initial={variants.initial}
-        animate={variants.animate}
-        exit={variants.exit}
-        style={performanceStyle}
-      >
-        {/* Deep emerald - building and growth */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(180deg, #059669 0%, #10B981 40%, #047857 100%)`,
-          }}
-        />
-        
-        {/* Monument being built brick-by-brick */}
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-24 h-32 sm:w-32 sm:h-40">
-          {bricks.map((b) => (
-            <motion.div
-              key={`brick-${b.id}`}
-              className="absolute border border-emerald-300/40 bg-emerald-600/20"
-              style={{
-                width: '18%',
-                height: '13%',
-                left: `${b.col * 20 + (b.row % 2) * 10}%`,
-                bottom: `${b.row * 14}%`,
-              }}
-              initial={{ opacity: 0, scale: 0.5, y: -20 }}
-              animate={{ 
-                opacity: [0, 0.6, 0.6],
-                scale: [0.5, 1, 1],
-                y: [-20, 0, 0]
-              }}
-              transition={{
-                duration: 0.6,
-                repeat: Infinity,
-                repeatDelay: 4,
-                delay: b.delay,
-                ease: 'easeOut'
-              }}
-            />
-          ))}
-        </div>
-        
-        {/* Construction crane silhouette */}
-        <motion.div 
-          className="absolute top-8 right-12 opacity-15"
-          animate={{
-            rotate: [-2, 2, -2]
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-        >
-          <div className="relative w-12 h-16 sm:w-16 sm:h-20">
-            {/* Crane arm */}
-            <div className="absolute top-0 left-1/2 w-px h-8 sm:h-12 bg-emerald-300/50" />
-            <div className="absolute top-0 left-1/2 w-10 sm:w-14 h-px bg-emerald-300/50 origin-left" 
-              style={{ transform: 'rotate(-30deg)' }} />
-          </div>
-        </motion.div>
-        
-        {/* Flame icon representing dedication */}
-        <motion.div
-          className="absolute bottom-1/4 left-1/4 text-4xl sm:text-5xl opacity-20"
-          animate={{ 
-            scale: [1, 1.15, 1.05, 1.2, 1],
-            opacity: [0.15, 0.25, 0.2, 0.3, 0.15]
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-        >
-          🔥
-        </motion.div>
-        
-        {/* Ember particles rising from dedication flame */}
-        {embers.map((e) => (
-          <motion.div
-            key={e.id}
-            className="absolute w-1 h-1 rounded-full bg-amber-400"
-            style={{
-              left: `${e.left}%`,
-              bottom: '25%',
-            }}
-            animate={{ 
-              y: [0, -70, -70],
-              x: [0, (e.id - 5) * 4, (e.id - 5) * 4],
-              opacity: [0.7, 0.3, 0],
-              scale: [1, 0.4, 0]
-            }}
-            transition={{
-              duration: e.duration,
-              repeat: Infinity,
-              delay: e.delay,
-              ease: 'easeOut'
-            }}
-          />
-        ))}
-        
-        {/* Progress bars as foundation */}
-        <div className="absolute bottom-0 left-0 right-0 h-3 bg-emerald-950/40 flex gap-px">
-          {Array.from({ length: 7 }).map((_, i) => (
-            <motion.div
-              key={`progress-${i}`}
-              className="flex-1 bg-emerald-400/30"
-              initial={{ scaleY: 0 }}
-              animate={{ scaleY: 1 }}
-              transition={{
-                duration: 0.4,
-                delay: i * 0.2,
-                repeat: Infinity,
-                repeatDelay: 3
-              }}
-              style={{
-                transformOrigin: 'bottom'
-              }}
-            />
-          ))}
-        </div>
-        
-        {/* Building sparkles */}
-        {Array.from({ length: 12 }).map((_, i) => (
-          <motion.div
-            key={`build-sparkle-${i}`}
-            className="absolute w-0.5 h-0.5 bg-emerald-200 rounded-full"
-            style={{
-              left: `${30 + i * 5}%`,
-              bottom: `${20 + (i % 3) * 15}%`
-            }}
-            animate={{ 
-              scale: [0, 2, 0],
-              opacity: [0, 0.8, 0]
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              delay: i * 0.2
-            }}
-          />
-        ))}
-        
-        {/* Cosmic effects */}
-        {Object.values(effects).map(effect => effect)}
-        
-        {/* 🌌 RANDOM COSMIC EVENTS */}
-        {cosmicEvents}
-        
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent" />
-      </motion.div>
-    );
+    return <HabitBuilderHorizon height={height} positioning={positioning} variants={variants} performanceStyle={performanceStyle} effects={effects} cosmicEvents={cosmicEvents} />;
   }
   
   if (titleName === 'Echo Pioneer') {
-    const ripples = useMemo(() => Array.from({ length: 6 }, (_, i) => ({
-      id: i,
-      delay: i * 1.2
-    })), []);
-    
-    const sonarPings = useMemo(() => Array.from({ length: 8 }, (_, i) => ({
-      id: i,
-      angle: i * 45,
-      delay: i * 0.15
-    })), []);
-
-    return (
-      <motion.div 
-        className={`top-0 left-0 right-0 ${height} overflow-hidden z-0 ${positioning}`}
-        initial={variants.initial}
-        animate={variants.animate}
-        exit={variants.exit}
-        style={performanceStyle}
-      >
-        {/* 📡 Echo Pioneer - Deep cyan cosmic pond with sonar ripple physics */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(135deg, #164E63 0%, #0891B2 50%, #22D3EE 100%)`,
-          }}
-        />
-        
-        {/* Underwater texture effect */}
-        <motion.div
-          className="absolute inset-0 opacity-20"
-          style={{
-            background: `radial-gradient(circle at 30% 40%, rgba(34, 211, 238, 0.3) 0%, transparent 50%),
-                         radial-gradient(circle at 70% 60%, rgba(6, 182, 212, 0.2) 0%, transparent 50%)`
-          }}
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.15, 0.25, 0.15]
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-        />
-        
-        {/* Concentric sonar ripples - expanding from center */}
-        {ripples.map((ripple) => (
-          <motion.div
-            key={ripple.id}
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-cyan-300/60"
-            animate={{
-              width: ['40px', '300px', '300px'],
-              height: ['40px', '300px', '300px'],
-              opacity: [0.8, 0, 0],
-              borderWidth: ['2px', '1px', '0px']
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              delay: ripple.delay,
-              ease: 'easeOut'
-            }}
-          />
-        ))}
-        
-        {/* Inner ripple set - faster frequency */}
-        {ripples.slice(0, 3).map((ripple) => (
-          <motion.div
-            key={`inner-${ripple.id}`}
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/50"
-            animate={{
-              width: ['20px', '150px', '150px'],
-              height: ['20px', '150px', '150px'],
-              opacity: [0.6, 0, 0]
-            }}
-            transition={{
-              duration: 2.5,
-              repeat: Infinity,
-              delay: ripple.delay * 0.5,
-              ease: 'easeOut'
-            }}
-          />
-        ))}
-        
-        {/* Central sonar transmitter */}
-        <motion.div
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-cyan-300/40 border-2 border-cyan-100/70 shadow-lg"
-          animate={{
-            scale: [1, 1.15, 1],
-            boxShadow: [
-              '0 0 10px rgba(34, 211, 238, 0.5)',
-              '0 0 30px rgba(34, 211, 238, 0.8)',
-              '0 0 10px rgba(34, 211, 238, 0.5)'
-            ]
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-        >
-          <div className="absolute inset-2 rounded-full bg-cyan-200/50" />
-        </motion.div>
-        
-        {/* Sonar ping radial lines */}
-        {sonarPings.map((ping) => (
-          <motion.div
-            key={ping.id}
-            className="absolute left-1/2 top-1/2 w-0.5 sm:w-1 h-16 sm:h-24 bg-gradient-to-b from-cyan-300/70 to-transparent origin-top"
-            style={{
-              transform: `translateX(-50%) rotate(${ping.angle}deg)`,
-              transformOrigin: '50% 0'
-            }}
-            animate={{
-              opacity: [0, 0.8, 0],
-              scaleY: [0.5, 1.2, 0.5]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              delay: ping.delay,
-              ease: 'easeOut'
-            }}
-          />
-        ))}
-        
-        {/* Echo delay trail particles */}
-        {Array.from({ length: 16 }).map((_, i) => (
-          <motion.div
-            key={`trail-${i}`}
-            className="absolute w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-cyan-200/60"
-            style={{
-              left: `${50 + Math.cos(i * 22.5 * Math.PI / 180) * 15}%`,
-              top: `${50 + Math.sin(i * 22.5 * Math.PI / 180) * 15}%`,
-              boxShadow: '0 0 8px rgba(34, 211, 238, 0.6)'
-            }}
-            animate={{
-              scale: [0.8, 1.2, 0.8],
-              opacity: [0.4, 0.9, 0.4]
-            }}
-            transition={{
-              duration: 2.5,
-              repeat: Infinity,
-              delay: i * 0.1,
-              ease: 'easeInOut'
-            }}
-          />
-        ))}
-        
-        {/* Water ripple distortion lines */}
-        {[20, 40, 60, 80].map((percent) => (
-          <motion.div
-            key={`wave-${percent}`}
-            className="absolute left-0 right-0 h-px bg-cyan-300/20"
-            style={{ top: `${percent}%` }}
-            animate={{
-              scaleX: [1, 1.02, 1],
-              opacity: [0.15, 0.3, 0.15]
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              delay: percent * 0.01,
-              ease: 'easeInOut'
-            }}
-          />
-        ))}
-        
-        {/* Sonar icon */}
-        <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-3xl sm:text-4xl opacity-15"
-          animate={{
-            scale: [1, 1.1, 1]
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-        >
-          📡
-        </motion.div>
-        
-        {/* Cosmic effects */}
-        {Object.values(effects).map(effect => effect)}
-        
-        {/* 🌌 RANDOM COSMIC EVENTS */}
-        {cosmicEvents}
-        
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent" />
-      </motion.div>
-    );
+    return <EchoPioneerHorizon height={height} positioning={positioning} variants={variants} performanceStyle={performanceStyle} effects={effects} cosmicEvents={cosmicEvents} />;
   }
   
-  // ============================================================================
-  // UNCOMMON TIER (13 titles): 🌟 NEXT-LEVEL COSMIC PHENOMENA
-  // UNIQUE FEATURES: 3D Depth, Weather Effects, Lens Flares, Fluid Dynamics, Auroras
-  // ============================================================================
-  
   if (titleName === 'Golden Hour Keeper') {
-    return (
-      <motion.div 
-        className={`top-0 left-0 right-0 ${height} overflow-hidden z-0 ${positioning}`}
-        initial={variants.initial}
-        animate={variants.animate}
-        exit={variants.exit}
-        style={performanceStyle}
-      >
-        {/* Animated time-of-day gradient transition */}
-        <motion.div 
-          className="absolute inset-0"
-          animate={{
-            background: [
-              'linear-gradient(135deg, #FBBF24 0%, #EA580C 100%)',
-              'linear-gradient(135deg, #F59E0B 0%, #DC2626 100%)',
-              'linear-gradient(135deg, #FBBF24 0%, #EA580C 100%)'
-            ]
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-        />
-        
-        {/* PARALLAX LAYER 1 (Background) - Slow moving clouds */}
-        <motion.div 
-          className="absolute inset-0 opacity-30"
-          animate={{ x: [0, -100, 0] }}
-          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-        >
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={`cloud-bg-${i}`}
-              className="absolute rounded-full blur-2xl"
-              style={{
-                left: `${i * 25}%`,
-                top: `${20 + (i % 3) * 15}%`,
-                width: `${80 + i * 20}px`,
-                height: `${40 + i * 10}px`,
-                background: 'rgba(255, 255, 255, 0.2)'
-              }}
-            />
-          ))}
-        </motion.div>
-        
-        {/* PARALLAX LAYER 2 (Mid) - God rays with depth */}
-        <div className="absolute inset-0 overflow-hidden" style={{ perspective: '1000px' }}>
-          {Array.from({ length: 12 }).map((_, i) => (
-            <motion.div
-              key={`ray-${i}`}
-              className="absolute top-0 left-1/2 origin-top"
-              style={{
-                width: '60px',
-                height: '200%',
-                background: `linear-gradient(to bottom, 
-                  rgba(251, 191, 36, ${0.15 + (i % 3) * 0.05}), 
-                  transparent 70%)`,
-                transform: `rotate(${i * 15}deg) translateZ(${-50 + i * 10}px)`,
-                transformStyle: 'preserve-3d',
-              }}
-              animate={{
-                opacity: [0.3, 0.7, 0.3],
-                scaleY: [0.95, 1.05, 0.95]
-              }}
-              transition={{
-                duration: 5 + (i % 3),
-                repeat: Infinity,
-                delay: i * 0.3
-              }}
-            />
-          ))}
-        </div>
-        
-        {/* LENS FLARE EFFECT - Distinctive visual signature */}
-        <motion.div
-          className="absolute"
-          style={{
-            left: '70%',
-            top: '20%',
-          }}
-          animate={{
-            left: ['70%', '30%', '70%'],
-            top: ['20%', '40%', '20%']
-          }}
-          transition={{
-            duration: 12,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-        >
-          {/* Main flare */}
-          <div className="relative">
-            <div className="w-16 h-16 rounded-full bg-amber-400/40 blur-xl" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/60 blur-md" />
-          </div>
-          {/* Flare artifacts */}
-          {Array.from({ length: 4 }).map((_, i) => (
-            <motion.div
-              key={`flare-${i}`}
-              className="absolute rounded-full"
-              style={{
-                left: `${-40 - i * 30}px`,
-                top: `${-10 + i * 15}px`,
-                width: `${20 - i * 3}px`,
-                height: `${20 - i * 3}px`,
-                background: `rgba(251, 191, 36, ${0.4 - i * 0.08})`,
-                filter: 'blur(4px)'
-              }}
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.5, 0.8, 0.5]
-              }}
-              transition={{
-                duration: 2 + i * 0.5,
-                repeat: Infinity,
-                delay: i * 0.2
-              }}
-            />
-          ))}
-        </motion.div>
-        
-        {/* PARALLAX LAYER 3 (Foreground) - Fast floating embers with depth */}
-        {Array.from({ length: 20 }).map((_, i) => (
-          <motion.div
-            key={`ember-${i}`}
-            className="absolute rounded-full"
-            style={{
-              left: `${(i * 11) % 100}%`,
-              top: `${(i * 17) % 80}%`,
-              width: `${3 + (i % 4)}px`,
-              height: `${3 + (i % 4)}px`,
-              background: i % 3 === 0 ? '#FEF3C7' : '#FCD34D',
-              boxShadow: `0 0 ${8 + (i % 3) * 4}px rgba(251, 191, 36, 0.8)`,
-              filter: 'blur(0.5px)'
-            }}
-            animate={{
-              y: [0, -80, -150],
-              x: [(i % 2 ? -10 : 10), (i % 2 ? -20 : 20), (i % 2 ? -30 : 30)],
-              opacity: [0, 1, 0],
-              scale: [0.5, 1, 0.3]
-            }}
-            transition={{
-              duration: 4 + (i % 3),
-              repeat: Infinity,
-              delay: i * 0.4,
-              ease: 'easeOut'
-            }}
-          />
-        ))}
-        
-        {/* Sunrise/Sunset split effect */}
-        <motion.div className="absolute left-0 top-0 bottom-16 w-1/2 opacity-30" animate={{ opacity: [0.2, 0.4, 0.2] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}>
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.3), rgba(234, 88, 12, 0.2))' }} />
-        </motion.div>
-        <motion.div className="absolute right-0 top-0 bottom-16 w-1/2 opacity-30" animate={{ opacity: [0.4, 0.2, 0.4] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}>
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(249, 115, 22, 0.3), rgba(220, 38, 38, 0.2))' }} />
-        </motion.div>
-        
-        {/* Photographer silhouette */}
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 opacity-25">
-          <div className="relative w-12 h-20 sm:w-16 sm:h-24">
-            {/* Head */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-900/80" />
-            {/* Body */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-6 h-10 sm:w-8 sm:h-12 bg-amber-900/80" />
-            {/* Camera */}
-            <div className="absolute top-6 left-1/2 -translate-x-1/2 w-8 h-4 sm:w-10 sm:h-5 bg-amber-800/80 rounded-sm">
-              <div className="absolute top-1/2 right-0 -translate-y-1/2 w-4 h-3 sm:w-5 sm:h-4 bg-amber-800/80 rounded-r" />
-            </div>
-          </div>
-        </div>
-        
-        {Object.values(effects).map(effect => effect)}
-        {cosmicEvents}
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent" />
-      </motion.div>
-    );
+    return <GoldenHourKeeperHorizon height={height} positioning={positioning} variants={variants} performanceStyle={performanceStyle} effects={effects} cosmicEvents={cosmicEvents} />;
   }
   
   if (titleName === 'Neon Dreamer') {
@@ -2832,87 +1603,9 @@ export function HeaderBackground({ titleName, titleRarity, preview = false }: He
   }
   
   if (titleName === 'Night Owl') {
-    const stars = useMemo(() => Array.from({ length: 30 }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      top: Math.random() * 70,
-      size: 1 + Math.random() * 2,
-      delay: i * 0.1
-    })), []);
-    
-    const constellations = useMemo(() => Array.from({ length: 5 }, (_, i) => ({
-      id: i,
-      left: 15 + i * 18,
-      top: 15 + (i % 2) * 25
-    })), []);
-
-    return (
-      <motion.div 
-        className={`top-0 left-0 right-0 ${height} overflow-hidden z-0 ${positioning}`}
-        initial={variants.initial}
-        animate={variants.animate}
-        exit={variants.exit}
-        style={performanceStyle}
-      >
-        {/* 🦉 Night Owl - Moonlit midnight cityscape with wise owl */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 40%, #334155 100%)' }} />
-        
-        {/* Crescent moon with glow */}
-        <motion.div className="absolute top-1/4 right-1/4 w-20 h-20 sm:w-28 sm:h-28" animate={{ scale: [1, 1.05, 1], filter: ['brightness(1)', 'brightness(1.2)', 'brightness(1)'] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}>
-          <div className="absolute inset-0 rounded-full bg-slate-300/30 blur-xl" />
-          <div className="absolute inset-2 rounded-full bg-slate-200/40" style={{ clipPath: 'ellipse(60% 80% at 30% 50%)' }} />
-          <div className="absolute inset-0 text-4xl sm:text-5xl flex items-center justify-center opacity-80">🌙</div>
-        </motion.div>
-        
-        {/* Wise owl perched on moon */}
-        <motion.div className="absolute top-1/4 right-1/4 translate-x-8 translate-y-6 text-3xl sm:text-4xl" animate={{ rotate: [-3, 3, -3] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
-          🦉
-          {/* Blinking eyes effect */}
-          <motion.div className="absolute inset-0" animate={{ opacity: [0, 0, 0, 1, 0, 0, 0] }} transition={{ duration: 4, repeat: Infinity, times: [0, 0.4, 0.42, 0.44, 0.46, 0.5, 1] }}>
-            <div className="absolute top-2 left-2 w-1 h-1 bg-slate-900 rounded-full" />
-            <div className="absolute top-2 right-2 w-1 h-1 bg-slate-900 rounded-full" />
-          </motion.div>
-        </motion.div>
-        
-        {/* Twinkling stars */}
-        {stars.map((star) => (
-          <motion.div key={star.id} className="absolute rounded-full bg-slate-300" style={{ width: `${star.size}px`, height: `${star.size}px`, left: `${star.left}%`, top: `${star.top}%`, boxShadow: `0 0 ${star.size * 2}px rgba(203, 213, 225, 0.6)` }} animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }} transition={{ duration: 2 + Math.random() * 2, repeat: Infinity, delay: star.delay }} />
-        ))}
-        
-        {/* Constellation connections */}
-        {constellations.map((constellation) => (
-          <div key={constellation.id} className="absolute opacity-20" style={{ left: `${constellation.left}%`, top: `${constellation.top}%` }}>
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i}>
-                <div className="absolute w-1 h-1 bg-slate-200 rounded-full" style={{ left: `${i * 8}px`, top: `${(i % 2) * 12}px` }} />
-                {i < 3 && <div className="absolute w-px bg-slate-400/40" style={{ left: `${i * 8 + 2}px`, top: `${(i % 2) * 12 + 2}px`, width: '8px', height: '1px', transform: `rotate(${i % 2 ? 45 : -45}deg)`, transformOrigin: 'left center' }} />}
-              </div>
-            ))}
-          </div>
-        ))}
-        
-        {/* City silhouette at bottom */}
-        <div className="absolute bottom-16 left-0 right-0 h-24 sm:h-32 opacity-30">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="absolute bg-slate-800/60" style={{ left: `${i * 8.33}%`, bottom: 0, width: `${6 + (i % 3) * 2}%`, height: `${50 + (i % 4) * 20}%` }}>
-              {/* Building windows */}
-              {Array.from({ length: 3 }).map((_, j) => (
-                <motion.div key={j} className="absolute w-1 h-1 bg-yellow-400/40" style={{ left: '30%', top: `${20 + j * 25}%` }} animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 2 + Math.random(), repeat: Infinity, delay: (i + j) * 0.3 }} />
-              ))}
-            </div>
-          ))}
-        </div>
-        
-        {/* Silver moonlight shimmer */}
-        <motion.div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(ellipse at 70% 30%, rgba(203, 213, 225, 0.3) 0%, transparent 50%)' }} animate={{ opacity: [0.08, 0.15, 0.08] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} />
-        
-        {Object.values(effects).map(effect => effect)}
-        {cosmicEvents}
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent" />
-      </motion.div>
-    );
+    return <NightOwlHorizon height={height} positioning={positioning} variants={variants} performanceStyle={performanceStyle} effects={effects} cosmicEvents={cosmicEvents} />;
   }
-  
+
   if (titleName === 'Detail Devotee') {
     const redPenMarks = useMemo(() => Array.from({ length: 8 }, (_, i) => ({
       id: i,
@@ -4950,66 +3643,34 @@ export function HeaderBackground({ titleName, titleRarity, preview = false }: He
   
   // Memory Sharer (A032) - Memory Broadcaster Tower
   if (titleName === 'Memory Sharer') {
-    const continents = useMemo(() => [
-      { id: 0, angle: 0, name: 'NA' }, { id: 1, angle: 60, name: 'EU' }, { id: 2, angle: 120, name: 'AS' },
-      { id: 3, angle: 180, name: 'SA' }, { id: 4, angle: 240, name: 'AF' }, { id: 5, angle: 300, name: 'OC' }
-    ], []);
-    
-    const connections = useMemo(() => Array.from({ length: 15 }, (_, i) => ({ id: i, from: i % 6, to: (i + 2) % 6, delay: i * 0.4 })), []);
-
-    return (
-      <motion.div 
-        className={`top-0 left-0 right-0 ${height} overflow-hidden z-0 ${positioning}`}
-        initial={variants.initial}
-        animate={variants.animate}
-        exit={variants.exit}
-        style={performanceStyle}
-      >
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0C4A6E 0%, #075985 40%, #0369A1 80%, #0284C7 100%)' }} />
-        <div className="absolute inset-0 opacity-15" style={{ backgroundImage: 'repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0px, transparent 20px), repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0px, transparent 20px)' }} />
-        <motion.div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 sm:w-40 sm:h-40 opacity-50" style={{ background: 'radial-gradient(circle at 35% 35%, rgba(14, 165, 233, 0.8) 0%, rgba(3, 105, 161, 0.6) 50%, rgba(12, 74, 110, 0.4) 100%)', borderRadius: '50%', border: '3px solid rgba(14, 165, 233, 0.5)', boxShadow: '0 0 40px rgba(14, 165, 233, 0.6), inset -10px -10px 30px rgba(0, 0, 0, 0.3)' }} animate={{ rotate: 360 }} transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}><div className="absolute inset-0 rounded-full opacity-30" style={{ background: 'repeating-linear-gradient(90deg, transparent 0px, rgba(255, 255, 255, 0.1) 10px, transparent 20px)' }} /><div className="absolute inset-0 rounded-full opacity-20" style={{ background: 'repeating-linear-gradient(0deg, transparent 0px, rgba(255, 255, 255, 0.1) 10px, transparent 20px)' }} /></motion.div>
-        {continents.map((continent) => (<motion.div key={continent.id} className="absolute top-1/2 left-1/2" style={{ transformOrigin: 'center' }}><div className="absolute w-4 h-4 sm:w-5 sm:h-5 rounded-full" style={{ background: 'rgba(34, 211, 238, 0.8)', border: '2px solid rgba(14, 165, 233, 1)', boxShadow: '0 0 15px rgba(34, 211, 238, 0.9)', transform: `translateX(${18}vw) translateY(-50%)` }} /><motion.div className="absolute w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 border-cyan-400/40" style={{ transform: `translateX(${18}vw) translateY(-50%) translate(-25%, -25%)` }} animate={{ scale: [1, 2, 1], opacity: [0.6, 0, 0.6] }} transition={{ duration: 2, repeat: Infinity, delay: continent.id * 0.3 }} /><div className="absolute text-xs sm:text-sm font-mono text-cyan-300/70" style={{ transform: `translateX(${18}vw) translateY(-50%) translateY(20px)` }}>{continent.name}</div></motion.div>))}
-        {connections.map((conn) => { const fromAngle = continents[conn.from].angle; return (<motion.div key={conn.id} className="absolute top-1/2 left-1/2 origin-left h-px" style={{ width: '18vw', background: 'linear-gradient(to right, rgba(34, 211, 238, 0.6), rgba(14, 165, 233, 0.3))', transform: `rotate(${fromAngle}deg)`, transformOrigin: 'left center' }} animate={{ opacity: [0.3, 0.8, 0.3], scaleX: [0.8, 1, 0.8] }} transition={{ duration: 2, repeat: Infinity, delay: conn.delay, ease: 'easeInOut' }} />); })}
-        {[0, 1, 2, 3, 4].map((i) => (<motion.div key={`pulse-${i}`} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 sm:w-32 sm:h-32 rounded-full border-2 border-cyan-400/30" animate={{ scale: [1, 2.5, 1], opacity: [0.6, 0, 0.6] }} transition={{ duration: 4, repeat: Infinity, delay: i * 0.8, ease: 'easeOut' }} />))}
-        {[0, 1, 2, 3, 4, 5].map((i) => (<motion.div key={`packet-${i}`} className="absolute top-1/2 left-1/2 w-2 h-2 bg-cyan-300 rounded-full" style={{ boxShadow: '0 0 8px rgba(34, 211, 238, 0.9)' }} animate={{ x: [0, 100, 0], y: [0, -50, 0], opacity: [0, 1, 0] }} transition={{ duration: 3, repeat: Infinity, delay: i * 0.5, ease: 'linear' }} />))}
-        {['🌍', '🌎', '🌏'].map((globe, i) => (<motion.div key={`globe-${i}`} className="absolute text-3xl sm:text-4xl opacity-20" style={{ left: `${25 + i * 25}%`, top: `${20 + (i % 2) * 40}%` }} animate={{ opacity: [0.15, 0.3, 0.15], scale: [0.95, 1.05, 0.95] }} transition={{ duration: 4, repeat: Infinity, delay: i * 1.2, ease: 'easeInOut' }}>{globe}</motion.div>))}
-        <motion.div className="absolute top-1/4 right-1/4 text-6xl sm:text-7xl opacity-30" animate={{ scale: [1, 1.1, 1], rotateY: [0, 20, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}>🎁</motion.div>
-        <motion.div className="absolute bottom-1/4 left-1/4 text-4xl sm:text-5xl opacity-30" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>↗️</motion.div>
-        {Object.values(effects).map(effect => effect)}
-        {cosmicEvents}
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent" />
-      </motion.div>
-    );
+    return <MemorySharerHorizon height={height} positioning={positioning} variants={variants} performanceStyle={performanceStyle} effects={effects} cosmicEvents={cosmicEvents} />;
   }
-  
+
   // Birthday Keeper (A027) - also handles New Year's Keeper (renamed A027 v2.8.0)
   if (titleName === 'Birthday Keeper' || titleName === "New Year's Keeper") {
-    const confetti = useMemo(() => Array.from({ length: 40 }, (_, i) => ({
+    const confetti = Array.from({ length: 40 }, (_, i) => ({
       id: i,
       left: 10 + (i * 2.5) % 80,
       delay: i * 0.1,
       color: ['#FCD34D', '#FB923C', '#F472B6', '#A78BFA', '#60A5FA'][i % 5],
       rotation: Math.random() * 360
-    })), []);
-    
-    const candles = useMemo(() => Array.from({ length: 5 }, (_, i) => ({
+    }));
+
+    const candles = Array.from({ length: 5 }, (_, i) => ({
       id: i,
       left: 35 + i * 7,
       delay: i * 0.2
-    })), []);
+    }));
 
     return (
-      <motion.div 
+      <motion.div
         className={`top-0 left-0 right-0 ${height} overflow-hidden z-0 ${positioning}`}
         initial={variants.initial}
         animate={variants.animate}
         exit={variants.exit}
         style={performanceStyle}
       >
-        {/* 🎂 Birthday Keeper - Party celebration with exploding cake candles */}
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #DB2777 0%, #EC4899 40%, #F472B6 100%)' }} />
-        
-        {/* Party popper bursts */}
         {[0, 1].map((i) => (
           <motion.div key={`burst-${i}`} className="absolute w-16 h-16 sm:w-20 sm:h-20 opacity-40" style={{ left: `${20 + i * 60}%`, top: '15%' }} animate={{ rotate: [0, 180, 360], scale: [0, 1.5, 0], opacity: [0, 0.6, 0] }} transition={{ duration: 3, repeat: Infinity, delay: i * 1.5 }}>
             {Array.from({ length: 12 }).map((_, j) => (
@@ -5017,14 +3678,9 @@ export function HeaderBackground({ titleName, titleRarity, preview = false }: He
             ))}
           </motion.div>
         ))}
-        
-        {/* Birthday cake with candles */}
         <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-32 h-24 sm:w-40 sm:h-28">
-          {/* Cake layers */}
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-8 sm:w-36 sm:h-10 bg-pink-300/40 border-2 border-pink-200/60 rounded-md" />
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-24 h-8 sm:w-30 sm:h-10 bg-pink-400/40 border-2 border-pink-200/60 rounded-md" />
-          
-          {/* Candles */}
           {candles.map((candle) => (
             <div key={candle.id} className="absolute bottom-14 sm:bottom-16" style={{ left: `${candle.left}%` }}>
               <div className="w-1 h-4 sm:h-5 bg-pink-100/60 mx-auto" />
@@ -5032,13 +3688,9 @@ export function HeaderBackground({ titleName, titleRarity, preview = false }: He
             </div>
           ))}
         </div>
-        
-        {/* Confetti raining down */}
         {confetti.map((piece) => (
           <motion.div key={piece.id} className="absolute w-2 h-3 sm:w-3 sm:h-4 opacity-0" style={{ left: `${piece.left}%`, top: '-5%', background: piece.color, rotate: piece.rotation }} animate={{ y: [0, 300], opacity: [0, 1, 1, 0.8, 0], rotate: [piece.rotation, piece.rotation + 720] }} transition={{ duration: 3 + (piece.id % 3) * 0.5, repeat: Infinity, delay: piece.delay, ease: 'easeIn' }} />
         ))}
-        
-        {/* Firework explosions */}
         {[0, 1, 2].map((i) => (
           <motion.div key={`firework-${i}`} className="absolute" style={{ left: `${25 + i * 25}%`, top: `${20 + i * 10}%` }} animate={{ scale: [0, 2, 2.5], opacity: [0, 1, 0] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.8 }}>
             {Array.from({ length: 8 }).map((_, j) => (
@@ -5046,51 +3698,43 @@ export function HeaderBackground({ titleName, titleRarity, preview = false }: He
             ))}
           </motion.div>
         ))}
-        
-        {/* Balloon strings floating */}
         {[0, 1, 2].map((i) => (
           <motion.div key={`balloon-${i}`} className="absolute" style={{ left: `${15 + i * 35}%`, bottom: '30%' }} animate={{ y: [0, -20, 0], x: [(i % 2 ? -5 : 5), (i % 2 ? 5 : -5)] }} transition={{ duration: 4, repeat: Infinity, delay: i * 0.5, ease: 'easeInOut' }}>
             <div className="text-2xl sm:text-3xl">🎈</div>
             <div className="w-px h-12 sm:h-16 bg-pink-300/50 mx-auto" />
           </motion.div>
         ))}
-        
-        {/* Cake emoji */}
         <motion.div className="absolute top-1/4 left-1/2 -translate-x-1/2 text-5xl sm:text-6xl opacity-20" animate={{ scale: [1, 1.1, 1], rotate: [-5, 5, -5] }} transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}>🎂</motion.div>
-        
         {Object.values(effects).map(effect => effect)}
         {cosmicEvents}
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent" />
       </motion.div>
     );
   }
-  
-  // Vault Keeper (A046) - Vault Starter Door — also handles Folder Keeper (renamed A046 v2.8.0)
+
+  // Vault Keeper (A046) - also handles Folder Keeper (renamed A046 v2.8.0)
   if (titleName === 'Vault Keeper' || titleName === 'Folder Keeper') {
-    const dataParticles = useMemo(() => Array.from({ length: 24 }, (_, i) => ({
+    const dataParticles = Array.from({ length: 24 }, (_, i) => ({
       id: i,
       left: (i * 13) % 100,
       top: (i * 19) % 80,
       symbol: i % 4 === 0 ? '🔒' : i % 4 === 1 ? '🔐' : i % 4 === 2 ? '01' : '10'
-    })), []);
-    
-    const vaultBolts = useMemo(() => Array.from({ length: 12 }, (_, i) => ({
+    }));
+
+    const vaultBolts = Array.from({ length: 12 }, (_, i) => ({
       id: i,
       angle: i * 30
-    })), []);
+    }));
 
     return (
-      <motion.div 
+      <motion.div
         className={`top-0 left-0 right-0 ${height} overflow-hidden z-0 ${positioning}`}
         initial={variants.initial}
         animate={variants.animate}
         exit={variants.exit}
         style={performanceStyle}
       >
-        {/* 🔐 Vault Keeper - Deep steel blue vault door with security mechanisms */}
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 50%, #60A5FA 100%)' }} />
-        
-        {/* Vault door circular seal */}
         <motion.div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 sm:w-48 sm:h-48 rounded-full opacity-30"
           animate={{ rotate: [0, 360] }}
@@ -5098,89 +3742,43 @@ export function HeaderBackground({ titleName, titleRarity, preview = false }: He
         >
           <div className="absolute inset-0 rounded-full border-4 border-blue-200/60" />
           <div className="absolute inset-2 rounded-full border-2 border-blue-300/50" />
-          <div className="absolute inset-4 rounded-full border-3 border-blue-200/60" />
           {vaultBolts.map((bolt) => (
-            <div
-              key={bolt.id}
-              className="absolute w-3 h-3 sm:w-4 sm:h-4 bg-blue-100/70 rounded-full"
-              style={{
-                top: '50%',
-                left: '50%',
-                transform: `translate(-50%, -50%) rotate(${bolt.angle}deg) translateY(-60px)`,
-                boxShadow: '0 0 8px rgba(191, 219, 254, 0.5)'
-              }}
-            />
+            <div key={bolt.id} className="absolute w-3 h-3 sm:w-4 sm:h-4 bg-blue-100/70 rounded-full" style={{ top: '50%', left: '50%', transform: `translate(-50%, -50%) rotate(${bolt.angle}deg) translateY(-60px)`, boxShadow: '0 0 8px rgba(191, 219, 254, 0.5)' }} />
           ))}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-200/50 border-2 border-blue-100/70" />
         </motion.div>
-        
-        {/* Counter-rotating inner mechanism */}
         <motion.div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 sm:w-28 sm:h-28 rounded-full border-2 border-blue-300/40 opacity-25"
           animate={{ rotate: [360, 0] }}
           transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
         >
           {[0, 90, 180, 270].map((angle) => (
-            <div
-              key={angle}
-              className="absolute top-1/2 left-1/2 w-0.5 h-8 sm:h-10 bg-blue-200/60"
-              style={{
-                transform: `translate(-50%, -50%) rotate(${angle}deg)`,
-                transformOrigin: 'center'
-              }}
-            />
+            <div key={angle} className="absolute top-1/2 left-1/2 w-0.5 h-8 sm:h-10 bg-blue-200/60" style={{ transform: `translate(-50%, -50%) rotate(${angle}deg)`, transformOrigin: 'center' }} />
           ))}
         </motion.div>
-        
-        {/* Security scan beam */}
         <motion.div
           className="absolute inset-0 opacity-30"
           style={{ background: 'linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.5), transparent)', width: '25%', filter: 'blur(8px)' }}
           animate={{ x: ['-25%', '125%'] }}
           transition={{ duration: 5, repeat: Infinity, ease: 'linear', repeatDelay: 3 }}
         />
-        
-        {/* Binary data stream */}
         {dataParticles.map((p) => (
-          <motion.div
-            key={p.id}
-            className="absolute text-xs opacity-70"
-            style={{
-              left: `${p.left}%`,
-              top: `${p.top}%`,
-              color: '#BFDBFE',
-              fontFamily: 'monospace',
-              textShadow: '0 0 6px rgba(191, 219, 254, 0.7)',
-              fontSize: typeof p.symbol === 'string' && p.symbol.length > 1 ? '10px' : '16px'
-            }}
-            animate={{ y: [0, -60], opacity: [0, 0.8, 0], scale: [0.8, 1, 0.8] }}
-            transition={{ duration: 4 + (p.id % 3), repeat: Infinity, delay: p.id * 0.2, ease: 'easeOut' }}
-          >
+          <motion.div key={p.id} className="absolute text-xs opacity-70" style={{ left: `${p.left}%`, top: `${p.top}%`, color: '#BFDBFE', fontFamily: 'monospace', textShadow: '0 0 6px rgba(191, 219, 254, 0.7)', fontSize: typeof p.symbol === 'string' && p.symbol.length > 1 ? '10px' : '16px' }} animate={{ y: [0, -60], opacity: [0, 0.8, 0], scale: [0.8, 1, 0.8] }} transition={{ duration: 4 + (p.id % 3), repeat: Infinity, delay: p.id * 0.2, ease: 'easeOut' }}>
             {p.symbol}
           </motion.div>
         ))}
-        
-        {/* Lock sparkles */}
         {[0, 1, 2].map((i) => (
-          <motion.div
-            key={`lock-${i}`}
-            className="absolute text-base sm:text-lg"
-            style={{ left: `${30 + i * 20}%`, top: `${35 + i * 15}%` }}
-            animate={{ scale: [0, 1.2, 0], opacity: [0, 0.9, 0], rotate: [0, 180, 360] }}
-            transition={{ duration: 3, repeat: Infinity, delay: i * 1.2 }}
-          >
+          <motion.div key={`lock-${i}`} className="absolute text-base sm:text-lg" style={{ left: `${30 + i * 20}%`, top: `${35 + i * 15}%` }} animate={{ scale: [0, 1.2, 0], opacity: [0, 0.9, 0], rotate: [0, 180, 360] }} transition={{ duration: 3, repeat: Infinity, delay: i * 1.2 }}>
             🔒
           </motion.div>
         ))}
-        
         {Object.values(effects).map(effect => effect)}
         {cosmicEvents}
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent" />
       </motion.div>
     );
   }
-  
-  // Format Master (A034) - Multimedia Virtuoso Mosaic
+
   if (titleName === 'Format Master') {
     const fireParticles = useMemo(() => Array.from({ length: 8 }, (_, i) => ({ id: i, left: 10 + (i * 10) % 40, delay: i * 0.3 })), []);
     const waterDrops = useMemo(() => Array.from({ length: 8 }, (_, i) => ({ id: i, left: 60 + (i * 8) % 30, delay: i * 0.4 })), []);

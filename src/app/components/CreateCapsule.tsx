@@ -1601,7 +1601,11 @@ export function CreateCapsule({
 
   // Wrapper functions to adapt data structure
   const saveDraft = useCallback(() => {
-    console.log('💾 Manual save draft with', media.length, 'media files');
+    console.log('💾 [Draft Save] Manual save draft:', {
+      title: title.substring(0, 60),
+      messageLength: message.length,
+      mediaCount: media.length,
+    });
     saveDraftToStorage({
       title,
       themeId,
@@ -2174,10 +2178,24 @@ export function CreateCapsule({
   }, [deliveryDate, deliveryTime]);
 
   // Apply template
+  // NOTE: This only sets React state. No template reference is retained after this call.
+  // All subsequent reads (save, send, autosave) use the live `title` and `message` state,
+  // so any user edits made after template insertion are always used.
   const applyTemplate = (template: { id: string; title: string; message: string; icon: string; name: string }) => {
+    console.log('[Template] Applying template:', template.id, {
+      templateTitle: template.title,
+      templateMessageLength: template.message.length,
+    });
     setTitle(template.title);
     setMessage(template.message);
     toast.success(`Applied ${template.name} template`);
+    // Scroll to message textarea so the user can immediately see and edit the pre-filled content
+    setTimeout(() => {
+      if (messageTextareaRef.current) {
+        messageTextareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        messageTextareaRef.current.focus();
+      }
+    }, 100);
   };
 
   // Media handling - Phase 1B: Upload Queue with File Size Warnings
@@ -2526,7 +2544,12 @@ export function CreateCapsule({
   // Background save draft function (called when navigating away with media)
   const saveDraftInBackground = async () => {
     const activeCapsuleId = editingCapsule?.id || internalDraftId;
-    
+    console.log('[Draft Background Save] Using values:', {
+      title: title.substring(0, 60),
+      messageLength: message.length,
+      mediaCount: media.length,
+    });
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -3965,6 +3988,11 @@ export function CreateCapsule({
       });
 
         // Create capsule data object (shared for both create and update to ensure consistency)
+        console.log('[Send] Building capsule payload with current field values:', {
+          title: title.substring(0, 60),
+          messageLength: message.length,
+          messagePreview: message.substring(0, 80),
+        });
         // 🏆 ACHIEVEMENT TRACKING: Calculate metadata for achievements
         const wordCount = message?.split(/\s+/).filter(w => w.length > 0).length || 0;
         const userLocalHour = new Date().getHours(); // 0-23 for time-based achievements
@@ -4538,7 +4566,7 @@ export function CreateCapsule({
                         <Input
                           id="title"
                           value={title}
-                          onChange={(e) => setTitle(e.target.value)}
+                          onChange={(e) => { console.log('[Field] Title changed:', e.target.value.substring(0, 50)); setTitle(e.target.value); }}
                           placeholder={themeId === 'future' ? "[ ENTER_IDENTIFIER ]" : 
                                       themeId === 'friendship' ? "Side A - Best Friends Forever" :
                                       themeId === 'new_life' ? "Baby's First Year..." :
@@ -4553,7 +4581,7 @@ export function CreateCapsule({
                                       themeId === 'travel' ? "Around the World..." :
                                       themeId === 'career' ? "Achieving Excellence..." :
                                       themeId === 'first_day' ? "New Beginnings..." : "Give your capsule a memorable title..."}
-                          className={`h-12 text-base text-white placeholder:text-white/40 ${
+                          className={`h-14 text-lg text-white placeholder:text-white/40 ${
                             themeId === 'future' 
                               ? 'bg-black/40 border-cyan-500/50 font-mono tracking-wider focus:ring-cyan-500 focus:border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.1)]' 
                               : themeId === 'friendship'
@@ -4631,7 +4659,7 @@ export function CreateCapsule({
                           id="message"
                           ref={messageTextareaRef}
                           value={message}
-                          onChange={(e) => setMessage(e.target.value)}
+                          onChange={(e) => { console.log('[Field] Message changed, length:', e.target.value.length); setMessage(e.target.value); }}
                           placeholder={themeId === 'future' ? "[ ENTER_TRANSMISSION_DATA ]" : 
                                       themeId === 'friendship' ? "Write your message like liner notes in a mixtape..." :
                                       themeId === 'new_life' ? "Write a loving message to the future..." :
@@ -4646,7 +4674,7 @@ export function CreateCapsule({
                                       themeId === 'travel' ? "Document your adventures and discoveries..." :
                                       themeId === 'career' ? "Reflect on achievements and future goals..." :
                                       themeId === 'first_day' ? "How are you feeling on this new beginning?..." : "Write your message to the future..."}
-                          className={`text-base md:text-sm p-5 leading-relaxed !text-left text-white placeholder:text-white/40 ${
+                          className={`text-lg p-5 leading-relaxed !text-left text-white placeholder:text-white/40 ${
                             themeId === 'future'
                               ? 'bg-black/40 border-cyan-500/50 font-mono tracking-wide focus:ring-cyan-500 focus:border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.1)]'
                               : themeId === 'friendship'

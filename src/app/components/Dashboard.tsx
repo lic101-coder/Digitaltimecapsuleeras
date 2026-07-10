@@ -867,7 +867,18 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
                 }
                 
                 hasValidCache = true;
-                
+
+                // Load cached stats instantly so counters appear immediately
+                try {
+                  const cachedStatsStr = localStorage.getItem(`dashboard_stats_${user.id}`);
+                  if (cachedStatsStr) {
+                    const { stats: cachedStats, timestamp: statsTs } = JSON.parse(cachedStatsStr);
+                    if (Date.now() - statsTs < 3 * 60 * 1000) {
+                      setServerStats(cachedStats);
+                    }
+                  }
+                } catch (e) { /* ignore */ }
+
                 // Continue to fetch fresh data in background
                 console.log('🔄 Fetching fresh data in background...');
               } else {
@@ -905,10 +916,12 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
         // CRITICAL FIX: Fetch ALL capsules metadata (limit=undefined, skipMedia=true)
         // This ensures accurate counts and prevents "Load More" appearing when no more items exist
         const fetchPromise = DatabaseService.getUserTimeCapsules(user.id, undefined, 0, true);
-        const timeoutPromise = new Promise((_, reject) => 
+        // Fire stats fetch immediately — no dependency on capsule data, runs in parallel
+        const statsPromise = DatabaseService.getCapsuleStats(user.id).catch(() => null);
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Database query timeout - the server is not responding')), 30000) // 30 seconds
         );
-        
+
         const result = await Promise.race([fetchPromise, timeoutPromise]);
         perfTimer.end({ capsulesLoaded: result.capsules?.length || 0, totalInDB: result.total });
         console.log('✅ Successfully fetched all capsules (metadata):', result.capsules?.length || 0, 'of', result.total);
@@ -958,13 +971,19 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
         
         console.log('📝 Dashboard state updated - capsules in state:', result.capsules?.length || 0);
 
-        // Fetch accurate stats from server (not affected by pagination)
+        // Resolve stats — already in-flight since capsule fetch started (parallel)
         try {
-          console.log('📊 Fetching accurate stats from server...');
-          const statsResponse = await DatabaseService.getCapsuleStats(user.id);
+          const statsResponse = await statsPromise;
           if (statsResponse && !statsResponse.error) {
             console.log('✅ Server stats loaded:', statsResponse);
             setServerStats(statsResponse);
+            // Cache for instant display on next navigation
+            try {
+              localStorage.setItem(`dashboard_stats_${user.id}`, JSON.stringify({
+                stats: statsResponse,
+                timestamp: Date.now()
+              }));
+            } catch (e) { /* ignore */ }
           } else {
             console.log('ℹ️ Server stats not available, using client-side calculation');
           }

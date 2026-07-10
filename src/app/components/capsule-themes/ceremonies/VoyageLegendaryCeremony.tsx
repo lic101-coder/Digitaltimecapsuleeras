@@ -881,7 +881,6 @@ export function VoyageLegendaryCeremony({
             >
               Journey Complete
             </h2>
-            <p className="text-2xl text-sky-700 drop-shadow-lg">{capsuleTitle}</p>
           </motion.div>
         )}
       </AnimatePresence>

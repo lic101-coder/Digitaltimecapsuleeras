@@ -308,21 +308,23 @@ function NotificationItem({
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Title and Badge */}
+          {/* Title and Badge — title hidden for echo notifications since content already names sender + action */}
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h4 
-              className="font-semibold text-white text-sm sm:text-base leading-snug"
-              style={{
-                wordWrap: 'break-word',
-                overflowWrap: 'break-word',
-                whiteSpace: 'normal',
-                hyphens: 'none'
-              }}
-            >
-              {notification.title}
-            </h4>
+            {notification.type !== 'echo' && (
+              <h4
+                className="font-semibold text-white text-sm sm:text-base leading-snug"
+                style={{
+                  wordWrap: 'break-word',
+                  overflowWrap: 'break-word',
+                  whiteSpace: 'normal',
+                  hyphens: 'none'
+                }}
+              >
+                {notification.title}
+              </h4>
+            )}
             {!notification.isRead && (
-              <span 
+              <span
                 className="shrink-0 px-2 py-0.5 text-[10px] sm:text-xs font-bold rounded-full text-white whitespace-nowrap"
                 style={{ backgroundColor: accentColor }}
               >

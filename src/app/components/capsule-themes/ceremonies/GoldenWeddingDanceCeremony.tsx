@@ -354,22 +354,6 @@ export function GoldenWeddingDanceCeremony({
                 — A LOVE STORY —
               </motion.p>
 
-              {/* capsuleTitle in massive gold serif */}
-              <motion.h1
-                className="text-4xl md:text-6xl font-bold text-center px-4 leading-tight"
-                style={{
-                  color: '#fbbf24',
-                  fontFamily: 'Georgia, serif',
-                  letterSpacing: '0.06em',
-                  textShadow:
-                    '0 0 40px rgba(251,191,36,1), 0 0 80px rgba(251,191,36,0.5), 0 0 160px rgba(251,191,36,0.2)',
-                }}
-                initial={{ opacity: 0, scale: 0.75 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1.2, delay: 0.6, ease: 'easeOut' }}
-              >
-                {capsuleTitle}
-              </motion.h1>
 
               {/* "A CELEBRATION OF LOVE" subtitle in rose pink */}
               <motion.p
@@ -1114,25 +1098,6 @@ export function GoldenWeddingDanceCeremony({
                 </motion.span>
               </div>
 
-              {/* Capsule title — MASSIVE gold serif, slow scale pulse repeat:Infinity 4s ambient */}
-              <motion.h1
-                className="text-3xl md:text-5xl font-bold leading-snug"
-                style={{
-                  color: '#fbbf24',
-                  fontFamily: 'Georgia, serif',
-                  textShadow:
-                    '0 0 30px rgba(251,191,36,1), 0 0 70px rgba(251,191,36,0.6), 0 0 140px rgba(251,191,36,0.3)',
-                  maxWidth: '88%',
-                }}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: [1, 1.03, 1] }}
-                transition={{
-                  opacity: { duration: 0.9, delay: 0.4 },
-                  scale: { duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.4 },
-                }}
-              >
-                {capsuleTitle}
-              </motion.h1>
 
               {/* "YOUR LOVE STORY BEGINS NOW" */}
               <motion.p

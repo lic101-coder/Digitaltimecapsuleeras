@@ -93,23 +93,6 @@ export function PetRainbowBridgeCeremony({
         ))}
       </div>
 
-      {/* Title */}
-      <AnimatePresence>
-        {stage === 'intro' && capsuleTitle && (
-          <motion.div
-            initial={{ opacity: 0, y: -30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-x-0 top-[20%] z-30 text-center px-8"
-          >
-            <h2 className="text-3xl md:text-5xl font-bold text-white drop-shadow-2xl">
-              {capsuleTitle}
-            </h2>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Paw prints on ground */}
       <AnimatePresence>
         {(stage === 'prints' || stage === 'crossing') && (

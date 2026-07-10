@@ -720,7 +720,6 @@ export function CareerGavelCeremony({
               >
                 Victory Achieved
               </h2>
-              <p className="text-2xl text-indigo-200 drop-shadow-lg">{capsuleTitle}</p>
             </motion.div>
           )}
         </AnimatePresence>

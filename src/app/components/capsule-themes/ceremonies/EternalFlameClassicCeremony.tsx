@@ -12,8 +12,23 @@
  * 
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+
+const UNITY_CSS = `
+@keyframes flame-core-glow {
+  0%,100% { opacity: 0.9; transform: translate(-50%,-50%) scale(1); }
+  50%      { opacity: 1;   transform: translate(-50%,-50%) scale(1.22); }
+}
+@keyframes unity-orbit-spin {
+  from { transform: translate(-50%,-50%) rotate(0deg); }
+  to   { transform: translate(-50%,-50%) rotate(360deg); }
+}
+@keyframes unity-radiance-pulse {
+  0%,100% { opacity: 0.88; }
+  50%      { opacity: 1; }
+}
+`;
 
 interface EternalFlameClassicCeremonyProps {
   capsuleTitle: string;
@@ -31,6 +46,33 @@ export function EternalFlameClassicCeremony({
   const [stage, setStage] = useState<'intro' | 'appear' | 'flicker' | 'move' | 'reach' | 'touch' | 'fuse' | 'merge' | 'radiance' | 'outro' | 'complete'>('intro');
   const [shake, setShake] = useState(false);
   const [completed, setCompleted] = useState(false);
+
+  /* ── Pre-computed particles — never call Math.random() in render ── */
+  const burstColors = ['#f43f5e', '#fb923c', '#fbbf24', '#fda4af'];
+
+  const fuseBurst = useMemo(() => Array.from({ length: 16 }, (_, i) => {
+    const angle = (i / 16) * Math.PI * 2;
+    const dist = 120 + (i % 4) * 52;
+    return { x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, colorIdx: i % 4, rot: i * 22 };
+  }), []);
+
+  const mergeBurst = useMemo(() => Array.from({ length: 16 }, (_, i) => {
+    const angle = (i / 16) * Math.PI * 2 + 0.2;
+    const dist = 130 + (i % 4) * 56;
+    return { x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, colorIdx: i % 4, rot: i * 22 };
+  }), []);
+
+  const radianceBurst = useMemo(() => Array.from({ length: 20 }, (_, i) => {
+    const angle = (i / 20) * Math.PI * 2;
+    const dist = 150 + (i % 4) * 70;
+    return { x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, colorIdx: i % 4 };
+  }), []);
+
+  const radianceRays = useMemo(() => Array.from({ length: 24 }, (_, i) => ({
+    angle: (i / 24) * 360,
+    height: i % 3 === 0 ? 12 : i % 3 === 1 ? 8 : 10,
+    colorIdx: i % 4
+  })), []);
 
   useEffect(() => {
     const timeline = [
@@ -72,6 +114,7 @@ export function EternalFlameClassicCeremony({
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#1a0f14] via-[#2d1420] to-[#0f0510]">
+      <style>{UNITY_CSS}</style>
       {/* Dynamic background */}
       <motion.div
         className="absolute inset-0"
@@ -268,16 +311,8 @@ export function EternalFlameClassicCeremony({
                         width: '10px',
                         height: '16px',
                         background: 'radial-gradient(ellipse, #ffffff 0%, #fffacd 40%, transparent 80%)',
-                        filter: 'blur(2px)'
-                      }}
-                      animate={{
-                        opacity: [0.9, 1, 0.85, 1, 0.9],
-                        scale: [1, 1.2, 1.1, 1.3, 1]
-                      }}
-                      transition={{
-                        duration: 0.6,
-                        repeat: Infinity,
-                        ease: 'easeInOut'
+                        filter: 'blur(2px)',
+                        animation: 'flame-core-glow 1.8s ease-in-out infinite'
                       }}
                     />
                   </div>
@@ -431,17 +466,8 @@ export function EternalFlameClassicCeremony({
                         width: '10px',
                         height: '16px',
                         background: 'radial-gradient(ellipse, #ffffff 0%, #fffdf0 40%, transparent 80%)',
-                        filter: 'blur(2px)'
-                      }}
-                      animate={{
-                        opacity: [0.85, 1, 0.9, 1, 0.85],
-                        scale: [1, 1.25, 1.15, 1.3, 1]
-                      }}
-                      transition={{
-                        duration: 0.7,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                        delay: 0.1
+                        filter: 'blur(2px)',
+                        animation: 'flame-core-glow 1.9s ease-in-out infinite'
                       }}
                     />
                   </div>
@@ -729,42 +755,22 @@ export function EternalFlameClassicCeremony({
                   />
                 ))}
 
-                {/* Burst particles */}
-                {[...Array(80)].map((_, i) => {
-                  const angle = (i / 80) * Math.PI * 2;
-                  const distance = 120 + Math.random() * 200;
-                  const x = Math.cos(angle) * distance;
-                  const y = Math.sin(angle) * distance;
-                  const colors = ['#f43f5e', '#fb923c', '#fbbf24', '#fda4af'];
-
-                  return (
-                    <motion.div
-                      key={`burst-${i}`}
-                      className="absolute left-1/2 z-37"
-                      style={{
-                        top: 'calc(50% - 75px)',
-                        width: '10px',
-                        height: '10px',
-                        borderRadius: '50%',
-                        background: colors[i % 4],
-                        boxShadow: `0 0 12px ${colors[i % 4]}`
-                      }}
-                      initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-                      animate={{
-                        x: x,
-                        y: y,
-                        scale: [0, 2, 1.5, 0],
-                        opacity: [0, 1, 0.9, 0],
-                        rotate: [0, Math.random() * 360]
-                      }}
-                      transition={{
-                        duration: 0.8,
-                        delay: i * 0.004,
-                        ease: 'easeOut'
-                      }}
-                    />
-                  );
-                })}
+                {/* Burst particles — 16 deterministic */}
+                {fuseBurst.map((p, i) => (
+                  <motion.div
+                    key={`burst-${i}`}
+                    className="absolute left-1/2 z-37"
+                    style={{
+                      top: 'calc(50% - 75px)',
+                      width: '10px', height: '10px', borderRadius: '50%',
+                      background: burstColors[p.colorIdx],
+                      boxShadow: `0 0 12px ${burstColors[p.colorIdx]}`
+                    }}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                    animate={{ x: p.x, y: p.y, scale: [0, 2, 1.5, 0], opacity: [0, 1, 0.9, 0], rotate: [0, p.rot] }}
+                    transition={{ duration: 0.8, delay: i * 0.02, ease: 'easeOut' }}
+                  />
+                ))}
               </>
             )}
           </AnimatePresence>
@@ -833,42 +839,22 @@ export function EternalFlameClassicCeremony({
                   />
                 ))}
 
-                {/* Burst particles */}
-                {[...Array(80)].map((_, i) => {
-                  const angle = (i / 80) * Math.PI * 2;
-                  const distance = 120 + Math.random() * 200;
-                  const x = Math.cos(angle) * distance;
-                  const y = Math.sin(angle) * distance;
-                  const colors = ['#f43f5e', '#fb923c', '#fbbf24', '#fda4af'];
-
-                  return (
-                    <motion.div
-                      key={`burst-${i}`}
-                      className="absolute left-1/2 z-37"
-                      style={{
-                        top: 'calc(50% - 75px)',
-                        width: '10px',
-                        height: '10px',
-                        borderRadius: '50%',
-                        background: colors[i % 4],
-                        boxShadow: `0 0 12px ${colors[i % 4]}`
-                      }}
-                      initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-                      animate={{
-                        x: x,
-                        y: y,
-                        scale: [0, 2, 1.5, 0],
-                        opacity: [0, 1, 0.9, 0],
-                        rotate: [0, Math.random() * 360]
-                      }}
-                      transition={{
-                        duration: 0.8,
-                        delay: i * 0.004,
-                        ease: 'easeOut'
-                      }}
-                    />
-                  );
-                })}
+                {/* Burst particles — 16 deterministic */}
+                {mergeBurst.map((p, i) => (
+                  <motion.div
+                    key={`burst-${i}`}
+                    className="absolute left-1/2 z-37"
+                    style={{
+                      top: 'calc(50% - 75px)',
+                      width: '10px', height: '10px', borderRadius: '50%',
+                      background: burstColors[p.colorIdx],
+                      boxShadow: `0 0 12px ${burstColors[p.colorIdx]}`
+                    }}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                    animate={{ x: p.x, y: p.y, scale: [0, 2, 1.5, 0], opacity: [0, 1, 0.9, 0], rotate: [0, p.rot] }}
+                    transition={{ duration: 0.8, delay: i * 0.02, ease: 'easeOut' }}
+                  />
+                ))}
               </>
             )}
           </AnimatePresence>
@@ -948,29 +934,16 @@ export function EternalFlameClassicCeremony({
                     }}
                   />
 
-                  {/* Secondary pulsing layer */}
-                  <motion.div
-                    style={{
-                      position: 'absolute',
-                      width: '80px',
-                      height: '105px',
-                      left: '50%',
-                      top: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      background: 'radial-gradient(ellipse at 50% 55%, rgba(255, 230, 150, 0.85), rgba(251, 191, 36, 0.6) 50%, transparent 80%)',
-                      filter: 'blur(15px)'
-                    }}
-                    animate={{
-                      scaleY: [1, 1.15, 1],
-                      scaleX: [1, 0.95, 1],
-                      opacity: [0.85, 1, 0.85]
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      ease: 'easeInOut'
-                    }}
-                  />
+                  {/* Secondary pulsing layer — CSS animation */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '80px', height: '105px',
+                    left: '50%', top: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    background: 'radial-gradient(ellipse at 50% 55%, rgba(255,230,150,0.85), rgba(251,191,36,0.6) 50%, transparent 80%)',
+                    filter: 'blur(15px)',
+                    animation: 'unity-radiance-pulse 2.2s ease-in-out infinite'
+                  }} />
 
                   {/* Main enormous flame */}
                   <div
@@ -983,25 +956,14 @@ export function EternalFlameClassicCeremony({
                       position: 'relative'
                     }}
                   >
-                    {/* Bright core */}
-                    <motion.div
-                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                      style={{
-                        width: '28px',
-                        height: '42px',
-                        background: 'radial-gradient(ellipse, #ffffff 0%, #fffdf0 30%, transparent 75%)',
-                        filter: 'blur(5px)'
-                      }}
-                      animate={{
-                        scale: [1, 1.2, 1.1, 1.25, 1],
-                        opacity: [0.95, 1, 0.9, 1, 0.95]
-                      }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: 'easeInOut'
-                      }}
-                    />
+                    {/* Bright core — CSS animation */}
+                    <div style={{
+                      position: 'absolute', top: '50%', left: '50%',
+                      width: '28px', height: '42px',
+                      background: 'radial-gradient(ellipse, #ffffff 0%, #fffdf0 30%, transparent 75%)',
+                      filter: 'blur(5px)',
+                      animation: 'flame-core-glow 1.8s ease-in-out infinite'
+                    }} />
                   </div>
                 </motion.div>
               </motion.div>
@@ -1009,147 +971,69 @@ export function EternalFlameClassicCeremony({
           </AnimatePresence>
         </div>
 
-        {/* RADIANCE finale */}
+        {/* RADIANCE finale — mobile-safe */}
         <AnimatePresence>
           {stage === 'radiance' && (
             <>
-              {/* Rays */}
-              {[...Array(60)].map((_, i) => {
-                const angle = (i / 60) * 360;
-                const colors = ['rgba(251, 113, 133, 1)', 'rgba(251, 191, 36, 1)', 'rgba(251, 146, 60, 1)', 'rgba(255, 255, 255, 1)'];
-
-                return (
-                  <motion.div
-                    key={`ray-${i}`}
-                    className="absolute"
-                    style={{
-                      left: '50%',
-                      top: '50%',
-                      width: '200vw',
-                      height: i % 3 === 0 ? '12px' : i % 3 === 1 ? '8px' : '10px',
-                      marginLeft: '-100vw',
-                      marginTop: i % 3 === 0 ? '-6px' : i % 3 === 1 ? '-4px' : '-5px',
-                      background: `linear-gradient(to right, transparent, ${colors[i % 4].replace('1)', '0.96)')} 50%, transparent)`,
-                      transformOrigin: 'center center',
-                      transform: `rotate(${angle}deg)`,
-                      filter: 'blur(2px)'
-                    }}
-                    initial={{ scaleX: 0, opacity: 0 }}
-                    animate={{
-                      scaleX: [0, 3.2, 3],
-                      opacity: [0, 1, 0.96]
-                    }}
-                    transition={{
-                      duration: 1.6,
-                      ease: 'easeOut'
-                    }}
-                  />
-                );
-              })}
+              {/* 24 static rays */}
+              <motion.div
+                className="absolute inset-0 pointer-events-none"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7 }}
+              >
+                {radianceRays.map((r, i) => (
+                  <div key={`ray-${i}`} style={{
+                    position: 'absolute', left: '50%', top: '50%',
+                    width: '200vw', height: `${r.height}px`,
+                    marginLeft: '-100vw', marginTop: `${-r.height / 2}px`,
+                    background: `linear-gradient(to right, transparent, ${burstColors[r.colorIdx]} 50%, transparent)`,
+                    transformOrigin: 'center center',
+                    transform: `rotate(${r.angle}deg)`,
+                    filter: 'blur(2px)'
+                  }} />
+                ))}
+              </motion.div>
 
               {/* Radiant core */}
               <motion.div
                 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                 initial={{ scale: 0, opacity: 0 }}
-                animate={{
-                  scale: [0, 8, 7.5],
-                  opacity: [0, 1, 0.98]
-                }}
+                animate={{ scale: [0, 6, 5.8], opacity: [0, 1, 0.96] }}
                 transition={{ duration: 1.8, ease: 'easeOut' }}
               >
-                <div
-                  className="w-[52rem] h-[52rem] rounded-full"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(254, 252, 232, 0.98) 5%, rgba(253, 224, 71, 0.93) 18%, rgba(251, 191, 36, 0.88) 28%, rgba(251, 146, 60, 0.82) 40%, rgba(251, 113, 133, 0.72) 55%, rgba(244, 63, 94, 0.58) 72%, transparent 95%)',
-                    boxShadow: '0 0 600px rgba(251, 146, 60, 1), 0 0 800px rgba(244, 63, 94, 0.85)',
-                    filter: 'blur(130px)'
-                  }}
-                />
+                <div style={{
+                  width: '440px', height: '440px', borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(254,252,232,0.97) 5%, rgba(251,191,36,0.9) 22%, rgba(251,146,60,0.82) 40%, rgba(251,113,133,0.7) 58%, transparent 88%)',
+                  filter: 'blur(100px)',
+                  animation: 'unity-radiance-pulse 3s ease-in-out infinite'
+                }} />
               </motion.div>
 
-              {/* Orbiting hearts */}
-              {(() => {
-                const particles = [];
-                for (let ring = 0; ring < 2; ring++) {
-                  const radius = 200 + ring * 120;
-                  const count = 40 + ring * 20;
+              {/* Single CSS orbit ring — zero JS per frame */}
+              <div className="absolute pointer-events-none" style={{
+                left: '50%', top: '50%',
+                width: '360px', height: '360px',
+                border: '2px solid rgba(251,113,133,0.45)',
+                borderRadius: '50%',
+                boxShadow: '0 0 18px rgba(251,146,60,0.35)',
+                animation: 'unity-orbit-spin 11s linear infinite'
+              }} />
 
-                  for (let i = 0; i < count; i++) {
-                    const angle = (i / count) * 360;
-                    const colors = ['#f43f5e', '#fb923c', '#fbbf24', '#fda4af'];
-
-                    particles.push(
-                      <motion.div
-                        key={`orbit-${ring}-${i}`}
-                        className="absolute"
-                        style={{
-                          width: '9px',
-                          height: '9px',
-                          borderRadius: '50%',
-                          background: colors[i % 4],
-                          boxShadow: `0 0 18px ${colors[i % 4]}`
-                        }}
-                        animate={{
-                          x: [
-                            Math.cos(angle * Math.PI / 180) * radius,
-                            Math.cos((angle + 360) * Math.PI / 180) * radius
-                          ],
-                          y: [
-                            Math.sin(angle * Math.PI / 180) * radius,
-                            Math.sin((angle + 360) * Math.PI / 180) * radius
-                          ]
-                        }}
-                        transition={{
-                          delay: 0.5 + (ring * 60 + i) * 0.004,
-                          duration: 7 + ring * 2,
-                          repeat: completed ? 0 : 2, // Limit repeats
-                          ease: 'linear'
-                        }}
-                      />
-                    );
-                  }
-                }
-                return particles;
-              })()}
-
-              {/* Burst particles */}
-              {[...Array(100)].map((_, i) => {
-                const angle = (i / 100) * Math.PI * 2;
-                const distance = 150 + Math.random() * 350;
-                const x = Math.cos(angle) * distance;
-                const y = Math.sin(angle) * distance;
-                const colors = ['#f43f5e', '#fb923c', '#fbbf24', '#fda4af'];
-
-                return (
-                  <motion.div
-                    key={`radiance-burst-${i}`}
-                    className="absolute"
-                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-                    animate={{
-                      x: x,
-                      y: [y, y + 160],
-                      scale: [0, 2.5, 2],
-                      opacity: [0, 1, 0.9, 0],
-                      rotate: [0, Math.random() * 600]
-                    }}
-                    transition={{
-                      duration: 3,
-                      delay: i * 0.007,
-                      ease: 'easeOut'
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '11px',
-                        height: '11px',
-                        borderRadius: '50%',
-                        background: colors[i % 4],
-                        boxShadow: `0 0 16px ${colors[i % 4]}`
-                      }}
-                    />
-                  </motion.div>
-                );
-              })}
+              {/* 20 burst particles — deterministic */}
+              {radianceBurst.map((p, i) => (
+                <motion.div
+                  key={`radiance-burst-${i}`}
+                  className="absolute"
+                  initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                  animate={{ x: p.x, y: [p.y, p.y + 140], scale: [0, 2.2, 1.8], opacity: [0, 1, 0.88, 0] }}
+                  transition={{ duration: 2.8, delay: i * 0.055, ease: 'easeOut' }}
+                >
+                  <div style={{
+                    width: '11px', height: '11px', borderRadius: '50%',
+                    background: burstColors[p.colorIdx],
+                    boxShadow: `0 0 14px ${burstColors[p.colorIdx]}`
+                  }} />
+                </motion.div>
+              ))}
             </>
           )}
         </AnimatePresence>
@@ -1167,7 +1051,6 @@ export function EternalFlameClassicCeremony({
               <h2 className="text-5xl md:text-6xl font-bold text-rose-100 drop-shadow-2xl mb-4">
                 Forever United
               </h2>
-              <p className="text-3xl text-amber-200 drop-shadow-lg">{capsuleTitle}</p>
             </motion.div>
           )}
         </AnimatePresence>

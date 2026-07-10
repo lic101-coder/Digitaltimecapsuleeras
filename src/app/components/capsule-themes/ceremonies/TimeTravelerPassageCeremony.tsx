@@ -908,28 +908,6 @@ export function TimeTravelerPassageCeremony({
                 }}
               />
 
-              {/* Capsule title — time-warp entrance (3 keyframes → ease with times) */}
-              <motion.h2
-                style={{
-                  color: '#f59e0b',
-                  fontFamily: 'Georgia, serif',
-                  fontSize: isMobile ? 28 : 42,
-                  fontWeight: 700,
-                  textAlign: 'center',
-                  textShadow:
-                    '0 0 20px #f59e0b, 0 0 50px rgba(245,158,11,0.6), 0 0 90px rgba(245,158,11,0.3)',
-                  lineHeight: 1.2,
-                  maxWidth: isMobile ? 300 : 520,
-                }}
-                initial={{ scale: 0.4, opacity: 0 }}
-                animate={{ scale: [0.4, 1.1, 1.0], opacity: 1 }}
-                transition={{
-                  scale: { duration: 0.9, ease: 'easeInOut', times: [0, 0.65, 1] },
-                  opacity: { duration: 0.6 },
-                }}
-              >
-                {capsuleTitle}
-              </motion.h2>
             </div>
 
             {/* "PRESERVED THROUGH TIME" */}

@@ -574,7 +574,6 @@ export function VoyageRareCeremony({
             >
               Your Path is Set
             </h2>
-            <p className="text-2xl text-amber-200 drop-shadow-lg">{capsuleTitle}</p>
           </motion.div>
         )}
       </AnimatePresence>

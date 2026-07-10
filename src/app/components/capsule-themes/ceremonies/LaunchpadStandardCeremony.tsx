@@ -974,7 +974,6 @@ export function LaunchpadStandardCeremony({
             <h2 className="text-4xl md:text-5xl font-bold text-emerald-100 drop-shadow-2xl mb-3">
               You've Transformed
             </h2>
-            <p className="text-2xl text-orange-200 drop-shadow-lg">{capsuleTitle}</p>
           </motion.div>
         )}
       </AnimatePresence>

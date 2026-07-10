@@ -4293,6 +4293,14 @@ app.put("/make-server-f9be53a7/api/capsules/:id", async (c) => {
         );
         const isFirstCapsule = userScheduledCapsules.length === 1;
         
+        // Read userLocalHour from the capsule's original metadata so time-based
+        // achievements (Midnight Creator, Early Bird, etc.) use the hour when the
+        // draft was first created, not the UTC hour at scheduling time.
+        const capsuleMetadata = capsule.metadata || {};
+        const storedLocalHour = typeof capsuleMetadata.userLocalHour === 'number'
+          ? capsuleMetadata.userLocalHour
+          : undefined;
+
         const achievementResult = await AchievementService.checkAndUnlockAchievements(
           user.id,
           'capsule_created',
@@ -4300,7 +4308,8 @@ app.put("/make-server-f9be53a7/api/capsules/:id", async (c) => {
             capsuleId: capsuleId,
             isFirstCapsule: isFirstCapsule,
             convertedFromDraft: true,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            userLocalHour: storedLocalHour
           }
         );
         

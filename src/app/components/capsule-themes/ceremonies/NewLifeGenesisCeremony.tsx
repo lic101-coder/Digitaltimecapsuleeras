@@ -1,850 +1,667 @@
 /**
- * New Life - GENESIS: Birth of a World (V3.0 EPIC ENHANCEMENT)
- * 
- * 🌍 ULTRA CINEMA-QUALITY STORY: From void to vibrant life - creation itself
- * 
- * REFINED NARRATIVE ARC:
- * - Infinite darkness → Life's first heartbeat echoes
- * - Heartbeat strengthens → Spark of creation ignites
- * - Light becomes matter → Sphere forms with gravitational grace
- * - Waters cascade from cosmos → Oceans flood the world
- * - Earth awakens → Continents rise, forests bloom
- * - Planet radiates living energy → "A new world begins"
- * 
- * ENHANCEMENTS V3:
- * - More dramatic heartbeat visualization
- * - Smoother planet formation with depth
- * - Better water cascade choreography
- * - More realistic continent emergence
- * - Epic atmosphere and glow effects
- * - Cinematic pacing with emotional crescendos
- * - Better color grading and transitions
- * 
+ * New Life — "The First Heartbeat"
+ *
+ * Story: Pure darkness. A single amber point ignites and pulses
+ * at 150 BPM — the true fetal heart rate. A luminous EKG thread
+ * draws itself across the void. Cells emerge and divide in
+ * generations. An organic heart materializes, breathing and
+ * radiating vein-threads outward. The world warms from void-black
+ * to amber to rose. The capsule title descends into the warmth.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { getOptimalParticleCount } from './ceremonyOptimization';
 
 interface NewLifeGenesisCeremonyProps {
   capsuleTitle: string;
-  media?: any[];
+  media: any[];
   isPreview?: boolean;
-  isVisible?: boolean;
   onComplete?: () => void;
 }
 
+/* ─────────────────────── CSS ─────────────────────── */
+const CSS = `
+/* 150 BPM — fetal */
+@keyframes beat-fast {
+  0%,100% { transform: scale(1);    opacity: 0.88; }
+  8%      { transform: scale(1.6);  opacity: 1; }
+  20%     { transform: scale(0.9);  opacity: 0.82; }
+  30%     { transform: scale(1);    opacity: 0.88; }
+}
+/* 60 BPM — newborn calm */
+@keyframes beat-slow {
+  0%,100% { transform: scale(1);    opacity: 0.82; }
+  10%     { transform: scale(1.48); opacity: 1; }
+  28%     { transform: scale(0.93); opacity: 0.85; }
+  42%     { transform: scale(1);    opacity: 0.82; }
+}
+@keyframes beat-ring-fast {
+  0%   { transform: scale(0.25); opacity: 0.8; }
+  100% { transform: scale(5);    opacity: 0; }
+}
+@keyframes beat-ring-slow {
+  0%   { transform: scale(0.25); opacity: 0.65; }
+  100% { transform: scale(6.5);  opacity: 0; }
+}
+@keyframes beat-enter {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+@keyframes cell-divide-flash {
+  0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.4); }
+  30%  { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%,-50%) scale(1); }
+}
+@keyframes vein-glow {
+  0%,100% { opacity: 0.5; }
+  50%     { opacity: 0.9; }
+}
+@keyframes heart-enter {
+  from { transform: translate(-50%,-52%) scale(0); opacity: 0; }
+  to   { transform: translate(-50%,-52%) scale(1); opacity: 1; }
+}
+@keyframes heart-breathe {
+  0%,100% {
+    transform: translate(-50%,-52%) scale(1);
+    filter: drop-shadow(0 0 10px rgba(255,120,40,0.8)) drop-shadow(0 0 28px rgba(255,100,30,0.4));
+  }
+  10% {
+    transform: translate(-50%,-52%) scale(1.14);
+    filter: drop-shadow(0 0 22px rgba(255,160,70,1)) drop-shadow(0 0 60px rgba(255,130,50,0.7));
+  }
+  26% {
+    transform: translate(-50%,-52%) scale(0.93);
+    filter: drop-shadow(0 0 13px rgba(255,110,35,0.85)) drop-shadow(0 0 34px rgba(255,90,25,0.45));
+  }
+  42% {
+    transform: translate(-50%,-52%) scale(1);
+    filter: drop-shadow(0 0 10px rgba(255,120,40,0.8)) drop-shadow(0 0 28px rgba(255,100,30,0.4));
+  }
+}
+@keyframes impression-float {
+  0%   { transform: translateY(0)     scale(0.55); opacity: 0; }
+  22%  { opacity: 0.52; }
+  78%  { opacity: 0.42; }
+  100% { transform: translateY(-36px) scale(0.92); opacity: 0; }
+}
+@keyframes star-twinkle {
+  0%,100% { opacity: 1; }
+  50%     { opacity: 0.28; }
+}
+@keyframes life-shimmer {
+  0%,100% { text-shadow: 0 0 20px rgba(255,160,70,0.75), 0 0 50px rgba(255,130,40,0.38); }
+  50%     { text-shadow: 0 0 36px rgba(255,190,95,1),   0 0 85px rgba(255,155,60,0.65); }
+}
+@keyframes ekg-spark {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes core-bloom {
+  0%   { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+`;
+
+/* ─────────────────────── EKG Path (3 complete cycles) ─────────────────────── */
+const EKG_PATH = [
+  'M 0,50',
+  'L 28,50',
+  'C 31,50 33,44 35,41 C 37,38 40,38 42,41 C 44,44 46,50 48,50',
+  'L 63,50',
+  'L 65,32 L 68,-14 L 71,92 L 74,50',
+  'C 79,50 83,45 88,43 C 93,41 98,43 103,47 C 108,50 111,50 113,50',
+  'L 121,50',
+  'L 150,50',
+  'C 153,50 155,44 157,41 C 159,38 162,38 164,41 C 166,44 168,50 170,50',
+  'L 185,50',
+  'L 187,32 L 190,-14 L 193,92 L 196,50',
+  'C 201,50 205,45 210,43 C 215,41 220,43 225,47 C 230,50 233,50 235,50',
+  'L 243,50',
+  'L 272,50',
+  'C 275,50 277,44 279,41 C 281,38 284,38 286,41 C 288,44 290,50 292,50',
+  'L 307,50',
+  'L 309,32 L 312,-14 L 315,92 L 318,50',
+  'C 323,50 327,45 332,43 C 337,41 342,43 347,47 C 352,50 355,50 357,50',
+  'L 375,50',
+].join(' ');
+
+/* ─────────────────────── Heart SVG path (organic) ─────────────────────── */
+const HEART_PATH =
+  'M 50,72 C 18,55 3,36 3,21 C 3,8 13,0 24,0 C 34,0 43,8 50,18 C 57,8 66,0 76,0 C 87,0 97,8 97,21 C 97,36 82,55 50,72 Z';
+
+type Stage = 'void' | 'pulse' | 'ekg' | 'divide' | 'heart' | 'bloom' | 'reveal' | 'outro';
+
 export function NewLifeGenesisCeremony({
   capsuleTitle,
-  media = [],
-  isPreview = false,
-  isVisible = true,
-  onComplete
+  onComplete,
 }: NewLifeGenesisCeremonyProps) {
-  const [stage, setStage] = useState<'void' | 'heartbeat' | 'ignition' | 'formation' | 'waters' | 'awakening' | 'radiance' | 'outro' | 'complete'>('void');
-  const [completed, setCompleted] = useState(false);
+  const [stage, setStage] = useState<Stage>('void');
+  const [beatReady, setBeatReady] = useState(false);
+  const [heartReady, setHeartReady] = useState(false);
 
   useEffect(() => {
-    const timeline = [
-      { time: 0, action: () => setStage('void') },
-      { time: 2000, action: () => setStage('heartbeat') },
-      { time: 4500, action: () => setStage('ignition') },
-      { time: 7000, action: () => setStage('formation') },
-      { time: 10000, action: () => setStage('waters') },
-      { time: 13000, action: () => setStage('awakening') },
-      { time: 16000, action: () => setStage('radiance') },
-      { time: 19500, action: () => setStage('outro') },
-      { time: 20000, action: () => {
-        setStage('complete');
-        setCompleted(true);
-        onComplete?.();
-      }}
+    const ts: { t: number; s: Stage }[] = [
+      { t: 0,     s: 'void' },
+      { t: 600,   s: 'pulse' },
+      { t: 2800,  s: 'ekg' },
+      { t: 6200,  s: 'divide' },
+      { t: 10000, s: 'heart' },
+      { t: 14500, s: 'bloom' },
+      { t: 18200, s: 'reveal' },
+      { t: 22500, s: 'outro' },
     ];
+    const ids = ts.map(({ t, s }) => setTimeout(() => setStage(s), t));
+    const done = setTimeout(() => onComplete?.(), 23500);
+    // Allow entry animations to complete before switching to infinite loops
+    const beatT  = setTimeout(() => setBeatReady(true),  600 + 600);
+    const heartT = setTimeout(() => setHeartReady(true), 10000 + 1000);
+    return () => { ids.forEach(clearTimeout); clearTimeout(done); clearTimeout(beatT); clearTimeout(heartT); };
+  }, []);
 
-    const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
+  /* ── Stars ── */
+  const bgStars = useMemo(() =>
+    Array.from({ length: 60 }, (_, i) => ({
+      x: ((i * 37 + Math.cos(i) * 20 + 200) % 100 + 100) % 100,
+      y: ((i * 23 + Math.sin(i) * 15 + 100) % 100 + 100) % 100,
+      r: 0.7 + (i % 3) * 0.55,
+      opacity: 0.10 + (i % 5) * 0.06,
+      dur: 3.5 + (i % 5) * 1.1,
+      delay: (i * 0.35) % 6,
+    })),
+  []);
 
-    // CRITICAL FAILSAFE: Force completion after 23 seconds if ceremony hasn't finished
-    const failsafeTimeout = setTimeout(() => {
-      if (!completed) {
-        console.warn('⚠️ Genesis ceremony failsafe triggered - forcing completion');
-        setStage('complete');
-        setCompleted(true);
-        onComplete?.();
-      }
-    }, 23000);
+  /* ── Cell positions (4 generations) ── */
+  const cells = useMemo(() => {
+    const cx = 50, cy = 50;
+    const r2 = 5, r3 = 10.5, r4 = 17;
+    return [
+      { x: cx,       y: cy,             r: 17, gen: 1, delay: 0 },
+      { x: cx - r2,  y: cy,             r: 13, gen: 2, delay: 0.12 },
+      { x: cx + r2,  y: cy,             r: 13, gen: 2, delay: 0.12 },
+      { x: cx - r3,  y: cy - r3 * 0.5, r: 10, gen: 3, delay: 0.28 },
+      { x: cx + r3,  y: cy - r3 * 0.5, r: 10, gen: 3, delay: 0.28 },
+      { x: cx - r3,  y: cy + r3 * 0.5, r: 10, gen: 3, delay: 0.38 },
+      { x: cx + r3,  y: cy + r3 * 0.5, r: 10, gen: 3, delay: 0.38 },
+      ...Array.from({ length: 10 }, (_, i) => {
+        const a = (i / 10) * Math.PI * 2 - Math.PI / 10;
+        return { x: cx + Math.cos(a) * r4, y: cy + Math.sin(a) * r4 * 0.8, r: 7, gen: 4, delay: 0.55 + (i % 5) * 0.06 };
+      }),
+    ];
+  }, []);
 
-    return () => {
-      timeouts.forEach(clearTimeout);
-      clearTimeout(failsafeTimeout);
-    };
-  }, []); // Only run once on mount - don't restart ceremony midway through
+  /* ── Division sparks ── */
+  const divSparks = useMemo(() =>
+    Array.from({ length: 24 }, (_, i) => {
+      const a = (i / 24) * Math.PI * 2;
+      const d = 8 + (i % 5) * 4;
+      return {
+        x: 50 + Math.cos(a) * d,
+        y: 50 + Math.sin(a) * d * 0.8,
+        delay: 0.04 + (i % 8) * 0.08,
+        dur: 0.5 + (i % 4) * 0.1,
+        size: 2.5 + (i % 5),
+        color: i % 3 === 0 ? 'rgba(255,230,140,0.95)' : i % 3 === 1 ? 'rgba(255,170,70,0.9)' : 'rgba(255,210,100,0.85)',
+      };
+    }),
+  []);
 
-  // Cinematic easing for smooth transitions
-  const cinematicEase = [0.43, 0.13, 0.23, 0.96];
-  const smoothEase = [0.25, 0.1, 0.25, 1];
+  /* ── Vein threads ── */
+  const veinPaths = useMemo(() => [
+    { d: 'M 50,50 C 34,41 20,30 6,18',    delay: 0 },
+    { d: 'M 50,50 C 56,33 60,20 62,3',    delay: 0.14 },
+    { d: 'M 50,50 C 67,39 80,30 94,18',   delay: 0.22 },
+    { d: 'M 50,50 C 72,50 84,50 98,50',   delay: 0.08 },
+    { d: 'M 50,50 C 70,63 82,72 94,82',   delay: 0.32 },
+    { d: 'M 50,50 C 52,68 53,80 54,97',   delay: 0.18 },
+    { d: 'M 50,50 C 30,65 18,74 6,82',    delay: 0.28 },
+    { d: 'M 50,50 C 26,50 12,50 1,50',    delay: 0.04 },
+    { d: 'M 50,50 C 38,38 28,28 14,14',   delay: 0.42 },
+    { d: 'M 50,50 C 62,38 72,28 84,14',   delay: 0.36 },
+  ], []);
 
-  if (!isVisible) return null;
+  /* ── Bloom forms ── */
+  const bloomForms = useMemo(() =>
+    Array.from({ length: 18 }, (_, i) => ({
+      x:  12 + (i * 6.8) % 76,
+      y:  14 + (i * 5.9) % 72,
+      dur: 4.2 + (i % 4) * 1.0,
+      delay: (i * 0.48) % 7,
+      shape: i % 3,
+    })),
+  []);
+
+  const isFast = ['pulse', 'ekg', 'divide'].includes(stage);
+  const isSlow = ['heart', 'bloom', 'reveal'].includes(stage);
+  const showCells  = ['divide', 'heart', 'bloom', 'reveal'].includes(stage);
+  const showHeart  = ['heart', 'bloom', 'reveal'].includes(stage);
+  const showVeins  = ['heart', 'bloom', 'reveal'].includes(stage);
+  const showBloom  = ['bloom', 'reveal'].includes(stage);
+  const showReveal = stage === 'reveal';
+
+  const beatAnim = isFast ? 'beat-fast 0.4s ease-in-out infinite'
+    : isSlow ? 'beat-slow 1.0s ease-in-out infinite' : 'none';
+  const ringAnim = isFast ? 'beat-ring-fast' : 'beat-ring-slow';
+  const ringDur  = isFast ? 0.4 : 1.0;
+  const ringGap  = isFast ? 0.2 : 0.5;
+
+  const bgGradient: Record<Stage, string> = {
+    void:   'radial-gradient(ellipse 80% 70% at 50% 50%, #070010 0%, #030008 100%)',
+    pulse:  'radial-gradient(ellipse 80% 70% at 50% 50%, #130406 0%, #07000b 100%)',
+    ekg:    'radial-gradient(ellipse 80% 70% at 50% 50%, #1e0804 0%, #0b0208 100%)',
+    divide: 'radial-gradient(ellipse 80% 70% at 50% 50%, #2a0f07 0%, #0f0308 100%)',
+    heart:  'radial-gradient(ellipse 70% 65% at 50% 52%, #3c1a08 0%, #190608 75%, #09021c 100%)',
+    bloom:  'radial-gradient(ellipse 75% 70% at 50% 52%, #4e220c 0%, #2a0d0a 58%, #0d061a 100%)',
+    reveal: 'radial-gradient(ellipse 80% 75% at 50% 52%, #5a2c12 0%, #361408 52%, #0d061a 100%)',
+    outro:  'radial-gradient(ellipse 80% 75% at 50% 52%, #5a2c12 0%, #361408 52%, #0d061a 100%)',
+  };
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-[#000000] flex items-center justify-center">
-      
-      {/* Distant cosmic stars with depth */}
-      <div className="absolute inset-0">
-        {/* Deep background stars */}
-        {[...Array(getOptimalParticleCount(50))].map((_, i) => (
-          <motion.div
-            key={`star-bg-${i}`}
-            className="absolute bg-white rounded-full opacity-20"
+    <div className="relative w-full h-full overflow-hidden"
+      style={{ background: bgGradient[stage], transition: 'background 3.5s ease' }}>
+      <style>{CSS}</style>
+
+      {/* ── Depth vignette ── */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse 90% 85% at 50% 50%, transparent 18%, rgba(4,0,10,0.75) 100%)' }} />
+
+      {/* ── Starfield ── */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none"
+        style={{ opacity: stage === 'void' ? 0.5 : showBloom ? 0.12 : 0.25 }}>
+        {bgStars.map((s, i) => (
+          <circle key={i} cx={`${s.x}%`} cy={`${s.y}%`} r={s.r}
+            fill="rgba(255,240,220,1)"
             style={{
-              width: Math.random() * 1.5 + 0.5 + 'px',
-              height: Math.random() * 1.5 + 0.5 + 'px',
-              left: Math.random() * 100 + '%',
-              top: Math.random() * 100 + '%',
-            }}
-            animate={{
-              opacity: completed ? 0 : [0.15, 0.4, 0.15],
-              scale: completed ? 1 : [1, 1.2, 1]
-            }}
-            transition={{
-              duration: 3 + Math.random() * 4,
-              repeat: completed ? 0 : 5, // Limit repeats
-              delay: Math.random() * 2
+              animation: `star-twinkle ${s.dur}s ease-in-out ${s.delay}s infinite`,
+              opacity: s.opacity,
             }}
           />
         ))}
-        
-        {/* Closer foreground stars */}
-        {[...Array(getOptimalParticleCount(30))].map((_, i) => (
-          <motion.div
-            key={`star-fg-${i}`}
-            className="absolute bg-white rounded-full"
+      </svg>
+
+      {/* ══════════════════════════════════════════
+          CENTRAL BEAT POINT
+          ══════════════════════════════════════════ */}
+      {/*
+        Beat center — all children use negative margins to center without
+        transform so CSS scale animations don't fight positional transforms.
+      */}
+      {stage !== 'void' && (
+        <div className="absolute pointer-events-none" style={{ left: '50%', top: '50%' }}>
+
+          {/* Expanding core bloom on initial ignition */}
+          {stage === 'pulse' && (
+            <div className="absolute rounded-full"
+              style={{
+                width: '28px', height: '28px',
+                marginLeft: '-14px', marginTop: '-14px',
+                background: 'radial-gradient(circle, rgba(255,220,150,0.9), rgba(255,140,40,0.4))',
+                animation: 'core-bloom 1.0s ease-out forwards',
+              }} />
+          )}
+
+          {/* Pulse rings — negative margin centers them; keyframe only scales */}
+          {(isFast || isSlow) && [0, 1, 2, 3].map(i => (
+            <div key={`ring-${i}-${stage}`}
+              className="absolute rounded-full"
+              style={{
+                width: '22px', height: '22px',
+                marginLeft: '-11px', marginTop: '-11px',
+                border: `${isFast ? '2px' : '1.5px'} solid rgba(255,145,55,${isFast ? 0.75 : 0.6})`,
+                boxShadow: `0 0 ${isFast ? 12 : 8}px rgba(255,120,40,${isFast ? 0.55 : 0.4})`,
+                animation: `${ringAnim} ${ringDur}s ease-out ${i * ringGap}s infinite`,
+                opacity: 0,
+              }}
+            />
+          ))}
+
+          {/* Ambient core glow */}
+          <div className="absolute rounded-full"
             style={{
-              width: Math.random() * 2.5 + 0.8 + 'px',
-              height: Math.random() * 2.5 + 0.8 + 'px',
-              left: Math.random() * 100 + '%',
-              top: Math.random() * 100 + '%',
-              boxShadow: '0 0 4px rgba(255, 255, 255, 0.6)'
-            }}
-            animate={{
-              opacity: completed ? 0 : [0.3, 0.8, 0.3],
-              scale: completed ? 1 : [1, 1.3, 1]
-            }}
-            transition={{
-              duration: 2 + Math.random() * 2,
-              repeat: completed ? 0 : 7, // Limit repeats
-              delay: Math.random() * 2
+              width: '110px', height: '110px',
+              marginLeft: '-55px', marginTop: '-55px',
+              background: 'radial-gradient(circle, rgba(255,145,55,0.2) 0%, rgba(255,100,30,0.06) 55%, transparent 75%)',
+              filter: 'blur(16px)',
+              animation: beatAnim,
             }}
           />
-        ))}
-      </div>
 
-      {/* STAGE 1: HEARTBEAT - Life's first pulse in the void */}
-      <AnimatePresence>
-        {stage === 'heartbeat' && (
-          <>
-            {/* Epic heartbeat rings */}
-            {[0, 1, 2, 3, 4].map((i) => (
-              <motion.div
-                key={`heartbeat-${i}`}
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-                style={{
-                  width: '120px',
-                  height: '120px',
-                  borderRadius: '50%',
-                  border: '3px solid rgba(251, 191, 36, 0.7)',
-                }}
-                initial={{ scale: 1, opacity: 0 }}
-                animate={{
-                  scale: [1, 6],
-                  opacity: [0.9, 0]
-                }}
-                exit={{ opacity: 0 }}
-                transition={{
-                  duration: 2,
-                  delay: i * 0.4,
-                  ease: cinematicEase
-                }}
-              />
-            ))}
-            
-            {/* Central heartbeat core with intense glow */}
-            <motion.div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{
-                scale: [0.3, 1, 0.3, 1],
-                opacity: [0, 0.9, 0, 0.9]
-              }}
-              exit={{ opacity: 0 }}
-              transition={{
-                duration: 2,
-                times: [0, 0.25, 0.5, 0.75],
-                ease: 'easeInOut'
-              }}
-            >
-              <div
-                className="w-40 h-40 rounded-full"
-                style={{
-                  background: 'radial-gradient(circle, rgba(251,191,36,1) 0%, rgba(249,115,22,0.8) 40%, rgba(217,70,239,0.4) 70%, transparent 90%)',
-                  filter: 'blur(30px)',
-                  boxShadow: '0 0 80px rgba(251, 191, 36, 0.8)'
-                }}
-              />
-            </motion.div>
-
-            {/* Heartbeat sound wave visualization */}
-            {[...Array(8)].map((_, i) => (
-              <motion.div
-                key={`wave-${i}`}
-                className="absolute left-1/2 top-1/2"
-                style={{
-                  width: '3px',
-                  height: '60px',
-                  background: 'linear-gradient(to bottom, rgba(251,191,36,0.8), transparent)',
-                  filter: 'blur(2px)',
-                  transformOrigin: 'bottom center'
-                }}
-                animate={{
-                  x: [-200 + i * 50, -250 + i * 50],
-                  scaleY: [0.2, 1.5, 0.2, 1.5, 0.2],
-                  opacity: [0, 1, 1, 1, 0]
-                }}
-                transition={{
-                  duration: 2,
-                  ease: 'easeInOut'
-                }}
-              />
-            ))}
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* STAGE 2: IGNITION - The spark of creation */}
-      <AnimatePresence>
-        {(stage === 'ignition') && (
-          <>
-            {/* Brilliant ignition flash */}
-            <motion.div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ 
-                scale: [0, 2, 1],
-                opacity: [0, 1, 0.9]
-              }}
-              exit={{ opacity: 0, scale: 1.5 }}
-              transition={{ duration: 2, ease: cinematicEase }}
-            >
-              <div
-                className="w-64 h-64 rounded-full"
-                style={{
-                  background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(254,243,199,1) 15%, rgba(251,191,36,0.95) 35%, rgba(249,115,22,0.8) 60%, rgba(234,88,12,0.5) 85%, transparent 100%)',
-                  filter: 'blur(25px)',
-                  boxShadow: '0 0 150px rgba(251, 191, 36, 1), 0 0 300px rgba(249, 115, 22, 0.9)'
-                }}
-              />
-            </motion.div>
-
-            {/* Energy burst rays */}
-            {[...Array(getOptimalParticleCount(30))].map((_, i) => {
-              const angle = (i / getOptimalParticleCount(30)) * 360;
-              return (
-                <motion.div
-                  key={`ignition-ray-${i}`}
-                  className="absolute left-1/2 top-1/2 origin-left"
-                  style={{
-                    width: '100%',
-                    height: '6px',
-                    background: 'linear-gradient(to right, rgba(251,191,36,0.9), transparent 50%)',
-                    transform: `rotate(${angle}deg)`,
-                    filter: 'blur(4px)'
-                  }}
-                  initial={{ scaleX: 0, opacity: 0 }}
-                  animate={{ scaleX: 1, opacity: [0, 1, 0.7] }}
-                  exit={{ opacity: 0 }}
-                  transition={{
-                    duration: 1.5,
-                    delay: i * 0.02,
-                    ease: 'easeOut'
-                  }}
-                />
-              );
-            })}
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* MAIN PLANET SPHERE - Persistent across stages */}
-      <AnimatePresence>
-        {(stage === 'formation' || stage === 'waters' || stage === 'awakening' || stage === 'radiance') && (
-          <motion.div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{
-              scale: stage === 'radiance' ? 1.12 : 1,
-              opacity: 1,
-              rotate: stage === 'radiance' ? 360 : 0
-            }}
-            transition={{
-              scale: { duration: stage === 'formation' ? 2.5 : 3, ease: cinematicEase },
-              opacity: { duration: 2 },
-              rotate: { duration: stage === 'radiance' ? 15 : 0, ease: 'linear' }
-            }}
-            style={{ zIndex: 20 }}
-          >
-            {/* PLANET CORE CONTAINER */}
+          {/* The beating point — entry then steady loop (no forwards+infinite chain) */}
+          {!showHeart && (
             <div
-              className="relative rounded-full"
+              className="absolute rounded-full"
               style={{
-                width: '450px',
-                height: '450px',
-                overflow: 'hidden'
-              }}
-            >
-              
-              {/* STAGE 3: FORMATION - Molten sphere forms */}
-              <AnimatePresence>
-                {(stage === 'formation') && (
-                  <motion.div
-                    className="absolute inset-0"
-                    style={{
-                      background: 'radial-gradient(circle at 42% 38%, #fef3c7 0%, #fde68a 15%, #fbbf24 30%, #f59e0b 50%, #ea580c 70%, #dc2626 85%, #991b1b 95%)',
-                      borderRadius: '50%'
-                    }}
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{
-                      opacity: 1,
-                      scale: 1
-                    }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 2, ease: cinematicEase }}
-                  >
-                    {/* Molten surface texture */}
-                    <motion.div
-                      className="absolute inset-0"
-                      animate={{
-                        opacity: stage === 'formation' && !completed ? [0.8, 1, 0.8] : 1,
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: stage === 'formation' && !completed ? 2 : 0, // Limit repeats
-                        ease: 'easeInOut'
-                      }}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* STAGE 4: WATERS - Ocean floods the world with ENHANCED REALISM */}
-              <AnimatePresence>
-                {(stage === 'waters' || stage === 'awakening' || stage === 'radiance') && (
-                  <>
-                    {/* Deep ocean base - VIVID TURQUOISE/CYAN - UNMISSABLE CHANGE */}
-                    <motion.div
-                      className="absolute inset-0"
-                      style={{
-                        background: 'radial-gradient(circle at 42% 35%, #06b6d4 0%, #0891b2 20%, #0e7490 40%, #155e75 60%, #164e63 80%, #0c4a6e 100%)',
-                        borderRadius: '50%'
-                      }}
-                      initial={{ opacity: 0, scale: 0.7 }}
-                      animate={{
-                        opacity: 1,
-                        scale: 1.1
-                      }}
-                      transition={{ duration: 2.5, ease: smoothEase }}
-                    />
-
-                    {/* MASSIVE OCEAN WAVES - HUGE AND OBVIOUS */}
-                    {[0, 1, 2].map(i => (
-                      <motion.div
-                        key={`giant-wave-${i}`}
-                        className="absolute inset-0"
-                        style={{
-                          background: `radial-gradient(ellipse at ${30 + i * 20}% ${40 + i * 10}%, rgba(255, 255, 255, 0.6) 0%, rgba(34, 211, 238, 0.4) 25%, transparent 50%)`,
-                          borderRadius: '50%',
-                          mixBlendMode: 'overlay',
-                          filter: 'blur(8px)'
-                        }}
-                        animate={{
-                          scale: [0.8, 1.3, 0.8],
-                          opacity: [0.3, 0.9, 0.3],
-                          x: ['-5%', '5%', '-5%']
-                        }}
-                        transition={{
-                          duration: 3 + i * 0.5,
-                          repeat: completed ? 0 : 3,
-                          delay: i * 0.6,
-                          ease: 'easeInOut'
-                        }}
-                      />
-                    ))}
-
-                    {/* GIANT GLOWING WATER HIGHLIGHTS - IMPOSSIBLE TO MISS */}
-                    {[0, 1, 2, 3].map(i => (
-                      <motion.div
-                        key={`mega-shimmer-${i}`}
-                        className="absolute rounded-full"
-                        style={{
-                          left: `${20 + i * 15}%`,
-                          top: `${30 + i * 10}%`,
-                          width: '80px',
-                          height: '80px',
-                          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(6, 182, 212, 0.6) 50%, transparent 100%)',
-                          filter: 'blur(15px)',
-                          boxShadow: '0 0 60px rgba(6, 182, 212, 1)'
-                        }}
-                        animate={{
-                          opacity: [0, 1, 0],
-                          scale: [0.5, 1.5, 0.5],
-                          rotate: [0, 180, 360]
-                        }}
-                        transition={{
-                          duration: 3,
-                          repeat: completed ? 0 : 4,
-                          delay: i * 0.5,
-                          ease: 'easeInOut'
-                        }}
-                      />
-                    ))}
-                  </>
-                )}
-              </AnimatePresence>
-
-              {/* Water droplets rushing in - epic cascade */}
-              <AnimatePresence>
-                {stage === 'waters' && (
-                  <>
-                    {[...Array(getOptimalParticleCount(120))].map((_, i) => {
-                      const angle = (i / getOptimalParticleCount(120)) * Math.PI * 2;
-                      const distance = 700 + Math.random() * 300;
-                      const size = 6 + Math.random() * 6;
-                      return (
-                        <motion.div
-                          key={`water-${i}`}
-                          className="absolute"
-                          style={{
-                            width: `${size}px`,
-                            height: `${size}px`,
-                            borderRadius: '50%',
-                            background: '#38bdf8',
-                            boxShadow: '0 0 12px rgba(56, 189, 248, 1)',
-                            left: '50%',
-                            top: '50%',
-                            filter: 'blur(1.5px)'
-                          }}
-                          initial={{
-                            x: Math.cos(angle) * distance,
-                            y: Math.sin(angle) * distance,
-                            opacity: 0,
-                            scale: 0.3
-                          }}
-                          animate={{
-                            x: 0,
-                            y: 0,
-                            opacity: [0, 1, 0],
-                            scale: [0.3, 1.5, 0]
-                          }}
-                          transition={{
-                            duration: 1.5 + Math.random() * 0.8,
-                            delay: i * 0.008,
-                            ease: 'easeIn'
-                          }}
-                        />
-                      );
-                    })}
-                  </>
-                )}
-              </AnimatePresence>
-
-              {/* STAGE 5: AWAKENING - Continents rise and bloom */}
-              <AnimatePresence>
-                {(stage === 'awakening' || stage === 'radiance') && (
-                  <svg
-                    viewBox="0 0 450 450"
-                    className="absolute inset-0 w-full h-full"
-                    style={{ pointerEvents: 'none', zIndex: 10 }}
-                  >
-                    {/* MASSIVELY LARGER CONTINENT 1 - Takes up 40% more space */}
-                    <motion.path
-                      d="M 60,100 Q 95,75 140,70 Q 185,75 220,100 Q 250,130 260,170 Q 265,210 250,250 Q 230,285 190,300 Q 150,310 110,295 Q 75,275 60,240 Q 48,200 50,160 Q 52,120 60,100 Z"
-                      fill={stage === 'radiance' ? '#22c55e' : '#047857'}
-                      initial={{ opacity: 0, scale: 0, x: 225, y: 225 }}
-                      animate={{
-                        opacity: 1,
-                        scale: 1,
-                        x: 0,
-                        y: 0
-                      }}
-                      transition={{
-                        duration: 2.5,
-                        delay: 0.3,
-                        ease: cinematicEase
-                      }}
-                      style={{
-                        filter: stage === 'radiance'
-                          ? 'drop-shadow(0 0 20px rgba(34, 197, 94, 1))'
-                          : 'drop-shadow(0 0 15px rgba(4, 120, 87, 0.9))',
-                        transformOrigin: '50% 50%'
-                      }}
-                    />
-
-                    {/* MASSIVELY LARGER CONTINENT 2 - Takes up 45% more space */}
-                    <motion.path
-                      d="M 240,60 Q 285,45 330,55 Q 375,75 400,115 Q 415,160 415,205 Q 410,250 385,285 Q 355,315 310,325 Q 265,330 225,310 Q 195,285 185,245 Q 180,200 190,155 Q 205,105 225,75 Q 232,65 240,60 Z"
-                      fill={stage === 'radiance' ? '#10b981' : '#065f46'}
-                      initial={{ opacity: 0, scale: 0, x: 225, y: 225 }}
-                      animate={{
-                        opacity: 1,
-                        scale: 1,
-                        x: 0,
-                        y: 0
-                      }}
-                      transition={{
-                        duration: 2.5,
-                        delay: 0.6,
-                        ease: cinematicEase
-                      }}
-                      style={{
-                        filter: stage === 'radiance'
-                          ? 'drop-shadow(0 0 20px rgba(16, 185, 129, 1))'
-                          : 'drop-shadow(0 0 15px rgba(6, 95, 70, 0.9))',
-                        transformOrigin: '50% 50%'
-                      }}
-                    />
-
-                    {/* MASSIVELY LARGER CONTINENT 3 - Takes up 50% more space */}
-                    <motion.path
-                      d="M 100,250 Q 145,230 195,240 Q 240,260 270,300 Q 285,345 280,390 Q 265,430 230,450 Q 185,465 140,455 Q 95,435 70,395 Q 55,350 60,305 Q 70,265 85,250 Q 92,245 100,250 Z"
-                      fill={stage === 'radiance' ? '#84cc16' : '#4d7c0f'}
-                      initial={{ opacity: 0, scale: 0, x: 225, y: 225 }}
-                      animate={{
-                        opacity: 1,
-                        scale: 1,
-                        x: 0,
-                        y: 0
-                      }}
-                      transition={{
-                        duration: 2.5,
-                        delay: 0.9,
-                        ease: cinematicEase
-                      }}
-                      style={{
-                        filter: stage === 'radiance'
-                          ? 'drop-shadow(0 0 20px rgba(132, 204, 22, 1))'
-                          : 'drop-shadow(0 0 15px rgba(77, 124, 15, 0.9))',
-                        transformOrigin: '50% 50%'
-                      }}
-                    />
-
-                    {/* ENHANCED: Coastal highlights (beaches/shores) on continents */}
-                    {/* Northern continent beach */}
-                    <motion.path
-                      d="M 95,140 Q 120,125 145,123 Q 170,125 195,138"
-                      stroke="rgba(254, 243, 199, 0.7)"
-                      strokeWidth="4"
-                      fill="none"
-                      initial={{ pathLength: 0, opacity: 0 }}
-                      animate={{ pathLength: 1, opacity: 0.8 }}
-                      transition={{ duration: 1.5, delay: 1.5, ease: 'easeOut' }}
-                      style={{ filter: 'blur(1px)' }}
-                    />
-
-                    {/* Eastern continent beach */}
-                    <motion.path
-                      d="M 245,105 Q 275,95 300,100 Q 325,110 345,130"
-                      stroke="rgba(254, 243, 199, 0.7)"
-                      strokeWidth="4"
-                      fill="none"
-                      initial={{ pathLength: 0, opacity: 0 }}
-                      animate={{ pathLength: 1, opacity: 0.8 }}
-                      transition={{ duration: 1.5, delay: 1.8, ease: 'easeOut' }}
-                      style={{ filter: 'blur(1px)' }}
-                    />
-
-                    {/* ENHANCED: Mountain ranges on continents (darker green peaks) */}
-                    {/* Northern continent mountains */}
-                    {[0, 1, 2, 3, 4].map(i => (
-                      <motion.circle
-                        key={`n-mountain-${i}`}
-                        cx={110 + i * 18}
-                        cy={148 + Math.sin(i) * 8}
-                        r={6 + Math.random() * 4}
-                        fill="rgba(6, 78, 59, 0.8)"
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.8, delay: 1.8 + i * 0.1, ease: 'easeOut' }}
-                        style={{ filter: 'blur(0.5px)' }}
-                      />
-                    ))}
-
-                    {/* Eastern continent mountains */}
-                    {[0, 1, 2, 3].map(i => (
-                      <motion.circle
-                        key={`e-mountain-${i}`}
-                        cx={260 + i * 20}
-                        cy={138 + Math.sin(i * 1.5) * 10}
-                        r={5 + Math.random() * 3}
-                        fill="rgba(4, 120, 87, 0.8)"
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.8, delay: 2.1 + i * 0.1, ease: 'easeOut' }}
-                        style={{ filter: 'blur(0.5px)' }}
-                      />
-                    ))}
-
-                    {/* Forest vegetation blooming */}
-                    {stage === 'radiance' && [...Array(getOptimalParticleCount(50))].map((_, j) => {
-                      const x = 90 + Math.random() * 270;
-                      const y = 100 + Math.random() * 270;
-                      const size = 2 + Math.random() * 5;
-                      return (
-                        <motion.circle
-                          key={`veg-${j}`}
-                          cx={x}
-                          cy={y}
-                          r={size}
-                          fill="#065f46"
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{ 
-                            opacity: [0, 1, 0.9],
-                            scale: [0, 1.3, 1]
-                          }}
-                          transition={{ 
-                            delay: 0.5 + j * 0.02, 
-                            duration: 0.8,
-                            ease: cinematicEase
-                          }}
-                          style={{
-                            filter: 'drop-shadow(0 0 3px rgba(6, 95, 70, 0.8))'
-                          }}
-                        />
-                      );
-                    })}
-                  </svg>
-                )}
-              </AnimatePresence>
-
-              {/* MASSIVE BRIGHT WHITE CLOUDS - GIANT AND UNMISSABLE */}
-              <AnimatePresence>
-                {(stage === 'awakening' || stage === 'radiance') && (
-                  <>
-                    {/* HUGE cloud formations */}
-                    {[0, 1, 2, 3].map((i) => {
-                      const size = 150 + i * 30;
-                      return (
-                        <motion.div
-                          key={`mega-cloud-${i}`}
-                          className="absolute"
-                          style={{
-                            width: `${size}px`,
-                            height: `${size * 0.7}px`,
-                            left: `${10 + i * 22}%`,
-                            top: `${15 + i * 15}%`,
-                            background: 'radial-gradient(ellipse, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.7) 40%, rgba(255, 255, 255, 0.4) 70%, transparent 90%)',
-                            borderRadius: '50%',
-                            filter: 'blur(25px)',
-                            boxShadow: '0 0 50px rgba(255, 255, 255, 0.9)'
-                          }}
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{
-                            opacity: [0, 1, 0.9],
-                            scale: [0, 1.2, 1],
-                            x: [0, 30, 0],
-                            rotate: [0, 15, 0]
-                          }}
-                          transition={{
-                            opacity: { duration: 2, delay: i * 0.3 },
-                            scale: { duration: 2.5, delay: i * 0.3 },
-                            x: { duration: 6 + i, repeat: completed ? 0 : 2, ease: 'easeInOut' },
-                            rotate: { duration: 8, repeat: completed ? 0 : 1, ease: 'easeInOut' }
-                          }}
-                        />
-                      );
-                    })}
-                  </>
-                )}
-              </AnimatePresence>
-
-            </div>
-
-            {/* ENHANCED: Atmospheric rim lighting (scattering effect) */}
-            <motion.div
-              className="absolute inset-0 rounded-full pointer-events-none"
-              style={{
-                width: '450px',
-                height: '450px',
-                background: 'radial-gradient(circle at 30% 30%, transparent 0%, transparent 65%, rgba(125, 211, 252, 0.25) 75%, rgba(56, 189, 248, 0.4) 85%, rgba(14, 165, 233, 0.25) 95%, transparent 100%)',
-                opacity: stage === 'waters' || stage === 'awakening' || stage === 'radiance' ? 0.8 : 0
-              }}
-              animate={{
-                opacity: stage === 'waters' || stage === 'awakening' || stage === 'radiance' ? [0.6, 0.9, 0.6] : 0
-              }}
-              transition={{
-                opacity: { duration: 3, repeat: completed ? 0 : 3, ease: 'easeInOut' }
+                width: '22px', height: '22px',
+                marginLeft: '-11px', marginTop: '-11px',
+                background: 'radial-gradient(circle, #FFEEC0 0%, #FFA040 38%, #FF5C10 80%)',
+                boxShadow: '0 0 16px rgba(255,145,55,1), 0 0 38px rgba(255,100,30,0.6)',
+                animation: beatReady
+                  ? (isFast ? 'beat-fast 0.4s ease-in-out infinite' : 'beat-slow 1.0s ease-in-out infinite')
+                  : 'beat-enter 0.55s cubic-bezier(0.22,1,0.36,1) both',
               }}
             />
+          )}
+        </div>
+      )}
 
-            {/* MASSIVE BRIGHT PLANET GLOW - CYAN/TURQUOISE - UNMISSABLE */}
-            <motion.div
-              className="absolute inset-0 rounded-full pointer-events-none"
-              style={{
-                width: '450px',
-                height: '450px',
-                boxShadow: stage === 'radiance'
-                  ? '0 0 100px rgba(6, 182, 212, 1), 0 0 200px rgba(8, 145, 178, 1), 0 0 350px rgba(14, 116, 144, 0.9)'
-                  : stage === 'awakening'
-                  ? '0 0 70px rgba(6, 182, 212, 1), 0 0 140px rgba(8, 145, 178, 0.8)'
-                  : stage === 'waters'
-                  ? '0 0 70px rgba(6, 182, 212, 1), 0 0 140px rgba(8, 145, 178, 0.8)'
-                  : '0 0 50px rgba(251, 191, 36, 0.8), 0 0 100px rgba(249, 115, 22, 0.6)'
-              }}
-              animate={{
-                boxShadow: stage === 'radiance' && !completed
-                  ? [
-                      '0 0 100px rgba(6, 182, 212, 1), 0 0 200px rgba(8, 145, 178, 1), 0 0 350px rgba(14, 116, 144, 0.9)',
-                      '0 0 130px rgba(6, 182, 212, 1), 0 0 260px rgba(8, 145, 178, 1), 0 0 450px rgba(14, 116, 144, 1)',
-                      '0 0 100px rgba(6, 182, 212, 1), 0 0 200px rgba(8, 145, 178, 1), 0 0 350px rgba(14, 116, 144, 0.9)'
-                    ]
-                  : undefined
-              }}
-              transition={{
-                duration: 2.5,
-                repeat: stage === 'radiance' && !completed ? 2 : 0,
-                ease: 'easeInOut'
-              }}
-            />
-
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* STAGE 6: RADIANCE - Living energy explosion */}
+      {/* ══════════════════════════════════════════
+          EKG GOLDEN THREAD
+          ══════════════════════════════════════════ */}
       <AnimatePresence>
-        {stage === 'radiance' && (
-          <>
-            {/* Life energy rays emanating */}
-            {[...Array(getOptimalParticleCount(50))].map((_, i) => {
-              const angle = (i / getOptimalParticleCount(50)) * 360;
-              return (
-                <motion.div
-                  key={`life-ray-${i}`}
-                  className="absolute left-1/2 top-1/2 origin-left"
-                  style={{
-                    width: '130%',
-                    height: '8px',
-                    background: 'linear-gradient(to right, rgba(16, 185, 129, 0.9), transparent 55%)',
-                    transform: `rotate(${angle}deg)`,
-                    filter: 'blur(4px)',
-                    zIndex: 15
-                  }}
-                  initial={{ scaleX: 0, opacity: 0 }}
-                  animate={{
-                    scaleX: 1,
-                    opacity: [0, 1, 0.8],
-                    height: completed ? '8px' : ['8px', '12px', '8px']
-                  }}
-                  transition={{
-                    scaleX: { duration: 1, delay: i * 0.008, ease: 'easeOut' },
-                    opacity: { duration: 1, delay: i * 0.008 },
-                    height: { duration: 2, delay: 1, repeat: completed ? 0 : 2, ease: 'easeInOut' } // Limit repeats
-                  }}
-                />
-              );
-            })}
-
-            {/* Life particles bursting outward */}
-            {[...Array(getOptimalParticleCount(70))].map((_, i) => {
-              const angle = (i / getOptimalParticleCount(70)) * Math.PI * 2;
-              const distance = 280 + Math.random() * 350;
-              const size = 8 + Math.random() * 6;
-              return (
-                <motion.div
-                  key={`life-particle-${i}`}
-                  className="absolute left-1/2 top-1/2"
-                  style={{
-                    width: `${size}px`,
-                    height: `${size}px`,
-                    borderRadius: '50%',
-                    background: '#10b981',
-                    boxShadow: '0 0 18px rgba(16, 185, 129, 1)',
-                    filter: 'blur(2.5px)',
-                    zIndex: 25
-                  }}
-                  initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
-                  animate={{
-                    scale: [0, 1.5, 1],
-                    x: Math.cos(angle) * distance,
-                    y: Math.sin(angle) * distance,
-                    opacity: [1, 1, 0]
-                  }}
-                  transition={{
-                    duration: 2.5,
-                    delay: i * 0.015,
-                    ease: cinematicEase
-                  }}
-                />
-              );
-            })}
-
-            {/* Epic title reveal */}
-            <motion.div
-              className="absolute inset-x-0 bottom-[8%] z-40 text-center px-8"
-              initial={{ opacity: 0, y: 80, scale: 0.8 }}
-              animate={{ 
-                opacity: 1, 
-                y: 0,
-                scale: 1
-              }}
-              transition={{ 
-                duration: 1.3, 
-                delay: 0.8, 
-                ease: cinematicEase 
-              }}
-            >
-              <motion.h2 
-                className="text-4xl md:text-7xl font-bold mb-4"
-                style={{
-                  background: 'linear-gradient(135deg, #10b981, #22c55e, #84cc16, #65a30d, #14b8a6)',
-                  backgroundSize: '250% 250%',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  filter: 'drop-shadow(0 0 35px rgba(16, 185, 129, 0.9))',
-                }}
-                animate={{
-                  backgroundPosition: completed ? '0% 50%' : ['0% 50%', '100% 50%', '0% 50%']
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: completed ? 0 : 2, // Limit repeats
-                  ease: 'linear'
-                }}
-              >
-                {capsuleTitle}
-              </motion.h2>
-              <motion.p
-                className="text-xl md:text-3xl text-white font-light tracking-wider"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 1.4, ease: cinematicEase }}
-                style={{
-                  textShadow: '0 0 40px rgba(255, 255, 255, 0.8), 0 0 80px rgba(16, 185, 129, 0.6)'
-                }}
-              >
-                A new world begins 🌍
-              </motion.p>
-            </motion.div>
-          </>
+        {['ekg', 'divide', 'heart', 'bloom', 'reveal'].includes(stage) && (
+          <motion.svg
+            viewBox="0 -20 375 140"
+            preserveAspectRatio="none"
+            className="absolute pointer-events-none"
+            style={{
+              left: 0, top: '50%',
+              width: '100%', height: '96px',
+              transform: 'translateY(-48px)',
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: stage === 'heart' || showBloom ? 0.22 : 0.85 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: stage === 'heart' ? 3 : 0.6 }}
+          >
+            <defs>
+              <filter id="ekgGlow">
+                <feGaussianBlur stdDeviation="3" result="b" />
+                <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            {/* Wide glow halo */}
+            <motion.path
+              d={EKG_PATH}
+              stroke="rgba(255,150,50,0.45)"
+              strokeWidth="8"
+              fill="none"
+              filter="url(#ekgGlow)"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 2.6, ease: 'easeInOut' }}
+            />
+            {/* Mid amber layer */}
+            <motion.path
+              d={EKG_PATH}
+              stroke="rgba(255,185,80,0.7)"
+              strokeWidth="2.5"
+              fill="none"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 2.6, ease: 'easeInOut' }}
+            />
+            {/* Sharp gold core */}
+            <motion.path
+              d={EKG_PATH}
+              stroke="rgba(255,225,120,0.98)"
+              strokeWidth="1"
+              fill="none"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 2.6, ease: 'easeInOut' }}
+            />
+          </motion.svg>
         )}
       </AnimatePresence>
 
-      {/* Outro fade - smooth to black */}
+      {/* ══════════════════════════════════════════
+          CELL DIVISION
+          ══════════════════════════════════════════ */}
+      <AnimatePresence>
+        {showCells && (
+          <div className="absolute inset-0 pointer-events-none">
+
+            {/* Division sparks */}
+            {stage === 'divide' && divSparks.map((f, i) => (
+              <div key={i}
+                className="absolute rounded-full"
+                style={{
+                  left: `${f.x}%`, top: `${f.y}%`,
+                  width: `${f.size}px`, height: `${f.size}px`,
+                  background: f.color,
+                  animation: `cell-divide-flash ${f.dur}s ease-out ${f.delay}s both`,
+                }} />
+            ))}
+
+            {/* Filaments — SVG viewBox 0 0 100 100 */}
+            <svg className="absolute inset-0 w-full h-full"
+              viewBox="0 0 100 100" preserveAspectRatio="none">
+              {cells.filter(c => c.gen > 1).map((c, i) => (
+                <motion.path key={i}
+                  d={`M 50,50 L ${c.x.toFixed(1)},${c.y.toFixed(1)}`}
+                  stroke="rgba(255,170,65,0.32)"
+                  strokeWidth="0.28"
+                  fill="none"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 0.6 }}
+                  transition={{ duration: 0.5, delay: (c.gen - 1) * 0.55 + c.delay }}
+                />
+              ))}
+            </svg>
+
+            {/* Cell bodies */}
+            {cells.map((c, i) => {
+              const genDelay  = (c.gen - 1) * 0.55;
+              const colors = ['rgba(255,148,55,1)', 'rgba(255,118,92,0.94)', 'rgba(255,195,82,0.9)', 'rgba(255,140,60,0.85)'];
+              const fill = colors[(c.gen - 1) % colors.length];
+              const glow = c.gen === 1
+                ? '0 0 18px rgba(255,140,50,1), 0 0 44px rgba(255,105,30,0.6)'
+                : '0 0 10px rgba(255,148,62,0.8)';
+              return (
+                <motion.div key={i}
+                  className="absolute rounded-full"
+                  style={{
+                    left: `${c.x}%`, top: `${c.y}%`,
+                    width: `${c.r * 2}px`, height: `${c.r * 2}px`,
+                    transform: 'translate(-50%,-50%)',
+                    background: `radial-gradient(circle at 33% 30%, rgba(255,248,210,0.9), ${fill})`,
+                    boxShadow: glow,
+                    border: '1px solid rgba(255,210,130,0.38)',
+                  }}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: c.gen === 1 && showHeart ? 0 : 0.9 }}
+                  transition={{ duration: 0.55, delay: genDelay + c.delay, ease: [0.22, 1, 0.36, 1] }}
+                />
+              );
+            })}
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ══════════════════════════════════════════
+          THE HEART
+          CSS-only animation: enter → breathe
+          ══════════════════════════════════════════ */}
+      <AnimatePresence>
+        {showHeart && (
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              left: '50%', top: '50%',
+              width: '100px', height: '78px',
+              transformOrigin: 'center center',
+              animation: 'heart-enter 0.95s cubic-bezier(0.22,1,0.36,1) forwards, heart-breathe 1.0s ease-in-out 0.95s infinite',
+            }}
+          >
+            <svg viewBox="0 0 100 75" width="100" height="78" style={{ overflow: 'visible' }}>
+              <defs>
+                <radialGradient id="hFillGrad" cx="50%" cy="38%" r="64%">
+                  <stop offset="0%"   stopColor="#FFEAA0" stopOpacity="0.97" />
+                  <stop offset="22%"  stopColor="#FFA048" stopOpacity="0.95" />
+                  <stop offset="58%"  stopColor="#FF5C1C" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#CC2E00" stopOpacity="0.84" />
+                </radialGradient>
+                <radialGradient id="hBloomGrad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%"   stopColor="rgba(255,120,40,0.35)" />
+                  <stop offset="100%" stopColor="rgba(255,80,20,0)" />
+                </radialGradient>
+                <filter id="hBlurFilt">
+                  <feGaussianBlur stdDeviation="3.5" result="b" />
+                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              {/* Outer luminous bloom */}
+              <path d={HEART_PATH}
+                fill="rgba(255,110,35,0.18)"
+                transform="scale(1.3) translate(-11.5,-10)"
+                filter="url(#hBlurFilt)"
+              />
+              {/* Mid glow ring */}
+              <path d={HEART_PATH}
+                fill="rgba(255,140,50,0.12)"
+                transform="scale(1.14) translate(-7,-5)"
+              />
+              {/* Heart body */}
+              <path d={HEART_PATH}
+                fill="url(#hFillGrad)"
+                stroke="rgba(255,210,130,0.6)"
+                strokeWidth="1.2"
+              />
+              {/* Specular arc */}
+              <path d="M 30,11 C 35,5 47,6 51,14"
+                fill="none" stroke="rgba(255,252,210,0.65)"
+                strokeWidth="2.5" strokeLinecap="round" />
+              {/* Inner contour depth */}
+              <path d={HEART_PATH}
+                fill="none" stroke="rgba(180,60,10,0.25)" strokeWidth="1.5" />
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Vein threads (bloom radiate outward) ── */}
+      <AnimatePresence>
+        {showVeins && (
+          <svg className="absolute inset-0 w-full h-full pointer-events-none"
+            viewBox="0 0 100 100" preserveAspectRatio="none"
+            style={{ animation: 'vein-glow 1.0s ease-in-out infinite' }}>
+            <defs>
+              <filter id="vBlur">
+                <feGaussianBlur stdDeviation="0.65" />
+              </filter>
+            </defs>
+            {veinPaths.map((v, i) => (
+              <React.Fragment key={i}>
+                {/* Glow halo */}
+                <motion.path
+                  d={v.d} stroke="rgba(255,145,55,0.35)" strokeWidth="1.4"
+                  fill="none" filter="url(#vBlur)"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  transition={{ duration: 1.8, delay: v.delay, ease: 'easeOut' }}
+                />
+                {/* Core line */}
+                <motion.path
+                  d={v.d} stroke="rgba(255,188,88,0.7)" strokeWidth="0.28"
+                  fill="none"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  transition={{ duration: 1.8, delay: v.delay, ease: 'easeOut' }}
+                />
+              </React.Fragment>
+            ))}
+          </svg>
+        )}
+      </AnimatePresence>
+
+      {/* ── Organic bloom forms ── */}
+      <AnimatePresence>
+        {showBloom && bloomForms.map((f, i) => {
+          const fills   = ['rgba(55,130,42,0.4)', 'rgba(255,148,62,0.36)', 'rgba(205,100,78,0.33)'];
+          const widths  = [12, 20, 9];
+          const heights = [22, 16, 28];
+          return (
+            <div key={i}
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                left: `${f.x}%`, top: `${f.y}%`,
+                width: `${widths[f.shape]}px`,
+                height: `${heights[f.shape]}px`,
+                transform: 'translate(-50%,-50%)',
+                background: `radial-gradient(circle at 38% 28%, rgba(255,240,200,0.38), ${fills[f.shape]})`,
+                animation: `impression-float ${f.dur}s ease-in-out ${f.delay}s infinite`,
+                filter: 'blur(2px)',
+              }}
+            />
+          );
+        })}
+      </AnimatePresence>
+
+      {/* ── Warmth overlay (bloom stage) ── */}
+      <AnimatePresence>
+        {showBloom && (
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse 90% 80% at 50% 54%, rgba(255,140,45,0.1) 0%, rgba(185,82,22,0.06) 52%, transparent 75%)' }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 4 }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Living-green edge (reveal) ── */}
+      <AnimatePresence>
+        {showReveal && (
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse 120% 120% at 50% 50%, transparent 50%, rgba(22,68,14,0.32) 80%, rgba(12,48,6,0.52) 100%)' }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 4.5 }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ══════════════════════════════════════════
+          CAPSULE TITLE
+          ══════════════════════════════════════════ */}
+      <AnimatePresence>
+        {showReveal && (
+          <div className="absolute z-40 text-center pointer-events-none"
+            style={{ left: '50%', bottom: '9%', transform: 'translateX(-50%)', width: '90%', maxWidth: '350px' }}>
+
+            <motion.p
+              style={{
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontSize: '9px',
+                letterSpacing: '0.5em',
+                color: 'rgba(255,192,92,0.65)',
+                textTransform: 'uppercase',
+                marginBottom: '13px',
+              }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 1.0 }}
+            >
+              EVERY HEARTBEAT IS A BEGINNING
+            </motion.p>
+
+
+            <motion.p
+              style={{
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontSize: '11px',
+                letterSpacing: '0.22em',
+                color: 'rgba(255,170,75,0.5)',
+                marginTop: '16px',
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.7, duration: 1.3 }}
+            >
+              — life begins here —
+            </motion.p>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Outro ── */}
       <AnimatePresence>
         {stage === 'outro' && (
-          <motion.div
-            className="absolute inset-0 bg-black z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
+          <motion.div className="absolute inset-0 z-50"
+            style={{ background: '#07000d' }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ duration: 1.4 }}
           />
         )}
       </AnimatePresence>

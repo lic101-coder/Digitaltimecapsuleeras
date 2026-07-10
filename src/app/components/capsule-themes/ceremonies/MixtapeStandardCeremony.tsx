@@ -587,16 +587,6 @@ export function MixtapeStandardCeremony({
             >
               SPINNING FOREVER
             </h2>
-            <p
-              className="text-2xl text-cyan-300"
-              style={{
-                textShadow: '0 0 15px rgba(0, 255, 255, 0.9)',
-                fontFamily: 'monospace',
-                fontSize: 'clamp(16px, 3vw, 24px)'
-              }}
-            >
-              {capsuleTitle}
-            </p>
           </motion.div>
         )}
       </AnimatePresence>
