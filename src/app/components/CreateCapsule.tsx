@@ -1631,6 +1631,17 @@ export function CreateCapsule({
     }, { manual: true });
   }, [title, themeId, themeMetadata, message, recipientType, recipients, deliveryDate, deliveryTime, timeZone, media, saveDraftToStorage]);
 
+  // Idle-timeout safety net: save current state immediately when the idle timer
+  // is about to sign the user out, so no in-progress work is lost.
+  useEffect(() => {
+    const handleIdleSave = () => {
+      console.log('⏱️ [IdleTimer] Triggered emergency draft save before sign-out');
+      saveDraft();
+    };
+    window.addEventListener('eras:idle-save-draft', handleIdleSave);
+    return () => window.removeEventListener('eras:idle-save-draft', handleIdleSave);
+  }, [saveDraft]);
+
   const loadDraft = useCallback(() => {
     const draft = loadDraftFromStorage();
     if (draft) {

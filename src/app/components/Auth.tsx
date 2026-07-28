@@ -14,6 +14,7 @@ import { supabase } from '../utils/supabase/client';
 import { DatabaseService } from '../utils/supabase/database';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { logger } from '../utils/logger';
+import { isNativeApp, NATIVE_REDIRECT_URL } from '../utils/native-app';
 
 export function Auth({ onAuthenticated }) {
   const [currentView, setCurrentView] = useState('signin'); // 'signin', 'signup', 'forgot', 'reset-sent', 'reset-password', 'verify-email'
@@ -1662,15 +1663,17 @@ export function Auth({ onAuthenticated }) {
         console.warn('Could not set OAuth flow marker:', storageError);
       }
       
+      const oauthRedirect = isNativeApp() ? NATIVE_REDIRECT_URL : window.location.origin;
+      console.log(`🔐 Google OAuth redirect target: ${oauthRedirect} (native: ${isNativeApp()})`);
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: oauthRedirect,
           queryParams: {
             access_type: 'offline',
-            prompt: 'select_account', // Allow account selection without forcing full consent every time
+            prompt: 'select_account',
           },
-          // Skip email confirmation since Google already verified the email
           skipBrowserRedirect: false
         }
       });
@@ -1750,10 +1753,13 @@ export function Auth({ onAuthenticated }) {
     setIsLoading(true);
     
     try {
+      const appleRedirect = isNativeApp() ? NATIVE_REDIRECT_URL : window.location.origin;
+      console.log(`🍎 Apple OAuth redirect target: ${appleRedirect} (native: ${isNativeApp()})`);
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: appleRedirect
         }
       });
 

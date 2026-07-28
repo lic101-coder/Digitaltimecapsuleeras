@@ -97,9 +97,11 @@ import { ReferralSystem } from "./components/ReferralSystem";
 import { UnsubscribePage } from "./components/UnsubscribePage";
 import { Store } from "./components/Store";
 import { motion, AnimatePresence } from "motion/react";
+import { IdleWarningModal } from "./components/IdleWarningModal";
 
 // Custom Hooks
 import { useAuth } from "./contexts/AuthContext";
+import { useIdleTimer } from "./hooks/useIdleTimer";
 import { AuthProvider } from "./contexts/AuthContext";
 import "../styles/textarea-fix.css";
 import { useNetworkStatus } from "./hooks/useNetworkStatus";
@@ -905,6 +907,39 @@ const MainAppContent = React.memo(
 
     // Custom Hooks (MUST be declared BEFORE useEffects that depend on them)
     const auth = useAuth();
+
+    // ── Idle session timeout ────────────────────────────────────────────────
+    const handleIdleLogout = React.useCallback(async () => {
+      console.log('⏱️ [IdleTimer] Inactivity timeout reached — signing out');
+
+      // 1. Fire save event so CreateCapsule (if open) flushes current state
+      window.dispatchEvent(new CustomEvent('eras:idle-save-draft'));
+
+      // 2. Wait briefly for the async save to complete
+      await new Promise(resolve => setTimeout(resolve, 600));
+
+      // 3. Sign out without wiping the saved draft
+      await auth.handleLogout({ preserveDraft: true });
+
+      toast.info('You were signed out due to inactivity. Your draft was saved.', {
+        duration: 6000,
+        position: 'top-center',
+      });
+    }, [auth]);
+
+    const hasDraftInStorage = React.useMemo(() => {
+      try {
+        return !!localStorage.getItem('eras_capsule_draft');
+      } catch {
+        return false;
+      }
+    }, []);
+
+    const { showWarning, secondsLeft, staySignedIn } = useIdleTimer({
+      onLogout: handleIdleLogout,
+      enabled: auth.isAuthenticated,
+    });
+    // ────────────────────────────────────────────────────────────────────────
 
     // Account deletion grace-period state
     const [deletionScheduled, setDeletionScheduled] = React.useState<{ deleteAt: string; daysLeft: number } | null>(null);
@@ -5319,6 +5354,14 @@ const MainAppContent = React.memo(
             </div>
           </div>
         )}
+
+        {/* Idle session timeout warning */}
+        <IdleWarningModal
+          show={showWarning}
+          secondsLeft={secondsLeft}
+          hasDraft={hasDraftInStorage}
+          onStaySignedIn={staySignedIn}
+        />
       </>
     );
   },

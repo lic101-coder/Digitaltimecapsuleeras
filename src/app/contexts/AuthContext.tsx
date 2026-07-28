@@ -12,7 +12,7 @@ interface AuthContextValue {
   isLoading: boolean;
   setShowOnboarding: (show: boolean) => void;
   handleAuthenticated: (userData: any, accessToken?: string | null) => void;
-  handleLogout: () => Promise<void>;
+  handleLogout: (options?: { preserveDraft?: boolean }) => Promise<void>;
   setUser: (user: any) => void;
   getAccessToken: () => Promise<string | null>;
 }

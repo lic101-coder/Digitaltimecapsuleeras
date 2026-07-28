@@ -3,6 +3,7 @@ import { supabase } from '../utils/supabase/client';
 import { DatabaseService } from '../utils/supabase/database';
 import { toast } from 'sonner';
 import { CacheService } from '../utils/cache';
+import { isNativeApp, NATIVE_REDIRECT_URL } from '../utils/native-app';
 
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -439,20 +440,25 @@ export function useAuth() {
     // setTimeout(checkOnboarding, 100);
   }, []);
 
-  const handleLogout = useCallback(async () => {
+  const handleLogout = useCallback(async (options?: { preserveDraft?: boolean }) => {
     console.log('👋 Starting sign out process...');
     console.log('🧹 [LOGOUT] COMPLETE CLEANUP - Ensuring user is fully signed out');
-    
+
     setIsLoggingOut(true);
     setUser(null);
     setIsAuthenticated(false);
     setIsCheckingAuth(false);
     setShowOnboarding(false);
     setAccessToken(null);
-    
+
     // Step 1: Clear ALL localStorage items
     try {
-      localStorage.removeItem('eras_capsule_draft');
+      // preserveDraft: idle-timeout logout keeps the draft so user doesn't lose work
+      if (!options?.preserveDraft) {
+        localStorage.removeItem('eras_capsule_draft');
+      } else {
+        console.log('📝 [LOGOUT] Preserving capsule draft for next sign-in');
+      }
       localStorage.removeItem('eras-onboarding-completed');
       localStorage.removeItem('eras-auth-state');
       localStorage.removeItem('eras-remember-email');
@@ -623,6 +629,49 @@ export function useAuth() {
       }, 30000); // Check every 30 seconds
     }
 
+    // ── Deep-link handler for native iOS OAuth callbacks ────────────────────
+    // When the app is opened via erasapp://auth/callback?code=...&... (or #...)
+    // we extract the session from the URL and hand it to Supabase.
+    const handleDeepLink = async (url: string) => {
+      try {
+        if (!url.startsWith('erasapp://')) return;
+        console.log('🔗 [DeepLink] Incoming native callback URL received');
+
+        // Supabase puts tokens in the hash fragment OR as query params depending on flow type.
+        // exchangeCodeForSession handles both PKCE code and implicit token fragments.
+        const { data, error } = await supabase.auth.exchangeCodeForSession(url);
+
+        if (error) {
+          console.error('🔗 [DeepLink] Failed to exchange code for session:', error.message);
+          toast.error('Sign-in failed. Please try again.', { duration: 5000 });
+          return;
+        }
+
+        if (data?.session) {
+          console.log('🔗 [DeepLink] Session established via deep link ✅');
+          setUserFromSession(data.session);
+        }
+      } catch (err) {
+        console.error('🔗 [DeepLink] Unexpected error handling deep link:', err);
+      }
+    };
+
+    // On initial load: if the page/app was opened with an erasapp:// URL,
+    // window.location.href will contain it (some WKWebView bridges load it as the href).
+    if (isNativeApp() && window.location.href.startsWith('erasapp://')) {
+      handleDeepLink(window.location.href);
+    }
+
+    // Listen for subsequent deep links while the app is running.
+    // Native shells (Capacitor, custom WKWebView) should dispatch this event
+    // when a new URL opens the app.
+    const onDeepLinkEvent = (e: Event) => {
+      const url = (e as CustomEvent<{ url: string }>).detail?.url ?? (e as CustomEvent<string>).detail;
+      if (typeof url === 'string') handleDeepLink(url);
+    };
+    window.addEventListener('erasapp:deeplink', onDeepLinkEvent);
+    // ────────────────────────────────────────────────────────────────────────
+
     checkExistingSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -749,6 +798,7 @@ export function useAuth() {
       if (subscription) {
         subscription.unsubscribe();
       }
+      window.removeEventListener('erasapp:deeplink', onDeepLinkEvent);
     };
   }, []);
 
