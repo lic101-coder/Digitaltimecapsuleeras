@@ -50,10 +50,10 @@ export function BirthdayAuroraCascadeCeremony({
       { time: 3000, action: () => setStage('spark') },
       { time: 5000, action: () => setStage('aurora_birth') },
       { time: 8000, action: () => setStage('cascade') },
-      { time: 11500, action: () => setStage('symphony') },
-      { time: 15000, action: () => setStage('supernova') },
-      { time: 17500, action: () => setStage('outro') },
-      { time: 18000, action: () => onComplete?.() }
+      { time: mobile ? 10500 : 11500, action: () => setStage('symphony') },
+      { time: mobile ? 13800 : 15000, action: () => setStage('supernova') },
+      { time: mobile ? 16800 : 17500, action: () => setStage('outro') },
+      { time: mobile ? 17400 : 18000, action: () => onComplete?.() }
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
@@ -424,6 +424,39 @@ export function BirthdayAuroraCascadeCeremony({
       <AnimatePresence>
         {stage === 'symphony' && (
           <>
+            {/* Mobile symphony: color pulse crescendo + expanding rings */}
+            {mobile && (
+              <>
+                {auroraColors.map((color, i) => (
+                  <motion.div
+                    key={`mob-sym-wave-${i}`}
+                    className="absolute inset-0"
+                    style={{
+                      background: `radial-gradient(ellipse 130% 45% at 50% ${15 + i * 7}%, ${color.main}55 0%, transparent 70%)`,
+                      zIndex: 8
+                    }}
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 0.85, delay: i * 0.15, repeat: 1, repeatDelay: 0.05, ease: 'easeInOut' }}
+                  />
+                ))}
+                {[0, 0.5, 1.05].map((delay, i) => (
+                  <motion.div
+                    key={`mob-sym-ring-${i}`}
+                    className="absolute left-1/2 top-1/2 rounded-full"
+                    style={{
+                      width: 80, height: 80,
+                      marginLeft: -40, marginTop: -40,
+                      border: `3px solid ${auroraColors[i * 3].main}`,
+                      boxShadow: `0 0 18px ${auroraColors[i * 3].main}`,
+                      zIndex: 12
+                    }}
+                    animate={{ scale: [0.3, 6.5], opacity: [1, 0] }}
+                    transition={{ duration: 1.4, delay, repeat: 1, ease: 'easeOut' }}
+                  />
+                ))}
+              </>
+            )}
+
             {/* Swirling energy vortex — skip on mobile */}
             {!mobile && vortexParticles.map(({ id, angle, layer, radius }) => (
               <motion.div
@@ -489,6 +522,68 @@ export function BirthdayAuroraCascadeCeremony({
       <AnimatePresence>
         {stage === 'supernova' && (
           <>
+            {/* Mobile supernova: shockwave rings + white flash */}
+            {mobile && (
+              <>
+                {/* White flash at detonation moment */}
+                <motion.div
+                  className="absolute inset-0 bg-white"
+                  style={{ zIndex: 35 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 0.9, 0] }}
+                  transition={{ duration: 0.65, delay: 0.05, ease: 'easeInOut' }}
+                />
+                {/* Four shockwave rings expanding from center */}
+                {[0, 0.22, 0.44, 0.66].map((delay, i) => (
+                  <motion.div
+                    key={`shock-${i}`}
+                    className="absolute left-1/2 top-1/2 rounded-full"
+                    style={{
+                      width: 80, height: 80,
+                      marginLeft: -40, marginTop: -40,
+                      border: `3px solid ${auroraColors[i * 2].main}`,
+                      boxShadow: `0 0 24px ${auroraColors[i * 2].main}, inset 0 0 12px ${auroraColors[i * 2].main}44`,
+                      zIndex: 28
+                    }}
+                    initial={{ scale: 0, opacity: 1 }}
+                    animate={{ scale: 8, opacity: 0 }}
+                    transition={{ duration: 1.6, delay, ease: 'easeOut' }}
+                  />
+                ))}
+                {/* Secondary rings — slightly larger start, different colors */}
+                {[0.55, 1.0].map((delay, i) => (
+                  <motion.div
+                    key={`shock2-${i}`}
+                    className="absolute left-1/2 top-1/2 rounded-full"
+                    style={{
+                      width: 120, height: 120,
+                      marginLeft: -60, marginTop: -60,
+                      border: `2px solid ${auroraColors[i * 3 + 1].main}`,
+                      boxShadow: `0 0 16px ${auroraColors[i * 3 + 1].main}`,
+                      zIndex: 26
+                    }}
+                    initial={{ scale: 0, opacity: 0.9 }}
+                    animate={{ scale: 5.5, opacity: 0 }}
+                    transition={{ duration: 1.3, delay, ease: 'easeOut' }}
+                  />
+                ))}
+                {/* Color burst: rapid full-screen flashes cycling all colors */}
+                {auroraColors.slice(0, 6).map((color, i) => (
+                  <motion.div
+                    key={`mob-nova-flash-${i}`}
+                    className="absolute inset-0"
+                    style={{
+                      background: `radial-gradient(circle at 50% 50%, ${color.main}66 0%, transparent 65%)`,
+                      zIndex: 20
+                    }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 0.85, 0] }}
+                    transition={{ duration: 0.55, delay: 0.3 + i * 0.2, ease: 'easeInOut' }}
+                  />
+                ))}
+              </>
+            )}
+
             {/* Intense rainbow rays — skip on mobile */}
             {!mobile && Array.from({ length: 36 }, (_, i) => {
               const angle = (i / 36) * 360;

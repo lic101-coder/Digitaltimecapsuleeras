@@ -2078,8 +2078,8 @@ export function Auth({ onAuthenticated }) {
       */}
       <div className="min-h-screen flex flex-col-reverse md:flex-row items-start md:items-center justify-center gap-0 md:gap-12 lg:gap-20 px-4 pt-4 pb-8 md:p-8 lg:p-12">
 
-        {/* ── Brand / Landing Panel — bottom on mobile, left on desktop ── */}
-        <div className="w-full md:w-1/2 max-w-xl flex flex-col items-center text-center pt-6 pb-2 md:pt-0 md:pb-0 md:py-8">
+        {/* ── Brand / Landing Panel — hidden on mobile, left on desktop ── */}
+        <div className="hidden md:flex md:flex-col w-full md:w-1/2 max-w-xl items-center text-center md:pt-0 md:pb-0 md:py-8">
 
           {/* Logo — always centered */}
           <div className="relative mb-4 md:mb-6">
@@ -2770,6 +2770,15 @@ export function Auth({ onAuthenticated }) {
           </Tabs>
         </CardContent>
       </Card>
+        </div>
+        <div className="md:hidden w-full flex flex-col items-center text-center pt-4">
+          <div className="relative mb-4">
+            <MomentPrismLogo size={110} forceAuthLayout={false} instanceId="mobile-auth" isDarkHorizon={true} />
+            <div
+              className="absolute inset-0 blur-3xl opacity-25 animate-pulse pointer-events-none"
+              style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.5) 0%, rgba(217,70,239,0.3) 50%, transparent 70%)', zIndex: -1 }}
+            />
+          </div>
         </div>
       </div>
     </div>

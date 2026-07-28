@@ -62,17 +62,54 @@ export function AchievementsDashboard() {
 
   // Calculate progress for locked achievements
   const getProgress = (achievement: any): number => {
-    if (!userStats || !achievement.unlockCriteria.stat || !achievement.unlockCriteria.threshold) {
-      return 0;
+    if (!userStats) return 0;
+
+    const { stat, threshold, type } = achievement.unlockCriteria;
+
+    // Standard count/streak achievements
+    if (stat && threshold) {
+      const value = stat.split('.').reduce((obj: any, key: string) => obj?.[key], userStats) || 0;
+      return Math.min(100, (value / threshold) * 100);
     }
 
-    const stat = achievement.unlockCriteria.stat;
-    const threshold = achievement.unlockCriteria.threshold;
+    // Custom validators — map to meaningful progress stats
+    if (type === 'custom' || type === 'specific_action') {
+      const id = achievement.id;
 
-    // Handle nested stats (e.g., "filter_usage.yesterday")
-    const value = stat.split('.').reduce((obj: any, key: string) => obj?.[key], userStats) || 0;
-    
-    return Math.min(100, (value / threshold) * 100);
+      // A033 Golden Ratio: approach 89 capsules (capped at 99 until exactly 89)
+      if (id === 'A033') {
+        return Math.min(99, ((userStats.capsules_created || 0) / 89) * 100);
+      }
+
+      // A030 Cinematic: capsule with 10+ media files
+      if (id === 'A030') {
+        if ((userStats.cinematic_capsules || 0) > 0) return 100;
+        return Math.min(90, ((userStats.total_media_files || 0) / 20) * 100);
+      }
+
+      // A034 Memory Weaver: use all 4 media types (photo, video, audio, text)
+      if (id === 'A034') {
+        const mt = userStats.media_by_type || {};
+        const typesUsed = ([mt.photo, mt.video, mt.audio, mt.text] as number[]).filter(v => (v || 0) > 0).length;
+        return Math.min(100, (typesUsed / 4) * 100);
+      }
+
+      // A036 Time Lord: capsules scheduled across 5+ distinct years
+      if (id === 'A036') {
+        const yearsCount = (userStats.capsule_years || []).length;
+        return Math.min(100, (yearsCount / 5) * 100);
+      }
+
+      // A008 Multimedia Creator: single capsule with 3+ content types
+      if (id === 'A008') {
+        if ((userStats.multimedia_capsules || 0) > 0) return 100;
+        const mt2 = userStats.media_by_type || {};
+        const typesUsed2 = ([mt2.photo, mt2.video, mt2.audio] as number[]).filter(v => (v || 0) > 0).length;
+        return Math.min(90, (typesUsed2 / 3) * 100);
+      }
+    }
+
+    return 0;
   };
 
   // Prepare achievement list with locked/unlocked status

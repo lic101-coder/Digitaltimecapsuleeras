@@ -8,6 +8,7 @@ interface MomentPrismLogoProps {
   onClick?: () => void;
   colorScheme?: 'scheduled' | 'delivered' | 'received' | 'draft' | 'all' | 'eclipse' | 'aurora';
   isDarkHorizon?: boolean;
+  instanceId?: string;
 }
 
 // 6 Color Schemes matching capsule statuses
@@ -78,6 +79,7 @@ export function MomentPrismLogo({
   onClick,
   colorScheme = 'aurora',
   isDarkHorizon = false,
+  instanceId,
 }: MomentPrismLogoProps) {
   // Breathing animation state
   const [isBreathing, setIsBreathing] = React.useState(false);
@@ -186,7 +188,7 @@ export function MomentPrismLogo({
         >
           <defs>
             {/* Core glow gradient */}
-            <radialGradient id={`coreGlow-${colorScheme}`} cx="0.5" cy="0.5" r="0.5">
+            <radialGradient id={`coreGlow-${instanceId ?? colorScheme}`} cx="0.5" cy="0.5" r="0.5">
               <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
               <stop offset="50%" stopColor={colors.core} stopOpacity="0.9" />
               <stop offset="100%" stopColor={colors.glow} stopOpacity="0.6" />
@@ -194,7 +196,7 @@ export function MomentPrismLogo({
             
             {/* Facet gradients */}
             {colors.facets.map((color, i) => (
-              <linearGradient key={i} id={`facet-${colorScheme}-${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient key={i} id={`facet-${instanceId ?? colorScheme}-${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor={color} stopOpacity="0.9" />
                 <stop offset="100%" stopColor={color} stopOpacity="0.6" />
               </linearGradient>
@@ -219,7 +221,7 @@ export function MomentPrismLogo({
               <path
                 key={i}
                 d={`M ${size / 2} ${size / 2} L ${point.x} ${point.y} L ${nextPoint.x} ${nextPoint.y} Z`}
-                fill={`url(#facet-${colorScheme}-${i})`}
+                fill={`url(#facet-${instanceId ?? colorScheme}-${i})`}
                 stroke={colors.glow}
                 strokeWidth={size * 0.01}
                 opacity="0.8"
@@ -232,7 +234,7 @@ export function MomentPrismLogo({
             cx={size / 2}
             cy={size / 2}
             r={centerRadius}
-            fill={`url(#coreGlow-${colorScheme})`}
+            fill={`url(#coreGlow-${instanceId ?? colorScheme})`}
             opacity="1"
           />
           
