@@ -5290,7 +5290,21 @@ const MainAppContent = React.memo(
               };
               setPreviewMedia(normalizedMedia);
             }}
-            canEdit={false} // Received capsules are not editable
+            canEdit={(() => {
+              const c = viewingCapsule;
+              if (!c || c.isReceived || c.is_received) return false;
+              if (!c.delivery_date || c.status === 'draft') return true;
+              if (c.status === 'delivered') return false;
+              if (c.status === 'scheduled') {
+                const msDiff = new Date(c.delivery_date).getTime() - Date.now();
+                return msDiff > 60 * 1000; // more than 1 minute away
+              }
+              return false;
+            })()}
+            onEditCapsule={(capsule) => {
+              setViewingCapsule(null);
+              handleEditCapsuleDetails(capsule);
+            }}
             onEchoSent={async () => {
               // Refresh capsule data after echo is sent
               console.log("💫 Echo sent from Portal overlay");

@@ -802,6 +802,9 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
 
   // Enhanced dashboard initialization with caching and pagination
   useEffect(() => {
+    // Auth hasn't resolved yet — wait for the next render when user.id is available.
+    if (!user?.id) return;
+
     let mounted = true;
     let retryTimeout = null;
 

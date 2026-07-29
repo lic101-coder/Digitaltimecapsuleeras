@@ -76,15 +76,20 @@ export function useTitles() {
     });
   }, [availableTitles]);
   
-  // Store access token AND current state in refs to avoid closure issues
+  // Store access token AND current state in refs to avoid closure issues.
   const accessTokenRef = React.useRef<string | undefined>(accessToken);
+  // Sync synchronously during render so the ref is never one render behind
+  // when refresh() is called immediately after a token arrives.
+  accessTokenRef.current = accessToken;
+
   const titleProfileRef = React.useRef<TitleProfile | null>(null);
   const availableTitlesRef = React.useRef<AvailableTitles | null>(null);
-  
+
+  // Keep accessTokenRef in sync via effect as well (preserves hook order).
   React.useEffect(() => {
     accessTokenRef.current = accessToken;
   }, [accessToken]);
-  
+
   // Keep refs in sync with state
   React.useEffect(() => {
     titleProfileRef.current = titleProfile;

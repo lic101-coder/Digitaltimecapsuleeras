@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { supabase } from '../utils/supabase/client';
 import { DatabaseService } from '../utils/supabase/database';
 import { toast } from 'sonner';
@@ -12,6 +12,15 @@ export function useAuth() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+
+  // Refs so setInterval/setTimeout closures always read fresh state
+  // without needing the effect to re-run on every auth state change.
+  const isAuthenticatedRef = useRef(false);
+  const isLoggingOutRef    = useRef(false);
+
+  // Keep refs in sync with state (runs synchronously after every render where these changed)
+  useEffect(() => { isAuthenticatedRef.current = isAuthenticated; }, [isAuthenticated]);
+  useEffect(() => { isLoggingOutRef.current    = isLoggingOut;    }, [isLoggingOut]);
 
   const handleAuthError = useCallback((error) => {
     console.error('Auth error:', error);
@@ -54,6 +63,7 @@ export function useAuth() {
           localStorage.removeItem(`dashboard_capsules_${userId}`);
           sessionStorage.removeItem(`dashboard_capsules_${userId}`);
           localStorage.removeItem(`received_capsules_${userId}`);
+          localStorage.removeItem(`received_capsules_v3_${userId}`);
           localStorage.removeItem(`received_count_${userId}`);
           console.log('✅ Dashboard cache cleared');
         }
@@ -317,6 +327,7 @@ export function useAuth() {
               localStorage.removeItem(`dashboard_capsules_${userId}`);
               sessionStorage.removeItem(`dashboard_capsules_${userId}`);
               localStorage.removeItem(`received_capsules_${userId}`);
+              localStorage.removeItem(`received_capsules_v3_${userId}`);
               localStorage.removeItem(`received_count_${userId}`);
             }
             
@@ -375,9 +386,10 @@ export function useAuth() {
           const result = await DatabaseService.claimPendingCapsules(accessToken);
           if (result.claimed > 0) {
             console.log(`🎉 Claimed ${result.claimed} pending capsule(s)`);
-            
+
             // Clear received capsules cache to force refresh
             CacheService.delete(`received_capsules_${userData.id}`);
+            CacheService.delete(`received_capsules_v3_${userData.id}`);
             CacheService.delete(`received_count_${userData.id}`);
             
             toast.success(
@@ -395,9 +407,10 @@ export function useAuth() {
           const result = await DatabaseService.claimPendingCapsules();
           if (result.claimed > 0) {
             console.log(`🎉 Claimed ${result.claimed} pending capsule(s)`);
-            
+
             // Clear received capsules cache to force refresh
             CacheService.delete(`received_capsules_${userData.id}`);
+            CacheService.delete(`received_capsules_v3_${userData.id}`);
             CacheService.delete(`received_count_${userData.id}`);
             
             toast.success(
@@ -444,6 +457,11 @@ export function useAuth() {
     console.log('👋 Starting sign out process...');
     console.log('🧹 [LOGOUT] COMPLETE CLEANUP - Ensuring user is fully signed out');
 
+    // Set refs immediately (synchronous) so any in-flight setInterval
+    // callbacks see the correct values before React re-renders.
+    isLoggingOutRef.current    = true;
+    isAuthenticatedRef.current = false;
+
     setIsLoggingOut(true);
     setUser(null);
     setIsAuthenticated(false);
@@ -453,6 +471,16 @@ export function useAuth() {
 
     // Step 1: Clear ALL localStorage items
     try {
+      // Clear per-user cache keys (capture userId before state is cleared)
+      const logoutUserId = (user as any)?.id;
+      if (logoutUserId) {
+        localStorage.removeItem(`dashboard_capsules_${logoutUserId}`);
+        sessionStorage.removeItem(`dashboard_capsules_${logoutUserId}`);
+        localStorage.removeItem(`received_capsules_${logoutUserId}`);
+        localStorage.removeItem(`received_capsules_v3_${logoutUserId}`);
+        localStorage.removeItem(`received_count_${logoutUserId}`);
+      }
+
       // preserveDraft: idle-timeout logout keeps the draft so user doesn't lose work
       if (!options?.preserveDraft) {
         localStorage.removeItem('eras_capsule_draft');
@@ -596,38 +624,49 @@ export function useAuth() {
       }, 3000);
     }
 
-    // Monitor session persistence every 30 seconds when authenticated
-    if (isAuthenticated && user) {
-      sessionMonitor = setInterval(async () => {
-        try {
-          const { data: { session }, error } = await supabase.auth.getSession();
-          
-          // Check for refresh token errors
-          if (error) {
-            if (error.message?.includes('Invalid Refresh Token') || 
-                error.message?.includes('Refresh Token Not Found') ||
-                error.message?.includes('refresh_token_not_found')) {
-              console.warn('⚠️ Invalid refresh token detected in session monitor');
-              handleAuthError(error);
-              return;
-            }
-          }
-          
-          if (!session && isAuthenticated) {
-            console.warn('⚠️ Session lost unexpectedly - logging out');
-            handleLogout();
-          }
-        } catch (error) {
-          console.warn('Session monitor error:', error);
-          
-          // Handle refresh token errors
-          if (error.message?.includes('Invalid Refresh Token') || 
-              error.message?.includes('Refresh Token Not Found')) {
+    // Monitor session persistence every 30 seconds when authenticated.
+    // Uses refs (not closure values) so the callback always sees fresh state.
+    sessionMonitor = setInterval(async () => {
+      // Skip entirely if not authenticated or already in a logout flow.
+      if (!isAuthenticatedRef.current || isLoggingOutRef.current) return;
+
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        // Check for refresh token errors
+        if (error) {
+          if (error.message?.includes('Invalid Refresh Token') ||
+              error.message?.includes('Refresh Token Not Found') ||
+              error.message?.includes('refresh_token_not_found')) {
+            console.warn('⚠️ Invalid refresh token detected in session monitor');
             handleAuthError(error);
+            return;
           }
         }
-      }, 30000); // Check every 30 seconds
-    }
+
+        if (!session && isAuthenticatedRef.current && !isLoggingOutRef.current) {
+          // getSession() can return null momentarily during a background token
+          // refresh. Wait 3 s and verify before treating it as a real lost session.
+          await new Promise(resolve => setTimeout(resolve, 3000));
+
+          // Re-check refs — a logout may have started while we were waiting.
+          if (!isAuthenticatedRef.current || isLoggingOutRef.current) return;
+
+          const { data: { session: retrySession } } = await supabase.auth.getSession();
+          if (!retrySession) {
+            console.warn('⚠️ Session confirmed lost after retry - logging out');
+            handleLogout();
+          }
+          // If retrySession exists, the token refresh completed fine — do nothing.
+        }
+      } catch (error) {
+        console.warn('Session monitor error:', error);
+        if (error.message?.includes('Invalid Refresh Token') ||
+            error.message?.includes('Refresh Token Not Found')) {
+          handleAuthError(error);
+        }
+      }
+    }, 30000); // Check every 30 seconds
 
     // ── Deep-link handler for native iOS OAuth callbacks ────────────────────
     // When the app is opened via erasapp://auth/callback?code=...&... (or #...)

@@ -1,18 +1,12 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 
-const IDLE_TIMEOUT_MS  = 30 * 60 * 1000; // 30 minutes
-const WARNING_BEFORE_MS = 2 * 60 * 1000; // warn at 28 minutes (2 min before logout)
-const WARNING_AT_MS    = IDLE_TIMEOUT_MS - WARNING_BEFORE_MS; // 28 min
+const IDLE_TIMEOUT_MS   = 30 * 60 * 1000; // 30 minutes total
+const WARNING_BEFORE_MS =  2 * 60 * 1000; // show warning 2 min before logout
+const WARNING_AT_MS     = IDLE_TIMEOUT_MS - WARNING_BEFORE_MS; // 28 min
 
-// User-activity events that reset the idle clock
 const ACTIVITY_EVENTS: (keyof WindowEventMap)[] = [
-  'mousemove',
-  'mousedown',
-  'keydown',
-  'touchstart',
-  'scroll',
-  'click',
-  'pointerdown',
+  'mousemove', 'mousedown', 'keydown', 'touchstart',
+  'scroll', 'click', 'pointerdown',
 ];
 
 export interface IdleTimerOptions {
@@ -21,89 +15,81 @@ export interface IdleTimerOptions {
 }
 
 export function useIdleTimer({ onLogout, enabled = true }: IdleTimerOptions) {
-  const [showWarning, setShowWarning]     = useState(false);
-  const [secondsLeft, setSecondsLeft]     = useState(WARNING_BEFORE_MS / 1000);
+  // ── State (slots 1-2) ────────────────────────────────────────────────────
+  const [showWarning, setShowWarning] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(WARNING_BEFORE_MS / 1000);
 
-  const lastActivityRef  = useRef<number>(Date.now());
-  const logoutTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const warningTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const countdownRef     = useRef<ReturnType<typeof setInterval> | null>(null);
-  const warningShownAtRef = useRef<number | null>(null);
+  // ── Refs (slots 3-7) ─────────────────────────────────────────────────────
+  const onLogoutRef     = useRef(onLogout);
+  const showWarningRef  = useRef(false);
+  const warningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const logoutTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownRef    = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // ── Callbacks (slots 8-12) — declared BEFORE effects to preserve hook order
   const clearAllTimers = useCallback(() => {
-    if (logoutTimerRef.current)   clearTimeout(logoutTimerRef.current);
-    if (warningTimerRef.current)  clearTimeout(warningTimerRef.current);
-    if (countdownRef.current)     clearInterval(countdownRef.current);
-    logoutTimerRef.current  = null;
-    warningTimerRef.current = null;
-    countdownRef.current    = null;
+    if (warningTimerRef.current)  { clearTimeout(warningTimerRef.current);  warningTimerRef.current  = null; }
+    if (logoutTimerRef.current)   { clearTimeout(logoutTimerRef.current);   logoutTimerRef.current   = null; }
+    if (countdownRef.current)     { clearInterval(countdownRef.current);    countdownRef.current     = null; }
   }, []);
 
   const startCountdown = useCallback(() => {
-    setSecondsLeft(WARNING_BEFORE_MS / 1000);
-    warningShownAtRef.current = Date.now();
-
     if (countdownRef.current) clearInterval(countdownRef.current);
+    setSecondsLeft(WARNING_BEFORE_MS / 1000);
     countdownRef.current = setInterval(() => {
       setSecondsLeft(prev => {
-        if (prev <= 1) {
-          if (countdownRef.current) clearInterval(countdownRef.current);
+        const next = prev - 1;
+        if (next <= 0) {
+          clearInterval(countdownRef.current!);
+          countdownRef.current = null;
           return 0;
         }
-        return prev - 1;
+        return next;
       });
     }, 1000);
   }, []);
 
   const scheduleTimers = useCallback(() => {
     clearAllTimers();
-
-    // Show warning at 28 min
     warningTimerRef.current = setTimeout(() => {
+      showWarningRef.current = true;
       setShowWarning(true);
       startCountdown();
-
-      // Sign out at 30 min
       logoutTimerRef.current = setTimeout(() => {
+        showWarningRef.current = false;
         setShowWarning(false);
-        onLogout();
+        if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null; }
+        onLogoutRef.current();
       }, WARNING_BEFORE_MS);
     }, WARNING_AT_MS);
-  }, [clearAllTimers, startCountdown, onLogout]);
+  }, [clearAllTimers, startCountdown]);
 
-  // Dismiss warning and reset the full 30-min clock
   const staySignedIn = useCallback(() => {
+    showWarningRef.current = false;
     setShowWarning(false);
-    lastActivityRef.current = Date.now();
+    setSecondsLeft(WARNING_BEFORE_MS / 1000);
     scheduleTimers();
   }, [scheduleTimers]);
 
-  // Called by activity events
   const handleActivity = useCallback(() => {
-    // Ignore activity if the warning is already showing — user must explicitly
-    // click "Stay Signed In" to prevent accidental dismissal
-    if (showWarning) return;
-
-    lastActivityRef.current = Date.now();
+    if (showWarningRef.current) return;
     scheduleTimers();
-  }, [showWarning, scheduleTimers]);
+  }, [scheduleTimers]);
 
+  // ── Effects (slots 13-14) ─────────────────────────────────────────────────
+  // Keep onLogout ref fresh without triggering the main effect to re-run.
+  useEffect(() => { onLogoutRef.current = onLogout; }, [onLogout]);
+
+  // Single stable effect — [enabled] only; stable callbacks read from refs.
   useEffect(() => {
     if (!enabled) return;
-
     scheduleTimers();
-
-    ACTIVITY_EVENTS.forEach(event => {
-      window.addEventListener(event, handleActivity, { passive: true });
-    });
-
+    ACTIVITY_EVENTS.forEach(e => window.addEventListener(e, handleActivity, { passive: true }));
     return () => {
       clearAllTimers();
-      ACTIVITY_EVENTS.forEach(event => {
-        window.removeEventListener(event, handleActivity);
-      });
+      ACTIVITY_EVENTS.forEach(e => window.removeEventListener(e, handleActivity));
     };
-  }, [enabled, handleActivity, scheduleTimers, clearAllTimers]);
+  }, [enabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { showWarning, secondsLeft, staySignedIn };
 }

@@ -59,10 +59,10 @@ function useCosmicEvents(themeColors: string[], isActive: boolean) {
           key: Date.now(),
         });
 
-        // Clear event after its duration
+        // Clear event after its duration plus a 1.5s buffer so no animation is cut short
         setTimeout(() => {
           setCurrentEvent(null);
-        }, event.duration * 1000);
+        }, event.duration * 1000 + 1500);
 
         // Schedule next event
         scheduleNextEvent();

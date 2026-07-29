@@ -48,7 +48,7 @@ export const COSMIC_EVENTS: CosmicEventDefinition[] = [
   // UNCOMMON (30% total probability)
   { type: 'satellite-pass', rarity: 'uncommon', duration: 8, probability: 12, name: 'Satellite Pass' },
   { type: 'star-birth', rarity: 'uncommon', duration: 5, probability: 10, name: 'Star Birth' },
-  { type: 'asteroid-tumble', rarity: 'uncommon', duration: 7, probability: 8, name: 'Asteroid Tumble' },
+  { type: 'asteroid-tumble', rarity: 'uncommon', duration: 14, probability: 8, name: 'Asteroid Tumble' },
   
   // RARE (20% total probability)
   { type: 'supernova-burst', rarity: 'rare', duration: 4, probability: 8, name: 'Supernova Burst' },
@@ -118,15 +118,15 @@ export function ShootingComet({ themeColors }: EventProps) {
         top: `${path.startY}%`,
         opacity: 0
       }}
-      animate={{ 
+      animate={{
         left: `${path.endX}%`,
         top: `${path.endY}%`,
-        opacity: [0, 1, 1, 1, 0],
+        opacity: [0, 1, 1],
       }}
-      transition={{ 
-        duration: 2.5, 
+      transition={{
+        duration: 2.5,
         ease: [0.22, 1, 0.36, 1],
-        times: [0, 0.1, 0.5, 0.85, 1]
+        times: [0, 0.08, 1]
       }}
     >
       {/* Bright white core */}
@@ -1273,16 +1273,16 @@ export function UFOStreak({ themeColors }: EventProps) {
         top: `${path.startY}%`,
         opacity: 0,
       }}
-      animate={{ 
+      animate={{
         left: `${path.endX}%`,
         top: `${path.endY}%`,
         y: [0, -path.wobbleIntensity, path.wobbleIntensity * 0.6, -path.wobbleIntensity * 0.4, 0],
-        opacity: [0, 1, 1, 1, 0],
+        opacity: [0, 1, 1],
       }}
-      transition={{ 
-        duration: 4, 
+      transition={{
+        duration: 4,
         ease: [0.22, 1, 0.36, 1],
-        times: [0, 0.1, 0.5, 0.85, 1],
+        times: [0, 0.08, 1],
         y: { duration: 4, ease: "easeInOut" }
       }}
     >
@@ -1836,14 +1836,14 @@ export function SatellitePass({ themeColors }: EventProps) {
         left: direction > 0 ? '-8%' : '108%',
         opacity: 0,
       }}
-      animate={{ 
+      animate={{
         left: direction > 0 ? '108%' : '-8%',
-        opacity: [0, 1, 1, 1, 0],
+        opacity: [0, 1, 1],
       }}
-      transition={{ 
-        duration: 8, 
+      transition={{
+        duration: 8,
         ease: "linear",
-        times: [0, 0.1, 0.5, 0.9, 1]
+        times: [0, 0.05, 1]
       }}
     >
       <div className="relative" style={{ transform: direction > 0 ? 'none' : 'scaleX(-1)' }}>
@@ -1928,15 +1928,15 @@ export function SpaceXStarship({ themeColors }: EventProps) {
         rotate: path.angle,
         opacity: 0,
       }}
-      animate={{ 
-        left: `${path.endX}%`, 
+      animate={{
+        left: `${path.endX}%`,
         top: `${path.endY}%`,
-        opacity: [0, 1, 1, 1, 0],
+        opacity: [0, 1, 1],
       }}
-      transition={{ 
-        duration: 4.5, 
+      transition={{
+        duration: 4.5,
         ease: [0.25, 0.1, 0.25, 1],
-        times: [0, 0.1, 0.5, 0.9, 1]
+        times: [0, 0.08, 1]
       }}
     >
       <div className="relative" style={{ transform: path.direction > 0 ? 'none' : 'scaleX(-1)' }}>
@@ -2072,14 +2072,14 @@ export function SpaceStation({ themeColors }: EventProps) {
         left: direction > 0 ? '-12%' : '112%',
         opacity: 0,
       }}
-      animate={{ 
+      animate={{
         left: direction > 0 ? '112%' : '-12%',
-        opacity: [0, 1, 1, 1, 0],
+        opacity: [0, 1, 1],
       }}
-      transition={{ 
-        duration: 8, 
+      transition={{
+        duration: 8,
         ease: "linear",
-        times: [0, 0.12, 0.5, 0.88, 1]
+        times: [0, 0.05, 1]
       }}
     >
       <div className="relative" style={{ transform: direction > 0 ? 'none' : 'scaleX(-1)' }}>
