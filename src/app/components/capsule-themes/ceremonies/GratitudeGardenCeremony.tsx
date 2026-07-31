@@ -66,7 +66,7 @@ export function GratitudeGardenCeremony({
   onComplete
 }: GratitudeGardenCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'seeds' | 'sprout' | 'bloom' | 'butterflies' | 'wind' | 'heart' | 'radiance'>('intro');
-  const [completed, setCompleted] = useState(false);
+  const [isMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
   // Timeline
   useEffect(() => {
@@ -84,11 +84,7 @@ export function GratitudeGardenCeremony({
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
 
-    // Failsafe timeout - 1 second after last timeline action
-    const failsafeTimeout = setTimeout(() => {
-      setCompleted(true);
-      onComplete?.();
-    }, 17000);
+    const failsafeTimeout = setTimeout(() => { onComplete?.(); }, 17000);
 
     return () => {
       timeouts.forEach(clearTimeout);
@@ -209,7 +205,6 @@ export function GratitudeGardenCeremony({
     });
   }, [flowers]);
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const ggColors = useMemo(() => ['#22c55e','#fbbf24','#fb923c','#10b981','#ffffff','#86efac','#f9a8d4'], []);
   const ggFwPositions = useMemo(() => [
     {x:10,y:18},{x:26,y:10},{x:42,y:20},{x:58,y:8},{x:74,y:18},{x:88,y:12},{x:18,y:34},{x:82,y:28},
@@ -247,7 +242,8 @@ export function GratitudeGardenCeremony({
 
   // Memoize background stars
   const backgroundStars = useMemo(() => {
-    return Array.from({ length: 40 }, (_, i) => ({
+    const count = isMobile ? 20 : 40;
+    return Array.from({ length: count }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
       top: Math.random() * 60,
@@ -255,7 +251,7 @@ export function GratitudeGardenCeremony({
       delay: Math.random() * 3,
       duration: 2.5 + Math.random() * 2
     }));
-  }, []);
+  }, [isMobile]);
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#0f2027] via-[#203a43] to-[#2c5364]">
@@ -265,7 +261,7 @@ export function GratitudeGardenCeremony({
         style={{
           opacity: stage === 'bloom' || stage === 'butterflies' || stage === 'wind' ? 0.7 : 0.3,
           background: 'radial-gradient(ellipse at 50% 25%, rgba(251, 191, 36, 0.4) 0%, rgba(251, 146, 60, 0.2) 40%, transparent 75%)',
-          filter: 'blur(80px)'
+          filter: isMobile ? 'blur(30px)' : 'blur(80px)'
         }}
       />
 
@@ -283,6 +279,17 @@ export function GratitudeGardenCeremony({
           />
         )}
       </AnimatePresence>
+
+      {/* Grass strip at bottom */}
+      <div
+        className="absolute bottom-0 left-0 right-0 pointer-events-none"
+        style={{
+          height: '28px',
+          background: 'linear-gradient(to top, #14532d 0%, #166534 55%, #15803d 85%, transparent 100%)',
+          opacity: stage === 'intro' ? 0 : 0.9,
+          transition: 'opacity 1.5s ease'
+        }}
+      />
 
       {/* Background stars - CSS only */}
       <div className="absolute inset-0">
@@ -325,7 +332,7 @@ export function GratitudeGardenCeremony({
         
         {/* Seeds falling */}
         <AnimatePresence>
-          {(stage === 'seeds' || stage === 'sprout') && seeds.map((seed) => (
+          {(stage === 'seeds' || stage === 'sprout') && seeds.slice(0, isMobile ? 15 : 25).map((seed) => (
             <motion.div
               key={seed.id}
               className="absolute z-20"
@@ -358,7 +365,7 @@ export function GratitudeGardenCeremony({
 
         {/* 20 Flowers */}
         <AnimatePresence>
-          {(stage === 'sprout' || stage === 'bloom' || stage === 'butterflies' || stage === 'wind' || stage === 'heart') && flowers.map((flower) => (
+          {(stage === 'sprout' || stage === 'bloom' || stage === 'butterflies' || stage === 'wind' || stage === 'heart') && flowers.slice(0, isMobile ? 15 : 25).map((flower) => (
             <motion.div
               key={flower.id}
               className="absolute z-25"
@@ -491,7 +498,7 @@ export function GratitudeGardenCeremony({
                 transition={{
                   delay: butterfly.delay,
                   duration: stage === 'wind' ? 1.2 : 7,
-                  repeat: stage === 'wind' || completed ? 0 : 3,
+                  repeat: stage === 'wind' ? 0 : 3,
                   ease: 'easeInOut'
                 }}
                 style={{
@@ -635,21 +642,16 @@ export function GratitudeGardenCeremony({
                 );
               })}
 
-              {/* Central glow - NO BLUR */}
+              {/* Central glow - viewport-fill, no scale thrash */}
               <motion.div
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 2.5, opacity: 0.85, y: -80 }}
+                className="absolute inset-0 pointer-events-none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.88 }}
                 transition={{ duration: 1.5, ease: 'easeOut' }}
-              >
-                <div 
-                  className="w-80 h-80 rounded-full"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(34, 197, 94, 0.7) 40%, rgba(22, 163, 74, 0.4) 70%, transparent 90%)',
-                    boxShadow: '0 0 120px rgba(34, 197, 94, 0.7)'
-                  }}
-                />
-              </motion.div>
+                style={{
+                  background: 'radial-gradient(circle at 50% 55%, rgba(255,255,255,0.9) 0%, rgba(34,197,94,0.68) 20%, rgba(22,163,74,0.38) 48%, transparent 74%)'
+                }}
+              />
 
               {/* Sparkles - 8 total */}
               {Array.from({ length: 8 }, (_, i) => {

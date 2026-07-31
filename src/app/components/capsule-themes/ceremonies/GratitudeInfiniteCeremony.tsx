@@ -51,7 +51,7 @@ export function GratitudeInfiniteCeremony({
   onComplete
 }: GratitudeInfiniteCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'birth' | 'expansion' | 'cosmic' | 'unity' | 'bloom' | 'radiance'>('intro');
-  const [completed, setCompleted] = useState(false);
+  const [isMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
   // Clear timeline
   useEffect(() => {
@@ -68,11 +68,7 @@ export function GratitudeInfiniteCeremony({
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
 
-    // Failsafe timeout - 1 second after last timeline action
-    const failsafeTimeout = setTimeout(() => {
-      setCompleted(true);
-      onComplete?.();
-    }, 16000);
+    const failsafeTimeout = setTimeout(() => { onComplete?.(); }, 16000);
 
     return () => {
       timeouts.forEach(clearTimeout);
@@ -109,17 +105,27 @@ export function GratitudeInfiniteCeremony({
     });
   }, []);
 
-  // Memoize bloom petals - 20 total
+  // Memoize bloom petals - 20 total (12 on mobile)
   const petals = useMemo((): Petal[] => {
-    return Array.from({ length: 20 }, (_, i) => ({
+    const count = isMobile ? 12 : 20;
+    return Array.from({ length: count }, (_, i) => ({
       id: i,
-      angle: (i / 20) * Math.PI * 2,
+      angle: (i / count) * Math.PI * 2,
       distance: 130 + (i % 3) * 25,
       size: 1 + (i % 3) * 0.25
     }));
-  }, []);
+  }, [isMobile]);
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  // Memoize sparkle positions to prevent Math.random() re-randomizing on re-render
+  const sparklePositions = useMemo(() => {
+    const count = isMobile ? 8 : 12;
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i / count) * Math.PI * 2;
+      const distance = 130 + (i * 11.3) % 50;
+      return { x: Math.cos(angle) * distance, y: Math.sin(angle) * distance };
+    });
+  }, [isMobile]);
+
   const giColors = useMemo(() => ['#a78bfa','#fbbf24','#f472b6','#60a5fa','#ffffff','#fde68a','#34d399'], []);
   const giFwPositions = useMemo(() => [
     {x:10,y:18},{x:26,y:10},{x:42,y:20},{x:58,y:8},{x:74,y:18},{x:88,y:12},{x:18,y:34},{x:82,y:28},
@@ -157,7 +163,8 @@ export function GratitudeInfiniteCeremony({
 
   // Memoize background stars
   const backgroundStars = useMemo(() => {
-    return Array.from({ length: 50 }, (_, i) => ({
+    const count = isMobile ? 30 : 50;
+    return Array.from({ length: count }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
       top: Math.random() * 100,
@@ -165,7 +172,7 @@ export function GratitudeInfiniteCeremony({
       delay: Math.random() * 2,
       duration: 2 + Math.random() * 2
     }));
-  }, []);
+  }, [isMobile]);
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#000000] via-[#0a0520] to-[#1a0a30]">
@@ -176,10 +183,24 @@ export function GratitudeInfiniteCeremony({
           style={{
             opacity: stage === 'bloom' ? 0.4 : 0.2,
             background: 'radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 70%)',
-            filter: 'blur(100px)'
+            filter: isMobile ? 'blur(50px)' : 'blur(100px)'
           }}
         />
       )}
+
+      {/* Static nebula clouds - visual enhancement, no animation */}
+      <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.18 }}>
+        <div style={{
+          position: 'absolute', left: '8%', top: '20%', width: '38%', height: '28%',
+          background: 'radial-gradient(ellipse, rgba(139,92,246,0.7) 0%, rgba(79,70,229,0.3) 50%, transparent 80%)',
+          filter: isMobile ? 'blur(28px)' : 'blur(50px)'
+        }} />
+        <div style={{
+          position: 'absolute', right: '6%', top: '40%', width: '32%', height: '24%',
+          background: 'radial-gradient(ellipse, rgba(236,72,153,0.6) 0%, rgba(168,85,247,0.3) 50%, transparent 80%)',
+          filter: isMobile ? 'blur(24px)' : 'blur(45px)'
+        }} />
+      </div>
 
       {/* Background stars - CSS only */}
       <div className="absolute inset-0">
@@ -433,28 +454,21 @@ export function GratitudeInfiniteCeremony({
                 );
               })}
 
-              {/* Central supernova - NO BLUR */}
+              {/* Central supernova - viewport-fill, no scale(3.5) thrash */}
               <motion.div
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ 
-                  scale: 3.5,
-                  opacity: 0.9
-                }}
+                className="absolute inset-0 pointer-events-none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.92 }}
                 transition={{ duration: 1.8, ease: 'easeOut' }}
-              >
-                <div 
-                  className="w-96 h-96 rounded-full"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 250, 205, 0.85) 12%, rgba(251, 191, 36, 0.8) 28%, rgba(245, 158, 11, 0.6) 50%, rgba(217, 119, 6, 0.35) 75%, transparent 90%)',
-                    boxShadow: '0 0 180px rgba(251, 191, 36, 0.95), 0 0 280px rgba(255, 255, 255, 0.5)'
-                  }}
-                />
-              </motion.div>
+                style={{
+                  background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.96) 0%, rgba(255,250,205,0.82) 10%, rgba(251,191,36,0.75) 25%, rgba(245,158,11,0.48) 48%, rgba(167,139,250,0.22) 68%, transparent 85%)'
+                }}
+              />
 
-              {/* Particle ring - 30 total (was 140+) */}
-              {Array.from({ length: 30 }, (_, i) => {
-                const angle = (i / 30) * Math.PI * 2;
+              {/* Particle ring - reduced on mobile */}
+              {Array.from({ length: isMobile ? 20 : 30 }, (_, i) => {
+                const total = isMobile ? 20 : 30;
+                const angle = (i / total) * Math.PI * 2;
                 const radius = 200;
                 const x = Math.cos(angle) * radius;
                 const y = Math.sin(angle) * radius;
@@ -483,34 +497,27 @@ export function GratitudeInfiniteCeremony({
                 );
               })}
 
-              {/* Sparkle burst - 12 total */}
-              {Array.from({ length: 12 }, (_, i) => {
-                const angle = (i / 12) * Math.PI * 2;
-                const distance = 130 + Math.random() * 50;
-                const x = Math.cos(angle) * distance;
-                const y = Math.sin(angle) * distance;
-
-                return (
-                  <motion.div
-                    key={`sparkle-${i}`}
-                    className="absolute text-4xl"
-                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-                    animate={{
-                      x: x,
-                      y: y,
-                      scale: [0, 1.5, 1.2],
-                      opacity: [0, 1, 0.9]
-                    }}
-                    transition={{
-                      duration: 1.8,
-                      delay: 0.3 + i * 0.06,
-                      ease: 'easeOut'
-                    }}
-                  >
-                    ✨
-                  </motion.div>
-                );
-              })}
+              {/* Sparkle burst - positions memoised, no Math.random() in render */}
+              {sparklePositions.map((pos, i) => (
+                <motion.div
+                  key={`sparkle-${i}`}
+                  className="absolute text-4xl"
+                  initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                  animate={{
+                    x: pos.x,
+                    y: pos.y,
+                    scale: [0, 1.5, 1.2],
+                    opacity: [0, 1, 0.9]
+                  }}
+                  transition={{
+                    duration: 1.8,
+                    delay: 0.3 + i * 0.06,
+                    ease: 'easeOut'
+                  }}
+                >
+                  ✨
+                </motion.div>
+              ))}
 
               {/* Celestial emojis - 8 total */}
               {Array.from({ length: 8 }, (_, i) => {

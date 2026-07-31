@@ -46,7 +46,7 @@ export function GratitudeLanternCeremony({
   onComplete
 }: GratitudeLanternCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'appear' | 'messages' | 'release' | 'ascend' | 'stars' | 'constellation' | 'radiance' | 'outro'>('intro');
-  const [completed, setCompleted] = useState(false);
+  const [isMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   // Animation timeline
@@ -68,11 +68,7 @@ export function GratitudeLanternCeremony({
       setTimeout(action, time)
     );
 
-    // Failsafe timeout - 1 second after last timeline action
-    const failsafeTimeout = setTimeout(() => {
-      setCompleted(true);
-      onComplete?.();
-    }, 17000);
+    const failsafeTimeout = setTimeout(() => { onComplete?.(); }, 17000);
 
     return () => {
       timeoutsRef.current.forEach(clearTimeout);
@@ -140,7 +136,6 @@ export function GratitudeLanternCeremony({
     return newStars;
   }, []);
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const ltColors = useMemo(() => ['#fbbf24','#fb923c','#fde68a','#f59e0b','#ffffff','#fcd34d','#ffa040'], []);
   const ltFwPositions = useMemo(() => [
     {x:10,y:20},{x:25,y:12},{x:40,y:22},{x:56,y:10},{x:72,y:20},{x:87,y:14},{x:18,y:35},{x:82,y:30},
@@ -178,7 +173,8 @@ export function GratitudeLanternCeremony({
 
   // Memoize background stars
   const backgroundStars = useMemo(() => {
-    return Array.from({ length: 30 }, (_, i) => ({
+    const count = isMobile ? 20 : 30;
+    return Array.from({ length: count }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
       top: Math.random() * 70,
@@ -186,7 +182,7 @@ export function GratitudeLanternCeremony({
       delay: Math.random() * 3,
       duration: 2 + Math.random() * 3
     }));
-  }, []);
+  }, [isMobile]);
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#0a0e27] via-[#1a1f3a] to-[#2d1a2e]">
@@ -228,15 +224,40 @@ export function GratitudeLanternCeremony({
             transition: 'opacity 2.5s ease'
           }}
         >
-          <div 
+          <div
             className="absolute inset-0"
             style={{
               background: 'radial-gradient(ellipse at 50% 70%, rgba(251, 191, 36, 0.25) 0%, rgba(245, 158, 11, 0.12) 40%, transparent 70%)',
-              filter: 'blur(60px)'
+              filter: isMobile ? 'blur(20px)' : 'blur(60px)'
             }}
           />
         </div>
       )}
+
+      {/* Moon */}
+      <div
+        className="absolute rounded-full pointer-events-none"
+        style={{
+          top: '8%', right: '10%',
+          width: isMobile ? 36 : 52,
+          height: isMobile ? 36 : 52,
+          background: 'radial-gradient(circle at 40% 35%, #fef9c3 0%, #fde68a 60%, #f59e0b 100%)',
+          boxShadow: '0 0 24px rgba(254, 240, 138, 0.55)',
+          opacity: stage === 'radiance' ? 0 : 0.75,
+          transition: 'opacity 2s ease'
+        }}
+      />
+
+      {/* Warm horizon glow that brightens as lanterns rise */}
+      <div
+        className="absolute bottom-0 left-0 right-0 pointer-events-none"
+        style={{
+          height: '35%',
+          background: 'radial-gradient(ellipse at 50% 100%, rgba(251,146,60,0.35) 0%, rgba(245,158,11,0.18) 40%, transparent 75%)',
+          opacity: stage === 'release' || stage === 'ascend' ? 1 : 0,
+          transition: 'opacity 2.5s ease'
+        }}
+      />
 
       {/* Ground silhouette */}
       <div
@@ -271,7 +292,7 @@ export function GratitudeLanternCeremony({
         
         {/* 30 Sky Lanterns - SIMPLIFIED */}
         <AnimatePresence>
-          {(stage === 'appear' || stage === 'messages' || stage === 'release' || stage === 'ascend') && lanterns.map((lantern) => {
+          {(stage === 'appear' || stage === 'messages' || stage === 'release' || stage === 'ascend') && lanterns.slice(0, isMobile ? 20 : 30).map((lantern) => {
             const ascentDistance = stage === 'ascend' ? -700 : stage === 'release' ? -350 : 0;
             const swayX = (stage === 'release' || stage === 'ascend') 
               ? Math.sin(lantern.swayOffset + lantern.baseY * 0.02) * 60 
@@ -483,24 +504,16 @@ export function GratitudeLanternCeremony({
                 );
               })}
 
-              {/* Central glow - NO BLUR */}
+              {/* Central glow - viewport-fill, no scale thrash */}
               <motion.div
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ 
-                  scale: 2.5,
-                  opacity: 0.8
-                }}
+                className="absolute inset-0 pointer-events-none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.85 }}
                 transition={{ duration: 1.5, ease: 'easeOut' }}
-              >
-                <div 
-                  className="w-80 h-80 rounded-full"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(251, 191, 36, 0.6) 40%, rgba(245, 158, 11, 0.3) 70%, transparent 90%)',
-                    boxShadow: '0 0 100px rgba(251, 191, 36, 0.6)'
-                  }}
-                />
-              </motion.div>
+                style={{
+                  background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.88) 0%, rgba(251,191,36,0.65) 18%, rgba(245,158,11,0.38) 42%, transparent 72%)'
+                }}
+              />
 
               {/* Sparkles - REDUCED to 6 */}
               {Array.from({ length: 6 }, (_, i) => {
