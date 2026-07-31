@@ -101,13 +101,13 @@ export function NewLifeWorldTreeCeremony({
     if (stage !== 'painting') return;
     const colors = ['#fbbf24','#fb923c','#f97316','#fde68a','#ffffff','#10b981','#fcd34d'];
     const base = { spread: 80, ticks: 200, gravity: 0.9, decay: 0.93, startVelocity: 38, colors };
-    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 60, origin: { x: 0, y: 0.7 } });
-    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 120, origin: { x: 1, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 60, origin: { x: isMobile ? 0.12 : 0, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 120, origin: { x: isMobile ? 0.88 : 1, y: 0.7 } });
     if (!isMobile) {
       const t1 = setTimeout(() => confetti({ ...base, particleCount: 80, angle: 90, origin: { x: 0.5, y: 0.6 } }), 380);
       const t2 = setTimeout(() => {
-        confetti({ ...base, particleCount: 100, angle: 60, origin: { x: 0, y: 0.65 } });
-        confetti({ ...base, particleCount: 100, angle: 120, origin: { x: 1, y: 0.65 } });
+        confetti({ ...base, particleCount: 100, angle: 60, origin: { x: isMobile ? 0.12 : 0, y: 0.65 } });
+        confetti({ ...base, particleCount: 100, angle: 120, origin: { x: isMobile ? 0.88 : 1, y: 0.65 } });
       }, 950);
       return () => { clearTimeout(t1); clearTimeout(t2); };
     }
@@ -299,14 +299,16 @@ export function NewLifeWorldTreeCeremony({
 
       {/* Ground */}
       <motion.div className="absolute z-18" style={{ left: 0, right: 0, bottom: 0, height: '38%' }}
+        initial={{ opacity: 0 }}
         animate={{
+          opacity: 1,
           background: isPainting
             ? 'linear-gradient(to bottom, rgba(250,204,21,0.95) 0%, rgba(234,179,8,1) 45%, rgba(202,138,4,1) 100%)'
             : isLit
             ? 'linear-gradient(to bottom, rgba(202,138,4,0.7) 0%, rgba(161,98,7,0.85) 45%, rgba(133,77,14,1) 100%)'
             : 'linear-gradient(to bottom, rgba(15,23,42,0.5) 0%, rgba(14,61,33,0.7) 45%, rgba(7,30,16,1) 100%)'
         }}
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2.5 }}
+        transition={{ duration: 2.5 }}
       />
 
       {/* Grass blades — CSS sway, capped at 60 */}

@@ -178,8 +178,8 @@ export function BirthdayAuroraCascadeCeremony({
       shapes: ['square', 'circle'] as confetti.Shape[],
     };
     const count = mobile ? 100 : 180;
-    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 75, origin: { x: 0, y: 0.45 } });
-    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 75, origin: { x: 1, y: 0.45 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 75, origin: { x: isMobile ? 0.12 : 0, y: 0.45 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 75, origin: { x: isMobile ? 0.88 : 1, y: 0.45 } });
     if (!mobile) {
       const t1 = setTimeout(() => confetti({ ...opts, particleCount: 70, spread: 110, origin: { x: 0.5, y: 0.4 }, startVelocity: 42 }), 400);
       const t2 = setTimeout(() => {

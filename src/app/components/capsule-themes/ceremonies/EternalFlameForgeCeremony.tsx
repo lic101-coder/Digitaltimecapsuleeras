@@ -408,8 +408,8 @@ export function EternalFlameForgeCeremony({
     const colors = ['#ff6b00','#ffa500','#fcd34d','#ff3d00','#f97316','#ffffff','#fb923c','#fbbf24'];
     const opts = { colors, startVelocity: isMobile ? 36 : 50, gravity: 0.92, ticks: isMobile ? 160 : 230, shapes: ['square','circle'] as any };
     const count = isMobile ? 100 : 190;
-    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 72, origin: { x: 0, y: 0.55 } });
-    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 72, origin: { x: 1, y: 0.55 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 72, origin: { x: isMobile ? 0.12 : 0, y: 0.55 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 72, origin: { x: isMobile ? 0.88 : 1, y: 0.55 } });
     if (!isMobile) {
       const t1 = setTimeout(() => confetti({ ...opts, particleCount: 70, spread: 105, origin: { x: 0.5, y: 0.4 }, startVelocity: 42, gravity: 0.8 }), 400);
       const t2 = setTimeout(() => {

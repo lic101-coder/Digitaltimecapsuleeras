@@ -163,8 +163,8 @@ export function LuxeBirthdayCeremony({ onComplete, isVisible, age, recipientName
       shapes: ['square', 'circle'] as confetti.Shape[],
     };
 
-    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 72, origin: { x: 0, y: 0.65 }, drift: 0.2 });
-    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 72, origin: { x: 1, y: 0.65 }, drift: -0.2 });
+    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 72, origin: { x: isMobile ? 0.12 : 0, y: 0.65 }, drift: 0.2 });
+    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 72, origin: { x: isMobile ? 0.88 : 1, y: 0.65 }, drift: -0.2 });
 
     if (!isMobile) {
       setTimeout(() => confetti({ ...opts, particleCount: 80, spread: 105, origin: { x: 0.5, y: 0.5 }, startVelocity: 45, gravity: 0.8 }), 350);

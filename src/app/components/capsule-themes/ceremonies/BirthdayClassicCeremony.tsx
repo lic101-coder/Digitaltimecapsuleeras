@@ -222,8 +222,8 @@ export function BirthdayClassicCeremony({
       shapes: ['square', 'circle'] as confetti.Shape[],
     };
     const count = isMobile ? 110 : 200;
-    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 75, origin: { x: 0, y: 0.55 } });
-    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 75, origin: { x: 1, y: 0.55 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 75, origin: { x: isMobile ? 0.12 : 0, y: 0.55 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 75, origin: { x: isMobile ? 0.88 : 1, y: 0.55 } });
     if (!isMobile) {
       const t1 = setTimeout(() => confetti({ ...opts, particleCount: 75, spread: 108, origin: { x: 0.5, y: 0.45 }, startVelocity: 44, gravity: 0.8 }), 380);
       const t2 = setTimeout(() => {

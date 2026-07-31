@@ -171,12 +171,12 @@ export function MixtapeEpicCeremony({
     if (stage !== 'radiance') return;
     const colors = ['#ffff00','#00ff41','#ff0000','#00ffff','#ff00ff'];
     const base = { spread: 90, ticks: 300, gravity: 0.9, decay: 0.93, startVelocity: 50, colors };
-    confetti({ ...base, particleCount: isMobile ? 70 : 150, angle: 60, origin: { x: 0, y: 0.7 } });
-    confetti({ ...base, particleCount: isMobile ? 70 : 150, angle: 120, origin: { x: 1, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 150, angle: 60, origin: { x: isMobile ? 0.12 : 0, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 150, angle: 120, origin: { x: isMobile ? 0.88 : 1, y: 0.7 } });
     const t1 = setTimeout(() => confetti({ ...base, particleCount: isMobile ? 60 : 100, angle: 90, origin: { x: 0.5, y: 0.6 } }), 400);
     const t2 = setTimeout(() => {
-      confetti({ ...base, particleCount: 100, angle: 60, origin: { x: 0, y: 0.65 } });
-      confetti({ ...base, particleCount: 100, angle: 120, origin: { x: 1, y: 0.65 } });
+      confetti({ ...base, particleCount: 100, angle: 60, origin: { x: isMobile ? 0.12 : 0, y: 0.65 } });
+      confetti({ ...base, particleCount: 100, angle: 120, origin: { x: isMobile ? 0.88 : 1, y: 0.65 } });
     }, 950);
     // Score counter
     let s = 0;

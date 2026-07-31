@@ -52,7 +52,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
   standard: {
     id: 'standard',
     name: 'Standard Eras',
-    description: 'The classic capsule experience reimagined',
+    description: 'The classic capsule experience',
     icon: (props: any) => <EmojiIcon emoji="⭐" {...props} />,
     primaryColor: '#0f172a', // Dark blue (slate-900) for mobile visibility and contrast
     secondaryColor: '#94a3b8',

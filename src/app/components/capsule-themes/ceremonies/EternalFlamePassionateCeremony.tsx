@@ -236,8 +236,8 @@ export function EternalFlamePassionateCeremony({
     const colors = ['#ff69b4','#00e5ff','#ffd700','#ff1744','#00ff41','#e91e63','#ffffff'];
     const opts = { colors, startVelocity: isMobile ? 35 : 48, gravity: 0.85, ticks: isMobile ? 160 : 220, shapes: ['square','circle'] as any };
     const count = isMobile ? 100 : 180;
-    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 72, origin: { x: 0, y: 0.55 } });
-    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 72, origin: { x: 1, y: 0.55 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 72, origin: { x: isMobile ? 0.12 : 0, y: 0.55 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 72, origin: { x: isMobile ? 0.88 : 1, y: 0.55 } });
     if (!isMobile) {
       const t1 = setTimeout(() => confetti({ ...opts, particleCount: 70, spread: 100, origin: { x: 0.5, y: 0.45 }, startVelocity: 42 }), 350);
       const t2 = setTimeout(() => {

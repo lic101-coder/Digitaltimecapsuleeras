@@ -100,13 +100,13 @@ export function LaunchpadPremiumCeremony({
     if (stage !== 'radiance') return;
     const colors = ['#88ccff','#aaddff','#ffffff','#c8e6ff','#6699ff'];
     const base = { spread: 80, ticks: 200, gravity: 0.9, decay: 0.93, startVelocity: 38, colors };
-    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 60, origin: { x: 0, y: 0.7 } });
-    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 120, origin: { x: 1, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 60, origin: { x: isMobile ? 0.12 : 0, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 120, origin: { x: isMobile ? 0.88 : 1, y: 0.7 } });
     if (!isMobile) {
       const t1 = setTimeout(() => confetti({ ...base, particleCount: 80, angle: 90, origin: { x: 0.5, y: 0.6 } }), 380);
       const t2 = setTimeout(() => {
-        confetti({ ...base, particleCount: 100, angle: 60, origin: { x: 0, y: 0.65 } });
-        confetti({ ...base, particleCount: 100, angle: 120, origin: { x: 1, y: 0.65 } });
+        confetti({ ...base, particleCount: 100, angle: 60, origin: { x: isMobile ? 0.12 : 0, y: 0.65 } });
+        confetti({ ...base, particleCount: 100, angle: 120, origin: { x: isMobile ? 0.88 : 1, y: 0.65 } });
       }, 950);
       return () => { clearTimeout(t1); clearTimeout(t2); };
     }

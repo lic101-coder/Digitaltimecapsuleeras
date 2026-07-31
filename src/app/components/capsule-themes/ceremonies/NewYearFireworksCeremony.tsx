@@ -262,8 +262,8 @@ export function NewYearFireworksCeremony({ capsuleTitle, onComplete }: Props) {
   useEffect(() => {
     if (stage !== 'finale') return;
     const cfg = { spread: 110, ticks: 280, gravity: 0.65, decay: 0.93, startVelocity: 50 };
-    confetti({ ...cfg, particleCount: 160, angle: 60,  colors: ['#ffd700','#ff4444','#4499ff','#cc44ff'], origin: { x: 0,   y: 0.8 } });
-    confetti({ ...cfg, particleCount: 160, angle: 120, colors: ['#ffd700','#ff4444','#4499ff','#cc44ff'], origin: { x: 1,   y: 0.8 } });
+    confetti({ ...cfg, particleCount: 160, angle: 60,  colors: ['#ffd700','#ff4444','#4499ff','#cc44ff'], origin: { x: isMobile ? 0.12 : 0,   y: 0.8 } });
+    confetti({ ...cfg, particleCount: 160, angle: 120, colors: ['#ffd700','#ff4444','#4499ff','#cc44ff'], origin: { x: isMobile ? 0.88 : 1,   y: 0.8 } });
     const t1 = setTimeout(() => confetti({ ...cfg, particleCount: 220, angle: 90, colors: ['#ffffff','#ffd700','#ff44cc','#00ffff'], origin: { x: 0.5, y: 0.65 } }), 700);
     const t2 = setTimeout(() => {
       confetti({ ...cfg, particleCount: 120, angle: 70,  colors: ['#cc44ff','#00ffff','#ffffff'], origin: { x: 0.25, y: 0.75 } });
