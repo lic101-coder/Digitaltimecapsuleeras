@@ -15,6 +15,7 @@
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 interface GratitudeLanternCeremonyProps {
   isVisible: boolean;
@@ -138,6 +139,42 @@ export function GratitudeLanternCeremony({
     
     return newStars;
   }, []);
+
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const ltColors = useMemo(() => ['#fbbf24','#fb923c','#fde68a','#f59e0b','#ffffff','#fcd34d','#ffa040'], []);
+  const ltFwPositions = useMemo(() => [
+    {x:10,y:20},{x:25,y:12},{x:40,y:22},{x:56,y:10},{x:72,y:20},{x:87,y:14},{x:18,y:35},{x:82,y:30},
+  ].slice(0, isMobile ? 5 : 8), [isMobile]);
+  const ltFwSparks = useMemo(() => ltFwPositions.map(() =>
+    Array.from({length: isMobile ? 14 : 20}, (_, i) => {
+      const a = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const d = 50 + (i % 5) * 20;
+      return { x: Math.cos(a)*d, y: Math.sin(a)*d, color: ltColors[i % ltColors.length], delay: i*0.04 };
+    })
+  ), [ltFwPositions, ltColors, isMobile]);
+  const ltFwRings = useMemo(() => ltFwPositions.map(() =>
+    Array.from({length: 3}, (_, i) => ({ delay: i*0.15, color: ['#fbbf24','#fb923c','#fde68a'][i] }))
+  ), [ltFwPositions]);
+  const ltOrbs = useMemo(() => Array.from({length: isMobile ? 10 : 18}, (_, i) => ({
+    x: 5 + (i * 5.5) % 90, dx: (i % 7 - 3) * 18, dur: 2.5 + (i % 4) * 0.5,
+    delay: i * 0.18, color: ltColors[i % ltColors.length]
+  })), [ltColors, isMobile]);
+
+  useEffect(() => {
+    if (stage !== 'radiance') return;
+    const colors = ['#fbbf24','#fb923c','#fde68a','#f59e0b','#ffffff','#fcd34d'];
+    const base = { spread: 80, ticks: 200, gravity: 0.9, decay: 0.93, startVelocity: 38, colors };
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 60, origin: { x: 0, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 120, origin: { x: 1, y: 0.7 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...base, particleCount: 80, angle: 90, origin: { x: 0.5, y: 0.6 } }), 380);
+      const t2 = setTimeout(() => {
+        confetti({ ...base, particleCount: 100, angle: 60, origin: { x: 0, y: 0.65 } });
+        confetti({ ...base, particleCount: 100, angle: 120, origin: { x: 1, y: 0.65 } });
+      }, 950);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
 
   // Memoize background stars
   const backgroundStars = useMemo(() => {
@@ -527,6 +564,45 @@ export function GratitudeLanternCeremony({
         </AnimatePresence>
       </div>
 
+      {/* Firework clusters for radiance */}
+      <AnimatePresence>
+        {stage === 'radiance' && (
+          <>
+            {ltFwPositions.map((pos, pi) => (
+              <React.Fragment key={`lt-fw-${pi}`}>
+                {ltFwSparks[pi].map((s, si) => (
+                  <motion.div key={`lt-spark-${pi}-${si}`} className="absolute z-51 rounded-full"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 6, height: 6, background: s.color }}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                    animate={{ x: s.x, y: s.y, scale: [0,1.4,0], opacity: [0,1,0] }}
+                    transition={{ duration: 1.2, delay: s.delay, ease: 'easeOut' }}
+                  />
+                ))}
+                {ltFwRings[pi].map((r, ri) => (
+                  <div key={`lt-ring-${pi}-${ri}`} className="absolute rounded-full border-2"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 20, height: 20, borderColor: r.color, animation: `lt-pop-ring 0.9s ease-out ${r.delay}s both` }}
+                  />
+                ))}
+                <div key={`lt-flash-${pi}`} className="absolute rounded-full"
+                  style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 40, height: 40,
+                    background: `radial-gradient(circle, ${ltColors[pi % ltColors.length]}cc, transparent)`,
+                    filter: 'blur(8px)', animation: 'lt-flash 0.5s ease-out both' }}
+                />
+              </React.Fragment>
+            ))}
+            {ltOrbs.map((orb, i) => (
+              <div key={`lt-orb-${i}`} className="absolute rounded-full z-49"
+                style={{ left: `${orb.x}%`, bottom: '20%', width: 10, height: 10,
+                  background: orb.color, boxShadow: `0 0 14px ${orb.color}`,
+                  '--dx': `${orb.dx}px`,
+                  animation: `lt-orb-float ${orb.dur}s ease-out ${orb.delay}s both`
+                } as React.CSSProperties}
+              />
+            ))}
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Success message */}
       <AnimatePresence>
         {stage === 'radiance' && (
@@ -537,11 +613,12 @@ export function GratitudeLanternCeremony({
             transition={{ delay: 0.8, duration: 1 }}
             className="absolute bottom-20 left-0 right-0 text-center z-40"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-amber-200 drop-shadow-2xl mb-3">
-              Your Gratitude Illuminates the Sky ✨🏮💫
+            <h2 className="text-3xl md:text-5xl font-black drop-shadow-[0_0_24px_rgba(251,191,36,0.9)] mb-3"
+              style={{ background: 'linear-gradient(90deg,#fbbf24,#fb923c,#fde68a,#fbbf24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              🏮 Gratitude Illuminates the Sky 🏮
             </h2>
-            <p className="text-2xl text-yellow-200 drop-shadow-lg">
-              30 lanterns carry your thanks to the heavens
+            <p className="text-xl text-yellow-200 drop-shadow-lg">
+              Your thanks rises to the heavens ✨
             </p>
           </motion.div>
         )}
@@ -549,6 +626,19 @@ export function GratitudeLanternCeremony({
 
       {/* SIMPLIFIED CSS Animations */}
       <style>{`
+        @keyframes lt-pop-ring {
+          0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
+        }
+        @keyframes lt-flash {
+          0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+        }
+        @keyframes lt-orb-float {
+          0% { transform: translateY(0) translateX(0); opacity: 0; }
+          20% { opacity: 1; }
+          100% { transform: translateY(-180px) translateX(var(--dx)); opacity: 0; }
+        }
         @keyframes star-twinkle {
           0%, 100% { opacity: 0.2; }
           50% { opacity: 1; }

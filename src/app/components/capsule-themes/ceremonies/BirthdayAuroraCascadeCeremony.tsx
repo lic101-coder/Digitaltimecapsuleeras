@@ -23,6 +23,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 import { getOptimalParticleCount, isMobile } from './ceremonyOptimization';
 
 interface BirthdayAuroraCascadeCeremonyProps {
@@ -119,6 +120,42 @@ export function BirthdayAuroraCascadeCeremony({
     });
   }, []);
 
+  // Firework clusters that radiate from fixed positions during supernova
+  const supernovaClusters = useMemo(() => {
+    const positions = mobile
+      ? [{ x: 18, y: 20 }, { x: 82, y: 18 }, { x: 50, y: 12 }]
+      : [{ x: 12, y: 18 }, { x: 88, y: 16 }, { x: 50, y: 10 }, { x: 28, y: 32 }, { x: 72, y: 28 }, { x: 50, y: 45 }];
+    return positions.map((pos, pi) =>
+      Array.from({ length: mobile ? 12 : 18 }, (_, i) => {
+        const angle = (i / (mobile ? 12 : 18)) * Math.PI * 2;
+        const speed = 50 + (i % 5) * 22;
+        return {
+          px: pos.x, py: pos.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          colorIdx: (pi * 3 + i) % auroraColors.length,
+          size: 4 + (i % 4) * 2,
+          delay: pi * 0.18 + i * 0.012,
+        };
+      })
+    ).flat();
+  }, [mobile]);
+
+  // Shockwave rings at each cluster position (3 rings each)
+  const supernovaRings = useMemo(() => {
+    const positions = mobile
+      ? [{ x: 18, y: 20 }, { x: 82, y: 18 }, { x: 50, y: 12 }]
+      : [{ x: 12, y: 18 }, { x: 88, y: 16 }, { x: 50, y: 10 }, { x: 28, y: 32 }, { x: 72, y: 28 }];
+    return positions.flatMap((pos, pi) =>
+      [0, 1, 2].map((ri) => ({
+        x: pos.x, y: pos.y,
+        color: auroraColors[(pi * 2 + ri) % auroraColors.length].main,
+        size: 50 + ri * 20,
+        delay: pi * 0.18 + ri * 0.1,
+      }))
+    );
+  }, [mobile]);
+
   const starCss = `
     @keyframes bac-twinkle-slow{0%,100%{opacity:0.2;transform:scale(1)}50%{opacity:0.5;transform:scale(1.2)}}
     @keyframes bac-twinkle-fast{0%,100%{opacity:0.4;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
@@ -126,7 +163,32 @@ export function BirthdayAuroraCascadeCeremony({
     @keyframes bac-title-shift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
     @keyframes bac-ray-in{0%{transform:scaleX(0);opacity:0}20%{opacity:1}100%{transform:scaleX(1);opacity:0.75}}
     @keyframes bac-ray-fade{0%,100%{opacity:0.75}50%{opacity:0.45}}
+    @keyframes bac-nova-ring{0%{transform:translate(-50%,-50%) scale(0);opacity:0.9}55%{opacity:0.6}100%{transform:translate(-50%,-50%) scale(4.5);opacity:0}}
   `;
+
+  // Fire confetti when supernova hits
+  useEffect(() => {
+    if (stage !== 'supernova') return;
+    const colors = auroraColors.map(c => c.main);
+    const opts = {
+      colors,
+      startVelocity: mobile ? 38 : 52,
+      gravity: 0.85,
+      ticks: mobile ? 160 : 230,
+      shapes: ['square', 'circle'] as confetti.Shape[],
+    };
+    const count = mobile ? 100 : 180;
+    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 75, origin: { x: 0, y: 0.45 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 75, origin: { x: 1, y: 0.45 } });
+    if (!mobile) {
+      const t1 = setTimeout(() => confetti({ ...opts, particleCount: 70, spread: 110, origin: { x: 0.5, y: 0.4 }, startVelocity: 42 }), 400);
+      const t2 = setTimeout(() => {
+        confetti({ ...opts, particleCount: 60, angle: 70, spread: 65, origin: { x: 0.2, y: 0.55 } });
+        confetti({ ...opts, particleCount: 60, angle: 110, spread: 65, origin: { x: 0.8, y: 0.55 } });
+      }, 900);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isVisible) return null;
 
@@ -659,32 +721,86 @@ export function BirthdayAuroraCascadeCeremony({
               );
             })}
 
+            {/* Firework clusters radiating from fixed screen positions */}
+            {supernovaClusters.map((f, i) => (
+              <motion.div
+                key={`nova-fw-${i}`}
+                className="absolute pointer-events-none rounded-full"
+                style={{
+                  left: `${f.px}%`, top: `${f.py}%`,
+                  width: f.size, height: f.size,
+                  background: auroraColors[f.colorIdx].main,
+                  boxShadow: `0 0 ${f.size * 2}px ${auroraColors[f.colorIdx].glow}`,
+                  zIndex: 32,
+                }}
+                initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                animate={{ x: f.vx, y: f.vy, opacity: [1, 0.9, 0], scale: [1.3, 0.9, 0] }}
+                transition={{ duration: mobile ? 0.95 : 1.15, delay: f.delay, ease: [0.2, 0.8, 0.3, 1] }}
+              />
+            ))}
+
+            {/* Shockwave rings at each cluster origin */}
+            {supernovaRings.map((r, i) => (
+              <div
+                key={`nova-ring-${i}`}
+                className="absolute pointer-events-none rounded-full"
+                style={{
+                  left: `${r.x}%`, top: `${r.y}%`,
+                  width: r.size, height: r.size,
+                  border: `2px solid ${r.color}`,
+                  boxShadow: `0 0 12px ${r.color}88`,
+                  animation: `bac-nova-ring 0.9s cubic-bezier(0.2,0.8,0.3,1) ${r.delay}s forwards`,
+                  opacity: 0,
+                  zIndex: 30,
+                }}
+              />
+            ))}
+
             {/* Title reveal with epic entrance */}
             <motion.div
               className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-40 text-center px-8"
               initial={{ opacity: 0, scale: 0.3, y: 100, rotateX: mobile ? 0 : 45 }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: 0,
-                rotateX: 0
-              }}
-              transition={{ 
-                duration: 1.2, 
-                delay: 0.6, 
-                ease: cinematicEase 
-              }}
+              animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+              transition={{ duration: 1.2, delay: 0.6, ease: cinematicEase }}
             >
+              <motion.h2
+                className="font-bold tracking-wide"
+                initial={{ opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
+                style={{
+                  fontSize: mobile ? '2rem' : '3rem',
+                  background: 'linear-gradient(135deg, #ff6b9d 0%, #fbbf24 40%, #84cc16 70%, #06b6d4 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  filter: 'drop-shadow(0 0 20px rgba(251,191,36,0.7))',
+                }}
+              >
+                🎉 Happy Birthday! 🎉
+              </motion.h2>
               <motion.p
-                className="text-xl md:text-3xl text-white font-light tracking-wider"
+                className="text-xl md:text-3xl text-white font-light tracking-wider mt-3"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 1.2, ease: cinematicEase }}
-                style={{
-                  textShadow: '0 0 50px rgba(255, 255, 255, 0.8), 0 0 100px rgba(251, 191, 36, 0.5)'
-                }}
+                style={{ textShadow: '0 0 50px rgba(255,255,255,0.8), 0 0 100px rgba(251,191,36,0.5)' }}
               >
                 Another trip around the sun ✨
+              </motion.p>
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.8, duration: 0.7 }}
+                style={{
+                  color: 'rgba(200,180,255,0.7)',
+                  fontSize: mobile ? '0.8rem' : '0.95rem',
+                  letterSpacing: '0.22em',
+                  textTransform: 'uppercase',
+                  marginTop: 10,
+                }}
+              >
+                The universe celebrates you
               </motion.p>
             </motion.div>
           </>

@@ -11,6 +11,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 interface NewLifeGenesisCeremonyProps {
   capsuleTitle: string;
@@ -21,6 +22,20 @@ interface NewLifeGenesisCeremonyProps {
 
 /* ─────────────────────── CSS ─────────────────────── */
 const CSS = `
+@keyframes gs-pop-ring {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.92; }
+  55%  { opacity: 0.6; }
+  100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
+}
+@keyframes gs-flash {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  40%  { opacity: 0; }
+}
+@keyframes gs-orb-float {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.9; }
+  100% { transform: translate(var(--dx), -90px) scale(0.4); opacity: 0; }
+}
 /* 150 BPM — fetal */
 @keyframes beat-fast {
   0%,100% { transform: scale(1);    opacity: 0.88; }
@@ -141,6 +156,26 @@ export function NewLifeGenesisCeremony({
   const [beatReady, setBeatReady] = useState(false);
   const [heartReady, setHeartReady] = useState(false);
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const gsColors = useMemo(() => ['#FFA040','#FFD840','#fbbf24','#FF5C10','#ffffff','#fde68a','#fb923c','#FFEEC0'], []);
+  const gsFwPositions = useMemo(() => [
+    {x:8,y:14},{x:22,y:9},{x:38,y:18},{x:52,y:7},{x:68,y:15},{x:82,y:11},{x:14,y:28},{x:90,y:22},
+  ].slice(0, isMobile ? 5 : 8), [isMobile]);
+  const gsFwSparks = useMemo(() => gsFwPositions.map(() =>
+    Array.from({length: isMobile ? 14 : 20}, (_, i) => {
+      const a = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const d = 50 + (i % 5) * 20;
+      return { x: Math.cos(a)*d, y: Math.sin(a)*d, color: gsColors[i % gsColors.length], delay: i*0.04 };
+    })
+  ), [gsFwPositions, gsColors, isMobile]);
+  const gsFwRings = useMemo(() => gsFwPositions.map(() =>
+    Array.from({length: 3}, (_, i) => ({ delay: i*0.15, color: ['#FFA040','#FFD840','#FFEEC0'][i] }))
+  ), [gsFwPositions]);
+  const gsOrbs = useMemo(() => Array.from({length: isMobile ? 10 : 18}, (_, i) => ({
+    x: 5 + (i * 5.5) % 90, dx: (i % 7 - 3) * 18, dur: 2.5 + (i % 4) * 0.5,
+    delay: i * 0.18, color: gsColors[i % gsColors.length]
+  })), [gsColors, isMobile]);
+
   useEffect(() => {
     const ts: { t: number; s: Stage }[] = [
       { t: 0,     s: 'void' },
@@ -159,6 +194,22 @@ export function NewLifeGenesisCeremony({
     const heartT = setTimeout(() => setHeartReady(true), 10000 + 1000);
     return () => { ids.forEach(clearTimeout); clearTimeout(done); clearTimeout(beatT); clearTimeout(heartT); };
   }, []);
+
+  useEffect(() => {
+    if (stage !== 'reveal') return;
+    const colors = ['#FFA040','#FFD840','#fbbf24','#FF5C10','#ffffff','#fde68a','#fb923c'];
+    const base = { spread: 80, ticks: 200, gravity: 0.9, decay: 0.93, startVelocity: 38, colors };
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 60, origin: { x: 0, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 120, origin: { x: 1, y: 0.7 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...base, particleCount: 80, angle: 90, origin: { x: 0.5, y: 0.6 } }), 380);
+      const t2 = setTimeout(() => {
+        confetti({ ...base, particleCount: 100, angle: 60, origin: { x: 0, y: 0.65 } });
+        confetti({ ...base, particleCount: 100, angle: 120, origin: { x: 1, y: 0.65 } });
+      }, 950);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
 
   /* ── Stars ── */
   const bgStars = useMemo(() =>
@@ -612,37 +663,85 @@ export function NewLifeGenesisCeremony({
         )}
       </AnimatePresence>
 
+      {/* Firework clusters — reveal finale */}
+      <AnimatePresence>
+        {showReveal && (
+          <>
+            {gsFwPositions.map((pos, pi) => (
+              <React.Fragment key={`gs-fw-${pi}`}>
+                {gsFwSparks[pi].map((s, si) => (
+                  <motion.div key={`gs-spark-${pi}-${si}`} className="absolute z-51 rounded-full"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 6, height: 6, background: s.color }}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                    animate={{ x: s.x, y: s.y, scale: [0,1.4,0], opacity: [0,1,0] }}
+                    transition={{ duration: 1.2, delay: s.delay, ease: 'easeOut' }}
+                  />
+                ))}
+                {gsFwRings[pi].map((r, ri) => (
+                  <div key={`gs-ring-${pi}-${ri}`} className="absolute rounded-full border-2"
+                    style={{
+                      left: `${pos.x}%`, top: `${pos.y}%`, width: 20, height: 20,
+                      borderColor: r.color, animation: `gs-pop-ring 0.9s ease-out ${r.delay}s both`
+                    }}
+                  />
+                ))}
+                <div key={`gs-flash-${pi}`} className="absolute rounded-full"
+                  style={{
+                    left: `${pos.x}%`, top: `${pos.y}%`, width: 40, height: 40,
+                    background: `radial-gradient(circle, ${gsColors[pi % gsColors.length]}cc, transparent)`,
+                    filter: 'blur(8px)', animation: 'gs-flash 0.5s ease-out both'
+                  }}
+                />
+              </React.Fragment>
+            ))}
+            {gsOrbs.map((orb, i) => (
+              <div key={`gs-orb-${i}`} className="absolute rounded-full z-49"
+                style={{
+                  left: `${orb.x}%`, bottom: '18%', width: 8, height: 8,
+                  background: orb.color, boxShadow: `0 0 12px ${orb.color}`,
+                  '--dx': `${orb.dx}px`,
+                  animation: `gs-orb-float ${orb.dur}s ease-out ${orb.delay}s both`
+                } as React.CSSProperties}
+              />
+            ))}
+          </>
+        )}
+      </AnimatePresence>
+
       {/* ══════════════════════════════════════════
           CAPSULE TITLE
           ══════════════════════════════════════════ */}
       <AnimatePresence>
         {showReveal && (
           <div className="absolute z-40 text-center pointer-events-none"
-            style={{ left: '50%', bottom: '9%', transform: 'translateX(-50%)', width: '90%', maxWidth: '350px' }}>
+            style={{ left: '50%', bottom: '9%', transform: 'translateX(-50%)', width: '90%', maxWidth: '380px' }}>
 
-            <motion.p
+            <motion.h2
               style={{
                 fontFamily: 'Georgia, "Times New Roman", serif',
-                fontSize: '9px',
-                letterSpacing: '0.5em',
-                color: 'rgba(255,192,92,0.65)',
+                fontSize: '13px',
+                letterSpacing: '0.4em',
                 textTransform: 'uppercase',
-                marginBottom: '13px',
+                marginBottom: '10px',
+                background: 'linear-gradient(135deg, #FFEEC0, #FFA040, #FFD840, #FFEEC0)',
+                backgroundSize: '200% 200%',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 0 18px rgba(255,160,70,0.8))'
               }}
               initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 1.0 }}
+              animate={{ opacity: 1, y: 0, backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] as any }}
+              transition={{ delay: 0.4, duration: 1.0, backgroundPosition: { duration: 3, repeat: 5 } }}
             >
-              EVERY HEARTBEAT IS A BEGINNING
-            </motion.p>
-
+              💛 Every Heartbeat Is A Beginning 💛
+            </motion.h2>
 
             <motion.p
               style={{
                 fontFamily: 'Georgia, "Times New Roman", serif',
                 fontSize: '11px',
                 letterSpacing: '0.22em',
-                color: 'rgba(255,170,75,0.5)',
+                color: 'rgba(255,170,75,0.6)',
                 marginTop: '16px',
               }}
               initial={{ opacity: 0 }}

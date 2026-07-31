@@ -12,6 +12,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 interface FreshStartDigitalAvatarCeremonyProps {
   capsuleTitle: string;
@@ -78,6 +79,20 @@ const CSS = `
 @keyframes frame-glow-ring {
   0%   { transform: translate(-50%,-50%) scale(0.95); opacity: 0.6; }
   100% { transform: translate(-50%,-50%) scale(2.2);  opacity: 0; }
+}
+@keyframes hg-pop-ring {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.92; }
+  55%  { opacity: 0.6; }
+  100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
+}
+@keyframes hg-flash {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+  40%  { opacity: 0.85; transform: translate(-50%,-50%) scale(1); }
+  100% { transform: translate(-50%,-50%) scale(2.4); opacity: 0; }
+}
+@keyframes hg-orb-float {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.9; }
+  100% { transform: translate(var(--dx), -90px) scale(0.4); opacity: 0; }
 }
 `;
 
@@ -311,16 +326,16 @@ export function FreshStartDigitalAvatarCeremony({
   useEffect(() => {
     const ts: { t: number; s: Stage }[] = [
       { t: 0,     s: 'void' },
-      { t: 600,   s: 'weight' },
-      { t: 3400,  s: 'settle' },
-      { t: 5800,  s: 'flip' },
-      { t: 9400,  s: 'cascade' },
-      { t: 14800, s: 'bloom' },
-      { t: 18200, s: 'reveal' },
-      { t: 22500, s: 'outro' },
+      { t: 200,   s: 'weight' },   // was 600 — enter weight faster
+      { t: 2200,  s: 'settle' },   // was 3400 — shorten weight by ~1.2s
+      { t: 3900,  s: 'flip' },     // was 5800 — shorten settle too; flip arrives 1.9s earlier
+      { t: 7200,  s: 'cascade' },  // same gap from flip (3.3s)
+      { t: 12600, s: 'bloom' },    // same gap (5.4s)
+      { t: 16000, s: 'reveal' },   // same gap (3.4s)
+      { t: 20300, s: 'outro' },    // same gap (4.3s)
     ];
     const ids = ts.map(({ t, s }) => setTimeout(() => setStage(s), t));
-    const done = setTimeout(() => onComplete?.(), 23500);
+    const done = setTimeout(() => onComplete?.(), 21300);
     return () => { ids.forEach(clearTimeout); clearTimeout(done); };
   }, []);
 
@@ -376,6 +391,51 @@ export function FreshStartDigitalAvatarCeremony({
       color: i % 4 === 0 ? 'rgba(255,230,100,0.95)' : 'rgba(255,200,50,0.85)',
     })),
   []);
+
+  /* ── Reveal firework bursts ── */
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const hgFwColors = useMemo(() => ['#D4A020','#FFD840','#fff5c0','#fbbf24','#fb923c','#ffffff','#fde68a'], []);
+
+  const hgFwPositions = useMemo(() => isMobile
+    ? [{x:14,y:18},{x:86,y:16},{x:50,y:9},{x:28,y:38},{x:72,y:35}]
+    : [{x:12,y:18},{x:88,y:16},{x:50,y:9},{x:24,y:40},{x:76,y:36},{x:50,y:27},{x:18,y:32},{x:82,y:30}],
+  [isMobile]);
+
+  const hgFwSparks = useMemo(() => hgFwPositions.flatMap((pos, pi) =>
+    Array.from({length: isMobile ? 14 : 20}, (_, i) => {
+      const angle = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const speed = 52 + (i % 5) * 18;
+      return { px: pos.x, py: pos.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+               color: hgFwColors[(pi + i) % hgFwColors.length], size: 3 + (i % 4), delay: pi * 0.14 + (i % 5) * 0.01 };
+    })
+  ), [hgFwPositions, isMobile, hgFwColors]);
+
+  const hgFwRings = useMemo(() => hgFwPositions.flatMap((pos, pi) =>
+    [0, 1, 2].map(ri => ({ x: pos.x, y: pos.y, color: hgFwColors[pi % hgFwColors.length], size: 44 + ri * 20, delay: pi * 0.14 + ri * 0.1 }))
+  ), [hgFwPositions, hgFwColors]);
+
+  const hgFwOrbs = useMemo(() => Array.from({length: isMobile ? 10 : 16}, (_, i) => ({
+    left: 12 + (i * 19) % 76, bottom: 35 + (i % 3) * 18,
+    size: 10 + (i % 4) * 5, color: hgFwColors[i % hgFwColors.length],
+    driftX: (i % 2 === 0 ? 1 : -1) * (5 + (i % 4) * 8), dur: 1.9 + (i % 4) * 0.4, delay: 0.08 + (i * 0.11) % 0.9,
+  })), [isMobile, hgFwColors]);
+
+  useEffect(() => {
+    if (stage !== 'reveal') return;
+    const colors = ['#D4A020','#FFD840','#fbbf24','#fb923c','#ffffff','#fde68a','#fef08a'];
+    const opts = { colors, startVelocity: isMobile ? 38 : 50, gravity: 0.88, ticks: isMobile ? 170 : 240, shapes: ['square','circle'] as any };
+    const count = isMobile ? 110 : 200;
+    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 75, origin: { x: 0, y: 0.55 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 75, origin: { x: 1, y: 0.55 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...opts, particleCount: 75, spread: 108, origin: { x: 0.5, y: 0.45 }, startVelocity: 44, gravity: 0.8 }), 380);
+      const t2 = setTimeout(() => {
+        confetti({ ...opts, particleCount: 50, angle: 72, spread: 85, origin: { x: 0.18, y: 0.62 } });
+        confetti({ ...opts, particleCount: 50, angle: 108, spread: 85, origin: { x: 0.82, y: 0.62 } });
+      }, 900);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
 
   // Sand rotates WITH the glass during the flip
   const showOldSand = ['weight', 'settle', 'flip'].includes(stage);
@@ -509,6 +569,55 @@ export function FreshStartDigitalAvatarCeremony({
         ))}
       </AnimatePresence>
 
+      {/* ── REVEAL FIREWORKS ── */}
+      <AnimatePresence>
+        {showReveal && (
+          <>
+            {hgFwSparks.map((s, i) => (
+              <motion.div key={`hg-spark-${i}`} className="absolute pointer-events-none"
+                style={{ left: `${s.px}%`, top: `${s.py}%` }}
+                initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+                animate={{ x: s.vx, y: s.vy, scale: 0, opacity: 0 }}
+                transition={{ duration: 1.1, delay: s.delay, ease: 'easeOut' }}
+              >
+                <div style={{ width: s.size, height: s.size, borderRadius: '50%', background: s.color,
+                  boxShadow: `0 0 ${s.size * 2}px ${s.color}`, transform: 'translate(-50%,-50%)' }} />
+              </motion.div>
+            ))}
+            {hgFwRings.map((r, i) => (
+              <div key={`hg-ring-${i}`} className="absolute pointer-events-none" style={{
+                left: `${r.x}%`, top: `${r.y}%`,
+                width: r.size, height: r.size,
+                border: `2px solid ${r.color}`,
+                borderRadius: '50%',
+                boxShadow: `0 0 10px ${r.color}`,
+                animation: `hg-pop-ring 0.9s ${r.delay}s cubic-bezier(0.2,0,0.8,1) both`,
+              }} />
+            ))}
+            {hgFwPositions.map((pos, i) => (
+              <div key={`hg-flash-${i}`} className="absolute pointer-events-none" style={{
+                left: `${pos.x}%`, top: `${pos.y}%`,
+                width: 50, height: 50,
+                background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,215,50,0.6) 45%, transparent 70%)',
+                borderRadius: '50%',
+                animation: `hg-flash 0.6s ${i * 0.14}s ease-out both`,
+              }} />
+            ))}
+            {hgFwOrbs.map((orb, i) => (
+              <div key={`hg-orb-${i}`} className="absolute pointer-events-none" style={{
+                left: `${orb.left}%`, bottom: `${orb.bottom}%`,
+                width: orb.size, height: orb.size,
+                background: `radial-gradient(circle, #fff 0%, ${orb.color} 55%, transparent 85%)`,
+                borderRadius: '50%',
+                boxShadow: `0 0 ${orb.size}px ${orb.color}`,
+                '--dx': `${orb.driftX}px`,
+                animation: `hg-orb-float ${orb.dur}s ${orb.delay}s ease-out both`,
+              } as React.CSSProperties} />
+            ))}
+          </>
+        )}
+      </AnimatePresence>
+
       {/* ── TITLE REVEAL ── */}
       <AnimatePresence>
         {showReveal && (
@@ -520,6 +629,25 @@ export function FreshStartDigitalAvatarCeremony({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
           >
+            <motion.h2
+              style={{
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontSize: isMobile ? '1.5rem' : '2rem',
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #FFD840 0%, #D4A020 40%, #FFF5C0 60%, #D4A020 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 0 16px rgba(212,160,32,0.7))',
+                letterSpacing: '0.04em',
+                marginBottom: '12px',
+                lineHeight: 1.2,
+              }}
+              initial={{ opacity: 0, scale: 0.85, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.9, type: 'spring', stiffness: 200, damping: 18 }}
+            >
+              ✨ Your Time Begins Now ✨
+            </motion.h2>
             <motion.p
               style={{
                 fontFamily: 'Georgia, "Times New Roman", serif',
@@ -531,11 +659,10 @@ export function FreshStartDigitalAvatarCeremony({
               }}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35, duration: 0.9 }}
+              transition={{ delay: 0.7, duration: 0.9 }}
             >
-              YOUR TIME BEGINS NOW
+              THE GOLD POURS — A NEW CHAPTER
             </motion.p>
-
 
             <motion.p
               style={{

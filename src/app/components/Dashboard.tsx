@@ -1238,23 +1238,8 @@ export function Dashboard({ onEditCapsule, onEditCapsuleDetails, onCreateCapsule
         const received = await DatabaseService.getReceivedCapsules(user.id, user.email);
         const count = received?.length || 0;
         
-        // ✅ CRITICAL: Detect cache mismatch and auto-clear stale cache
-        if (cachedDataStr && !skipCache) {
-          try {
-            const cachedData = JSON.parse(cachedDataStr);
-            const cachedCount = cachedData.count || 0;
-            if (cachedCount !== count) {
-              console.warn(`🚨 [CACHE MISMATCH] Cached count (${cachedCount}) != Fresh count (${count}). Difference: ${count - cachedCount}`);
-              console.log('📊 [CACHE MISMATCH] Cached IDs:', cachedData.capsules?.map(c => c.id.substring(0, 8)).join(', '));
-              console.log('📊 [CACHE MISMATCH] Fresh IDs:', received?.map(c => c.id.substring(0, 8)).join(', '));
-              console.log('🔄 [AUTO-FIX] Clearing stale cache and updating with fresh data');
-              // Clear the stale cache immediately
-              localStorage.removeItem(cacheKey);
-            }
-          } catch (e) {
-            console.warn('Failed to compare cache:', e);
-          }
-        }
+        // If the cached count differs from fresh data, the stale entry will be
+        // overwritten below — no action needed here.
         
         setReceivedCount(count);
         setReceivedCapsules(received || []);

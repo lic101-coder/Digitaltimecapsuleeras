@@ -99,6 +99,24 @@ export function CapsuleDetailModal({
   // 🚀 PERFORMANCE: Uses global cache for instant loading
   const [enrichedMedia, setEnrichedMedia] = useState<any[]>([]);
 
+  // 🎬 CEREMONY LAG FIX: Track ceremony state in a ref for use inside async callbacks.
+  // IMPORTANT: This ref is set SYNCHRONOUSLY (not via useEffect) wherever setShowCeremony(true)
+  // is called, to close the race window between the state update and the next render cycle.
+  // A sync useEffect alone isn't enough — the async media fetch can resolve in that gap.
+  const ceremonyActiveRef = React.useRef(false);
+
+  // 🎬 CEREMONY LAG FIX: Stable media snapshot — only updated when ceremony is NOT playing.
+  // CeremonyOverlay reads this ref so it never receives new props mid-timeline.
+  const ceremonyMediaRef = React.useRef<any[]>([]);
+  if (!showCeremony) { ceremonyMediaRef.current = enrichedMedia; }
+
+  // 🎬 CEREMONY LAG FIX: Memoized callback so CeremonyOverlay never gets a new function ref mid-play
+  const handleCeremonyComplete = React.useCallback(() => {
+    ceremonyActiveRef.current = false; // Reset synchronously so flush effect can run
+    setShowCeremony(false);
+    setIsCeremonyComplete(true);
+  }, []);
+
   // ⚡ PERFORMANCE: Memoize theme parsing - only recompute when capsule.id changes
   const themeId = useMemo(() => {
     if (!capsule) return 'standard';
@@ -154,17 +172,27 @@ export function CapsuleDetailModal({
       try {
         const mediaWithThumbnails = await DatabaseService.getCapsuleMediaFiles(capsule.id);
         console.log('✅ [CapsuleDetailModal] Media enriched with thumbnails:', mediaWithThumbnails.length, 'files');
-        
+
         // Store in cache for future instant loading
         mediaCache.set(capsule.id, mediaWithThumbnails);
-        
+
+        // 🎬 CEREMONY LAG FIX: Never setState while ceremony is playing — it forces
+        // React reconciliation on the main JS thread which breaks animation frame timing.
+        // The ceremonyMediaRef already holds the snapshot used by CeremonyOverlay.
+        if (ceremonyActiveRef.current) {
+          console.log('⏸ [CapsuleDetailModal] Ceremony active — deferring setEnrichedMedia');
+          return;
+        }
+
         setEnrichedMedia(mediaWithThumbnails);
       } catch (error) {
         console.warn('⚠️ [CapsuleDetailModal] Could not enrich media, using raw data:', error);
-        setEnrichedMedia(rawMedia); // Fallback to raw data
+        if (!ceremonyActiveRef.current) {
+          setEnrichedMedia(rawMedia); // Fallback to raw data
+        }
       }
     };
-    
+
     enrichMedia();
   }, [isOpen, capsule?.id]);
 
@@ -202,6 +230,7 @@ export function CapsuleDetailModal({
       if (shouldShowCeremony) {
         setTimeout(() => {
           console.log('📱 [Mobile] Starting ceremony overlay...');
+          ceremonyActiveRef.current = true; // Set SYNCHRONOUSLY before setShowCeremony to close race window
           setShowCeremony(true);
           ceremoniesShownCache.set(capsule.id, true);
         }, 100); // Small delay to let content render first
@@ -230,6 +259,7 @@ export function CapsuleDetailModal({
       }
       
       if (shouldShowCeremony) {
+        ceremonyActiveRef.current = true; // Set SYNCHRONOUSLY before setShowCeremony to close race window
         setShowCeremony(true);
         setIsCeremonyComplete(false);
         ceremoniesShownCache.set(capsule.id, true);
@@ -257,6 +287,17 @@ export function CapsuleDetailModal({
     };
   }, [isOpen, capsule?.id, themeId, isMobile]);
   
+  // 🎬 CEREMONY LAG FIX: When ceremony finishes, flush any deferred media update from cache
+  useEffect(() => {
+    if (!isCeremonyComplete || !capsule?.id) return;
+    const cached = mediaCache.get(capsule.id);
+    if (cached && cached !== enrichedMedia) {
+      console.log('⚡ [CapsuleDetailModal] Ceremony done — flushing deferred media update');
+      setEnrichedMedia(cached);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCeremonyComplete]);
+
   // ⚡ PERFORMANCE: Load sessionStorage cache on mount (once)
   useEffect(() => {
     try {
@@ -651,7 +692,8 @@ export function CapsuleDetailModal({
               radial-gradient(circle at center, rgba(15, 20, 40, 0.98) 0%, rgba(5, 5, 15, 0.99) 100%)
             `,
           // ⚡ FIX 1: MOBILE PERFORMANCE - Remove expensive backdrop blur on mobile
-          ...(isMobile ? {} : {
+          // 🎬 CEREMONY LAG FIX: Also remove during ceremony (competes on GPU compositor)
+          ...(isMobile || showCeremony ? {} : {
             backdropFilter: 'blur(20px)',
           }),
           // ⚡ FIX 1: MOBILE PERFORMANCE - Simplified shadow on mobile
@@ -677,8 +719,8 @@ export function CapsuleDetailModal({
           }} />
         )}
 
-        {/* ⚡ FIX 1: MOBILE PERFORMANCE - Disable particle system on mobile */}
-        {!isMobile && (
+        {/* 🎬 CEREMONY LAG FIX: Suppress particle system while ceremony plays (GPU compositor competition) */}
+        {!isMobile && !showCeremony && (
           <div 
             className="absolute inset-0 pointer-events-none overflow-hidden opacity-60"
             aria-hidden="true"
@@ -717,8 +759,8 @@ export function CapsuleDetailModal({
           </div>
         )}
 
-        {/* ⚡ FIX 1: MOBILE PERFORMANCE - Simplified portal glow on mobile */}
-        {!isMobile && (
+        {/* 🎬 CEREMONY LAG FIX: Suppress portal glow while ceremony plays */}
+        {!isMobile && !showCeremony && (
           <div 
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full pointer-events-none animate-portal-expand"
             style={{
@@ -734,17 +776,17 @@ export function CapsuleDetailModal({
 
         {/* ⚡ FIX 2: MOBILE PERFORMANCE - Ceremony is non-blocking on mobile (runs in background) */}
         {/* ⚡ FIX 2: On mobile, ceremony plays as overlay while content is visible */}
-        <CeremonyOverlay 
+        {/* 🎬 CEREMONY LAG FIX:
+            media={ceremonyMediaRef.current} — stable snapshot, never changes mid-play
+            onComplete={handleCeremonyComplete} — memoized, stable reference across renders */}
+        <CeremonyOverlay
           themeId={themeId}
           ceremonyId={ceremonyId}
           capsuleTitle={capsule.title}
-          media={enrichedMedia}
+          media={ceremonyMediaRef.current}
           isVisible={showCeremony}
           isNewReceived={capsule.isReceived && !capsule.viewed_at}
-          onComplete={() => {
-            setShowCeremony(false);
-            setIsCeremonyComplete(true);
-          }}
+          onComplete={handleCeremonyComplete}
         />
 
         {/* ⚡ FIX 3: MOBILE PERFORMANCE - Custom close button always visible with high z-index */}

@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 interface EternalFlameForgeCeremonyProps {
   capsuleTitle: string;
@@ -65,6 +66,11 @@ const FORGE_CSS = `
 @keyframes heat-shimmer {
   0%,100% { opacity: 0.12; transform: scaleY(1);    }
   50%     { opacity: 0.22; transform: scaleY(1.04); }
+}
+@keyframes forge-pop-ring {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.92; }
+  55%  { opacity: 0.6; }
+  100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
 }
 `;
 
@@ -277,17 +283,25 @@ export function EternalFlameForgeCeremony({
     const GAP  = 1400; // ms between swings
     const ids: ReturnType<typeof setTimeout>[] = [];
 
-    ids.push(setTimeout(() => setStage('forge'),    2300));
+    // Mobile: compressed timeline so the ceremony doesn't feel sluggish.
+    // Desktop timing unchanged.
+    const FORGE_START  = isMobile ? 1500 : 2300;
+    const STRIKE_START = isMobile ? 3000 : 4300;
+    const RADIANCE_DUR = isMobile ? 3000 : 4600; // shorter radiance on mobile
+    const OUTRO_HOLD   = isMobile ? 200  : 2600; // near-instant outro on mobile
+    const DONE_EXTRA   = isMobile ? 300  : 2000;
+
+    ids.push(setTimeout(() => setStage('forge'),    FORGE_START));
     ids.push(setTimeout(() => {
       setStage('strike');
       setStrikeNum(1);                  // swing 1
-    }, 4300));
-    ids.push(setTimeout(() => setStrikeNum(2),      4300 + GAP));     // swing 2
-    ids.push(setTimeout(() => setStrikeNum(3),      4300 + GAP * 2)); // swing 3 (final)
-    ids.push(setTimeout(() => setStage('glow'),     4300 + GAP * 2 + 1800));
-    ids.push(setTimeout(() => setStage('radiance'), 4300 + GAP * 2 + 4600));
-    ids.push(setTimeout(() => setStage('outro'),    4300 + GAP * 2 + 11200));
-    const done = setTimeout(() => onComplete?.(),   4300 + GAP * 2 + 13200);
+    }, STRIKE_START));
+    ids.push(setTimeout(() => setStrikeNum(2),      STRIKE_START + GAP));
+    ids.push(setTimeout(() => setStrikeNum(3),      STRIKE_START + GAP * 2));
+    ids.push(setTimeout(() => setStage('glow'),     STRIKE_START + GAP * 2 + 1800));
+    ids.push(setTimeout(() => setStage('radiance'), STRIKE_START + GAP * 2 + 4600));
+    ids.push(setTimeout(() => setStage('outro'),    STRIKE_START + GAP * 2 + 4600 + RADIANCE_DUR + OUTRO_HOLD));
+    const done = setTimeout(() => onComplete?.(),   STRIKE_START + GAP * 2 + 4600 + RADIANCE_DUR + OUTRO_HOLD + DONE_EXTRA);
 
     return () => { ids.forEach(clearTimeout); clearTimeout(done); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -333,27 +347,78 @@ export function EternalFlameForgeCeremony({
     { x: 62,  h: 56,  w: 14, dur: 1.8,  delay: 0.30 },
   ], []);
 
-  const sparks1 = useMemo(() => buildSparks(22, 136, 0),    []);
-  const sparks2 = useMemo(() => buildSparks(24, 164, 0.28), []);
-  const sparks3 = useMemo(() => buildSparks(28, 196, 0.55), []);
+  // Mobile: drastically reduce particle counts so the JS thread stays responsive
+  const sparks1 = useMemo(() => buildSparks(isMobile ? 8  : 22, 136, 0),    [isMobile]);
+  const sparks2 = useMemo(() => buildSparks(isMobile ? 10 : 24, 164, 0.28), [isMobile]);
+  const sparks3 = useMemo(() => buildSparks(isMobile ? 12 : 28, 196, 0.55), [isMobile]);
   const currentSparks = strikeNum === 1 ? sparks1 : strikeNum === 2 ? sparks2 : sparks3;
 
-  const glowBeams = useMemo(() =>
-    Array.from({ length: 14 }, (_, i) => ({
-      angle: (i / 14) * 360,
+  const glowBeams = useMemo(() => {
+    const count = isMobile ? 6 : 14;
+    return Array.from({ length: count }, (_, i) => ({
+      angle: (i / count) * 360,
       color: i % 3 === 0 ? '#ff6b00' : i % 3 === 1 ? '#ffa500' : '#fcd34d',
       delay: i * 0.065,
-    })), []);
+    }));
+  }, [isMobile]);
 
-  const embers = useMemo(() =>
-    Array.from({ length: 12 }, (_, i) => ({
-      x: (i - 5.5) * 24,
+  const embers = useMemo(() => {
+    const count = isMobile ? 5 : 12;
+    return Array.from({ length: count }, (_, i) => ({
+      x: (i - (count - 1) / 2) * 24,
       size:   5 + (i % 4) * 4,
       color:  i % 2 ? '#fbbf24' : '#f97316',
       drift:  (i % 2 ? 1 : -1) * 22,
       yTravel: 220 + (i % 5) * 38,
       delay:  i * 0.15,
-    })), []);
+    }));
+  }, [isMobile]);
+
+  const forgeColors = useMemo(() => ['#ff6b00','#ffa500','#fcd34d','#ff3d00','#f97316','#ffffff','#fb923c','#fbbf24'], []);
+
+  const forgeFireworks = useMemo(() => {
+    const positions = isMobile
+      ? [{x:50,y:20},{x:20,y:30},{x:80,y:30},{x:50,y:50},{x:30,y:50}]
+      : [{x:50,y:15},{x:15,y:25},{x:85,y:25},{x:30,y:40},{x:70,y:40},{x:50,y:35},{x:22,y:55},{x:78,y:55}];
+    return positions.flatMap((pos, pi) =>
+      Array.from({ length: isMobile ? 12 : 18 }, (_, i) => {
+        const angle = (i / (isMobile ? 12 : 18)) * Math.PI * 2;
+        const speed = 50 + (i % 5) * 18;
+        return { px: pos.x, py: pos.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                 color: forgeColors[(pi + i) % forgeColors.length], size: 3 + (i % 4), delay: pi * 0.14 + (i % 4) * 0.01 };
+      })
+    );
+  }, [isMobile, forgeColors]);
+
+  const forgeRings = useMemo(() => {
+    const positions = isMobile
+      ? [{x:50,y:20},{x:20,y:30},{x:80,y:30}]
+      : [{x:50,y:15},{x:15,y:25},{x:85,y:25},{x:30,y:40},{x:70,y:40}];
+    return positions.flatMap((pos, pi) =>
+      [0, 1, 2].map(ri => ({
+        x: pos.x, y: pos.y,
+        color: ri % 2 === 0 ? '#ffa500' : '#ff6b00',
+        size: 40 + ri * 18, delay: pi * 0.14 + ri * 0.1,
+      }))
+    );
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (stage !== 'radiance') return;
+    const colors = ['#ff6b00','#ffa500','#fcd34d','#ff3d00','#f97316','#ffffff','#fb923c','#fbbf24'];
+    const opts = { colors, startVelocity: isMobile ? 36 : 50, gravity: 0.92, ticks: isMobile ? 160 : 230, shapes: ['square','circle'] as any };
+    const count = isMobile ? 100 : 190;
+    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 72, origin: { x: 0, y: 0.55 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 72, origin: { x: 1, y: 0.55 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...opts, particleCount: 70, spread: 105, origin: { x: 0.5, y: 0.4 }, startVelocity: 42, gravity: 0.8 }), 400);
+      const t2 = setTimeout(() => {
+        confetti({ ...opts, particleCount: 45, angle: 70, spread: 80, origin: { x: 0.2, y: 0.65 } });
+        confetti({ ...opts, particleCount: 45, angle: 110, spread: 80, origin: { x: 0.8, y: 0.65 } });
+      }, 900);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
 
   const showForge = stage !== 'intro' && stage !== 'outro';
   const showGlow  = stage === 'glow' || stage === 'radiance';
@@ -623,8 +688,8 @@ export function EternalFlameForgeCeremony({
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.75 }}
           >
-            {/* Spinning radial beams */}
-            <div style={{
+            {/* Spinning radial beams — skip on mobile (blur + infinite spin is expensive) */}
+            {!isMobile && <div style={{
               position: 'absolute', left: '50%', top: '47%', width: 0, height: 0,
               animation: 'beam-spin 24s linear infinite',
             }}>
@@ -646,7 +711,7 @@ export function EternalFlameForgeCeremony({
                   transition={{ duration: 1.3, delay: b.delay }}
                 />
               ))}
-            </div>
+            </div>}
 
             {/* Forge bloom */}
             <motion.div className="absolute rounded-full pointer-events-none"
@@ -717,12 +782,37 @@ export function EternalFlameForgeCeremony({
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 1.0 }}
           >
-            {/* Volume light shafts */}
-            {[-36, -18, 0, 18, 36].map((rot, i) => (
+            {/* Firework sparks from forge burst positions */}
+            {forgeFireworks.map((s, i) => (
+              <motion.div key={`ff-${i}`} className="absolute pointer-events-none"
+                style={{ left: `${s.px}%`, top: `${s.py}%` }}
+                initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+                animate={{ x: s.vx, y: s.vy, scale: 0, opacity: 0 }}
+                transition={{ duration: 1.1, delay: s.delay, ease: 'easeOut' }}
+              >
+                <div style={{ width: s.size, height: s.size, borderRadius: '50%', background: s.color,
+                  boxShadow: `0 0 ${s.size * 2}px ${s.color}`, transform: 'translate(-50%,-50%)' }} />
+              </motion.div>
+            ))}
+
+            {/* Shockwave rings */}
+            {forgeRings.map((r, i) => (
+              <div key={`fr-${i}`} className="absolute pointer-events-none" style={{
+                left: `${r.x}%`, top: `${r.y}%`,
+                width: r.size, height: r.size,
+                border: `2px solid ${r.color}`,
+                borderRadius: '50%',
+                boxShadow: `0 0 10px ${r.color}`,
+                animation: `forge-pop-ring 0.9s ${r.delay}s cubic-bezier(0.2,0,0.8,1) both`,
+              }} />
+            ))}
+
+            {/* Volume light shafts — skip on mobile (blur on tall full-height divs = compositor pressure) */}
+            {!isMobile && [-36, -18, 0, 18, 36].map((rot, i) => (
               <motion.div key={i} className="absolute pointer-events-none"
                 style={{
                   left: '50%', top: 0, bottom: '38%',
-                  width: isMobile ? 24 : 34,
+                  width: 34,
                   translateX: '-50%',
                   transformOrigin: 'bottom center',
                   rotate: rot,
@@ -736,21 +826,40 @@ export function EternalFlameForgeCeremony({
             ))}
 
             {/* "FORGED IN FIRE" headline */}
-            <motion.div className="absolute pointer-events-none"
+            <motion.div className="absolute pointer-events-none text-center"
               style={{
-                top: '6%', left: 0, right: 0, textAlign: 'center',
+                top: '5%', left: 0, right: 0,
                 fontFamily: 'Georgia, serif', fontWeight: 900,
                 fontSize: isMobile ? '2.7rem' : '4.6rem',
-                color: '#fbbf24', letterSpacing: '0.05em', textTransform: 'uppercase',
-                textShadow: '0 0 48px rgba(251,191,36,0.8), 0 0 90px rgba(255,100,0,0.5)',
+                background: 'linear-gradient(135deg, #ffffff 0%, #fbbf24 40%, #ff6b00 80%, #fcd34d 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                letterSpacing: '0.05em', textTransform: 'uppercase',
+                filter: 'drop-shadow(0 0 30px rgba(255,107,0,0.65))',
                 animation: 'title-breathe 3s ease-in-out infinite',
               }}
               initial={{ y: 90, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
             >
-              Forged in Fire
+              🔥 Forged in Fire 🔥
             </motion.div>
+
+            {/* "Your love, hammered into forever" subtitle — appears after headline */}
+            <motion.p className="absolute pointer-events-none"
+              style={{
+                top: isMobile ? '28%' : '25%', left: 0, right: 0, textAlign: 'center',
+                fontFamily: 'Georgia, serif',
+                fontSize: isMobile ? '0.78rem' : '0.95rem',
+                color: '#fb923c', letterSpacing: '0.2em', textTransform: 'uppercase',
+                textShadow: '0 0 16px rgba(251,146,60,0.7)',
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.0, duration: 1.0 }}
+            >
+              Your love, hammered into forever
+            </motion.p>
 
             {/* Radiance bloom */}
             <motion.div className="absolute rounded-full pointer-events-none"
@@ -788,7 +897,7 @@ export function EternalFlameForgeCeremony({
           <motion.div key="outro"
             className="absolute inset-0 bg-black z-50 pointer-events-none"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            transition={{ duration: 2.0, ease: 'easeInOut' }}
+            transition={{ duration: isMobile ? 0.3 : 2.0, ease: 'easeInOut' }}
           />
         )}
       </AnimatePresence>

@@ -24,8 +24,9 @@
  * - 200+ mortarboard confetti pieces
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 interface GoldenGraduationCeremonyProps {
   capsuleTitle: string;
@@ -115,6 +116,42 @@ export function GoldenGraduationCeremony({
     { text: 'Renaissance', x: 15, y: 65, size: 'text-sm' },
     { text: 'Democracy', x: 85, y: 60, size: 'text-sm' }
   ];
+
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const gdColors = useMemo(() => ['#fbbf24','#3b82f6','#8b5cf6','#10b981','#ffffff','#fde68a','#f59e0b'], []);
+  const gdFwPositions = useMemo(() => [
+    {x:12,y:15},{x:28,y:8},{x:44,y:18},{x:60,y:6},{x:76,y:16},{x:88,y:10},{x:20,y:30},{x:80,y:26},
+  ].slice(0, isMobile ? 5 : 8), [isMobile]);
+  const gdFwSparks = useMemo(() => gdFwPositions.map(() =>
+    Array.from({length: isMobile ? 14 : 20}, (_, i) => {
+      const a = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const d = 50 + (i % 5) * 20;
+      return { x: Math.cos(a)*d, y: Math.sin(a)*d, color: gdColors[i % gdColors.length], delay: i*0.04 };
+    })
+  ), [gdFwPositions, gdColors, isMobile]);
+  const gdFwRings = useMemo(() => gdFwPositions.map(() =>
+    Array.from({length: 3}, (_, i) => ({ delay: i*0.15, color: ['#fbbf24','#3b82f6','#8b5cf6'][i] }))
+  ), [gdFwPositions]);
+  const gdOrbs = useMemo(() => Array.from({length: isMobile ? 10 : 18}, (_, i) => ({
+    x: 5 + (i * 5.5) % 90, dx: (i % 7 - 3) * 18, dur: 2.5 + (i % 4) * 0.5,
+    delay: i * 0.18, color: gdColors[i % gdColors.length]
+  })), [gdColors, isMobile]);
+
+  useEffect(() => {
+    if (stage !== 'triumph') return;
+    const colors = ['#fbbf24','#3b82f6','#8b5cf6','#10b981','#ffffff','#fde68a','#f59e0b'];
+    const base = { spread: 80, ticks: 200, gravity: 0.9, decay: 0.93, startVelocity: 38, colors };
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 60, origin: { x: 0, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 120, origin: { x: 1, y: 0.7 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...base, particleCount: 80, angle: 90, origin: { x: 0.5, y: 0.6 } }), 380);
+      const t2 = setTimeout(() => {
+        confetti({ ...base, particleCount: 100, angle: 60, origin: { x: 0, y: 0.65 } });
+        confetti({ ...base, particleCount: 100, angle: 120, origin: { x: 1, y: 0.65 } });
+      }, 950);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
 
   // Confetti particles (mortarboards and traditional)
   const confettiParticles = Array.from({ length: 200 }, (_, i) => ({
@@ -783,24 +820,70 @@ export function GoldenGraduationCeremony({
               </motion.div>
             ))}
 
+            {/* Firework clusters */}
+            {gdFwPositions.map((pos, pi) => (
+              <React.Fragment key={`gd-fw-${pi}`}>
+                {gdFwSparks[pi].map((s, si) => (
+                  <motion.div key={`gd-spark-${pi}-${si}`} className="absolute z-51 rounded-full"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 6, height: 6, background: s.color }}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                    animate={{ x: s.x, y: s.y, scale: [0,1.4,0], opacity: [0,1,0] }}
+                    transition={{ duration: 1.2, delay: s.delay, ease: 'easeOut' }}
+                  />
+                ))}
+                {gdFwRings[pi].map((r, ri) => (
+                  <div key={`gd-ring-${pi}-${ri}`} className="absolute rounded-full border-2"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 20, height: 20, borderColor: r.color, animation: `gd-pop-ring 0.9s ease-out ${r.delay}s both` }}
+                  />
+                ))}
+                <div key={`gd-flash-${pi}`} className="absolute rounded-full"
+                  style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 40, height: 40,
+                    background: `radial-gradient(circle, ${gdColors[pi % gdColors.length]}cc, transparent)`,
+                    filter: 'blur(8px)', animation: 'gd-flash 0.5s ease-out both' }}
+                />
+              </React.Fragment>
+            ))}
+            {gdOrbs.map((orb, i) => (
+              <div key={`gd-orb-${i}`} className="absolute rounded-full z-49"
+                style={{ left: `${orb.x}%`, bottom: '20%', width: 10, height: 10,
+                  background: orb.color, boxShadow: `0 0 14px ${orb.color}`,
+                  '--dx': `${orb.dx}px`,
+                  animation: `gd-orb-float ${orb.dur}s ease-out ${orb.delay}s both`
+                } as React.CSSProperties}
+              />
+            ))}
+
             {/* Label - FIXED POSITIONING */}
             <motion.div
               className="absolute bottom-20 left-0 right-0 text-center z-20"
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ 
-                delay: 0.5,
-                type: "spring",
-                damping: 8
-              }}
+              transition={{ delay: 0.5, type: "spring", damping: 8 }}
             >
-              <h2 className="text-4xl font-black text-white drop-shadow-[0_0_20px_rgba(0,0,0,0.8)]">
-                Your Future is Bright! 🌟
+              <h2 className="text-4xl md:text-5xl font-black drop-shadow-[0_0_24px_rgba(251,191,36,0.9)]"
+                style={{ background: 'linear-gradient(90deg,#fbbf24,#3b82f6,#8b5cf6,#fbbf24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                🎓 CONGRATULATIONS! 🎓
               </h2>
             </motion.div>
           </>
         )}
       </AnimatePresence>
+
+      <style>{`
+        @keyframes gd-pop-ring {
+          0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
+        }
+        @keyframes gd-flash {
+          0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+        }
+        @keyframes gd-orb-float {
+          0% { transform: translateY(0) translateX(0); opacity: 0; }
+          20% { opacity: 1; }
+          100% { transform: translateY(-180px) translateX(var(--dx)); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }

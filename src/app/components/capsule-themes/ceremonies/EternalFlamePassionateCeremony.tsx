@@ -13,6 +13,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 interface EternalFlamePassionateCeremonyProps {
   capsuleTitle?: string;
@@ -172,6 +173,22 @@ export function EternalFlamePassionateCeremony({
     });
   }, []);
 
+  // Radiance firework burst particles radiating outward
+  const radianceBursts = useMemo(() => {
+    const count = isMobile ? 16 : 24;
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i / count) * Math.PI * 2;
+      const dist = 110 + (i % 4) * 50;
+      return {
+        vx: Math.cos(angle) * dist,
+        vy: Math.sin(angle) * dist,
+        color: i % 3 === 0 ? '#ff69b4' : i % 3 === 1 ? '#00e5ff' : '#ffd700',
+        size: 5 + (i % 4) * 2,
+        delay: i * 0.04,
+      };
+    });
+  }, [isMobile]);
+
   // ─── LOVE = INFINITE decode text cycling ──────────────────────────────────
   const decodeTexts = useMemo(
     () => [
@@ -212,6 +229,24 @@ export function EternalFlamePassionateCeremony({
       clearTimeout(failsafe);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Confetti burst on radiance
+  useEffect(() => {
+    if (stage !== 'radiance') return;
+    const colors = ['#ff69b4','#00e5ff','#ffd700','#ff1744','#00ff41','#e91e63','#ffffff'];
+    const opts = { colors, startVelocity: isMobile ? 35 : 48, gravity: 0.85, ticks: isMobile ? 160 : 220, shapes: ['square','circle'] as any };
+    const count = isMobile ? 100 : 180;
+    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 72, origin: { x: 0, y: 0.55 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 72, origin: { x: 1, y: 0.55 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...opts, particleCount: 70, spread: 100, origin: { x: 0.5, y: 0.45 }, startVelocity: 42 }), 350);
+      const t2 = setTimeout(() => {
+        confetti({ ...opts, particleCount: 45, angle: 70, spread: 85, origin: { x: 0.2, y: 0.6 } });
+        confetti({ ...opts, particleCount: 45, angle: 110, spread: 85, origin: { x: 0.8, y: 0.6 } });
+      }, 850);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
 
   // Decode text cycling — triggered when supernova stage starts
   useEffect(() => {
@@ -619,6 +654,36 @@ export function EternalFlamePassionateCeremony({
             transition={{ duration: 1 }}
           >
 
+            {/* Firework radial bursts from center */}
+            {radianceBursts.map((b, i) => (
+              <motion.div
+                key={`rb-${i}`}
+                className="absolute pointer-events-none"
+                initial={{ x: 0, y: 0, scale: 1.5, opacity: 1 }}
+                animate={{ x: b.vx, y: b.vy, scale: 0, opacity: 0 }}
+                transition={{ duration: 1.4, delay: b.delay, ease: 'easeOut' }}
+              >
+                <div style={{ width: b.size, height: b.size, borderRadius: '50%', background: b.color,
+                  boxShadow: `0 0 ${b.size * 2}px ${b.color}`, transform: 'translate(-50%,-50%)' }} />
+              </motion.div>
+            ))}
+
+            {/* Shockwave rings at radiance start */}
+            {[0, 1, 2].map(ri => (
+              <motion.div
+                key={`rr-${ri}`}
+                className="absolute rounded-full pointer-events-none"
+                style={{
+                  width: 80, height: 80,
+                  border: `2px solid ${ri === 0 ? '#ff69b4' : ri === 1 ? '#00e5ff' : '#ffd700'}`,
+                  translateX: '-50%', translateY: '-50%',
+                }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: [0, isMobile ? 4.5 : 6.5], opacity: [0, 0.8, 0] }}
+                transition={{ duration: 1.8, delay: ri * 0.3, ease: 'easeOut' }}
+              />
+            ))}
+
             {/* Ambient heart glow — slow pulse, safe repeat:Infinity */}
             <motion.div
               className="absolute rounded-full pointer-events-none"
@@ -698,17 +763,35 @@ export function EternalFlamePassionateCeremony({
               </motion.div>
             </div>
 
-            {/* Capsule title with glow */}
+            {/* Radiance celebration title */}
             <motion.div
-              className="text-center mt-6 pointer-events-none px-4 relative z-10"
+              className="text-center mt-4 pointer-events-none px-4 relative z-10"
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 1.2, ease: 'easeOut' }}
+              transition={{ delay: 0.4, duration: 1.0, ease: 'easeOut' }}
             >
+              <motion.h2
+                className="pointer-events-none"
+                style={{
+                  fontFamily: 'monospace', fontWeight: 900,
+                  fontSize: isMobile ? '2.2rem' : '3.2rem',
+                  background: 'linear-gradient(135deg, #ff69b4 0%, #ffd700 50%, #00e5ff 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  letterSpacing: '0.04em',
+                  filter: 'drop-shadow(0 0 18px rgba(255,105,180,0.55))',
+                  lineHeight: 1.1,
+                }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3, duration: 0.9, type: 'spring', stiffness: 200, damping: 18 }}
+              >
+                💑 LOVE = ∞ 💑
+              </motion.h2>
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.2, duration: 0.9, ease: 'easeOut' }}
+                transition={{ delay: 1.0, duration: 0.9, ease: 'easeOut' }}
                 style={{
                   color: '#ffd700',
                   fontSize: isMobile ? '0.65rem' : '0.78rem',
@@ -719,7 +802,7 @@ export function EternalFlamePassionateCeremony({
                   marginTop: '0.6rem',
                 }}
               >
-                YOUR LOVE, WRITTEN IN THE STARS
+                YOUR LOVE, WRITTEN IN THE STARS ✨
               </motion.p>
               <p
                 style={{

@@ -1,18 +1,91 @@
 /**
- * Mixtape - Arcade INSERT COIN Ceremony (Epic) — Enhanced Round 2
+ * Mixtape - Retro Arcade Ceremony (Epic) — Authentic CRT Rewrite
  *
- * CONCEPT: Retro 8-bit arcade with INSERT COIN energy, neon pixel aesthetic.
+ * CONCEPT: Authentic CRT arcade aesthetic — Pac-Man, Tetris, Space Invaders —
+ * with CSS-only sprites, pixel art box-shadow invaders, CRT scanlines, and
+ * Courier New monospace throughout.
+ *
  * Stages:
- * 1. insert-coin  (0-2s):    Attract mode scanline, HIGH SCORE board, coin bounce squish, star blinks
- * 2. pacman       (2-5s):    Pac-Man eats 8 dots, 1UP score ticker, ghost label, energizer dots, LEVEL 1
- * 3. tetris       (5-9s):    Blocks + HOLD box + LINES counter + +100 float + LEVEL UP badge
- * 4. invaders     (9-12s):   Shields, LIVES, UFO fly-by, wobble x repeat:2, explosions
- * 5. gameover     (12-15s):  CONTINUE countdown, flicker, INSERT COIN blink, 16 pixel bursts
- * 6. radiance     (15-17s):  Orbiting stars, PRESS START, pixel-border title box
+ * 1. intro         (0-2s):    Attract screen — INSERT COIN, hi-score, blinking
+ * 2. pacman        (2-6s):    CSS Pac-Man chomps dots, CSS ghost sprites
+ * 3. tetris        (6-10s):   Tetris pieces fall into well, LINE CLEAR!
+ * 4. spaceinvaders (10-14s):  Pixel-art invader grid marches, lasers, explosions
+ * 5. radiance      (14-17s):  GAME OVER → HIGH SCORE! + confetti + capsule title
+ * 6. outro         (17s+):    Fade to black
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
+
+// ── Pixel art helper: converts 0/1 row strings → CSS box-shadow string
+function pixelShadow(rows: string[], color: string, px = 4): string {
+  const s: string[] = [];
+  rows.forEach((row, y) =>
+    row.split('').forEach((c, x) => {
+      if (c === '1') s.push(`${x * px}px ${y * px}px 0 ${color}`);
+    })
+  );
+  return s.join(', ');
+}
+
+// ── Classic Space Invader pixel patterns (8 cols × 6 rows, 0=off 1=on)
+const INV_SQUID: string[] = [
+  '00100100',
+  '01111110',
+  '11011011',
+  '01111110',
+  '01000010',
+  '10000001',
+];
+const INV_CRAB: string[] = [
+  '10000001',
+  '01111110',
+  '11111111',
+  '11011011',
+  '11111111',
+  '01010110',
+];
+const INV_USHIP: string[] = [
+  '00111100',
+  '01111110',
+  '11111111',
+  '10011001',
+  '11111111',
+  '01100110',
+];
+
+// ── Ghost pixel patterns — body (8×8) and eye overlay (8×8)
+const GHOST_BODY: string[] = [
+  '00111100',
+  '01111110',
+  '11111111',
+  '11111111',
+  '11111111',
+  '11111111',
+  '11011011',
+  '10100101',
+];
+const GHOST_EYE_WHITE: string[] = [
+  '00000000',
+  '00000000',
+  '00110110',
+  '00110110',
+  '00110110',
+  '00000000',
+  '00000000',
+  '00000000',
+];
+const GHOST_EYE_PUPIL: string[] = [
+  '00000000',
+  '00000000',
+  '00010010',
+  '00010010',
+  '00000000',
+  '00000000',
+  '00000000',
+  '00000000',
+];
 
 interface MixtapeEpicCeremonyProps {
   capsuleTitle: string;
@@ -28,535 +101,478 @@ export function MixtapeEpicCeremony({
   onComplete,
 }: MixtapeEpicCeremonyProps) {
   const [stage, setStage] = useState<
-    'insert-coin' | 'pacman' | 'tetris' | 'invaders' | 'gameover' | 'radiance' | 'outro'
-  >('insert-coin');
-  const [completed, setCompleted] = useState(false);
+    'intro' | 'pacman' | 'tetris' | 'spaceinvaders' | 'radiance' | 'outro'
+  >('intro');
 
+  const completedRef = useRef(false);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const CELL = isMobile ? 11 : 15; // Tetris cell size px
+  const GHOST_PX = isMobile ? 2 : 3; // ghost pixels size px
 
-  // ── Ghost scared state for power pellet effect
-  const [ghostScared, setGhostScared] = useState(false);
-
-  // ── Cherry bonus: show "200 PTS" after pac-man passes
-  const [cherryEaten, setCherryEaten] = useState(false);
-
-  // ── Pac-Man score: ticks up +10 per dot eaten
+  // ── Score states
   const [pacScore, setPacScore] = useState(0);
+  const [radianceScore, setRadianceScore] = useState(0);
+  const scoreRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pacScoreRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // ── Tetris score: ticks up by 100 every 420ms during tetris stage
-  const [tetrisScore, setTetrisScore] = useState(0);
+  // ── Pac-Man dots: 8 fixed x positions
+  const pacDots = useMemo(() =>
+    [10, 21, 31, 41, 51, 61, 71, 82].map((xPct, i) => ({
+      id: i, xPct, delay: 0.25 + i * 0.3,
+    })), []);
 
-  // ── Tetris LINES counter: ticks up by 1 every 1.5s during tetris stage (max 4)
-  const [tetrisLines, setTetrisLines] = useState(0);
-
-  // ── Shield health for space invaders (starts at 2, decrements as lasers pass)
-  const [shieldHealth, setShieldHealth] = useState(2);
-
-  // ── Score display for GAME OVER stage
-  const [score, setScore] = useState(0);
-
-  // ── CONTINUE countdown (9 → 0)
-  const [countdown, setCountdown] = useState(9);
-
-  // ── UFO bonus shown
-  const [ufoBonusShown, setUfoBonusShown] = useState(false);
-
-  // ── Pac-Man dots: 8 pre-computed fixed x positions
-  const pacDots = useMemo(() => {
-    return [10, 22, 33, 44, 55, 66, 77, 88].map((xPct, i) => ({
-      id: i,
-      xPct,
-      disappearDelay: 0.3 + i * 0.28,
-    }));
-  }, []);
-
-  // ── Energizer dots for pac-man stage (4 positions, static blink)
-  const energizerDots = useMemo(() => {
-    return [
-      { id: 0, xPct: 5  },
-      { id: 1, xPct: 48 },
-      { id: 2, xPct: 52 },
-      { id: 3, xPct: 94 },
-    ];
-  }, []);
-
-  // ── Tetris blocks: 5 rows
-  const tetrisBlocks = useMemo(() => {
-    const palette = ['#ff0000', '#00ffff', '#ff8800', '#0000ff', '#00ff00'];
-    const widths = ['80%', '70%', '90%', '65%', '85%'];
-    return palette.map((color, i) => ({
-      id: i,
-      color,
-      width: widths[i],
-      delay: i * 0.42,
-    }));
-  }, []);
-
-  // ── Pixel burst stars: 16 fixed positions for GAME OVER stage
-  const pixelBursts = useMemo(() => {
-    const colors = [
-      '#00ff00', '#ffff00', '#00ffff', '#ff00ff', '#ff8800', '#ffffff',
-      '#00ff00', '#ffff00', '#ff00ff', '#00ffff', '#ff8800', '#ffffff',
-      '#ff0000', '#00ff88', '#ff66ff', '#ffcc00',
-    ];
-    const positions = [
-      { x: 12, y: 18 }, { x: 82, y: 14 }, { x: 6,  y: 72 }, { x: 90, y: 68 },
-      { x: 48, y: 8  }, { x: 50, y: 88 }, { x: 22, y: 46 }, { x: 76, y: 52 },
-      { x: 35, y: 30 }, { x: 65, y: 25 }, { x: 20, y: 60 }, { x: 78, y: 78 },
-      { x: 8,  y: 40 }, { x: 92, y: 38 }, { x: 40, y: 92 }, { x: 60, y: 5  },
-    ];
-    return positions.map((pos, i) => ({ ...pos, color: colors[i], id: i }));
-  }, []);
-
-  // ── Corner brackets for INSERT COIN stage
-  const cornerBrackets = useMemo(() => [
-    { char: '⌐', style: { top: '12%', left: '8%' }  },
-    { char: '¬', style: { top: '12%', right: '8%' } },
-    { char: 'L', style: { bottom: '12%', left: '8%' }  },
-    { char: 'J', style: { bottom: '12%', right: '8%' } },
+  // ── Ghost definitions
+  const ghosts = useMemo(() => [
+    { id: 0, color: '#ff0000', name: 'BLINKY', startLeft: '-12%', endLeft: '82%', dur: 3.8, sd: 0.1 },
+    { id: 1, color: '#ffb8ff', name: 'PINKY',  startLeft: '-22%', endLeft: '72%', dur: 3.8, sd: 0.45 },
+    { id: 2, color: '#00ffff', name: 'INKY',   startLeft: '-32%', endLeft: '62%', dur: 3.8, sd: 0.8 },
+    { id: 3, color: '#ffb852', name: 'CLYDE',  startLeft: '-42%', endLeft: '52%', dur: 3.8, sd: 1.15 },
   ], []);
 
-  // ── Radiance corner decorations
-  const radianceCorners = useMemo(() => [
-    { label: '1UP',  style: { top: '10%',    left: '6%'   } },
-    { label: '2UP',  style: { top: '10%',    right: '6%'  } },
-    { label: '★★★', style: { bottom: '15%', left: '6%'   } },
-    { label: '∞',    style: { bottom: '15%', right: '6%'  } },
+  // ── Tetris pieces (7 tetrominos as [col,row] cell offsets)
+  const tetrisPieces = useMemo(() => [
+    { id: 0, color: '#00ffff', cells: [[0,0],[1,0],[2,0],[3,0]], col: 3, delay: 0.0 },  // I
+    { id: 1, color: '#ffff00', cells: [[0,0],[1,0],[0,1],[1,1]], col: 4, delay: 0.55 }, // O
+    { id: 2, color: '#a000f0', cells: [[1,0],[0,1],[1,1],[2,1]], col: 3, delay: 1.1 },  // T
+    { id: 3, color: '#00f000', cells: [[1,0],[2,0],[0,1],[1,1]], col: 2, delay: 1.65 }, // S
+    { id: 4, color: '#f00000', cells: [[0,0],[1,0],[1,1],[2,1]], col: 5, delay: 2.2 },  // Z
+    { id: 5, color: '#f0a000', cells: [[0,0],[0,1],[0,2],[1,2]], col: 1, delay: 2.75 }, // L
   ], []);
 
-  // ── Orbiting achievement stars for radiance (6 stars at fixed cos/sin angles)
-  const orbitStars = useMemo(() => {
-    const chars = ['✦', '★', '⭐', '✦', '★', '⭐'];
-    const colors = ['#ffd700', '#ffffff', '#ffd700', '#ffffff', '#ffd700', '#ffffff'];
-    return chars.map((char, i) => {
-      const angleDeg = i * 60;
-      const angleRad = (angleDeg * Math.PI) / 180;
-      const radius = 80; // px from center
-      const x = Math.cos(angleRad) * radius;
-      const y = Math.sin(angleRad) * radius;
-      return { id: i, char, color: colors[i], x, y };
-    });
-  }, []);
+  // ── Space Invader rows
+  const invaderRows = useMemo(() => [
+    { id: 0, pattern: INV_SQUID, color: '#ffffff', topPct: 20, count: 5, pointsLabel: '10 PTS' },
+    { id: 1, pattern: INV_CRAB,  color: '#00ffff', topPct: 32, count: 5, pointsLabel: '20 PTS' },
+    { id: 2, pattern: INV_USHIP, color: '#00ff41', topPct: 44, count: 5, pointsLabel: '30 PTS' },
+  ], []);
 
-  const scoreIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const linesIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pacScoreIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const shieldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // ── me- fireworks (preserved from previous version)
+  const meColors = useMemo(() => ['#00ff00','#ffff00','#00ffff','#ff00ff','#ff8800','#ffffff','#00ff88'], []);
+  const meFwPositions = useMemo(() => [
+    {x:10,y:18},{x:25,y:10},{x:42,y:20},{x:58,y:8},{x:72,y:18},{x:88,y:12},{x:18,y:32},{x:82,y:28},
+  ].slice(0, isMobile ? 5 : 8), [isMobile]);
+  const meFwSparks = useMemo(() => meFwPositions.map(() =>
+    Array.from({length: isMobile ? 14 : 20}, (_, i) => {
+      const a = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const d = 50 + (i % 5) * 20;
+      return { x: Math.cos(a)*d, y: Math.sin(a)*d, color: meColors[i % meColors.length], delay: i*0.04 };
+    })
+  ), [meFwPositions, meColors, isMobile]);
+  const meFwRings = useMemo(() => meFwPositions.map(() =>
+    Array.from({length: 3}, (_, i) => ({ delay: i*0.15, color: ['#00ff00','#ffff00','#00ffff'][i] }))
+  ), [meFwPositions]);
+  const meOrbs = useMemo(() => Array.from({length: isMobile ? 10 : 18}, (_, i) => ({
+    x: 5 + (i * 5.5) % 90, dx: (i % 7 - 3) * 18, dur: 2.5 + (i % 4) * 0.5,
+    delay: i * 0.18, color: meColors[i % meColors.length]
+  })), [meColors, isMobile]);
 
+  // ── Confetti + score counter on radiance
   useEffect(() => {
-    const timeline = [
-      {
-        time: 0,
-        action: () => {
-          setStage('insert-coin');
-          setGhostScared(false);
-          setCherryEaten(false);
-          setTetrisScore(0);
-          setTetrisLines(0);
-          setPacScore(0);
-          setShieldHealth(2);
-          setCountdown(9);
-          setUfoBonusShown(false);
-        },
-      },
-      {
-        time: 2000,
-        action: () => {
-          setStage('pacman');
-          // Pac score ticks +10 per dot (8 dots over ~2.5s → every ~280ms)
-          let ps = 0;
-          const pi = setInterval(() => {
-            ps += 10;
-            if (ps >= 80) {
-              ps = 80;
-              clearInterval(pi);
-            }
-            setPacScore(ps);
-          }, 280);
-          pacScoreIntervalRef.current = pi;
-        },
-      },
-      {
-        time: 5000,
-        action: () => {
-          if (pacScoreIntervalRef.current) clearInterval(pacScoreIntervalRef.current);
-          setStage('tetris');
-          setTetrisScore(0);
-          setTetrisLines(0);
-          let ts = 0;
-          const ti = setInterval(() => {
-            ts += 100;
-            if (ts >= 1000) {
-              ts = 1000;
-              clearInterval(ti);
-            }
-            setTetrisScore(ts);
-          }, 420);
-          scoreIntervalRef.current = ti;
-          // Lines counter: +1 every 1.5s, max 4
-          let lines = 0;
-          const li = setInterval(() => {
-            lines += 1;
-            setTetrisLines(lines);
-            if (lines >= 4) clearInterval(li);
-          }, 1500);
-          linesIntervalRef.current = li;
-        },
-      },
-      {
-        time: 9000,
-        action: () => {
-          if (scoreIntervalRef.current) clearInterval(scoreIntervalRef.current);
-          if (linesIntervalRef.current) clearInterval(linesIntervalRef.current);
-          setStage('invaders');
-          setShieldHealth(2);
-          // Decrement shield health as lasers fire
-          shieldTimerRef.current = setTimeout(() => setShieldHealth(1), 500);
-          setTimeout(() => setShieldHealth(0), 900);
-          // UFO exits at ~3s (delay 0.5s + 2.5s duration), show bonus text
-          setTimeout(() => setUfoBonusShown(true), 3100);
-        },
-      },
-      {
-        time: 12000,
-        action: () => {
-          setStage('gameover');
-          setCountdown(9);
-          setScore(0);
-          let s = 0;
-          const si = setInterval(() => {
-            s += 33330;
-            if (s >= 999990) {
-              s = 999990;
-              clearInterval(si);
-            }
-            setScore(s);
-          }, 83);
-          scoreIntervalRef.current = si;
-          // Countdown starts at 1s delay
-          setTimeout(() => {
-            let cd = 9;
-            const ci = setInterval(() => {
-              cd -= 1;
-              setCountdown(cd);
-              if (cd <= 0) clearInterval(ci);
-            }, 1000);
-            countdownIntervalRef.current = ci;
-          }, 1000);
-        },
-      },
-      {
-        time: 15000,
-        action: () => {
-          if (scoreIntervalRef.current) clearInterval(scoreIntervalRef.current);
-          if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-          setStage('radiance');
-        },
-      },
-      {
-        time: 17000,
-        action: () => {
-          setStage('outro');
-          setCompleted(true);
-          onComplete?.();
-        },
-      },
+    if (stage !== 'radiance') return;
+    const colors = ['#ffff00','#00ff41','#ff0000','#00ffff','#ff00ff'];
+    const base = { spread: 90, ticks: 300, gravity: 0.9, decay: 0.93, startVelocity: 50, colors };
+    confetti({ ...base, particleCount: isMobile ? 70 : 150, angle: 60, origin: { x: 0, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 150, angle: 120, origin: { x: 1, y: 0.7 } });
+    const t1 = setTimeout(() => confetti({ ...base, particleCount: isMobile ? 60 : 100, angle: 90, origin: { x: 0.5, y: 0.6 } }), 400);
+    const t2 = setTimeout(() => {
+      confetti({ ...base, particleCount: 100, angle: 60, origin: { x: 0, y: 0.65 } });
+      confetti({ ...base, particleCount: 100, angle: 120, origin: { x: 1, y: 0.65 } });
+    }, 950);
+    // Score counter
+    let s = 0;
+    const si = setInterval(() => {
+      s += 33330;
+      if (s >= 999990) { s = 999990; clearInterval(si); }
+      setRadianceScore(s);
+    }, 50);
+    scoreRef.current = si;
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearInterval(si);
+    };
+  }, [stage]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Main timeline
+  useEffect(() => {
+    const timeouts: ReturnType<typeof setTimeout>[] = [
+      setTimeout(() => {
+        setStage('pacman');
+        let ps = 0;
+        const pi = setInterval(() => {
+          ps += 10;
+          if (ps >= 80) { ps = 80; clearInterval(pi); }
+          setPacScore(ps);
+        }, 280);
+        pacScoreRef.current = pi;
+      }, 2000),
+      setTimeout(() => {
+        if (pacScoreRef.current) clearInterval(pacScoreRef.current);
+        setStage('tetris');
+      }, 6000),
+      setTimeout(() => setStage('spaceinvaders'), 10000),
+      setTimeout(() => setStage('radiance'), 14000),
+      setTimeout(() => {
+        setStage('outro');
+        if (!completedRef.current) { completedRef.current = true; onComplete?.(); }
+      }, 17000),
     ];
 
-    const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-
-    // Ghost scared at 2000 + 2200ms = 4200ms
-    const ghostTimer = setTimeout(() => setGhostScared(true), 4200);
-    // Cherry eaten at 2000 + 1800ms = 3800ms
-    const cherryTimer = setTimeout(() => setCherryEaten(true), 3800);
-
-    // Failsafe at ~17.5s
+    // Failsafe at 18s
     const failsafe = setTimeout(() => {
-      [scoreIntervalRef, linesIntervalRef, pacScoreIntervalRef, countdownIntervalRef].forEach(
-        (ref) => { if (ref.current) clearInterval(ref.current); }
-      );
-      setStage('outro');
-      setCompleted(true);
-      onComplete?.();
-    }, 17500);
+      if (scoreRef.current) clearInterval(scoreRef.current);
+      if (pacScoreRef.current) clearInterval(pacScoreRef.current);
+      if (!completedRef.current) { completedRef.current = true; onComplete?.(); }
+    }, 18000);
 
     return () => {
       timeouts.forEach(clearTimeout);
-      clearTimeout(ghostTimer);
-      clearTimeout(cherryTimer);
       clearTimeout(failsafe);
-      if (shieldTimerRef.current) clearTimeout(shieldTimerRef.current);
-      [scoreIntervalRef, linesIntervalRef, pacScoreIntervalRef, countdownIntervalRef].forEach(
-        (ref) => { if (ref.current) clearInterval(ref.current); }
-      );
+      if (scoreRef.current) clearInterval(scoreRef.current);
+      if (pacScoreRef.current) clearInterval(pacScoreRef.current);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const screenH = typeof window !== 'undefined' ? window.innerHeight : 600;
-  const lastBlock = tetrisBlocks[tetrisBlocks.length - 1];
-  const lineClearDelay = lastBlock.delay + 0.8;
+  // ── Precomputed invader box-shadows
+  const invaderShadows = useMemo(() =>
+    invaderRows.map((row) => ({
+      body: pixelShadow(row.pattern, row.color, isMobile ? 3 : 4),
+    }))
+  , [invaderRows, isMobile]);
+
+  // ── Precomputed ghost box-shadows for each ghost color
+  const ghostShadows = useMemo(() =>
+    ghosts.map((g) => ({
+      body:  pixelShadow(GHOST_BODY, g.color, GHOST_PX),
+      eyes:  pixelShadow(GHOST_EYE_WHITE, '#ffffff', GHOST_PX),
+      pupil: pixelShadow(GHOST_EYE_PUPIL, '#00008b', GHOST_PX),
+    }))
+  , [ghosts, GHOST_PX]);
+
+  const ghostBoxW = 8 * GHOST_PX;
+  const ghostBoxH = 8 * GHOST_PX;
+  const invBoxW = 8 * (isMobile ? 3 : 4);
+  const invBoxH = 6 * (isMobile ? 3 : 4);
 
   return (
     <div
-      className="relative w-full h-full overflow-hidden"
       style={{
-        background: '#050508',
-        backgroundImage: `
-          linear-gradient(rgba(0,255,0,0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(0,255,0,0.04) 1px, transparent 1px)
-        `,
-        backgroundSize: '28px 28px',
-        fontFamily: 'monospace',
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        background: '#0a0a0a',
+        fontFamily: "'Courier New', monospace",
+        color: '#00ff41',
+        letterSpacing: '2px',
+        textTransform: 'uppercase',
+        // CRT tube glow
+        boxShadow: 'inset 0 0 80px rgba(0,255,65,0.08), inset 0 0 200px rgba(0,0,0,0.6)',
       }}
     >
-      {/* CSS keyframes */}
+      {/* ── CSS keyframes ── */}
       <style>{`
-        @keyframes arc-blink {
-          0%, 49% { opacity: 1; }
-          50%, 100% { opacity: 0; }
+        @keyframes me-pop-ring {
+          0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
         }
-        @keyframes arc-neon-pulse {
-          0%, 100% { text-shadow: 0 0 10px #00ff00, 0 0 24px #00ff00; }
-          50%       { text-shadow: 0 0 20px #00ff00, 0 0 50px #00ff00, 0 0 80px #00ff00; }
+        @keyframes me-flash {
+          0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
         }
-        @keyframes arc-gameover-flash {
-          0%, 100% { opacity: 1; color: #ff0000; text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
-          50%       { opacity: 0.3; color: #ff8800; text-shadow: none; }
+        @keyframes me-orb-float {
+          0% { transform: translateY(0) translateX(0); opacity: 0; }
+          20% { opacity: 1; }
+          100% { transform: translateY(-180px) translateX(var(--dx)); opacity: 0; }
         }
-        @keyframes gof-flicker {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.3; }
+        @keyframes me-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+        @keyframes me-chomp {
+          0%  { clip-path: polygon(50% 50%,100% 20%,100% 0,0 0,0 100%,100% 100%,100% 80%); }
+          50% { clip-path: polygon(50% 50%,100% 50%,100% 0,0 0,0 100%,100% 100%,100% 50%); }
         }
-        @keyframes arc-highscore-glow {
-          0%, 100% { text-shadow: 0 0 15px #ffff00, 0 0 30px #ffff00; }
-          50%       { text-shadow: 0 0 30px #ffff00, 0 0 60px #ffff00, 0 0 90px #ff8800; }
+        @keyframes me-fall {
+          0%   { transform: translateY(-${CELL * 3}px); opacity: 0; }
+          12%  { opacity: 1; }
+          100% { transform: translateY(${CELL * 12}px); opacity: 1; }
         }
-        @keyframes arc-lineclear {
-          0%   { opacity: 0; transform: scale(0.7); }
-          20%  { opacity: 1; transform: scale(1.15); }
-          80%  { opacity: 1; transform: scale(1); }
-          100% { opacity: 0; }
+        @keyframes me-march {
+          0%   { transform: translateX(0); }
+          50%  { transform: translateX(${isMobile ? 32 : 48}px); }
+          100% { transform: translateX(0); }
         }
-        @keyframes arc-scanline {
-          0%   { top: -4px; }
-          100% { top: 100%; }
+        @keyframes me-laser {
+          0%   { transform: translateY(0); opacity: 1; }
+          100% { transform: translateY(-${isMobile ? 320 : 520}px); opacity: 0; }
         }
-        @keyframes arc-white-flash {
-          0%   { opacity: 0; }
-          30%  { opacity: 1; }
-          100% { opacity: 0; }
+        @keyframes me-neon-pulse {
+          0%,100% { text-shadow: 0 0 10px #00ff41, 0 0 24px #00ff41; }
+          50%      { text-shadow: 0 0 20px #00ff41, 0 0 50px #00ff41, 0 0 90px #00ff41; }
         }
-        @keyframes arc-marquee {
-          0%   { transform: translateX(110%); }
-          100% { transform: translateX(-110%); }
+        @keyframes me-gold-glow {
+          0%,100% { text-shadow: 0 0 10px #ffd700, 0 0 22px #ffd700; }
+          50%      { text-shadow: 0 0 24px #ffd700, 0 0 50px #ff8800, 0 0 80px #ffd700; }
         }
-        @keyframes arc-gold-glow {
-          0%, 100% { text-shadow: 0 0 10px #ffd700, 0 0 22px #ffd700; }
-          50%       { text-shadow: 0 0 22px #ffd700, 0 0 48px #ff8800, 0 0 70px #ffd700; }
+        @keyframes me-gameover-flash {
+          0%,100% { opacity:1; color:#ff0000; text-shadow:0 0 20px #ff0000,0 0 40px #ff0000; }
+          50%      { opacity:0.35; color:#ff8800; }
         }
-        @keyframes arc-orbit {
-          0%   { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        @keyframes me-explosion {
+          0%   { transform: scale(0) rotate(0deg); opacity: 1; }
+          60%  { transform: scale(1.6) rotate(45deg); opacity: 1; }
+          100% { transform: scale(2.2) rotate(90deg); opacity: 0; }
         }
-        @keyframes arc-star-blink {
-          0%, 40%  { opacity: 1; }
-          50%, 90% { opacity: 0.15; }
-          100%     { opacity: 1; }
+        @keyframes me-ufo-blink {
+          0%,45%{opacity:1} 50%,95%{opacity:0.4} 100%{opacity:1}
+        }
+        @keyframes me-score-count {
+          0%,100% { color: #ffff00; }
+          50%      { color: #ffffff; }
+        }
+        @keyframes me-ready {
+          0%,100% { opacity:1; } 33%,66%{ opacity:0; }
+        }
+        @keyframes me-border-glow {
+          0%,100% { box-shadow: 0 0 8px #00ff41, 0 0 16px #00ff4144; }
+          50%      { box-shadow: 0 0 14px #00ff41, 0 0 28px #00ff4166, 0 0 50px #00ff4122; }
+        }
+        @keyframes me-rainbow {
+          0%{color:#ffff00} 20%{color:#00ff41} 40%{color:#00ffff} 60%{color:#ff00ff} 80%{color:#ff6600} 100%{color:#ffff00}
+        }
+        @keyframes me-ufo {
+          0%{transform:translateX(-60px);opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{transform:translateX(110vw);opacity:0}
         }
       `}</style>
 
-      {/* CRT scanline overlay */}
-      <div
-        style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100,
-          background: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.12) 3px, rgba(0,0,0,0.12) 4px)',
-        }}
-      />
+      {/* ── CRT scanlines (always present, z-index 100) ── */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 100, pointerEvents: 'none',
+        background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.10) 2px, rgba(0,0,0,0.10) 4px)',
+      }} />
+
+      {/* ── CRT vignette ── */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 99, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%)',
+      }} />
+      {/* ── Green phosphor tint vignette ── */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 98, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse at center, transparent 60%, rgba(0,20,0,0.5) 100%)',
+      }} />
+
+      {/* ── Persistent score header (all stages except outro) ── */}
+      {stage !== 'outro' && (
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: isMobile ? '3px 8px' : '5px 14px',
+          borderBottom: '1px solid #00ff4133',
+          background: 'rgba(0,0,0,0.75)',
+          fontSize: isMobile ? '8px' : '10px',
+        }}>
+          <span style={{ color: '#00ff41', textShadow: '0 0 6px #00ff41, 0 0 12px rgba(0,255,65,0.4)' }}>
+            1UP{'  '}
+            <span style={{ color: '#00ff41', textShadow: '0 0 8px #00ff41, 0 0 16px rgba(0,255,65,0.5)' }}>{String(pacScore * 1000 + 12500).padStart(6,'0')}</span>
+          </span>
+          <span style={{ color: '#00ff41', animation: 'me-neon-pulse 2s ease-in-out infinite', textShadow: '0 0 6px #00ff41, 0 0 12px rgba(0,255,65,0.4)' }}>
+            HI-SCORE{'  '}
+            <span style={{ color: '#00ff41', textShadow: '0 0 8px #00ff41, 0 0 16px rgba(0,255,65,0.5)' }}>999999</span>
+          </span>
+          <span style={{ color: '#00ff41', textShadow: '0 0 6px #00ff41, 0 0 12px rgba(0,255,65,0.4)' }}>
+            2UP{'  '}
+            <span style={{ color: '#00ff41', textShadow: '0 0 8px #00ff41, 0 0 16px rgba(0,255,65,0.5)' }}>000000</span>
+          </span>
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════
-          STAGE 1 — INSERT COIN
+          STAGE 1 — INTRO (attract screen)
       ══════════════════════════════════════════════ */}
       <AnimatePresence>
-        {stage === 'insert-coin' && (
+        {stage === 'intro' && (
           <motion.div
-            key="insert-coin"
+            key="intro"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.35 } }}
+            exit={{ opacity: 0, transition: { duration: 0.3 } }}
             transition={{ duration: 0.4 }}
-            className="absolute inset-0 flex flex-col items-center justify-center z-20 gap-4"
+            style={{
+              position: 'absolute', inset: 0, zIndex: 20,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: isMobile ? '10px' : '14px',
+            }}
           >
-            {/* Attract mode scanline — single horizontal bar sweeping top → bottom */}
-            <div
-              style={{
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                top: -4,
-                height: '3px',
-                background: 'rgba(255,255,255,0.5)',
-                pointerEvents: 'none',
-                zIndex: 30,
-                animationName: 'arc-scanline',
-                animationDuration: '1s',
-                animationDelay: '0.1s',
-                animationTimingFunction: 'linear',
-                animationIterationCount: 1,
-                animationFillMode: 'forwards',
-              }}
-            />
-
-            {/* HIGH SCORE board */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-              style={{
-                position: 'absolute',
-                top: isMobile ? '8%' : '10%',
-                left: 0,
-                right: 0,
-                textAlign: 'center',
-                fontSize: isMobile ? '12px' : '15px',
-                color: '#00ff00',
-                letterSpacing: '3px',
-                fontFamily: 'monospace',
-                textShadow: '0 0 8px #00ff00',
-              }}
-            >
-              HIGH SCORE &nbsp;&nbsp; AAA &nbsp; 999990
-            </motion.div>
-
             {/* Corner brackets */}
-            {cornerBrackets.map((bracket, i) => (
+            {[
+              { style: { top: '8%',    left:  '5%'  }, char: '┌' },
+              { style: { top: '8%',    right: '5%'  }, char: '┐' },
+              { style: { bottom: '8%', left:  '5%'  }, char: '└' },
+              { style: { bottom: '8%', right: '5%'  }, char: '┘' },
+            ].map((c, i) => (
               <motion.div
-                key={`bracket-${i}`}
+                key={i}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.25, delay: 0.15 + i * 0.12 }}
+                transition={{ duration: 0.25, delay: 0.1 + i * 0.1 }}
                 style={{
-                  position: 'absolute',
-                  ...bracket.style,
-                  fontSize: isMobile ? '22px' : '30px',
-                  color: '#00ff00',
-                  textShadow: '0 0 8px #00ff00',
-                  fontWeight: 900,
+                  position: 'absolute', ...c.style,
+                  fontSize: isMobile ? '18px' : '26px',
+                  color: '#00ff41',
+                  textShadow: '0 0 6px #00ff41',
                 }}
               >
-                {bracket.char}
+                {c.char}
               </motion.div>
             ))}
 
-            {/* Falling coin with squish bounce */}
-            <motion.div
-              initial={{ y: '-200px', opacity: 1 }}
-              animate={{ y: '0px', scaleY: [1, 0.6, 1.2, 0.9, 1] }}
-              transition={{
-                y: { duration: 0.7, delay: 0.4, ease: 'easeOut' },
-                scaleY: { duration: 0.45, delay: 0.9, ease: 'easeOut', times: [0, 0.25, 0.6, 0.8, 1] },
-              }}
-              style={{
-                position: 'absolute',
-                top: 'calc(50% - 90px)',
-                fontSize: isMobile ? '28px' : '36px',
-                lineHeight: 1,
-                transformOrigin: 'bottom center',
-              }}
-            >
-              🪙
-            </motion.div>
+            {/* Horizontal border lines */}
+            <div style={{
+              position: 'absolute', top: '11%', left: '6%', right: '6%',
+              height: '1px', background: 'rgba(0,255,65,0.4)',
+            }} />
+            <div style={{
+              position: 'absolute', bottom: '11%', left: '6%', right: '6%',
+              height: '1px', background: 'rgba(0,255,65,0.4)',
+            }} />
 
-            {/* PLAYER 1 label */}
+            {/* Subtitle above main title */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
+              transition={{ delay: 0.15, duration: 0.3 }}
               style={{
-                fontSize: isMobile ? '11px' : '14px',
-                color: '#00ff00',
-                letterSpacing: '4px',
-                textShadow: '0 0 8px #00ff00',
+                fontSize: isMobile ? '9px' : '11px',
+                letterSpacing: '5px',
+                color: '#00ff41',
+                textShadow: '0 0 6px #00ff41',
               }}
             >
-              PLAYER 1
+              ◆ ARCADE CLASSICS ◆
             </motion.div>
 
-            {/* Arcade title */}
+            {/* Main ARCADE title */}
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
               style={{
-                fontSize: isMobile ? '44px' : '72px',
+                fontSize: isMobile ? '46px' : '72px',
                 fontWeight: 900,
-                letterSpacing: '8px',
-                color: '#00ff00',
-                animation: 'arc-neon-pulse 1.4s ease-in-out infinite',
+                letterSpacing: isMobile ? '8px' : '12px',
+                color: '#00ff41',
+                animation: 'me-neon-pulse 1.4s ease-in-out infinite',
               }}
             >
               ARCADE
             </motion.div>
 
-
             {/* INSERT COIN blink */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.2, delay: 0.6 }}
+              transition={{ delay: 0.5, duration: 0.2 }}
               style={{
-                fontSize: isMobile ? '18px' : '26px',
+                fontSize: isMobile ? '18px' : '24px',
                 fontWeight: 'bold',
                 color: '#ffff00',
-                letterSpacing: '5px',
-                animation: 'arc-blink 0.65s step-start infinite',
-                textShadow: '0 0 12px #ffff00',
+                letterSpacing: '4px',
+                textShadow: '0 0 10px #ffff00',
+                animation: 'me-blink 1s step-start infinite',
               }}
             >
-              INSERT COIN ▶
+              INSERT COIN
             </motion.div>
 
-            {/* 3 decorative blink stars around INSERT COIN text */}
-            {(['✦', '✦', '✦'] as const).map((star, i) => (
-              <motion.div
-                key={`star-deco-${i}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.2, delay: 0.65 }}
-                style={{
-                  position: 'absolute',
-                  // left, center, right of the INSERT COIN band
-                  left: i === 0 ? '12%' : i === 1 ? '50%' : 'auto',
-                  right: i === 2 ? '12%' : 'auto',
-                  top: isMobile ? 'calc(50% + 34px)' : 'calc(50% + 42px)',
-                  transform: i === 1 ? 'translateX(-50%)' : undefined,
-                  fontSize: isMobile ? '14px' : '18px',
-                  color: '#ffff00',
-                  textShadow: '0 0 8px #ffff00',
-                  animationName: 'arc-star-blink',
-                  animationDuration: `${0.7 + i * 0.18}s`,
-                  animationDelay: `${0.2 * i}s`,
-                  animationTimingFunction: 'step-start',
-                  animationIterationCount: 'infinite',
-                }}
-              >
-                {star}
-              </motion.div>
-            ))}
-
-            {/* CREDITS: 01 */}
+            {/* PRESS START blink */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.8 }}
+              transition={{ delay: 0.7, duration: 0.2 }}
               style={{
-                fontSize: isMobile ? '11px' : '14px',
-                color: '#ffff00',
+                fontSize: isMobile ? '12px' : '16px',
+                color: '#ffffff',
                 letterSpacing: '3px',
-                textShadow: '0 0 6px #ffff00',
+                textShadow: '0 0 6px #ffffff',
+                animation: 'me-blink 1s step-start infinite',
+                animationDelay: '0.4s',
               }}
             >
-              CREDITS: 01
+              ▶ PRESS START ◀
+            </motion.div>
+
+            {/* Block cursor */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.9, duration: 0.2 }}
+              style={{
+                width: isMobile ? '8px' : '12px',
+                height: isMobile ? '14px' : '18px',
+                background: '#00ff41',
+                boxShadow: '0 0 8px #00ff41',
+                animation: 'me-blink 0.6s step-start infinite',
+              }}
+            />
+
+            {/* TOP SCORES attract list */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.3 }}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                gap: isMobile ? '3px' : '4px',
+                fontSize: isMobile ? '9px' : '11px',
+                color: '#00ff41',
+                letterSpacing: '3px',
+                textShadow: '0 0 4px #00ff41',
+              }}
+            >
+              <div style={{ color: '#ffff00', textShadow: '0 0 6px #ffff00', marginBottom: '2px' }}>TOP SCORES</div>
+              {[
+                { name: 'AAA', score: '999999' },
+                { name: 'BBB', score: '500000' },
+                { name: 'CCC', score: '250000' },
+              ].map((entry, i) => (
+                <div key={i} style={{ fontFamily: "'Courier New', monospace" }}>
+                  {entry.name}{'  '}{entry.score}
+                </div>
+              ))}
+            </motion.div>
+
+            {/* CREDITS 00 bottom */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.3 }}
+              style={{
+                position: 'absolute',
+                bottom: isMobile ? '10%' : '12%',
+                left: 0, right: 0, textAlign: 'center',
+                fontSize: isMobile ? '10px' : '13px',
+                color: '#888',
+                letterSpacing: '3px',
+              }}
+            >
+              CREDITS 00
+            </motion.div>
+
+            {/* © NAMCO 1980 copyright */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.0, duration: 0.3 }}
+              style={{
+                position: 'absolute',
+                bottom: isMobile ? '6%' : '7%',
+                left: 0, right: 0, textAlign: 'center',
+                fontSize: isMobile ? '8px' : '9px',
+                color: '#00ff41',
+                letterSpacing: '2px',
+                opacity: 0.4,
+              }}
+            >
+              © NAMCO 1980
             </motion.div>
           </motion.div>
         )}
@@ -573,222 +589,193 @@ export function MixtapeEpicCeremony({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.3 } }}
             transition={{ duration: 0.3 }}
-            className="absolute inset-0 z-20"
+            style={{ position: 'absolute', inset: 0, zIndex: 20 }}
           >
-            {/* 1UP score top-left */}
-            <div
-              style={{
-                position: 'absolute',
-                top: isMobile ? 12 : 18,
-                left: isMobile ? 12 : 20,
-                fontSize: isMobile ? '10px' : '13px',
-                color: '#ffffff',
-                letterSpacing: '2px',
-                textShadow: '0 0 6px #ffffff',
-                lineHeight: 1.4,
-              }}
-            >
-              <div style={{ color: '#00ffff' }}>1UP</div>
-              <div style={{ color: '#ffff00' }}>{String(pacScore * 100 + 12500).padStart(6, '0')}</div>
-            </div>
-
-            {/* LEVEL 1 — top right */}
-            <div
-              style={{
-                position: 'absolute',
-                top: isMobile ? 12 : 18,
-                right: isMobile ? 12 : 20,
-                fontSize: isMobile ? '10px' : '13px',
-                color: '#ffff00',
-                letterSpacing: '2px',
-                textShadow: '0 0 6px #ffff00',
-              }}
-            >
-              LEVEL 1
-            </div>
-
             {/* Stage label */}
-            <div
-              style={{
-                position: 'absolute', top: isMobile ? 20 : 32, left: 0, right: 0,
-                textAlign: 'center', fontSize: isMobile ? '12px' : '15px',
-                color: '#00ffff', letterSpacing: '4px', textShadow: '0 0 8px #00ffff',
-              }}
-            >
-              PAC-MAN
+            <div style={{
+              position: 'absolute', top: isMobile ? 26 : 34, left: 0, right: 0,
+              textAlign: 'center',
+              fontSize: isMobile ? '10px' : '13px',
+              color: '#ffff00',
+              letterSpacing: '4px',
+              textShadow: '0 0 8px #ffff00',
+            }}>
+              PAC-MAN — LEVEL 1
             </div>
 
-            {/* Maze wall — top */}
-            <div
-              style={{
-                position: 'absolute', top: '40%', left: '4%', right: '4%',
+            {/* READY! */}
+            <div style={{
+              position: 'absolute',
+              top: '36%', left: 0, right: 0, textAlign: 'center',
+              fontSize: isMobile ? '18px' : '24px',
+              color: '#ffff00',
+              letterSpacing: '5px',
+              textShadow: '0 0 10px #ffff00',
+              animation: 'me-ready 1.2s ease-in-out 1 forwards',
+              animationFillMode: 'forwards',
+            }}>
+              READY!
+            </div>
+
+            {/* Maze top/bottom walls */}
+            {['39%', '61%'].map((top, i) => (
+              <div key={i} style={{
+                position: 'absolute', top, left: '3%', right: '3%',
                 height: '2px',
-                background: 'rgba(0,255,0,0.5)',
-                boxShadow: '0 0 6px #00ff00',
-              }}
-            />
-
-            {/* Maze wall — bottom */}
-            <div
-              style={{
-                position: 'absolute', top: '60%', left: '4%', right: '4%',
-                height: '2px',
-                background: 'rgba(0,255,0,0.5)',
-                boxShadow: '0 0 6px #00ff00',
-              }}
-            />
-
-            {/* Horizontal track */}
-            <div
-              style={{
-                position: 'absolute', top: '50%', left: 0, right: 0,
-                height: '2px', background: 'rgba(0,255,0,0.15)',
-              }}
-            />
-
-            {/* 4 energizer blink dots (CSS only, no JS animation) */}
-            {energizerDots.map((ed) => (
-              <div
-                key={`energizer-${ed.id}`}
-                style={{
-                  position: 'absolute',
-                  top: 'calc(50% - 5px)',
-                  left: `${ed.xPct}%`,
-                  width: isMobile ? '8px' : '10px',
-                  height: isMobile ? '8px' : '10px',
-                  borderRadius: '50%',
-                  background: '#ffffff',
-                  boxShadow: '0 0 6px #ffffff',
-                  animationName: 'arc-blink',
-                  animationDuration: '0.45s',
-                  animationTimingFunction: 'step-start',
-                  animationIterationCount: 'infinite',
-                  animationDelay: `${ed.id * 0.11}s`,
-                }}
-              />
+                background: 'rgba(0,50,220,0.85)',
+                boxShadow: '0 0 8px rgba(0,80,255,0.5)',
+              }} />
             ))}
+
+            {/* Track center line (subtle) */}
+            <div style={{
+              position: 'absolute', top: 'calc(50% - 1px)', left: 0, right: 0,
+              height: '1px', background: 'rgba(0,255,65,0.06)',
+            }} />
 
             {/* 8 pac dots */}
             {pacDots.map((dot) => (
               <motion.div
-                key={`dot-${dot.id}`}
+                key={dot.id}
                 style={{
                   position: 'absolute',
-                  top: 'calc(50% - 6px)',
+                  top: 'calc(50% - 4px)',
                   left: `${dot.xPct}%`,
-                  fontSize: isMobile ? '10px' : '14px',
-                  lineHeight: 1,
+                  width: '8px', height: '8px',
+                  borderRadius: '50%',
+                  background: '#ffffff',
+                  boxShadow: '0 0 4px #ffffff',
                 }}
-                initial={{ opacity: 1 }}
-                animate={{ opacity: 0 }}
-                transition={{ duration: 0.15, delay: dot.disappearDelay }}
+                initial={{ opacity: 1, scale: 1 }}
+                animate={{ opacity: 0, scale: 0 }}
+                transition={{ duration: 0.1, delay: dot.delay }}
+              />
+            ))}
+
+            {/* Power pellets (4 large, corners) */}
+            {[4, 94].map((xPct, i) => (
+              <div key={i} style={{
+                position: 'absolute',
+                top: 'calc(50% - 7px)',
+                left: `${xPct}%`,
+                width: '14px', height: '14px',
+                borderRadius: '50%',
+                background: '#ffffff',
+                boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff',
+                animation: 'me-blink 0.5s step-start infinite',
+              }} />
+            ))}
+
+            {/* CSS Pac-Man (clip-path chomp) */}
+            <motion.div
+              style={{
+                position: 'absolute',
+                top: isMobile ? 'calc(50% - 15px)' : 'calc(50% - 20px)',
+                width: isMobile ? '30px' : '40px',
+                height: isMobile ? '30px' : '40px',
+                background: '#ffff00',
+                borderRadius: '50%',
+                clipPath: 'polygon(50% 50%,100% 20%,100% 0,0 0,0 100%,100% 100%,100% 80%)',
+                animation: 'me-chomp 0.28s step-start infinite',
+                boxShadow: '0 0 10px rgba(255,255,0,0.4)',
+                zIndex: 5,
+              }}
+              initial={{ left: '5%' }}
+              animate={{ left: '90%' }}
+              transition={{ duration: 3.6, ease: 'linear' }}
+            />
+
+            {/* +10 score pops */}
+            {pacDots.slice(0, 5).map((dot) => (
+              <motion.div
+                key={`score-${dot.id}`}
+                style={{
+                  position: 'absolute',
+                  top: 'calc(50% - 28px)',
+                  left: `${dot.xPct}%`,
+                  fontSize: isMobile ? '8px' : '10px',
+                  color: '#ffff00',
+                  textShadow: '0 0 6px #ffff00',
+                  pointerEvents: 'none',
+                  whiteSpace: 'nowrap',
+                  zIndex: 6,
+                }}
+                initial={{ opacity: 0, y: 0 }}
+                animate={{ opacity: [0, 1, 1, 0], y: [0, -8, -14, -20] }}
+                transition={{ duration: 0.65, delay: dot.delay + 0.08, times: [0, 0.1, 0.65, 1] }}
               >
-                ⚪
+                +10
               </motion.div>
             ))}
 
-            {/* Power pellet at 90% */}
-            <motion.div
-              style={{
-                position: 'absolute',
-                top: 'calc(50% - 10px)',
-                left: '90%',
-                fontSize: isMobile ? '14px' : '18px',
-                lineHeight: 1,
-              }}
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 0 }}
-              transition={{ duration: 0.15, delay: 2.3 }}
-            >
-              ⭕
-            </motion.div>
+            {/* Ghost sprites (pixel art box-shadow) */}
+            {ghosts.map((ghost, gi) => (
+              <motion.div
+                key={ghost.id}
+                style={{
+                  position: 'absolute',
+                  top: `calc(50% - ${ghostBoxH / 2 + 2}px)`,
+                  zIndex: 4,
+                }}
+                initial={{ left: ghost.startLeft }}
+                animate={{ left: ghost.endLeft }}
+                transition={{ duration: ghost.dur, delay: ghost.sd, ease: 'linear' }}
+              >
+                {/* Container sized to ghost pixel art */}
+                <div style={{
+                  position: 'relative',
+                  width: ghostBoxW + 'px',
+                  height: ghostBoxH + 'px',
+                }}>
+                  {/* Body pixels */}
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0,
+                    width: '1px', height: '1px',
+                    boxShadow: ghostShadows[gi].body,
+                    filter: `drop-shadow(0 0 3px ${ghost.color}88)`,
+                  }} />
+                  {/* Eye white pixels */}
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0,
+                    width: '1px', height: '1px',
+                    boxShadow: ghostShadows[gi].eyes,
+                  }} />
+                  {/* Pupil pixels */}
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0,
+                    width: '1px', height: '1px',
+                    boxShadow: ghostShadows[gi].pupil,
+                  }} />
+                  {/* Ghost name label */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '110%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    fontSize: isMobile ? '6px' : '8px',
+                    color: ghost.color,
+                    textShadow: `0 0 4px ${ghost.color}`,
+                    whiteSpace: 'nowrap',
+                    letterSpacing: '1px',
+                  }}>
+                    {ghost.name}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
 
-            {/* Cherry bonus */}
-            <motion.div
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: '40%',
-                transform: 'translateX(-50%)',
-                fontSize: isMobile ? '20px' : '26px',
-                lineHeight: 1,
-              }}
-              initial={{ opacity: 1 }}
-              animate={{ opacity: cherryEaten ? 0 : 1 }}
-              transition={{ duration: 0.2, delay: 0 }}
-            >
-              🍒
-            </motion.div>
-
-            {/* 200 PTS pop-up */}
-            <motion.div
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: '32%',
-                transform: 'translateX(-50%)',
-                fontSize: isMobile ? '11px' : '14px',
-                color: '#ffff00',
-                letterSpacing: '2px',
-                textShadow: '0 0 8px #ffff00',
-                whiteSpace: 'nowrap',
-              }}
-              initial={{ opacity: 0, y: 0 }}
-              animate={{ opacity: [0, 1, 1, 0], y: [0, -10, -10, -18] }}
-              transition={{ duration: 0.7, delay: 1.8, times: [0, 0.15, 0.75, 1] }}
-            >
-              200 PTS
-            </motion.div>
-
-            {/* Ghost name label — above ghost */}
-            <motion.div
-              style={{
-                position: 'absolute',
-                top: isMobile ? 'calc(50% - 36px)' : 'calc(50% - 44px)',
-                fontSize: isMobile ? '9px' : '11px',
-                letterSpacing: '1px',
-                fontWeight: 900,
-                color: ghostScared ? '#6666ff' : '#ff3333',
-                textShadow: ghostScared ? '0 0 6px #6666ff' : '0 0 6px #ff3333',
-                whiteSpace: 'nowrap',
-                pointerEvents: 'none',
-              }}
-              initial={{ left: '-10%' }}
-              animate={{ left: '68%' }}
-              transition={{ duration: 2.6, ease: 'linear' }}
-            >
-              {ghostScared ? 'SCARED!' : 'BLINKY'}
-            </motion.div>
-
-            {/* Pac-Man */}
-            <motion.div
-              style={{
-                position: 'absolute',
-                top: isMobile ? 'calc(50% - 14px)' : 'calc(50% - 18px)',
-                fontSize: isMobile ? '28px' : '36px',
-                lineHeight: 1,
-              }}
-              initial={{ left: '5%' }}
-              animate={{ left: '85%' }}
-              transition={{ duration: 2.6, ease: 'linear' }}
-            >
-              🟡
-            </motion.div>
-
-            {/* Ghost */}
-            <motion.div
-              style={{
-                position: 'absolute',
-                top: isMobile ? 'calc(50% - 14px)' : 'calc(50% - 18px)',
-                fontSize: isMobile ? '24px' : '32px',
-                lineHeight: 1,
-              }}
-              initial={{ left: '-10%' }}
-              animate={{ left: '68%' }}
-              transition={{ duration: 2.6, ease: 'linear' }}
-            >
-              {ghostScared ? '💙' : '👻'}
-            </motion.div>
+            {/* Maze score bottom */}
+            <div style={{
+              position: 'absolute',
+              bottom: isMobile ? '8%' : '10%',
+              left: 0, right: 0, textAlign: 'center',
+              fontSize: isMobile ? '9px' : '11px',
+              color: '#00ff41',
+              letterSpacing: '3px',
+              textShadow: '0 0 5px #00ff41',
+            }}>
+              SCORE: {String(pacScore * 10 + 1250).padStart(5,'0')}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -804,245 +791,210 @@ export function MixtapeEpicCeremony({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.3 } }}
             transition={{ duration: 0.3 }}
-            className="absolute inset-0 z-20"
+            style={{ position: 'absolute', inset: 0, zIndex: 20 }}
           >
-            {/* SCORE label top-left */}
-            <div
-              style={{
-                position: 'absolute', top: isMobile ? 16 : 24, left: isMobile ? 16 : 28,
-                fontSize: isMobile ? '11px' : '14px',
-                color: '#00ff00', letterSpacing: '3px',
-                textShadow: '0 0 6px #00ff00',
-              }}
-            >
-              SCORE
-            </div>
-            <div
-              style={{
-                position: 'absolute', top: isMobile ? 30 : 42, left: isMobile ? 16 : 28,
-                fontSize: isMobile ? '14px' : '18px',
-                color: '#ffff00', letterSpacing: '2px',
-                textShadow: '0 0 8px #ffff00',
-              }}
-            >
-              {String(tetrisScore).padStart(5, '0')}
+            {/* Stage label */}
+            <div style={{
+              position: 'absolute', top: isMobile ? 26 : 34, left: 0, right: 0,
+              textAlign: 'center',
+              fontSize: isMobile ? '10px' : '13px',
+              color: '#ff8800',
+              letterSpacing: '4px',
+              textShadow: '0 0 8px #ff8800',
+            }}>
+              TETRIS — LEVEL 1
             </div>
 
-            {/* LINES counter below SCORE */}
-            <div
-              style={{
-                position: 'absolute', top: isMobile ? 52 : 70, left: isMobile ? 16 : 28,
-                fontSize: isMobile ? '10px' : '12px',
-                color: '#00ffff', letterSpacing: '2px',
-                textShadow: '0 0 5px #00ffff',
-              }}
-            >
-              LINES: {tetrisLines}
-            </div>
-
-            {/* HOLD box — top left below lines */}
-            <div
-              style={{
-                position: 'absolute', top: isMobile ? 76 : 100, left: isMobile ? 16 : 28,
-                border: '1px solid #ff00ff',
-                padding: '4px 8px',
-                minWidth: isMobile ? '40px' : '52px',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: isMobile ? '8px' : '10px',
-                  color: '#ff00ff', letterSpacing: '2px',
-                  marginBottom: '4px',
-                }}
-              >
-                HOLD
-              </div>
-              <div
-                style={{
-                  width: isMobile ? '12px' : '16px',
-                  height: isMobile ? '12px' : '16px',
-                  background: '#ff00ff',
-                  margin: '0 auto',
-                  boxShadow: '0 0 6px #ff00ff',
-                }}
-              />
-            </div>
-
-            {/* Next piece preview — top right */}
-            <div
-              style={{
-                position: 'absolute', top: isMobile ? 16 : 24, right: isMobile ? 16 : 28,
-                border: '1px solid #00ffff',
-                padding: '6px 10px',
-                minWidth: isMobile ? '48px' : '64px',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: isMobile ? '9px' : '11px',
-                  color: '#00ffff', letterSpacing: '2px',
-                  marginBottom: '5px',
-                }}
-              >
-                NEXT
-              </div>
-              <div
-                style={{
-                  width: isMobile ? '14px' : '18px',
-                  height: isMobile ? '14px' : '18px',
-                  background: '#ff8800',
-                  margin: '0 auto',
-                  boxShadow: '0 0 6px #ff8800',
-                }}
-              />
-            </div>
-
-            {/* TETRIS label */}
-            <div
-              style={{
-                position: 'absolute', top: isMobile ? 20 : 32, left: 0, right: 0,
-                textAlign: 'center',
-                fontSize: isMobile ? '12px' : '15px',
-                color: '#ff8800',
-                letterSpacing: '4px',
-                textShadow: '0 0 8px #ff8800',
-              }}
-            >
-              TETRIS
-            </div>
-
-            {/* Well border left */}
-            <div
-              style={{
-                position: 'absolute',
-                left: 'calc(50% - 175px)',
-                top: '25%', bottom: '25%',
-                width: '2px',
-                background: '#00ffff',
-                boxShadow: '0 0 6px #00ffff',
-              }}
-            />
-            {/* Well border right */}
-            <div
-              style={{
-                position: 'absolute',
-                right: 'calc(50% - 175px)',
-                top: '25%', bottom: '25%',
-                width: '2px',
-                background: '#00ffff',
-                boxShadow: '0 0 6px #00ffff',
-              }}
-            />
-
-            {/* Block rows */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-8">
-              <div style={{ height: isMobile ? '24px' : '32px' }} />
-              {tetrisBlocks.map((block) => (
-                <motion.div
-                  key={`block-${block.id}`}
-                  style={{
-                    width: block.width,
-                    maxWidth: '340px',
-                    height: isMobile ? '22px' : '28px',
-                    background: block.color,
-                    boxShadow: `0 0 10px ${block.color}, 0 0 20px ${block.color}55`,
-                    borderRadius: '2px',
-                  }}
-                  initial={{ y: -120, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{
-                    delay: block.delay,
-                    duration: 0.45,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                />
+            {/* Left info panel */}
+            <div style={{
+              position: 'absolute',
+              left: isMobile ? '2%' : '4%',
+              top: isMobile ? '14%' : '12%',
+              display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px',
+            }}>
+              {[
+                { label: 'SCORE', value: '001000', color: '#ffff00' },
+                { label: 'LINES', value: '004',    color: '#00ffff' },
+                { label: 'LEVEL', value: '01',     color: '#ff00ff' },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{
+                  border: '2px solid #00ff41',
+                  padding: isMobile ? '4px 7px' : '6px 10px',
+                  background: 'rgba(0,255,65,0.04)',
+                  animation: 'me-border-glow 2s ease-in-out infinite',
+                  minWidth: isMobile ? '52px' : '70px',
+                }}>
+                  <div style={{ fontSize: isMobile ? '7px' : '9px', color: '#00ff41', letterSpacing: '2px', marginBottom: '3px' }}>{label}</div>
+                  <div style={{ fontSize: isMobile ? '12px' : '16px', color, textShadow: `0 0 6px ${color}` }}>{value}</div>
+                </div>
               ))}
             </div>
 
-            {/* +100 floating text on line clear */}
+            {/* Right info panel */}
+            <div style={{
+              position: 'absolute',
+              right: isMobile ? '2%' : '4%',
+              top: isMobile ? '14%' : '12%',
+              display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px',
+            }}>
+              {/* NEXT */}
+              <div style={{
+                border: '2px solid #00ff41', padding: isMobile ? '4px 7px' : '6px 10px',
+                background: 'rgba(0,255,65,0.04)',
+              }}>
+                <div style={{ fontSize: isMobile ? '7px' : '9px', color: '#00ff41', letterSpacing: '2px', marginBottom: '5px' }}>NEXT</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  {[[1,1],[1,1]].map((row, ri) => (
+                    <div key={ri} style={{ display: 'flex', gap: '2px' }}>
+                      {row.map((_, ci) => (
+                        <div key={ci} style={{
+                          width: isMobile ? '7px' : '9px',
+                          height: isMobile ? '7px' : '9px',
+                          background: '#ffff00',
+                          boxShadow: 'inset 1px 1px rgba(255,255,255,0.3)',
+                        }} />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* HOLD */}
+              <div style={{
+                border: '2px solid #00ff41', padding: isMobile ? '4px 7px' : '6px 10px',
+                background: 'rgba(0,255,65,0.04)',
+              }}>
+                <div style={{ fontSize: isMobile ? '7px' : '9px', color: '#00ff41', letterSpacing: '2px', marginBottom: '5px' }}>HOLD</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  {[[1,0],[1,0],[1,1]].map((row, ri) => (
+                    <div key={ri} style={{ display: 'flex', gap: '2px' }}>
+                      {row.map((c, ci) => (
+                        <div key={ci} style={{
+                          width: isMobile ? '7px' : '9px',
+                          height: isMobile ? '7px' : '9px',
+                          background: c ? '#f0a000' : 'transparent',
+                          boxShadow: c ? 'inset 1px 1px rgba(255,255,255,0.3)' : 'none',
+                        }} />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Tetris well */}
+            <div style={{
+              position: 'absolute',
+              left: '50%',
+              top: isMobile ? '10%' : '9%',
+              transform: 'translateX(-50%)',
+              width: CELL * 10 + 4,
+              height: CELL * 16 + 4,
+              border: '2px solid #00ff41',
+              boxShadow: '0 0 14px rgba(0,255,65,0.25), inset 0 0 8px rgba(0,255,65,0.06)',
+              overflow: 'hidden',
+              background: 'rgba(0,5,15,0.95)',
+            }}>
+              {/* Static completed bottom rows */}
+              {[
+                { row: 14, cells: [
+                  '#f0a000','#f0a000','#f0a000','transparent','#ff0000','#ff0000','#ff0000','transparent','#f0a000','#f0a000'
+                ] },
+                { row: 15, cells: [
+                  '#00f000','#f00000','#00ffff','#00ffff','#a000f0','#a000f0','#f0a000','#ffff00','#ffff00','#00f000'
+                ] },
+              ].map((rowDef) => (
+                <div key={rowDef.row} style={{ position: 'absolute', top: rowDef.row * CELL, left: 0, display: 'flex' }}>
+                  {rowDef.cells.map((color, ci) => (
+                    <div key={ci} style={{
+                      width: CELL, height: CELL,
+                      background: color === 'transparent' ? 'transparent' : color,
+                      border: color !== 'transparent' ? '1px solid rgba(255,255,255,0.15)' : 'none',
+                      boxShadow: color !== 'transparent'
+                        ? `inset 2px 2px rgba(255,255,255,0.28), inset -2px -2px rgba(0,0,0,0.35)`
+                        : 'none',
+                    }} />
+                  ))}
+                </div>
+              ))}
+
+              {/* Falling Tetris pieces */}
+              {tetrisPieces.map((piece) => (
+                <div
+                  key={piece.id}
+                  style={{
+                    position: 'absolute',
+                    left: piece.col * CELL,
+                    top: 0,
+                    animation: `me-fall 2.2s ease-in ${piece.delay}s both`,
+                  }}
+                >
+                  {piece.cells.map((cell, ci) => (
+                    <div
+                      key={ci}
+                      style={{
+                        position: 'absolute',
+                        left: cell[0] * CELL,
+                        top: cell[1] * CELL,
+                        width: CELL - 1,
+                        height: CELL - 1,
+                        background: piece.color,
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        boxShadow: `inset 2px 2px rgba(255,255,255,0.3), inset -2px -2px rgba(0,0,0,0.4), 0 0 4px ${piece.color}55`,
+                      }}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            {/* LINE CLEAR! flash */}
             <motion.div
               style={{
                 position: 'absolute',
-                left: '50%',
-                bottom: isMobile ? '28%' : '30%',
-                transform: 'translateX(-50%)',
-                fontSize: isMobile ? '16px' : '22px',
+                bottom: isMobile ? '6%' : '5%',
+                left: 0, right: 0, textAlign: 'center',
+                fontSize: isMobile ? '20px' : '30px',
                 fontWeight: 900,
-                color: '#ffff00',
-                textShadow: '0 0 10px #ffff00',
-                whiteSpace: 'nowrap',
-                pointerEvents: 'none',
+                letterSpacing: '6px',
+                color: '#00ffff',
+                textShadow: '0 0 20px #00ffff, 0 0 40px #00ffff',
+                animation: 'me-blink 0.18s step-start 8',
+                animationDelay: '3.2s',
               }}
-              initial={{ opacity: 0, y: 0 }}
-              animate={{ opacity: [0, 1, 1, 0], y: [0, -20, -30, -40] }}
-              transition={{ duration: 0.6, delay: lineClearDelay, times: [0, 0.1, 0.7, 1] }}
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: [0, 1, 1, 0], scale: [0.7, 1.1, 1.05, 0.9] }}
+              transition={{ delay: 3.2, duration: 1.4, times: [0, 0.15, 0.75, 1] }}
             >
-              +100
+              LINE CLEAR!
             </motion.div>
 
-            {/* LEVEL UP! badge — appears at 3.5s delay, scale spring, fades at 4s */}
+            {/* LEVEL UP badge */}
             <motion.div
               style={{
                 position: 'absolute',
-                top: '50%',
-                left: '50%',
+                top: '50%', left: '50%',
                 transform: 'translate(-50%, -50%)',
-                fontSize: isMobile ? '20px' : '28px',
+                fontSize: isMobile ? '18px' : '26px',
                 fontWeight: 900,
-                color: '#00ff00',
+                color: '#00ff41',
                 letterSpacing: '4px',
-                border: '2px solid #00ff00',
-                padding: isMobile ? '6px 14px' : '8px 20px',
-                textShadow: '0 0 14px #00ff00',
-                boxShadow: '0 0 20px #00ff00',
-                background: 'rgba(0,0,0,0.8)',
+                border: '2px solid #00ff41',
+                padding: isMobile ? '5px 12px' : '7px 18px',
+                textShadow: '0 0 12px #00ff41',
+                boxShadow: '0 0 20px #00ff4166',
+                background: 'rgba(0,0,0,0.9)',
                 whiteSpace: 'nowrap',
                 zIndex: 10,
               }}
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: [0, 1.2, 1, 1, 0], opacity: [0, 1, 1, 1, 0] }}
               transition={{
-                scale: { delay: 3.5, duration: 0.6, times: [0, 0.4, 0.7, 0.85, 1], ease: [0.34, 1.56, 0.64, 1] },
-                opacity: { delay: 3.5, duration: 0.6, times: [0, 0.4, 0.7, 0.85, 1] },
+                scale: { delay: 3.6, duration: 0.7, times: [0, 0.35, 0.6, 0.82, 1], ease: [0.34, 1.56, 0.64, 1] },
+                opacity: { delay: 3.6, duration: 0.7, times: [0, 0.35, 0.6, 0.82, 1] },
               }}
             >
               LEVEL UP!
             </motion.div>
-
-            {/* White flash overlay on LINE CLEAR */}
-            <div
-              style={{
-                position: 'absolute', inset: 0,
-                background: '#ffffff',
-                animationName: 'arc-white-flash',
-                animationDuration: '0.3s',
-                animationDelay: `${lineClearDelay}s`,
-                animationFillMode: 'both',
-                animationTimingFunction: 'ease-out',
-                animationIterationCount: 1,
-                opacity: 0,
-                pointerEvents: 'none',
-              }}
-            />
-
-            {/* LINE CLEAR! text */}
-            <div
-              style={{
-                position: 'absolute', bottom: isMobile ? '18%' : '20%',
-                left: 0, right: 0, textAlign: 'center',
-                fontSize: isMobile ? '22px' : '30px',
-                fontWeight: 900,
-                color: '#ffffff',
-                letterSpacing: '6px',
-                animation: `arc-lineclear 1.2s ease-in-out 1 forwards`,
-                animationDelay: `${lineClearDelay}s`,
-                opacity: 0,
-                textShadow: '0 0 20px #ffffff, 0 0 40px #00ffff',
-              }}
-            >
-              LINE CLEAR!
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1051,344 +1003,264 @@ export function MixtapeEpicCeremony({
           STAGE 4 — SPACE INVADERS
       ══════════════════════════════════════════════ */}
       <AnimatePresence>
-        {stage === 'invaders' && (
+        {stage === 'spaceinvaders' && (
           <motion.div
-            key="invaders"
+            key="spaceinvaders"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.3 } }}
             transition={{ duration: 0.3 }}
-            className="absolute inset-0 z-20 flex flex-col items-center justify-center"
+            style={{ position: 'absolute', inset: 0, zIndex: 20 }}
           >
-            {/* WAVE 1 header */}
-            <div
-              style={{
-                position: 'absolute', top: isMobile ? 20 : 32, left: 0, right: 0,
-                textAlign: 'center',
-                fontSize: isMobile ? '12px' : '15px',
-                color: '#00ff00',
-                letterSpacing: '4px',
-                textShadow: '0 0 8px #00ff00',
-              }}
-            >
-              WAVE 1 — SPACE INVADERS
+            {/* Stage label */}
+            <div style={{
+              position: 'absolute', top: isMobile ? 26 : 34, left: 0, right: 0,
+              textAlign: 'center',
+              fontSize: isMobile ? '10px' : '13px',
+              color: '#00ff41',
+              letterSpacing: '4px',
+              textShadow: '0 0 8px #00ff41',
+            }}>
+              SPACE INVADERS — WAVE 1
             </div>
 
-            {/* LIVES top-left */}
-            <div
-              style={{
-                position: 'absolute',
-                top: isMobile ? 14 : 20,
-                left: isMobile ? 12 : 20,
-                fontSize: isMobile ? '10px' : '13px',
-                color: '#ff3333',
-                letterSpacing: '1px',
-                textShadow: '0 0 6px #ff3333',
-              }}
-            >
-              LIVES: ❤️❤️❤️
-            </div>
-
-            {/* UFO flying across top right → left */}
+            {/* UFO bonus ship across top — framer motion pass */}
             <motion.div
               style={{
                 position: 'absolute',
-                top: isMobile ? '14%' : '16%',
-                fontSize: isMobile ? '20px' : '26px',
-                lineHeight: 1,
-              }}
-              initial={{ left: '110%' }}
-              animate={{ left: '-10%' }}
-              transition={{ duration: 2.5, delay: 0.5, ease: 'linear' }}
-            >
-              🛸
-            </motion.div>
-
-            {/* BONUS +300 text after UFO exits */}
-            <motion.div
-              style={{
-                position: 'absolute',
-                top: isMobile ? '13%' : '15%',
-                left: isMobile ? '8%' : '5%',
-                fontSize: isMobile ? '11px' : '14px',
-                color: '#ffff00',
-                letterSpacing: '2px',
-                textShadow: '0 0 8px #ffff00',
+                top: isMobile ? '13%' : '14%',
+                fontSize: isMobile ? '14px' : '18px',
+                color: '#ff0000',
+                textShadow: '0 0 8px #ff0000',
+                animation: 'me-ufo-blink 0.4s step-start infinite',
                 whiteSpace: 'nowrap',
               }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: ufoBonusShown ? [0, 1, 1, 0] : 0 }}
-              transition={{ duration: 0.8, times: [0, 0.1, 0.7, 1] }}
+              initial={{ left: '108%' }}
+              animate={{ left: '-10%' }}
+              transition={{ duration: 3, delay: 0.8, ease: 'linear' }}
             >
-              BONUS +300
+              ──▶▶ UFO ◀◀──  <span style={{ color: '#ffff00' }}>+300</span>
             </motion.div>
 
-            {/* Invader grid with wobble x repeat:2 */}
-            <motion.div
-              animate={{ x: [-8, 8, -8] }}
-              transition={{ duration: 0.9, ease: 'easeInOut', repeat: 2, repeatType: 'loop' }}
-              style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '10px', alignItems: 'center' }}
-            >
-              {[0, 1, 2].map((row) => (
-                <div key={`row-${row}`} style={{ display: 'flex', gap: isMobile ? '10px' : '16px' }}>
-                  {[0, 1, 2, 3, 4].map((col) => (
-                    <span
-                      key={`inv-${row}-${col}`}
-                      style={{ fontSize: isMobile ? '18px' : '24px', lineHeight: 1 }}
+            {/* CSS-driven UFO saucer (me-ufo keyframe, second pass at 2.5s) */}
+            <div style={{
+              position: 'absolute',
+              top: isMobile ? '10%' : '11%',
+              left: 0,
+              width: isMobile ? '32px' : '44px',
+              height: isMobile ? '12px' : '16px',
+              borderRadius: '50%',
+              background: 'radial-gradient(ellipse at center, #ff4444 0%, #880000 100%)',
+              boxShadow: '0 0 8px #ff0000, 0 0 16px #ff000066',
+              animation: 'me-ufo 4s linear 2.5s both',
+            }} />
+
+            {/* Invader formation — marching side-to-side */}
+            <div style={{
+              position: 'absolute',
+              top: isMobile ? '18%' : '16%',
+              left: 0, right: 0,
+              animation: 'me-march 1.1s ease-in-out infinite',
+            }}>
+              {invaderRows.map((row, ri) => (
+                <div
+                  key={row.id}
+                  style={{
+                    position: 'absolute',
+                    top: `${(ri * (invBoxH + (isMobile ? 14 : 20)))}px`,
+                    left: 0, right: 0,
+                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    gap: isMobile ? '18px' : '26px',
+                  }}
+                >
+                  {Array.from({ length: row.count }).map((_, ci) => (
+                    <div
+                      key={ci}
+                      style={{
+                        width: invBoxW + 'px',
+                        height: invBoxH + 'px',
+                        position: 'relative',
+                        flexShrink: 0,
+                      }}
                     >
-                      👾
-                    </span>
+                      {/* Invader pixel art */}
+                      <div style={{
+                        position: 'absolute', top: 0, left: 0,
+                        width: '1px', height: '1px',
+                        boxShadow: invaderShadows[ri].body,
+                        filter: `drop-shadow(0 0 2px ${row.color}88)`,
+                      }} />
+                    </div>
                   ))}
+                  {/* Points label at end of each row */}
+                  <div style={{
+                    fontSize: isMobile ? '7px' : '9px',
+                    color: row.color,
+                    textShadow: `0 0 4px ${row.color}`,
+                    letterSpacing: '1px',
+                    whiteSpace: 'nowrap',
+                    marginLeft: isMobile ? '4px' : '8px',
+                    flexShrink: 0,
+                  }}>
+                    = {row.pointsLabel}
+                  </div>
                 </div>
               ))}
-            </motion.div>
+            </div>
 
-            {/* 2 defensive shields */}
-            {[35, 65].map((leftPct, si) => (
+            {/* Shields */}
+            {[22, 42, 62, 82].map((leftPct) => (
               <div
-                key={`shield-${si}`}
+                key={leftPct}
                 style={{
                   position: 'absolute',
-                  bottom: isMobile ? '26%' : '28%',
+                  bottom: isMobile ? '22%' : '20%',
                   left: `${leftPct}%`,
                   transform: 'translateX(-50%)',
-                  fontSize: isMobile ? '20px' : '26px',
-                  lineHeight: 1,
-                  opacity: shieldHealth === 0 ? 0.08 : shieldHealth === 1 ? 0.4 : 0.9,
-                  transition: 'opacity 0.2s',
-                  filter: shieldHealth > 0 ? `hue-rotate(${shieldHealth * 30}deg)` : 'none',
+                  width: isMobile ? '26px' : '36px',
+                  height: isMobile ? '16px' : '22px',
+                  background: '#00ff41',
+                  boxShadow: '0 0 4px #00ff4155',
+                  clipPath: 'polygon(0 100%,0 25%,20% 0,80% 0,100% 25%,100% 100%,78% 100%,78% 55%,22% 55%,22% 100%)',
                 }}
-              >
-                🛡️
-              </div>
+              />
             ))}
 
-            {/* Player cannon */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0 }}
-              style={{
-                position: 'absolute',
-                bottom: isMobile ? '18px' : '28px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                fontSize: isMobile ? '22px' : '28px',
-                lineHeight: 1,
-              }}
-            >
-              🔫
-            </motion.div>
-
-            {/* 3 laser shots */}
-            {[30, 60, 48].map((leftPct, i) => (
-              <motion.div
-                key={`laser-${i}`}
+            {/* Laser beams from cannon */}
+            {[30, 50, 70].map((leftPct, i) => (
+              <div
+                key={i}
                 style={{
                   position: 'absolute',
                   left: `${leftPct}%`,
-                  bottom: isMobile ? '20px' : '32px',
+                  bottom: isMobile ? '19%' : '17%',
                   width: '3px',
-                  height: isMobile ? '28px' : '36px',
-                  background: '#00ffff',
-                  boxShadow: '0 0 6px #00ffff, 0 0 12px #00ffff',
-                  borderRadius: '2px',
-                }}
-                initial={{ y: 0, opacity: 1 }}
-                animate={{ y: -screenH, opacity: [1, 1, 0] }}
-                transition={{
-                  duration: 1.1,
-                  delay: 0.4 + i * 0.32,
-                  ease: 'linear',
-                  opacity: { times: [0, 0.85, 1] },
+                  height: isMobile ? '18px' : '24px',
+                  background: 'linear-gradient(to top, #00ffff, #ffffff)',
+                  boxShadow: '0 0 5px #00ffff, 0 0 10px #00ffff66',
+                  animation: `me-laser 1.1s linear ${i * 0.38}s infinite`,
                 }}
               />
             ))}
 
-            {/* Explosion 1 */}
-            <motion.div
-              style={{ position: 'absolute', left: '28%', top: '42%', fontSize: isMobile ? '20px' : '26px', lineHeight: 1 }}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: [0, 1.5, 0], opacity: [0, 1, 0] }}
-              transition={{ duration: 0.45, delay: 1.2, times: [0, 0.4, 1] }}
-            >
-              💥
-            </motion.div>
+            {/* Player cannon (triangle + base) */}
+            <div style={{
+              position: 'absolute',
+              bottom: isMobile ? '13%' : '11%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+            }}>
+              <div style={{
+                width: 0, height: 0,
+                borderLeft: `${isMobile ? 10 : 14}px solid transparent`,
+                borderRight: `${isMobile ? 10 : 14}px solid transparent`,
+                borderBottom: `${isMobile ? 16 : 22}px solid #00ff41`,
+                filter: 'drop-shadow(0 0 5px #00ff41)',
+                margin: '0 auto',
+              }} />
+              <div style={{
+                width: isMobile ? '30px' : '42px',
+                height: isMobile ? '7px' : '9px',
+                background: '#00ff41',
+                boxShadow: '0 0 6px #00ff41',
+                marginTop: '-1px',
+              }} />
+            </div>
 
-            {/* Explosion 2 */}
-            <motion.div
-              style={{ position: 'absolute', left: '56%', top: '35%', fontSize: isMobile ? '20px' : '26px', lineHeight: 1 }}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: [0, 1.5, 0], opacity: [0, 1, 0] }}
-              transition={{ duration: 0.45, delay: 1.6, times: [0, 0.4, 1] }}
-            >
-              💥
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ══════════════════════════════════════════════
-          STAGE 5 — GAME OVER / HIGH SCORE
-      ══════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {stage === 'gameover' && (
-          <motion.div
-            key="gameover"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.4 } }}
-            transition={{ duration: 0.3 }}
-            className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3"
-          >
-            {/* 16 pixel burst stars */}
-            {pixelBursts.map((burst) => (
+            {/* Pixel explosion marks */}
+            {[
+              { left: '26%', top: '26%', delay: 1.1, color: '#ff8800' },
+              { left: '54%', top: '21%', delay: 1.9, color: '#ffff00' },
+              { left: '70%', top: '32%', delay: 2.7, color: '#ff0000' },
+            ].map((ex, i) => (
               <motion.div
-                key={`burst-${burst.id}`}
+                key={i}
                 style={{
                   position: 'absolute',
-                  left: `${burst.x}%`,
-                  top: `${burst.y}%`,
-                  width: isMobile ? '10px' : '14px',
-                  height: isMobile ? '10px' : '14px',
-                  background: burst.color,
-                  boxShadow: `0 0 8px ${burst.color}, 0 0 16px ${burst.color}`,
-                  borderRadius: '2px',
+                  left: ex.left, top: ex.top,
+                  fontSize: isMobile ? '16px' : '20px',
+                  color: ex.color,
+                  textShadow: `0 0 8px ${ex.color}`,
+                  fontWeight: 900,
+                  letterSpacing: 0,
+                  lineHeight: 1,
+                  animation: `me-explosion 0.55s ease-out forwards`,
+                  animationDelay: `${ex.delay}s`,
+                  opacity: 0,
+                  zIndex: 10,
                 }}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.1 + burst.id * 0.05, ease: [0.34, 1.56, 0.64, 1] }}
-              />
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: [0, 1, 1, 0], scale: [0, 1.4, 1.2, 0] }}
+                transition={{ delay: ex.delay, duration: 0.55, times: [0, 0.28, 0.65, 1] }}
+              >
+                ✸✸
+              </motion.div>
             ))}
 
-            {/* GAME OVER with CSS flicker */}
-            <motion.div
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.45, ease: [0.34, 1.56, 0.64, 1] }}
-              style={{
-                fontSize: isMobile ? '38px' : '60px',
-                fontWeight: 900,
-                letterSpacing: '6px',
-                color: '#ff0000',
-                textShadow: '0 0 20px #ff0000, 0 0 40px #ff0000',
-                animationName: 'gof-flicker',
-                animationDuration: '0.55s',
-                animationTimingFunction: 'step-start',
-                animationIterationCount: 'infinite',
-              }}
-            >
-              GAME OVER
-            </motion.div>
-
-
-            {/* Score counter */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-              style={{
-                fontSize: isMobile ? '20px' : '28px',
-                color: '#ffff00',
-                letterSpacing: '3px',
-                textShadow: '0 0 10px #ffff00',
-              }}
-            >
-              {String(score).padStart(6, '0')}
-            </motion.div>
-
-            {/* CONTINUE? countdown — appears at delay 1s */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: 1.0 }}
-              style={{
-                fontSize: isMobile ? '15px' : '20px',
-                color: '#ff8800',
-                letterSpacing: '3px',
-                textShadow: '0 0 8px #ff8800',
-                fontWeight: 900,
-              }}
-            >
-              CONTINUE? {countdown}
-            </motion.div>
-
-            {/* INSERT COIN TO CONTINUE — blink, delay 1.5s */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: 1.5 }}
-              style={{
-                fontSize: isMobile ? '11px' : '14px',
-                color: '#ffff00',
-                letterSpacing: '3px',
-                textShadow: '0 0 6px #ffff00',
-                animationName: 'arc-blink',
-                animationDuration: '0.7s',
-                animationTimingFunction: 'step-start',
-                animationIterationCount: 'infinite',
-                animationDelay: '1.5s',
-              }}
-            >
-              INSERT COIN TO CONTINUE
-            </motion.div>
-
-            {/* HIGH SCORE! */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 1.2 }}
-              style={{
-                fontSize: isMobile ? '24px' : '36px',
-                fontWeight: 900,
-                color: '#ffff00',
-                letterSpacing: '5px',
-                animation: 'arc-highscore-glow 0.9s ease-in-out infinite',
-                animationDelay: '1.2s',
-              }}
-            >
-              HIGH SCORE!
-            </motion.div>
-
-            {/* NEW RECORD badge */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.7 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, delay: 2, ease: [0.34, 1.56, 0.64, 1] }}
-              style={{
-                fontSize: isMobile ? '13px' : '17px',
-                color: '#ffff00',
-                letterSpacing: '4px',
-                border: '1px solid #ffff00',
-                padding: isMobile ? '3px 10px' : '4px 14px',
-                animation: 'arc-highscore-glow 0.9s ease-in-out infinite',
-                animationDelay: '2s',
-              }}
-            >
-              ★ NEW RECORD ★
-            </motion.div>
-
-            {/* THANK YOU FOR PLAYING */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4, delay: 2.5 }}
-              style={{
-                fontSize: isMobile ? '11px' : '13px',
-                color: '#00ff00',
-                letterSpacing: '3px',
-                textShadow: '0 0 6px #00ff00',
-              }}
-            >
-              THANK YOU FOR PLAYING
-            </motion.div>
+            {/* Footer — lives / score / wave */}
+            <div style={{
+              position: 'absolute',
+              bottom: isMobile ? '6%' : '5%',
+              left: 0, right: 0,
+              display: 'flex', justifyContent: 'space-between',
+              padding: isMobile ? '0 10px' : '0 18px',
+              fontSize: isMobile ? '9px' : '11px',
+              color: '#00ff41',
+              letterSpacing: '2px',
+              borderTop: '1px solid #00ff4133',
+              paddingTop: '4px',
+            }}>
+              <span>LIVES: ▶▶▶</span>
+              <span style={{ color: '#ff0000' }}>SCORE: 01440</span>
+              <span>WAVE: 01</span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* ══════════════════════════════════════════════
-          STAGE 6 — RADIANCE
+          STAGE 5 — RADIANCE (GAME OVER → HIGH SCORE!)
       ══════════════════════════════════════════════ */}
+
+      {/* me- Fireworks (preserved) */}
+      <AnimatePresence>
+        {stage === 'radiance' && (
+          <>
+            {meFwPositions.map((pos, pi) => (
+              <React.Fragment key={`me-fw-${pi}`}>
+                {meFwSparks[pi].map((s, si) => (
+                  <motion.div key={`me-spark-${pi}-${si}`} className="absolute z-51 rounded-full"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 6, height: 6, background: s.color }}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                    animate={{ x: s.x, y: s.y, scale: [0,1.4,0], opacity: [0,1,0] }}
+                    transition={{ duration: 1.2, delay: s.delay, ease: 'easeOut' }}
+                  />
+                ))}
+                {meFwRings[pi].map((r, ri) => (
+                  <div key={`me-ring-${pi}-${ri}`} className="absolute rounded-full border-2"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 20, height: 20, borderColor: r.color, animation: `me-pop-ring 0.9s ease-out ${r.delay}s both` }}
+                  />
+                ))}
+                <div key={`me-flash-${pi}`} className="absolute rounded-full"
+                  style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 40, height: 40,
+                    background: `radial-gradient(circle, ${meColors[pi % meColors.length]}cc, transparent)`,
+                    filter: 'blur(8px)', animation: 'me-flash 0.5s ease-out both' }}
+                />
+              </React.Fragment>
+            ))}
+            {meOrbs.map((orb, i) => (
+              <div key={`me-orb-${i}`} className="absolute rounded-full z-49"
+                style={{ left: `${orb.x}%`, bottom: '20%', width: 10, height: 10,
+                  background: orb.color, boxShadow: `0 0 14px ${orb.color}`,
+                  '--dx': `${orb.dx}px`,
+                  animation: `me-orb-float ${orb.dur}s ease-out ${orb.delay}s both`
+                } as React.CSSProperties}
+              />
+            ))}
+          </>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {stage === 'radiance' && (
           <motion.div
@@ -1396,205 +1268,166 @@ export function MixtapeEpicCeremony({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.4 } }}
-            transition={{ duration: 0.6 }}
-            className="absolute inset-0 z-20"
+            transition={{ duration: 0.5 }}
+            style={{
+              position: 'absolute', inset: 0, zIndex: 20,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: isMobile ? '10px' : '14px',
+            }}
           >
-            {/* Neon radial burst */}
-            <motion.div
-              className="absolute inset-0 flex items-center justify-center pointer-events-none"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 1, 0.8] }}
-              transition={{ duration: 1.2, ease: 'easeOut' }}
-            >
-              <div
-                style={{
-                  width: isMobile ? '400px' : '700px',
-                  height: isMobile ? '400px' : '700px',
-                  borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(0,255,0,0.55) 0%, rgba(255,255,0,0.35) 25%, rgba(0,255,255,0.2) 50%, transparent 70%)',
-                  filter: 'blur(48px)',
-                }}
-              />
-            </motion.div>
+            {/* Radial glow burst */}
+            <div style={{
+              position: 'absolute', inset: 0, pointerEvents: 'none',
+              background: 'radial-gradient(ellipse at center, rgba(0,255,65,0.1) 0%, rgba(255,255,0,0.06) 35%, transparent 65%)',
+            }} />
 
-            {/* Score corner decorations */}
-            {radianceCorners.map((corner, i) => (
+            {/* Corner score decorations */}
+            {[
+              { style: { top: isMobile ? '9%' : '8%',    left:  isMobile ? '4%' : '5%'  }, label: '1UP' },
+              { style: { top: isMobile ? '9%' : '8%',    right: isMobile ? '4%' : '5%'  }, label: '★★★' },
+              { style: { bottom: isMobile ? '10%' : '9%', left:  isMobile ? '4%' : '5%' }, label: '∞'   },
+              { style: { bottom: isMobile ? '10%' : '9%', right: isMobile ? '4%' : '5%' }, label: '2UP' },
+            ].map((d, i) => (
               <motion.div
-                key={`rcorner-${i}`}
+                key={i}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, delay: 0.15 + i * 0.12 }}
+                transition={{ delay: 0.15 + i * 0.1, duration: 0.3 }}
                 style={{
-                  position: 'absolute',
-                  ...corner.style,
-                  fontSize: isMobile ? '11px' : '14px',
-                  color: '#00ff00',
+                  position: 'absolute', ...d.style,
+                  fontSize: isMobile ? '10px' : '13px',
+                  color: '#00ff41',
                   letterSpacing: '2px',
-                  textShadow: '0 0 8px #00ff00',
-                  fontWeight: 900,
+                  textShadow: '0 0 6px #00ff41',
                 }}
               >
-                {corner.label}
+                {d.label}
               </motion.div>
             ))}
 
-            {/* Center block */}
+            {/* GAME OVER — flickers then fades */}
             <motion.div
-              className="absolute inset-0 flex flex-col items-center justify-center gap-3"
-              initial={{ opacity: 0, scale: 0.75 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.25, ease: [0.34, 1.56, 0.64, 1] }}
+              style={{
+                fontSize: isMobile ? '34px' : '52px',
+                fontWeight: 900,
+                letterSpacing: isMobile ? '4px' : '7px',
+                color: '#ff0000',
+                animation: 'me-gameover-flash 0.5s step-start infinite',
+              }}
+              initial={{ opacity: 1, y: 0 }}
+              animate={{ opacity: [1, 1, 1, 0], y: [0, 0, 0, -8] }}
+              transition={{ delay: 1.2, duration: 0.4, times: [0, 0.5, 0.8, 1] }}
             >
-              {/* CHAMPION badge */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.4 }}
-                style={{
-                  fontSize: isMobile ? '12px' : '15px',
-                  color: '#ffd700',
-                  letterSpacing: '5px',
-                  fontWeight: 900,
-                  animation: 'arc-gold-glow 1.2s ease-in-out infinite',
-                  border: '1px solid #ffd700',
-                  padding: isMobile ? '2px 10px' : '3px 14px',
-                }}
-              >
-                ◆ CHAMPION ◆
-              </motion.div>
+              GAME OVER
+            </motion.div>
 
-              {/* ARCADE title with orbiting achievement stars */}
-              <div style={{ position: 'relative', display: 'inline-block' }}>
-                {/* Orbit ring — slow ambient rotation, repeat: Infinity, 6s */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    animationName: 'arc-orbit',
-                    animationDuration: '6s',
-                    animationTimingFunction: 'linear',
-                    animationIterationCount: 'infinite',
-                    pointerEvents: 'none',
-                  }}
-                >
-                  {orbitStars.map((star) => (
-                    <div
-                      key={`orbit-${star.id}`}
-                      style={{
-                        position: 'absolute',
-                        left: `calc(50% + ${star.x}px)`,
-                        top: `calc(50% + ${star.y}px)`,
-                        transform: 'translate(-50%, -50%)',
-                        fontSize: isMobile ? '12px' : '16px',
-                        color: star.color,
-                        textShadow: `0 0 8px ${star.color}`,
-                      }}
-                    >
-                      {star.char}
-                    </div>
-                  ))}
-                </div>
+            {/* HIGH SCORE! — springs in at 1.5s */}
+            <motion.div
+              style={{
+                fontSize: isMobile ? '32px' : '50px',
+                fontWeight: 900,
+                letterSpacing: isMobile ? '4px' : '7px',
+                color: '#ffff00',
+                animation: 'me-rainbow 2s linear infinite',
+              }}
+              initial={{ opacity: 0, scale: 0.55 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.55, duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
+            >
+              HIGH SCORE!
+            </motion.div>
 
-                <div
-                  style={{
-                    fontSize: isMobile ? '48px' : '76px',
-                    fontWeight: 900,
-                    letterSpacing: '8px',
-                    color: '#00ff00',
-                    textShadow: '0 0 20px #00ff00, 0 0 50px #00ff00, 0 0 90px #00ff00',
-                    animation: 'arc-neon-pulse 1.6s ease-in-out infinite',
-                    position: 'relative',
-                    zIndex: 1,
-                  }}
-                >
-                  ARCADE
-                </div>
+            {/* Score counter */}
+            <motion.div
+              style={{
+                fontSize: isMobile ? '24px' : '36px',
+                letterSpacing: '5px',
+                color: '#ffff00',
+                textShadow: '0 0 12px #ffff00',
+                animation: 'me-score-count 0.15s step-start infinite',
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.8, duration: 0.3 }}
+            >
+              {String(radianceScore).padStart(6, '0')}
+            </motion.div>
+
+            {/* Pixel border box with capsule title */}
+            <motion.div
+              style={{
+                border: '2px solid #00ff41',
+                padding: isMobile ? '8px 16px' : '12px 26px',
+                textAlign: 'center',
+                position: 'relative',
+                background: 'rgba(0,255,65,0.04)',
+                boxShadow: '0 0 18px rgba(0,255,65,0.28)',
+                animation: 'me-border-glow 1.5s ease-in-out infinite',
+              }}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 280, damping: 22, delay: 2.0 }}
+            >
+              {/* Corner bracket chars */}
+              {[
+                { style: { top: -5, left: 3 },  char: '◤' },
+                { style: { top: -5, right: 3 }, char: '◥' },
+                { style: { bottom: -5, left: 3 },  char: '◣' },
+                { style: { bottom: -5, right: 3 }, char: '◢' },
+              ].map((c, i) => (
+                <span key={i} style={{
+                  position: 'absolute', ...(c.style as React.CSSProperties),
+                  color: '#00ff41', fontSize: isMobile ? '9px' : '11px', lineHeight: 1,
+                }}>{c.char}</span>
+              ))}
+              <div style={{
+                fontSize: isMobile ? '7px' : '9px',
+                color: '#00ff41', letterSpacing: '4px',
+                marginBottom: isMobile ? '4px' : '6px',
+              }}>
+                TIME CAPSULE UNLOCKED
               </div>
-
-              {/* LEVEL COMPLETE */}
-              <div
-                style={{
-                  fontSize: isMobile ? '14px' : '18px',
-                  color: '#00ffff',
-                  letterSpacing: '5px',
-                  textShadow: '0 0 10px #00ffff',
-                  marginTop: '4px',
-                }}
-              >
-                LEVEL COMPLETE
-              </div>
-
-              {/* Pixel border box with capsule title — scale-in with spring */}
-              <motion.div
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 280, damping: 20, delay: 0.6 }}
-                style={{
-                  marginTop: '8px',
-                  padding: isMobile ? '6px 14px' : '8px 20px',
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  border: '1px solid #00ffff',
-                  background: 'rgba(0,255,255,0.05)',
-                  boxShadow: '0 0 12px rgba(0,255,255,0.3)',
-                }}
-              >
-                {/* Corner bracket chars */}
-                <span style={{ position: 'absolute', top: -2, left: 2, color: '#00ffff', fontSize: isMobile ? '10px' : '13px', lineHeight: 1 }}>⌐</span>
-                <span style={{ position: 'absolute', top: -2, right: 2, color: '#00ffff', fontSize: isMobile ? '10px' : '13px', lineHeight: 1 }}>¬</span>
-                <span style={{ position: 'absolute', bottom: -2, left: 2, color: '#00ffff', fontSize: isMobile ? '10px' : '13px', lineHeight: 1 }}>L</span>
-                <span style={{ position: 'absolute', bottom: -2, right: 2, color: '#00ffff', fontSize: isMobile ? '10px' : '13px', lineHeight: 1 }}>J</span>
-              </motion.div>
-
-              {/* PRESS START blinking line */}
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: isMobile ? '6%' : '5%',
-                  left: 0,
-                  right: 0,
-                  textAlign: 'center',
-                  fontSize: isMobile ? '13px' : '17px',
-                  color: '#ffffff',
-                  letterSpacing: '4px',
-                  textShadow: '0 0 8px #ffffff',
-                  animationName: 'arc-blink',
-                  animationDuration: '0.7s',
-                  animationTimingFunction: 'step-start',
-                  animationIterationCount: 'infinite',
-                }}
-              >
-                PRESS START
+              <div style={{
+                fontSize: isMobile ? '13px' : '18px',
+                color: '#ffffff',
+                letterSpacing: '2px',
+                textShadow: '0 0 8px rgba(255,255,255,0.5)',
+                maxWidth: isMobile ? '190px' : '280px',
+                wordBreak: 'break-word',
+              }}>
+                {capsuleTitle}
               </div>
             </motion.div>
 
-            {/* Marquee capsule title scrolling across bottom */}
-            <div
+            {/* PRESS START blinking */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 2.6, duration: 0.3 }}
               style={{
                 position: 'absolute',
-                bottom: isMobile ? '10%' : '8%',
-                left: 0, right: 0,
-                overflow: 'hidden',
-                height: isMobile ? '22px' : '28px',
+                bottom: isMobile ? '7%' : '8%',
+                left: 0, right: 0, textAlign: 'center',
+                fontSize: isMobile ? '11px' : '15px',
+                color: '#ffffff',
+                letterSpacing: '4px',
+                textShadow: '0 0 6px #ffffff',
+                animation: 'me-blink 0.8s step-start infinite',
+                animationDelay: '2.6s',
               }}
             >
-            </div>
+              PRESS START
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* OUTRO fade-to-black */}
+      {/* ── OUTRO — fade to black ── */}
       <AnimatePresence>
         {stage === 'outro' && (
           <motion.div
             key="outro"
-            className="absolute inset-0 bg-black z-50"
+            style={{ position: 'absolute', inset: 0, background: '#000', zIndex: 50 }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}

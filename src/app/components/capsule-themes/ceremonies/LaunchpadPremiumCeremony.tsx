@@ -6,8 +6,9 @@
  * Stages:
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 interface LaunchpadPremiumCeremonyProps {
   capsuleTitle: string;
@@ -75,8 +76,59 @@ export function LaunchpadPremiumCeremony({
     }
   }, [stage]);
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const lpColors = useMemo(() => ['#88ccff','#aaddff','#ffffff','#c8e6ff','#6699ff','#4488ff','#00aaff'], []);
+  const lpFwPositions = useMemo(() => [
+    {x:10,y:18},{x:25,y:10},{x:42,y:20},{x:58,y:8},{x:72,y:18},{x:88,y:12},{x:18,y:32},{x:82,y:28},
+  ].slice(0, isMobile ? 5 : 8), [isMobile]);
+  const lpFwSparks = useMemo(() => lpFwPositions.map(() =>
+    Array.from({length: isMobile ? 14 : 20}, (_, i) => {
+      const a = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const d = 50 + (i % 5) * 20;
+      return { x: Math.cos(a)*d, y: Math.sin(a)*d, color: lpColors[i % lpColors.length], delay: i*0.04 };
+    })
+  ), [lpFwPositions, lpColors, isMobile]);
+  const lpFwRings = useMemo(() => lpFwPositions.map(() =>
+    Array.from({length: 3}, (_, i) => ({ delay: i*0.15, color: ['#88ccff','#ffffff','#aaddff'][i] }))
+  ), [lpFwPositions]);
+  const lpOrbs = useMemo(() => Array.from({length: isMobile ? 10 : 18}, (_, i) => ({
+    x: 5 + (i * 5.5) % 90, dx: (i % 7 - 3) * 18, dur: 2.5 + (i % 4) * 0.5,
+    delay: i * 0.18, color: lpColors[i % lpColors.length]
+  })), [lpColors, isMobile]);
+
+  useEffect(() => {
+    if (stage !== 'radiance') return;
+    const colors = ['#88ccff','#aaddff','#ffffff','#c8e6ff','#6699ff'];
+    const base = { spread: 80, ticks: 200, gravity: 0.9, decay: 0.93, startVelocity: 38, colors };
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 60, origin: { x: 0, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 120, origin: { x: 1, y: 0.7 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...base, particleCount: 80, angle: 90, origin: { x: 0.5, y: 0.6 } }), 380);
+      const t2 = setTimeout(() => {
+        confetti({ ...base, particleCount: 100, angle: 60, origin: { x: 0, y: 0.65 } });
+        confetti({ ...base, particleCount: 100, angle: 120, origin: { x: 1, y: 0.65 } });
+      }, 950);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
+
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#0a0a1a] via-[#141428] to-[#1a1a35]">
+      <style>{`
+        @keyframes lp-pop-ring {
+          0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
+        }
+        @keyframes lp-flash {
+          0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+        }
+        @keyframes lp-orb-float {
+          0% { transform: translateY(0) translateX(0); opacity: 0; }
+          20% { opacity: 1; }
+          100% { transform: translateY(-180px) translateX(var(--dx)); opacity: 0; }
+        }
+      `}</style>
       {/* Background - stormy sky */}
       <motion.div
         className="absolute inset-0"
@@ -1087,6 +1139,45 @@ export function LaunchpadPremiumCeremony({
                 </motion.div>
               );
             })}
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Fireworks */}
+      <AnimatePresence>
+        {stage === 'radiance' && (
+          <>
+            {lpFwPositions.map((pos, pi) => (
+              <React.Fragment key={`lp-fw-${pi}`}>
+                {lpFwSparks[pi].map((s, si) => (
+                  <motion.div key={`lp-spark-${pi}-${si}`} className="absolute z-51 rounded-full"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 6, height: 6, background: s.color }}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                    animate={{ x: s.x, y: s.y, scale: [0,1.4,0], opacity: [0,1,0] }}
+                    transition={{ duration: 1.2, delay: s.delay, ease: 'easeOut' }}
+                  />
+                ))}
+                {lpFwRings[pi].map((r, ri) => (
+                  <div key={`lp-ring-${pi}-${ri}`} className="absolute rounded-full border-2"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 20, height: 20, borderColor: r.color, animation: `lp-pop-ring 0.9s ease-out ${r.delay}s both` }}
+                  />
+                ))}
+                <div key={`lp-flash-${pi}`} className="absolute rounded-full"
+                  style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 40, height: 40,
+                    background: `radial-gradient(circle, ${lpColors[pi % lpColors.length]}cc, transparent)`,
+                    filter: 'blur(8px)', animation: 'lp-flash 0.5s ease-out both' }}
+                />
+              </React.Fragment>
+            ))}
+            {lpOrbs.map((orb, i) => (
+              <div key={`lp-orb-${i}`} className="absolute rounded-full z-49"
+                style={{ left: `${orb.x}%`, bottom: '20%', width: 10, height: 10,
+                  background: orb.color, boxShadow: `0 0 14px ${orb.color}`,
+                  '--dx': `${orb.dx}px`,
+                  animation: `lp-orb-float ${orb.dur}s ease-out ${orb.delay}s both`
+                } as React.CSSProperties}
+              />
+            ))}
           </>
         )}
       </AnimatePresence>

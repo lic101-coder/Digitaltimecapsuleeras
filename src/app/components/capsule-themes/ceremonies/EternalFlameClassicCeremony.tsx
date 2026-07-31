@@ -14,6 +14,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 const UNITY_CSS = `
 @keyframes flame-core-glow {
@@ -27,6 +28,20 @@ const UNITY_CSS = `
 @keyframes unity-radiance-pulse {
   0%,100% { opacity: 0.88; }
   50%      { opacity: 1; }
+}
+@keyframes unity-pop-ring {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.92; }
+  55%  { opacity: 0.6; }
+  100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
+}
+@keyframes unity-flash {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+  40%  { opacity: 0.85; transform: translate(-50%,-50%) scale(1); }
+  100% { transform: translate(-50%,-50%) scale(2.4); opacity: 0; }
+}
+@keyframes unity-orb-float {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.9; }
+  100% { transform: translate(var(--dx), -90px) scale(0.4); opacity: 0; }
 }
 `;
 
@@ -49,6 +64,50 @@ export function EternalFlameClassicCeremony({
 
   /* ── Pre-computed particles — never call Math.random() in render ── */
   const burstColors = ['#f43f5e', '#fb923c', '#fbbf24', '#fda4af'];
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  const fwColors = useMemo(() => ['#f43f5e','#fb923c','#fbbf24','#fda4af','#fcd34d','#fb7185','#fed7aa','#fff'], []);
+
+  const fwPositions = useMemo(() => isMobile
+    ? [{x:14,y:18},{x:86,y:16},{x:50,y:9},{x:28,y:38},{x:72,y:35}]
+    : [{x:12,y:18},{x:88,y:16},{x:50,y:9},{x:25,y:40},{x:75,y:36},{x:50,y:28},{x:18,y:32},{x:82,y:30}],
+  [isMobile]);
+
+  const fwSparks = useMemo(() => fwPositions.flatMap((pos, pi) =>
+    Array.from({length: isMobile ? 14 : 20}, (_, i) => {
+      const angle = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const speed = 55 + (i % 5) * 20;
+      return { px: pos.x, py: pos.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+               color: fwColors[(pi + i) % fwColors.length], size: 3 + (i % 4), delay: pi * 0.13 + (i % 5) * 0.01 };
+    })
+  ), [fwPositions, isMobile, fwColors]);
+
+  const fwRings = useMemo(() => fwPositions.flatMap((pos, pi) =>
+    [0, 1, 2].map(ri => ({ x: pos.x, y: pos.y, color: fwColors[pi % fwColors.length], size: 44 + ri * 20, delay: pi * 0.13 + ri * 0.1 }))
+  ), [fwPositions, fwColors]);
+
+  const fwOrbs = useMemo(() => Array.from({length: isMobile ? 10 : 18}, (_, i) => ({
+    left: 12 + (i * 19) % 76, bottom: 35 + (i % 3) * 18,
+    size: 10 + (i % 4) * 5, color: fwColors[i % fwColors.length],
+    driftX: (i % 2 === 0 ? 1 : -1) * (5 + (i % 4) * 8), dur: 1.9 + (i % 4) * 0.4, delay: 0.08 + (i * 0.11) % 0.9,
+  })), [isMobile, fwColors]);
+
+  useEffect(() => {
+    if (stage !== 'radiance') return;
+    const colors = ['#f43f5e','#fb923c','#fbbf24','#fda4af','#fcd34d','#fb7185','#fed7aa'];
+    const opts = { colors, startVelocity: isMobile ? 38 : 52, gravity: 0.9, ticks: isMobile ? 170 : 240, shapes: ['square','circle'] as any };
+    const count = isMobile ? 110 : 200;
+    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 75, origin: { x: 0, y: 0.55 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 75, origin: { x: 1, y: 0.55 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...opts, particleCount: 75, spread: 108, origin: { x: 0.5, y: 0.45 }, startVelocity: 44, gravity: 0.8 }), 380);
+      const t2 = setTimeout(() => {
+        confetti({ ...opts, particleCount: 55, angle: 72, spread: 85, origin: { x: 0.18, y: 0.62 } });
+        confetti({ ...opts, particleCount: 55, angle: 108, spread: 85, origin: { x: 0.82, y: 0.62 } });
+      }, 950);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
 
   const fuseBurst = useMemo(() => Array.from({ length: 16 }, (_, i) => {
     const angle = (i / 16) * Math.PI * 2;
@@ -1034,6 +1093,57 @@ export function EternalFlameClassicCeremony({
                   }} />
                 </motion.div>
               ))}
+
+              {/* Firework sparks from each burst position */}
+              {fwSparks.map((s, i) => (
+                <motion.div
+                  key={`fw-spark-${i}`}
+                  className="absolute pointer-events-none"
+                  style={{ left: `${s.px}%`, top: `${s.py}%` }}
+                  initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+                  animate={{ x: s.vx, y: s.vy, scale: 0, opacity: 0 }}
+                  transition={{ duration: 1.1, delay: s.delay, ease: 'easeOut' }}
+                >
+                  <div style={{ width: s.size, height: s.size, borderRadius: '50%', background: s.color,
+                    boxShadow: `0 0 ${s.size * 2}px ${s.color}`, transform: 'translate(-50%,-50%)' }} />
+                </motion.div>
+              ))}
+
+              {/* Shockwave rings per burst */}
+              {fwRings.map((r, i) => (
+                <div key={`fw-ring-${i}`} className="absolute pointer-events-none" style={{
+                  left: `${r.x}%`, top: `${r.y}%`,
+                  width: r.size, height: r.size,
+                  border: `2px solid ${r.color}`,
+                  borderRadius: '50%',
+                  boxShadow: `0 0 10px ${r.color}`,
+                  animation: `unity-pop-ring 0.9s ${r.delay}s cubic-bezier(0.2,0,0.8,1) both`,
+                }} />
+              ))}
+
+              {/* Flash per burst position */}
+              {fwPositions.map((pos, i) => (
+                <div key={`fw-flash-${i}`} className="absolute pointer-events-none" style={{
+                  left: `${pos.x}%`, top: `${pos.y}%`,
+                  width: 50, height: 50,
+                  background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,220,160,0.6) 45%, transparent 70%)',
+                  borderRadius: '50%',
+                  animation: `unity-flash 0.6s ${i * 0.13}s ease-out both`,
+                }} />
+              ))}
+
+              {/* Glowing orbs floating upward */}
+              {fwOrbs.map((orb, i) => (
+                <div key={`fw-orb-${i}`} className="absolute pointer-events-none" style={{
+                  left: `${orb.left}%`, bottom: `${orb.bottom}%`,
+                  width: orb.size, height: orb.size,
+                  background: `radial-gradient(circle, #fff 0%, ${orb.color} 55%, transparent 85%)`,
+                  borderRadius: '50%',
+                  boxShadow: `0 0 ${orb.size}px ${orb.color}`,
+                  '--dx': `${orb.driftX}px`,
+                  animation: `unity-orb-float ${orb.dur}s ${orb.delay}s ease-out both`,
+                } as React.CSSProperties} />
+              ))}
             </>
           )}
         </AnimatePresence>
@@ -1046,11 +1156,24 @@ export function EternalFlameClassicCeremony({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               transition={{ delay: 0.6, duration: 0.8 }}
-              className="absolute bottom-20 left-0 right-0 text-center z-50"
+              className="absolute bottom-20 left-0 right-0 text-center z-50 px-4"
             >
-              <h2 className="text-5xl md:text-6xl font-bold text-rose-100 drop-shadow-2xl mb-4">
-                Forever United
+              <h2
+                className="text-5xl md:text-6xl font-bold drop-shadow-2xl mb-2"
+                style={{
+                  background: 'linear-gradient(135deg, #fda4af 0%, #fb923c 35%, #fbbf24 65%, #fda4af 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                💑 Forever United 💑
               </h2>
+              <p
+                className="text-rose-200/80 text-base md:text-lg tracking-widest uppercase"
+                style={{ letterSpacing: '0.2em', textShadow: '0 0 18px rgba(251,113,133,0.5)' }}
+              >
+                Two flames · One eternal light ✨
+              </p>
             </motion.div>
           )}
         </AnimatePresence>

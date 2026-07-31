@@ -9,8 +9,9 @@
  * REFINED with smooth animations, better bottle design, enhanced cork pop
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 interface NewYearChampagneCeremonyProps {
   capsuleTitle: string;
@@ -18,6 +19,23 @@ interface NewYearChampagneCeremonyProps {
   isPreview?: boolean;
   onComplete?: () => void;
 }
+
+const CHAMPAGNE_CSS = `
+@keyframes ch-pop-ring {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.92; }
+  55%  { opacity: 0.6; }
+  100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
+}
+@keyframes ch-flash {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  40%  { opacity: 0; }
+}
+@keyframes ch-orb-float {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.9; }
+  100% { transform: translate(var(--dx), -90px) scale(0.4); opacity: 0; }
+}
+`;
 
 export function NewYearChampagneCeremony({
   capsuleTitle,
@@ -27,6 +45,26 @@ export function NewYearChampagneCeremony({
 }: NewYearChampagneCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'bottle' | 'unwrap' | 'cork' | 'fountain' | 'nebula' | 'stars' | 'radiance' | 'outro'>('intro');
   const [completed, setCompleted] = useState(false);
+
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const chColors = useMemo(() => ['#fbbf24','#fef3c7','#f59e0b','#fb923c','#ffffff','#fde68a','#ec4899','#a855f7'], []);
+  const chFwPositions = useMemo(() => [
+    {x:8,y:15},{x:22,y:10},{x:38,y:18},{x:52,y:8},{x:68,y:16},{x:82,y:12},{x:14,y:30},{x:88,y:25},
+  ].slice(0, isMobile ? 5 : 8), [isMobile]);
+  const chFwSparks = useMemo(() => chFwPositions.map(() =>
+    Array.from({length: isMobile ? 14 : 20}, (_, i) => {
+      const a = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const d = 50 + (i % 5) * 20;
+      return { x: Math.cos(a)*d, y: Math.sin(a)*d, color: chColors[i % chColors.length], delay: i*0.04 };
+    })
+  ), [chFwPositions, chColors, isMobile]);
+  const chFwRings = useMemo(() => chFwPositions.map(() =>
+    Array.from({length: 3}, (_, i) => ({ delay: i*0.15, color: ['#fbbf24','#fef3c7','#f59e0b'][i] }))
+  ), [chFwPositions]);
+  const chOrbs = useMemo(() => Array.from({length: isMobile ? 10 : 18}, (_, i) => ({
+    x: 5 + (i * 5.5) % 90, dx: (i % 7 - 3) * 18, dur: 2.5 + (i % 4) * 0.5,
+    delay: i * 0.18, color: chColors[i % chColors.length]
+  })), [chColors, isMobile]);
 
   useEffect(() => {
     const timeline = [
@@ -56,8 +94,25 @@ export function NewYearChampagneCeremony({
     };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
+  useEffect(() => {
+    if (stage !== 'radiance') return;
+    const colors = ['#fbbf24','#fef3c7','#f59e0b','#fb923c','#ffffff','#fde68a','#ec4899'];
+    const base = { spread: 80, ticks: 200, gravity: 0.9, decay: 0.93, startVelocity: 38, colors };
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 60, origin: { x: 0, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 120, origin: { x: 1, y: 0.7 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...base, particleCount: 80, angle: 90, origin: { x: 0.5, y: 0.6 } }), 380);
+      const t2 = setTimeout(() => {
+        confetti({ ...base, particleCount: 100, angle: 60, origin: { x: 0, y: 0.65 } });
+        confetti({ ...base, particleCount: 100, angle: 120, origin: { x: 1, y: 0.65 } });
+      }, 950);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
+
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-slate-950 via-amber-950/40 to-slate-950">
+      <style>{CHAMPAGNE_CSS}</style>
       {/* Luxurious ambient lighting */}
       {[...Array(6)].map((_, i) => (
         <motion.div
@@ -985,6 +1040,45 @@ export function NewYearChampagneCeremony({
       <AnimatePresence>
         {stage === 'radiance' && (
           <>
+            {/* Firework clusters */}
+            {chFwPositions.map((pos, pi) => (
+              <React.Fragment key={`ch-fw-${pi}`}>
+                {chFwSparks[pi].map((s, si) => (
+                  <motion.div key={`ch-spark-${pi}-${si}`} className="absolute z-51 rounded-full"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 6, height: 6, background: s.color }}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                    animate={{ x: s.x, y: s.y, scale: [0,1.4,0], opacity: [0,1,0] }}
+                    transition={{ duration: 1.2, delay: s.delay, ease: 'easeOut' }}
+                  />
+                ))}
+                {chFwRings[pi].map((r, ri) => (
+                  <div key={`ch-ring-${pi}-${ri}`} className="absolute rounded-full border-2"
+                    style={{
+                      left: `${pos.x}%`, top: `${pos.y}%`, width: 20, height: 20,
+                      borderColor: r.color, animation: `ch-pop-ring 0.9s ease-out ${r.delay}s both`
+                    }}
+                  />
+                ))}
+                <div key={`ch-flash-${pi}`} className="absolute rounded-full"
+                  style={{
+                    left: `${pos.x}%`, top: `${pos.y}%`, width: 40, height: 40,
+                    background: `radial-gradient(circle, ${chColors[pi % chColors.length]}cc, transparent)`,
+                    filter: 'blur(8px)', animation: 'ch-flash 0.5s ease-out both'
+                  }}
+                />
+              </React.Fragment>
+            ))}
+            {/* Glowing orbs */}
+            {chOrbs.map((orb, i) => (
+              <div key={`ch-orb-${i}`} className="absolute rounded-full z-49"
+                style={{
+                  left: `${orb.x}%`, bottom: '20%', width: 10, height: 10,
+                  background: orb.color, boxShadow: `0 0 14px ${orb.color}`,
+                  '--dx': `${orb.dx}px`,
+                  animation: `ch-orb-float ${orb.dur}s ease-out ${orb.delay}s both`
+                } as React.CSSProperties}
+              />
+            ))}
             {/* Full 360° starburst rays */}
             {[...Array(44)].map((_, i) => {
               const rotation = (i * 360) / 44;
@@ -1097,13 +1191,14 @@ export function NewYearChampagneCeremony({
               <motion.h1
                 className="text-7xl md:text-8xl font-black"
                 style={{
-                  background: 'linear-gradient(135deg, #fef3c7, #fbbf24, #fef3c7)',
+                  background: 'linear-gradient(135deg, #fef3c7, #fbbf24, #fb923c, #fef3c7)',
+                  backgroundSize: '200% 200%',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
-                  textShadow: '0 0 40px rgba(251, 191, 36, 0.8)',
                   filter: 'drop-shadow(0 4px 20px rgba(251, 191, 36, 0.6))'
                 }}
                 animate={{
+                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
                   filter: [
                     'drop-shadow(0 4px 20px rgba(251, 191, 36, 0.6))',
                     'drop-shadow(0 4px 30px rgba(251, 191, 36, 1))',
@@ -1112,8 +1207,17 @@ export function NewYearChampagneCeremony({
                 }}
                 transition={{ duration: 1.5, repeat: completed ? 0 : 7 }}
               >
-                CHEERS! 🥂
+                🥂 CHEERS! 🥂
               </motion.h1>
+              <motion.p
+                className="text-lg md:text-xl font-semibold text-center mt-3"
+                style={{ color: '#fef3c7', textShadow: '0 0 20px rgba(251,191,36,0.9), 0 4px 14px rgba(0,0,0,0.9)' }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8, duration: 1.2 }}
+              >
+                New Year, new memories, new magic ✨
+              </motion.p>
             </motion.div>
           </>
         )}

@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 interface BirthdayClassicCeremonyProps {
   capsuleTitle: string;
@@ -59,6 +60,21 @@ const CSS = `
 @keyframes rosette-glow {
   0%,100% { box-shadow: 0 0 6px rgba(251,191,36,0.6); }
   50%      { box-shadow: 0 0 12px rgba(251,191,36,1); }
+}
+@keyframes wish-pop-ring {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.92; }
+  55%  { opacity: 0.6; }
+  100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
+}
+@keyframes wish-flash {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+  40%  { opacity: 0.85; transform: translate(-50%,-50%) scale(1); }
+  100% { transform: translate(-50%,-50%) scale(2.4); opacity: 0; }
+}
+@keyframes wish-orb-float {
+  0%   { opacity: 0; transform: scale(0) translateY(0); }
+  25%  { opacity: 1; transform: scale(1.2) translateY(0); }
+  100% { opacity: 0; transform: scale(0.5) translateY(-110px); }
 }
 `;
 
@@ -146,6 +162,77 @@ export function BirthdayClassicCeremony({
       delay: i * 0.04
     };
   }), []);
+
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  // Firework burst positions across the screen
+  const fwPositions = useMemo(() => isMobile
+    ? [{ x: 15, y: 20 }, { x: 85, y: 18 }, { x: 50, y: 10 }, { x: 30, y: 38 }, { x: 70, y: 35 }]
+    : [{ x: 12, y: 18 }, { x: 88, y: 16 }, { x: 50, y: 9 }, { x: 25, y: 40 }, { x: 75, y: 36 }, { x: 50, y: 28 }, { x: 18, y: 32 }, { x: 82, y: 30 }],
+  [isMobile]);
+
+  const fwColors = ['#ec4899', '#fb923c', '#fbbf24', '#a78bfa', '#34d399', '#60a5fa', '#f87171', '#fde047'];
+
+  // Sparks radiating from each position
+  const fwSparks = useMemo(() => fwPositions.flatMap((pos, pi) =>
+    Array.from({ length: isMobile ? 14 : 20 }, (_, i) => {
+      const angle = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const speed = 55 + (i % 5) * 20;
+      return {
+        px: pos.x, py: pos.y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        color: fwColors[(pi + i) % fwColors.length],
+        size: 3 + (i % 4),
+        delay: pi * 0.13 + (i % 5) * 0.01,
+      };
+    })
+  ), [fwPositions, isMobile]);
+
+  // 3 shockwave rings per position
+  const fwRings = useMemo(() => fwPositions.flatMap((pos, pi) =>
+    [0, 1, 2].map(ri => ({
+      x: pos.x, y: pos.y,
+      color: fwColors[pi % fwColors.length],
+      size: 44 + ri * 20,
+      delay: pi * 0.13 + ri * 0.1,
+    }))
+  ), [fwPositions]);
+
+  // Glowing orbs that drift upward
+  const fwOrbs = useMemo(() => Array.from({ length: isMobile ? 10 : 18 }, (_, i) => ({
+    left: 12 + (i * 19) % 76,
+    bottom: 35 + (i % 3) * 18,
+    size: 10 + (i % 4) * 5,
+    color: fwColors[i % fwColors.length],
+    driftX: (i % 2 === 0 ? 1 : -1) * (5 + (i % 4) * 8),
+    dur: 1.9 + (i % 4) * 0.4,
+    delay: 0.08 + (i * 0.11) % 0.9,
+  })), [isMobile]);
+
+  // Fire confetti when radiance starts
+  useEffect(() => {
+    if (stage !== 'radiance') return;
+    const colors = ['#ec4899', '#fbbf24', '#60a5fa', '#a78bfa', '#34d399', '#fb923c', '#f0abfc', '#fff'];
+    const opts = {
+      colors,
+      startVelocity: isMobile ? 38 : 52,
+      gravity: 0.9,
+      ticks: isMobile ? 170 : 240,
+      shapes: ['square', 'circle'] as confetti.Shape[],
+    };
+    const count = isMobile ? 110 : 200;
+    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 75, origin: { x: 0, y: 0.55 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 75, origin: { x: 1, y: 0.55 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...opts, particleCount: 75, spread: 108, origin: { x: 0.5, y: 0.45 }, startVelocity: 44, gravity: 0.8 }), 380);
+      const t2 = setTimeout(() => {
+        confetti({ ...opts, particleCount: 55, angle: 72, spread: 85, origin: { x: 0.18, y: 0.62 } });
+        confetti({ ...opts, particleCount: 55, angle: 108, spread: 85, origin: { x: 0.82, y: 0.62 } });
+      }, 950);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Sprinkles embedded in cake — deterministic positions */
   const sprinkles = useMemo(() => [
@@ -255,7 +342,10 @@ export function BirthdayClassicCeremony({
                       {stage !== 'blowout' && stage !== 'smoke' && stage !== 'radiance' && (
                         <motion.div
                           className="absolute left-1/2 -translate-x-1/2"
-                          style={{ bottom: '62px' }}
+                          style={{
+                            bottom: '62px',
+                            ...(stage === 'flicker' ? { animation: `candle-flicker ${1.3 + i * 0.17}s ease-in-out infinite` } : {})
+                          }}
                           animate={
                             stage === 'breath'
                               ? { scaleX: [1, 0.35, 0.3, 0.45], x: [0, -2, -4, -2], y: [0, -6, -10, -7], opacity: [1, 0.65, 0.5, 0.6] }
@@ -267,9 +357,6 @@ export function BirthdayClassicCeremony({
                               ? { duration: 1.3, ease: 'easeInOut' }
                               : { duration: 0.45 }
                           }
-                          style={stage === 'flicker' ? {
-                            animation: `candle-flicker ${1.3 + i * 0.17}s ease-in-out infinite`
-                          } : {}}
                         >
                           {/* Outer glow */}
                           <div style={{
@@ -585,6 +672,7 @@ export function BirthdayClassicCeremony({
         <AnimatePresence>
           {stage === 'radiance' && (
             <>
+              {/* 24 rotating rays */}
               <motion.div className="absolute inset-0 pointer-events-none"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}>
                 {rays.map((r, i) => (
@@ -600,6 +688,7 @@ export function BirthdayClassicCeremony({
                 ))}
               </motion.div>
 
+              {/* Core radiant bloom */}
               <motion.div
                 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                 initial={{ scale: 0, opacity: 0 }}
@@ -613,6 +702,7 @@ export function BirthdayClassicCeremony({
                 }} />
               </motion.div>
 
+              {/* Spinning orbit rings */}
               <div className="absolute pointer-events-none" style={{
                 left: '50%', top: '50%',
                 width: '340px', height: '340px',
@@ -621,7 +711,16 @@ export function BirthdayClassicCeremony({
                 boxShadow: '0 0 16px rgba(236,72,153,0.35)',
                 animation: 'orbit-ring-spin 12s linear infinite'
               }} />
+              <div className="absolute pointer-events-none" style={{
+                left: '50%', top: '50%',
+                width: '240px', height: '240px',
+                marginLeft: '-120px', marginTop: '-120px',
+                border: '1.5px solid rgba(251,146,60,0.35)',
+                borderRadius: '50%',
+                animation: 'orbit-ring-spin 18s linear infinite reverse'
+              }} />
 
+              {/* Burst particles from center */}
               {burstParticles.map((p, i) => (
                 <motion.div key={`burst-${i}`}
                   className="absolute left-1/2 top-1/2 pointer-events-none"
@@ -635,6 +734,74 @@ export function BirthdayClassicCeremony({
                   }} />
                 </motion.div>
               ))}
+
+              {/* ── FIREWORK BURSTS ── */}
+              {/* Sparks radiating outward */}
+              {fwSparks.map((s, i) => (
+                <motion.div
+                  key={`fw-spark-${i}`}
+                  className="absolute rounded-full pointer-events-none"
+                  style={{
+                    left: `${s.px}%`, top: `${s.py}%`,
+                    width: s.size, height: s.size,
+                    background: s.color,
+                    boxShadow: `0 0 ${s.size * 2}px ${s.color}`,
+                  }}
+                  initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                  animate={{ x: s.vx, y: s.vy, opacity: [1, 0.9, 0], scale: [1.2, 0.8, 0] }}
+                  transition={{ duration: isMobile ? 0.9 : 1.1, delay: s.delay, ease: [0.2, 0.8, 0.4, 1] }}
+                />
+              ))}
+
+              {/* Flash at each burst origin */}
+              {fwPositions.map((pos, i) => (
+                <div
+                  key={`fw-flash-${i}`}
+                  className="absolute pointer-events-none rounded-full"
+                  style={{
+                    left: `${pos.x}%`, top: `${pos.y}%`,
+                    width: 32, height: 32,
+                    background: fwColors[i % fwColors.length],
+                    filter: 'blur(8px)',
+                    animation: `wish-flash 0.55s ease-out ${i * 0.13}s forwards`,
+                    opacity: 0,
+                  }}
+                />
+              ))}
+
+              {/* 3 shockwave rings per burst */}
+              {fwRings.map((r, i) => (
+                <div
+                  key={`fw-ring-${i}`}
+                  className="absolute pointer-events-none rounded-full"
+                  style={{
+                    left: `${r.x}%`, top: `${r.y}%`,
+                    width: r.size, height: r.size,
+                    border: `2px solid ${r.color}`,
+                    boxShadow: `0 0 10px ${r.color}88`,
+                    animation: `wish-pop-ring 0.8s cubic-bezier(0.2,0.8,0.3,1) ${r.delay}s forwards`,
+                    opacity: 0,
+                  }}
+                />
+              ))}
+
+              {/* Glowing orbs drifting upward */}
+              {fwOrbs.map((orb, i) => (
+                <motion.div
+                  key={`fw-orb-${i}`}
+                  className="absolute rounded-full pointer-events-none"
+                  style={{
+                    left: `${orb.left}%`, bottom: `${orb.bottom}%`,
+                    width: orb.size, height: orb.size,
+                    background: `radial-gradient(circle, rgba(255,255,255,0.9) 0%, ${orb.color} 55%, transparent 90%)`,
+                    boxShadow: `0 0 ${orb.size}px ${orb.color}99`,
+                    filter: 'blur(1px)',
+                  }}
+                  initial={{ opacity: 0, scale: 0, y: 0, x: 0 }}
+                  animate={{ opacity: [0, 1, 0.8, 0], scale: [0, 1.3, 1, 0], y: -130, x: orb.driftX }}
+                  transition={{ duration: orb.dur, delay: orb.delay, ease: 'easeOut' }}
+                />
+              ))}
             </>
           )}
         </AnimatePresence>
@@ -644,10 +811,32 @@ export function BirthdayClassicCeremony({
       <AnimatePresence>
         {stage === 'radiance' && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="absolute bottom-20 left-0 right-0 text-center z-40">
-            <h2 className="text-4xl md:text-5xl font-bold text-pink-50 drop-shadow-2xl mb-3">Happy Birthday!</h2>
+            initial={{ opacity: 0, scale: 0.45, y: 40 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0 }}
+            transition={{ delay: 0.3, duration: 0.85, ease: [0.34, 1.56, 0.64, 1] }}
+            className="absolute bottom-16 left-0 right-0 text-center z-40 pointer-events-none">
+            <h2 style={{
+              fontSize: isMobile ? '2rem' : '2.8rem',
+              fontWeight: 700,
+              background: 'linear-gradient(135deg, #ec4899 0%, #fbbf24 45%, #fb923c 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              filter: 'drop-shadow(0 0 18px rgba(236,72,153,0.7))',
+              marginBottom: 8,
+            }}>🎉 Happy Birthday! 🎉</h2>
+            <motion.p
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.85, duration: 0.6 }}
+              style={{
+                color: 'rgba(255,220,240,0.8)',
+                fontSize: isMobile ? '0.8rem' : '0.95rem',
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Your wish was just made ✨
+            </motion.p>
           </motion.div>
         )}
       </AnimatePresence>

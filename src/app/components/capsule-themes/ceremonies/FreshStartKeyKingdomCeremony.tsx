@@ -12,6 +12,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import fireConfetti from 'canvas-confetti';
 
 interface FreshStartKeyKingdomCeremonyProps {
   capsuleTitle: string;
@@ -45,6 +46,23 @@ const FLOOR_DEFS = [
   { color: '#1e4496', border: '#2b5fc8' },
   { color: '#2250aa', border: '#3068d8' },
 ];
+
+const CONSTRUCTION_CSS = `
+@keyframes cs-pop-ring {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.92; }
+  55%  { opacity: 0.6; }
+  100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
+}
+@keyframes cs-flash {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+  40%  { opacity: 0.85; transform: translate(-50%,-50%) scale(1); }
+  100% { transform: translate(-50%,-50%) scale(2.4); opacity: 0; }
+}
+@keyframes cs-orb-float {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.9; }
+  100% { transform: translate(var(--dx), -90px) scale(0.4); opacity: 0; }
+}
+`;
 
 export function FreshStartKeyKingdomCeremony({
   capsuleTitle,
@@ -135,6 +153,51 @@ export function FreshStartKeyKingdomCeremony({
     []
   );
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  const csColors = useMemo(() => ['#fbbf24','#f59e0b','#10b981','#3b82f6','#fb923c','#a855f7','#ef4444','#fff'], []);
+
+  const csFwPositions = useMemo(() => isMobile
+    ? [{x:14,y:16},{x:86,y:14},{x:50,y:8},{x:28,y:36},{x:72,y:33}]
+    : [{x:12,y:16},{x:88,y:14},{x:50,y:8},{x:24,y:38},{x:76,y:35},{x:50,y:26},{x:18,y:30},{x:82,y:28}],
+  [isMobile]);
+
+  const csFwSparks = useMemo(() => csFwPositions.flatMap((pos, pi) =>
+    Array.from({length: isMobile ? 14 : 20}, (_, i) => {
+      const angle = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const speed = 55 + (i % 5) * 20;
+      return { px: pos.x, py: pos.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+               color: csColors[(pi + i) % csColors.length], size: 3 + (i % 4), delay: pi * 0.13 + (i % 5) * 0.01 };
+    })
+  ), [csFwPositions, isMobile, csColors]);
+
+  const csFwRings = useMemo(() => csFwPositions.flatMap((pos, pi) =>
+    [0, 1, 2].map(ri => ({ x: pos.x, y: pos.y, color: csColors[pi % csColors.length], size: 44 + ri * 20, delay: pi * 0.13 + ri * 0.1 }))
+  ), [csFwPositions, csColors]);
+
+  const csFwOrbs = useMemo(() => Array.from({length: isMobile ? 10 : 18}, (_, i) => ({
+    left: 12 + (i * 19) % 76, bottom: 35 + (i % 3) * 18,
+    size: 10 + (i % 4) * 5, color: csColors[i % csColors.length],
+    driftX: (i % 2 === 0 ? 1 : -1) * (5 + (i % 4) * 8), dur: 1.9 + (i % 4) * 0.4, delay: 0.08 + (i * 0.11) % 0.9,
+  })), [isMobile, csColors]);
+
+  useEffect(() => {
+    if (stage !== 'radiance') return;
+    const colors = ['#fbbf24','#f59e0b','#10b981','#3b82f6','#fb923c','#a855f7','#ef4444','#fff'];
+    const opts = { colors, startVelocity: isMobile ? 38 : 52, gravity: 0.9, ticks: isMobile ? 170 : 240, shapes: ['square','circle'] as any };
+    const count = isMobile ? 110 : 200;
+    fireConfetti({ ...opts, particleCount: count / 2, angle: 60, spread: 75, origin: { x: 0, y: 0.55 } });
+    fireConfetti({ ...opts, particleCount: count / 2, angle: 120, spread: 75, origin: { x: 1, y: 0.55 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => fireConfetti({ ...opts, particleCount: 75, spread: 108, origin: { x: 0.5, y: 0.45 }, startVelocity: 44, gravity: 0.8 }), 380);
+      const t2 = setTimeout(() => {
+        fireConfetti({ ...opts, particleCount: 55, angle: 72, spread: 85, origin: { x: 0.18, y: 0.62 } });
+        fireConfetti({ ...opts, particleCount: 55, angle: 108, spread: 85, origin: { x: 0.82, y: 0.62 } });
+      }, 950);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
+
   // Skyline buildings (static, background decoration)
   const skylineBuildings = useMemo(
     () => [
@@ -153,6 +216,7 @@ export function FreshStartKeyKingdomCeremony({
 
   return (
     <div className="relative w-full h-full overflow-hidden select-none">
+      <style>{CONSTRUCTION_CSS}</style>
 
       {/* ── BACKGROUND LAYERS ──────────────────────────────────────────────────── */}
 
@@ -871,16 +935,85 @@ export function FreshStartKeyKingdomCeremony({
               </div>
             </div>
 
+            {/* Firework sparks */}
+            {csFwSparks.map((s, i) => (
+              <motion.div key={`cs-spark-${i}`} className="absolute pointer-events-none"
+                style={{ left: `${s.px}%`, top: `${s.py}%` }}
+                initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+                animate={{ x: s.vx, y: s.vy, scale: 0, opacity: 0 }}
+                transition={{ duration: 1.1, delay: s.delay, ease: 'easeOut' }}
+              >
+                <div style={{ width: s.size, height: s.size, borderRadius: '50%', background: s.color,
+                  boxShadow: `0 0 ${s.size * 2}px ${s.color}`, transform: 'translate(-50%,-50%)' }} />
+              </motion.div>
+            ))}
+            {/* Shockwave rings */}
+            {csFwRings.map((r, i) => (
+              <div key={`cs-ring-${i}`} className="absolute pointer-events-none" style={{
+                left: `${r.x}%`, top: `${r.y}%`,
+                width: r.size, height: r.size,
+                border: `2px solid ${r.color}`,
+                borderRadius: '50%',
+                boxShadow: `0 0 10px ${r.color}`,
+                animation: `cs-pop-ring 0.9s ${r.delay}s cubic-bezier(0.2,0,0.8,1) both`,
+              }} />
+            ))}
+            {/* Flash per burst */}
+            {csFwPositions.map((pos, i) => (
+              <div key={`cs-flash-${i}`} className="absolute pointer-events-none" style={{
+                left: `${pos.x}%`, top: `${pos.y}%`,
+                width: 50, height: 50,
+                background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,220,100,0.6) 45%, transparent 70%)',
+                borderRadius: '50%',
+                animation: `cs-flash 0.6s ${i * 0.13}s ease-out both`,
+              }} />
+            ))}
+            {/* Floating orbs */}
+            {csFwOrbs.map((orb, i) => (
+              <div key={`cs-orb-${i}`} className="absolute pointer-events-none" style={{
+                left: `${orb.left}%`, bottom: `${orb.bottom}%`,
+                width: orb.size, height: orb.size,
+                background: `radial-gradient(circle, #fff 0%, ${orb.color} 55%, transparent 85%)`,
+                borderRadius: '50%',
+                boxShadow: `0 0 ${orb.size}px ${orb.color}`,
+                '--dx': `${orb.driftX}px`,
+                animation: `cs-orb-float ${orb.dur}s ${orb.delay}s ease-out both`,
+              } as React.CSSProperties} />
+            ))}
+
             {/* Title text */}
-            <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-8 px-6 text-center gap-3">
+            <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-8 px-6 text-center gap-2">
               <motion.p
                 className="text-xs uppercase tracking-[0.3em] font-semibold"
-                style={{ color: '#fbbf24' }}
+                style={{ color: '#fbbf24', textShadow: '0 0 12px rgba(251,191,36,0.7)' }}
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                Your New Chapter Begins
+                Your Vision Is Complete
+              </motion.p>
+              <motion.h2
+                className="font-black text-2xl md:text-4xl"
+                style={{
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 30%, #ffffff 55%, #fb923c 80%, #fbbf24 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  filter: 'drop-shadow(0 0 16px rgba(251,191,36,0.6))',
+                }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.6, duration: 0.8, type: 'spring', stiffness: 200, damping: 18 }}
+              >
+                🏗️ Built for Your Future 🏗️
+              </motion.h2>
+              <motion.p
+                className="text-xs md:text-sm uppercase tracking-[0.22em]"
+                style={{ color: 'rgba(251,191,36,0.75)', textShadow: '0 0 10px rgba(251,191,36,0.4)' }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.1 }}
+              >
+                Your new chapter begins now ✨
               </motion.p>
               <motion.div
                 className="h-0.5 rounded-full"

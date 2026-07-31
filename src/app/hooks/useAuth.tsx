@@ -633,15 +633,45 @@ export function useAuth() {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
 
-        // Check for refresh token errors
+        // Refresh-token errors during the monitor almost always mean Supabase is
+        // mid-rotation (old token consumed, new one not yet stored). Never sign
+        // the user out immediately — always attempt recovery first.
         if (error) {
-          if (error.message?.includes('Invalid Refresh Token') ||
-              error.message?.includes('Refresh Token Not Found') ||
-              error.message?.includes('refresh_token_not_found')) {
-            console.warn('⚠️ Invalid refresh token detected in session monitor');
-            handleAuthError(error);
+          const isTokenError =
+            error.message?.includes('Invalid Refresh Token') ||
+            error.message?.includes('Refresh Token Not Found') ||
+            error.message?.includes('refresh_token_not_found');
+
+          if (isTokenError) {
+            console.warn('⚠️ Refresh token error in session monitor — attempting recovery (token rotation in progress?)');
+
+            // Step 1: wait for rotation to complete, then re-check.
+            await new Promise(resolve => setTimeout(resolve, 3500));
+            if (!isAuthenticatedRef.current || isLoggingOutRef.current) return;
+
+            const { data: { session: recoveredSession } } = await supabase.auth.getSession();
+            if (recoveredSession) {
+              console.log('✅ Session recovered after token rotation wait');
+              setUserFromSession(recoveredSession);
+              return;
+            }
+
+            // Step 2: explicitly ask Supabase to issue a new token pair.
+            const { data: { session: refreshedSession }, error: refreshErr } =
+              await supabase.auth.refreshSession();
+            if (refreshedSession) {
+              console.log('✅ Session refreshed successfully via refreshSession()');
+              setUserFromSession(refreshedSession);
+              return;
+            }
+
+            // Both recovery paths failed — the token is genuinely gone.
+            console.warn('🔑 Refresh token unrecoverable after retry + refresh — signing out');
+            handleAuthError(refreshErr ?? error);
             return;
           }
+          // Non-token errors: ignore and let the next interval try again.
+          return;
         }
 
         if (!session && isAuthenticatedRef.current && !isLoggingOutRef.current) {
@@ -661,8 +691,18 @@ export function useAuth() {
         }
       } catch (error) {
         console.warn('Session monitor error:', error);
-        if (error.message?.includes('Invalid Refresh Token') ||
-            error.message?.includes('Refresh Token Not Found')) {
+        // Same recovery logic for thrown errors — don't sign out on first catch.
+        const isTokenError =
+          error?.message?.includes('Invalid Refresh Token') ||
+          error?.message?.includes('Refresh Token Not Found') ||
+          error?.message?.includes('refresh_token_not_found');
+        if (isTokenError) {
+          await new Promise(resolve => setTimeout(resolve, 3500));
+          if (!isAuthenticatedRef.current || isLoggingOutRef.current) return;
+          const { data: { session: s } } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+          if (s) { setUserFromSession(s); return; }
+          const { data: { session: s2 } } = await supabase.auth.refreshSession().catch(() => ({ data: { session: null } }));
+          if (s2) { setUserFromSession(s2); return; }
           handleAuthError(error);
         }
       }

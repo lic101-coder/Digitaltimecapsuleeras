@@ -19,7 +19,8 @@
  * 
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface MixtapeStandardCeremonyProps {
@@ -37,6 +38,7 @@ export function MixtapeStandardCeremony({
 }: MixtapeStandardCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'spin' | 'needle' | 'pulse' | 'shatter' | 'radiance' | 'outro'>('intro');
   const [completed, setCompleted] = useState(false);
+  const completedRef = useRef(false);
 
   useEffect(() => {
     const timeline = [
@@ -48,6 +50,7 @@ export function MixtapeStandardCeremony({
       { time: 11000, action: () => setStage('radiance') },
       { time: 14500, action: () => setStage('outro') },
       { time: 15000, action: () => {
+        completedRef.current = true;
         setCompleted(true);
         onComplete?.();
       }}
@@ -57,8 +60,9 @@ export function MixtapeStandardCeremony({
 
     // CRITICAL FAILSAFE: Force completion after 16 seconds if ceremony hasn't finished
     const failsafeTimeout = setTimeout(() => {
-      if (!completed) {
+      if (!completedRef.current) {
         console.warn('⚠️ Mixtape Standard ceremony failsafe triggered - forcing completion');
+        completedRef.current = true;
         setStage('outro');
         setCompleted(true);
         onComplete?.();
@@ -71,8 +75,59 @@ export function MixtapeStandardCeremony({
     };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const msColors = useMemo(() => ['#ff00ff','#00ffff','#ffff00','#ff0080','#ffffff','#ff66ff','#00ffee'], []);
+  const msFwPositions = useMemo(() => [
+    {x:10,y:18},{x:25,y:10},{x:42,y:20},{x:58,y:8},{x:72,y:18},{x:88,y:12},{x:18,y:32},{x:82,y:28},
+  ].slice(0, isMobile ? 5 : 8), [isMobile]);
+  const msFwSparks = useMemo(() => msFwPositions.map(() =>
+    Array.from({length: isMobile ? 14 : 20}, (_, i) => {
+      const a = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const d = 50 + (i % 5) * 20;
+      return { x: Math.cos(a)*d, y: Math.sin(a)*d, color: msColors[i % msColors.length], delay: i*0.04 };
+    })
+  ), [msFwPositions, msColors, isMobile]);
+  const msFwRings = useMemo(() => msFwPositions.map(() =>
+    Array.from({length: 3}, (_, i) => ({ delay: i*0.15, color: ['#ff00ff','#00ffff','#ffff00'][i] }))
+  ), [msFwPositions]);
+  const msOrbs = useMemo(() => Array.from({length: isMobile ? 10 : 18}, (_, i) => ({
+    x: 5 + (i * 5.5) % 90, dx: (i % 7 - 3) * 18, dur: 2.5 + (i % 4) * 0.5,
+    delay: i * 0.18, color: msColors[i % msColors.length]
+  })), [msColors, isMobile]);
+
+  useEffect(() => {
+    if (stage !== 'radiance') return;
+    const colors = ['#ff00ff','#00ffff','#ffff00','#ff0080','#ffffff','#ff66ff','#00ffee'];
+    const base = { spread: 80, ticks: 200, gravity: 0.9, decay: 0.93, startVelocity: 38, colors };
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 60, origin: { x: 0, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 120, origin: { x: 1, y: 0.7 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...base, particleCount: 80, angle: 90, origin: { x: 0.5, y: 0.6 } }), 380);
+      const t2 = setTimeout(() => {
+        confetti({ ...base, particleCount: 100, angle: 60, origin: { x: 0, y: 0.65 } });
+        confetti({ ...base, particleCount: 100, angle: 120, origin: { x: 1, y: 0.65 } });
+      }, 950);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
+
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-purple-950 via-black to-pink-950">
+      <style>{`
+        @keyframes ms-pop-ring {
+          0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
+        }
+        @keyframes ms-flash {
+          0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+        }
+        @keyframes ms-orb-float {
+          0% { transform: translateY(0) translateX(0); opacity: 0; }
+          20% { opacity: 1; }
+          100% { transform: translateY(-180px) translateX(var(--dx)); opacity: 0; }
+        }
+      `}</style>
       {/* Animated background gradient */}
       <motion.div
         className="absolute inset-0"
@@ -559,6 +614,45 @@ export function MixtapeStandardCeremony({
                 />
               );
             })}
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Fireworks */}
+      <AnimatePresence>
+        {stage === 'radiance' && (
+          <>
+            {msFwPositions.map((pos, pi) => (
+              <React.Fragment key={`ms-fw-${pi}`}>
+                {msFwSparks[pi].map((s, si) => (
+                  <motion.div key={`ms-spark-${pi}-${si}`} className="absolute z-51 rounded-full"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 6, height: 6, background: s.color }}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                    animate={{ x: s.x, y: s.y, scale: [0,1.4,0], opacity: [0,1,0] }}
+                    transition={{ duration: 1.2, delay: s.delay, ease: 'easeOut' }}
+                  />
+                ))}
+                {msFwRings[pi].map((r, ri) => (
+                  <div key={`ms-ring-${pi}-${ri}`} className="absolute rounded-full border-2"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 20, height: 20, borderColor: r.color, animation: `ms-pop-ring 0.9s ease-out ${r.delay}s both` }}
+                  />
+                ))}
+                <div key={`ms-flash-${pi}`} className="absolute rounded-full"
+                  style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 40, height: 40,
+                    background: `radial-gradient(circle, ${msColors[pi % msColors.length]}cc, transparent)`,
+                    filter: 'blur(8px)', animation: 'ms-flash 0.5s ease-out both' }}
+                />
+              </React.Fragment>
+            ))}
+            {msOrbs.map((orb, i) => (
+              <div key={`ms-orb-${i}`} className="absolute rounded-full z-49"
+                style={{ left: `${orb.x}%`, bottom: '20%', width: 10, height: 10,
+                  background: orb.color, boxShadow: `0 0 14px ${orb.color}`,
+                  '--dx': `${orb.dx}px`,
+                  animation: `ms-orb-float ${orb.dur}s ease-out ${orb.delay}s both`
+                } as React.CSSProperties}
+              />
+            ))}
           </>
         )}
       </AnimatePresence>

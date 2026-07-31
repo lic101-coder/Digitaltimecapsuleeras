@@ -8,8 +8,9 @@
  * Stages:
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 interface NewYearCountdownCeremonyProps {
   capsuleTitle: string;
@@ -17,6 +18,23 @@ interface NewYearCountdownCeremonyProps {
   isPreview?: boolean;
   onComplete?: () => void;
 }
+
+const COUNTDOWN_CSS = `
+@keyframes ny-pop-ring {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.92; }
+  55%  { opacity: 0.6; }
+  100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
+}
+@keyframes ny-flash {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  40%  { opacity: 0; }
+}
+@keyframes ny-orb-float {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.9; }
+  100% { transform: translate(var(--dx), -90px) scale(0.4); opacity: 0; }
+}
+`;
 
 export function NewYearCountdownCeremony({
   capsuleTitle,
@@ -28,6 +46,26 @@ export function NewYearCountdownCeremony({
   const [currentNumber, setCurrentNumber] = useState<number | null>(null);
   const [completed, setCompleted] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const nyColors = useMemo(() => ['#ec4899','#f59e0b','#8b5cf6','#22d3ee','#ef4444','#ffffff','#fbbf24','#fb923c'], []);
+  const nyFwPositions = useMemo(() => [
+    {x:10,y:20},{x:25,y:12},{x:40,y:22},{x:55,y:10},{x:70,y:20},{x:85,y:14},{x:15,y:35},{x:90,y:28},
+  ].slice(0, isMobile ? 5 : 8), [isMobile]);
+  const nyFwSparks = useMemo(() => nyFwPositions.map(() =>
+    Array.from({length: isMobile ? 14 : 20}, (_, i) => {
+      const a = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const d = 50 + (i % 5) * 20;
+      return { x: Math.cos(a)*d, y: Math.sin(a)*d, color: nyColors[i % nyColors.length], delay: i*0.04 };
+    })
+  ), [nyFwPositions, nyColors, isMobile]);
+  const nyFwRings = useMemo(() => nyFwPositions.map(() =>
+    Array.from({length: 3}, (_, i) => ({ delay: i*0.15, color: ['#ec4899','#f59e0b','#8b5cf6'][i] }))
+  ), [nyFwPositions]);
+  const nyOrbs = useMemo(() => Array.from({length: isMobile ? 10 : 18}, (_, i) => ({
+    x: 5 + (i * 5.5) % 90, dx: (i % 7 - 3) * 18, dur: 2.5 + (i % 4) * 0.5,
+    delay: i * 0.18, color: nyColors[i % nyColors.length]
+  })), [nyColors, isMobile]);
 
   useEffect(() => {
     const timers: NodeJS.Timeout[] = [];
@@ -98,8 +136,25 @@ export function NewYearCountdownCeremony({
     };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
+  useEffect(() => {
+    if (stage !== 'radiance') return;
+    const colors = ['#ec4899','#f59e0b','#8b5cf6','#22d3ee','#ef4444','#ffffff','#fbbf24'];
+    const base = { spread: 80, ticks: 200, gravity: 0.9, decay: 0.93, startVelocity: 38, colors };
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 60, origin: { x: 0, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 120, origin: { x: 1, y: 0.7 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...base, particleCount: 80, angle: 90, origin: { x: 0.5, y: 0.6 } }), 380);
+      const t2 = setTimeout(() => {
+        confetti({ ...base, particleCount: 100, angle: 60, origin: { x: 0, y: 0.65 } });
+        confetti({ ...base, particleCount: 100, angle: 120, origin: { x: 1, y: 0.65 } });
+      }, 950);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
+
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-black via-purple-950 to-black">
+      <style>{COUNTDOWN_CSS}</style>
       {/* Animated grid background */}
       <div className="absolute inset-0 opacity-30">
         <motion.div
@@ -379,6 +434,45 @@ export function NewYearCountdownCeremony({
       <AnimatePresence>
         {stage === 'radiance' && (
           <>
+            {/* Firework clusters */}
+            {nyFwPositions.map((pos, pi) => (
+              <React.Fragment key={`ny-fw-${pi}`}>
+                {nyFwSparks[pi].map((s, si) => (
+                  <motion.div key={`ny-spark-${pi}-${si}`} className="absolute z-51 rounded-full"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 6, height: 6, background: s.color }}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                    animate={{ x: s.x, y: s.y, scale: [0,1.4,0], opacity: [0,1,0] }}
+                    transition={{ duration: 1.2, delay: s.delay, ease: 'easeOut' }}
+                  />
+                ))}
+                {nyFwRings[pi].map((r, ri) => (
+                  <div key={`ny-ring-${pi}-${ri}`} className="absolute rounded-full border-2"
+                    style={{
+                      left: `${pos.x}%`, top: `${pos.y}%`, width: 20, height: 20,
+                      borderColor: r.color, animation: `ny-pop-ring 0.9s ease-out ${r.delay}s both`
+                    }}
+                  />
+                ))}
+                <div key={`ny-flash-${pi}`} className="absolute rounded-full"
+                  style={{
+                    left: `${pos.x}%`, top: `${pos.y}%`, width: 40, height: 40,
+                    background: `radial-gradient(circle, ${nyColors[pi % nyColors.length]}cc, transparent)`,
+                    filter: 'blur(8px)', animation: 'ny-flash 0.5s ease-out both'
+                  }}
+                />
+              </React.Fragment>
+            ))}
+            {/* Glowing orbs */}
+            {nyOrbs.map((orb, i) => (
+              <div key={`ny-orb-${i}`} className="absolute rounded-full z-49"
+                style={{
+                  left: `${orb.x}%`, bottom: '20%', width: 10, height: 10,
+                  background: orb.color, boxShadow: `0 0 14px ${orb.color}`,
+                  '--dx': `${orb.dx}px`,
+                  animation: `ny-orb-float ${orb.dur}s ease-out ${orb.delay}s both`
+                } as React.CSSProperties}
+              />
+            ))}
             {/* Rainbow starburst rays */}
             {[...Array(72)].map((_, i) => {
               const rotation = (i * 360) / 72;
@@ -468,8 +562,17 @@ export function NewYearCountdownCeremony({
                 }}
                 transition={{ duration: 3, repeat: completed ? 0 : 6 }}
               >
-                HAPPY NEW YEAR! 🎉
+                🎉 HAPPY NEW YEAR! 🎉
               </motion.h1>
+              <motion.p
+                className="text-lg md:text-xl font-semibold text-center mt-2"
+                style={{ color: '#fef3c7', textShadow: '0 0 20px rgba(236,72,153,0.9), 0 4px 14px rgba(0,0,0,0.9)' }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2, duration: 1 }}
+              >
+                The countdown ends · your story begins ✨
+              </motion.p>
             </motion.div>
 
             {/* Celebration particles floating up */}

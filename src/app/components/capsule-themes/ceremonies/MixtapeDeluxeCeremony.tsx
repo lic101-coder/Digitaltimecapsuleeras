@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
+import confetti from 'canvas-confetti';
 
 interface MixtapeDeluxeCeremonyProps {
   capsuleTitle: string
@@ -157,6 +158,25 @@ export function MixtapeDeluxeCeremony({
     ]
   }, [])
 
+  const mdColors = useMemo(() => ['#ff00ff','#00ffff','#ffff00','#ff0080','#ffffff','#ff66ff','#00ff88'], []);
+  const mdFwPositions = useMemo(() => [
+    {x:10,y:18},{x:25,y:10},{x:42,y:20},{x:58,y:8},{x:72,y:18},{x:88,y:12},{x:18,y:32},{x:82,y:28},
+  ].slice(0, isMobile ? 5 : 8), [isMobile]);
+  const mdFwSparks = useMemo(() => mdFwPositions.map(() =>
+    Array.from({length: isMobile ? 14 : 20}, (_, i) => {
+      const a = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const d = 50 + (i % 5) * 20;
+      return { x: Math.cos(a)*d, y: Math.sin(a)*d, color: mdColors[i % mdColors.length], delay: i*0.04 };
+    })
+  ), [mdFwPositions, mdColors, isMobile]);
+  const mdFwRings = useMemo(() => mdFwPositions.map(() =>
+    Array.from({length: 3}, (_, i) => ({ delay: i*0.15, color: ['#ff00ff','#00ffff','#ffff00'][i] }))
+  ), [mdFwPositions]);
+  const mdOrbs = useMemo(() => Array.from({length: isMobile ? 10 : 18}, (_, i) => ({
+    x: 5 + (i * 5.5) % 90, dx: (i % 7 - 3) * 18, dur: 2.5 + (i % 4) * 0.5,
+    delay: i * 0.18, color: mdColors[i % mdColors.length]
+  })), [mdColors, isMobile]);
+
   // ── Timeline ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const schedule: Array<{ t: number; fn: () => void }> = [
@@ -191,6 +211,22 @@ export function MixtapeDeluxeCeremony({
       clearTimeout(failsafe)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (stage !== 'radiance') return;
+    const colors = ['#ff00ff','#00ffff','#ffff00','#ff0080','#ffffff','#ff66ff','#00ff88'];
+    const base = { spread: 80, ticks: 200, gravity: 0.9, decay: 0.93, startVelocity: 38, colors };
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 60, origin: { x: 0, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 120, origin: { x: 1, y: 0.7 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...base, particleCount: 80, angle: 90, origin: { x: 0.5, y: 0.6 } }), 380);
+      const t2 = setTimeout(() => {
+        confetti({ ...base, particleCount: 100, angle: 60, origin: { x: 0, y: 0.65 } });
+        confetti({ ...base, particleCount: 100, angle: 120, origin: { x: 1, y: 0.65 } });
+      }, 950);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
 
   // ── Derived booleans ──────────────────────────────────────────────────────
   const showGrid =
@@ -237,6 +273,19 @@ export function MixtapeDeluxeCeremony({
     >
       {/* ── CSS keyframes ──────────────────────────────────────────────────── */}
       <style>{`
+        @keyframes md-pop-ring {
+          0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
+        }
+        @keyframes md-flash {
+          0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+        }
+        @keyframes md-orb-float {
+          0% { transform: translateY(0) translateX(0); opacity: 0; }
+          20% { opacity: 1; }
+          100% { transform: translateY(-180px) translateX(var(--dx)); opacity: 0; }
+        }
         @keyframes zap-flicker {
           0%, 100% { opacity: 0; }
           45%, 55% { opacity: 1; }
@@ -1792,6 +1841,39 @@ export function MixtapeDeluxeCeremony({
               />
             ))}
 
+            {/* Fireworks */}
+            {mdFwPositions.map((pos, pi) => (
+              <React.Fragment key={`md-fw-${pi}`}>
+                {mdFwSparks[pi].map((s, si) => (
+                  <motion.div key={`md-spark-${pi}-${si}`} className="absolute z-51 rounded-full"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 6, height: 6, background: s.color }}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                    animate={{ x: s.x, y: s.y, scale: [0,1.4,0], opacity: [0,1,0] }}
+                    transition={{ duration: 1.2, delay: s.delay, ease: 'easeOut' }}
+                  />
+                ))}
+                {mdFwRings[pi].map((r, ri) => (
+                  <div key={`md-ring-${pi}-${ri}`} className="absolute rounded-full border-2"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 20, height: 20, borderColor: r.color, animation: `md-pop-ring 0.9s ease-out ${r.delay}s both` }}
+                  />
+                ))}
+                <div key={`md-flash-${pi}`} className="absolute rounded-full"
+                  style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 40, height: 40,
+                    background: `radial-gradient(circle, ${mdColors[pi % mdColors.length]}cc, transparent)`,
+                    filter: 'blur(8px)', animation: 'md-flash 0.5s ease-out both' }}
+                />
+              </React.Fragment>
+            ))}
+            {mdOrbs.map((orb, i) => (
+              <div key={`md-orb-${i}`} className="absolute rounded-full z-49"
+                style={{ left: `${orb.x}%`, bottom: '20%', width: 10, height: 10,
+                  background: orb.color, boxShadow: `0 0 14px ${orb.color}`,
+                  '--dx': `${orb.dx}px`,
+                  animation: `md-orb-float ${orb.dur}s ease-out ${orb.delay}s both`
+                } as React.CSSProperties}
+              />
+            ))}
+
             {/* Capsule title with CSS neon-pulse */}
             <motion.div
               key="capsule-title"
@@ -1804,9 +1886,9 @@ export function MixtapeDeluxeCeremony({
                 style={{
                   fontFamily: 'Impact, "Arial Narrow", sans-serif',
                   fontSize: 'clamp(24px, 7vw, 52px)',
-                  color: '#ff00ff',
                   letterSpacing: 'clamp(2px, 1vw, 6px)',
                   marginBottom: '8px',
+                  color: '#ff00ff',
                   animation: 'neon-pulse 3s ease-in-out infinite',
                 }}
               >

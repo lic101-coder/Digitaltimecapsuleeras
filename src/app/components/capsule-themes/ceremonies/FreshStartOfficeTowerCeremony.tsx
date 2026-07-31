@@ -11,8 +11,9 @@
  * FINALE: "The Empire Below" (13.5-15s) - Aerial city, glowing window, YOUR JOURNEY BEGINS!
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 interface FreshStartOfficeTowerCeremonyProps {
   capsuleTitle: string;
@@ -58,6 +59,51 @@ export function FreshStartOfficeTowerCeremony({
     };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  const towerColors = useMemo(() => ['#fbbf24','#f59e0b','#3b82f6','#ffffff','#fb923c','#10b981','#a855f7','#ef4444'], []);
+
+  const towerFwPositions = useMemo(() => isMobile
+    ? [{x:14,y:16},{x:86,y:14},{x:50,y:8},{x:28,y:34},{x:72,y:31}]
+    : [{x:12,y:16},{x:88,y:14},{x:50,y:8},{x:24,y:36},{x:76,y:33},{x:50,y:24},{x:18,y:28},{x:82,y:26}],
+  [isMobile]);
+
+  const towerFwSparks = useMemo(() => towerFwPositions.flatMap((pos, pi) =>
+    Array.from({length: isMobile ? 14 : 20}, (_, i) => {
+      const angle = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const speed = 55 + (i % 5) * 20;
+      return { px: pos.x, py: pos.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+               color: towerColors[(pi + i) % towerColors.length], size: 3 + (i % 4), delay: pi * 0.13 + (i % 5) * 0.01 };
+    })
+  ), [towerFwPositions, isMobile, towerColors]);
+
+  const towerFwRings = useMemo(() => towerFwPositions.flatMap((pos, pi) =>
+    [0, 1, 2].map(ri => ({ x: pos.x, y: pos.y, color: towerColors[pi % towerColors.length], size: 44 + ri * 20, delay: pi * 0.13 + ri * 0.1 }))
+  ), [towerFwPositions, towerColors]);
+
+  const towerFwOrbs = useMemo(() => Array.from({length: isMobile ? 10 : 18}, (_, i) => ({
+    left: 12 + (i * 19) % 76, bottom: 32 + (i % 3) * 16,
+    size: 10 + (i % 4) * 5, color: towerColors[i % towerColors.length],
+    driftX: (i % 2 === 0 ? 1 : -1) * (5 + (i % 4) * 8), dur: 1.9 + (i % 4) * 0.4, delay: 0.08 + (i * 0.11) % 0.9,
+  })), [isMobile, towerColors]);
+
+  useEffect(() => {
+    if (stage !== 'finale') return;
+    const colors = ['#fbbf24','#f59e0b','#3b82f6','#ffffff','#fb923c','#10b981','#a855f7'];
+    const opts = { colors, startVelocity: isMobile ? 38 : 52, gravity: 0.9, ticks: isMobile ? 170 : 240, shapes: ['square','circle'] as any };
+    const count = isMobile ? 110 : 200;
+    confetti({ ...opts, particleCount: count / 2, angle: 60, spread: 75, origin: { x: 0, y: 0.55 } });
+    confetti({ ...opts, particleCount: count / 2, angle: 120, spread: 75, origin: { x: 1, y: 0.55 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...opts, particleCount: 75, spread: 108, origin: { x: 0.5, y: 0.45 }, startVelocity: 44, gravity: 0.8 }), 380);
+      const t2 = setTimeout(() => {
+        confetti({ ...opts, particleCount: 55, angle: 72, spread: 85, origin: { x: 0.18, y: 0.62 } });
+        confetti({ ...opts, particleCount: 55, angle: 108, spread: 85, origin: { x: 0.82, y: 0.62 } });
+      }, 950);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
+
   // Elevator floor counter animation
   useEffect(() => {
     if (stage === 'ascension') {
@@ -78,6 +124,22 @@ export function FreshStartOfficeTowerCeremony({
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-slate-800 via-blue-900 to-slate-900">
+      <style>{`
+        @keyframes ot-pop-ring {
+          0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.92; }
+          55%  { opacity: 0.6; }
+          100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
+        }
+        @keyframes ot-flash {
+          0%   { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          40%  { opacity: 0.85; transform: translate(-50%,-50%) scale(1); }
+          100% { transform: translate(-50%,-50%) scale(2.4); opacity: 0; }
+        }
+        @keyframes ot-orb-float {
+          0%   { transform: translate(0, 0) scale(1); opacity: 0.9; }
+          100% { transform: translate(var(--dx), -90px) scale(0.4); opacity: 0; }
+        }
+      `}</style>
 
       {/* SCENE 1: THRESHOLD OF GIANTS (0-2.5s) */}
       <AnimatePresence>
@@ -780,29 +842,78 @@ export function FreshStartOfficeTowerCeremony({
               transition={{ duration: 1, delay: 0.3 }}
             />
 
+            {/* Firework sparks */}
+            {towerFwSparks.map((s, i) => (
+              <motion.div key={`ot-spark-${i}`} className="absolute pointer-events-none z-30"
+                style={{ left: `${s.px}%`, top: `${s.py}%` }}
+                initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+                animate={{ x: s.vx, y: s.vy, scale: 0, opacity: 0 }}
+                transition={{ duration: 1.1, delay: s.delay, ease: 'easeOut' }}
+              >
+                <div style={{ width: s.size, height: s.size, borderRadius: '50%', background: s.color,
+                  boxShadow: `0 0 ${s.size * 2}px ${s.color}`, transform: 'translate(-50%,-50%)' }} />
+              </motion.div>
+            ))}
+            {towerFwRings.map((r, i) => (
+              <div key={`ot-ring-${i}`} className="absolute pointer-events-none z-30" style={{
+                left: `${r.x}%`, top: `${r.y}%`,
+                width: r.size, height: r.size,
+                border: `2px solid ${r.color}`,
+                borderRadius: '50%',
+                boxShadow: `0 0 10px ${r.color}`,
+                animation: `ot-pop-ring 0.9s ${r.delay}s cubic-bezier(0.2,0,0.8,1) both`,
+              }} />
+            ))}
+            {towerFwPositions.map((pos, i) => (
+              <div key={`ot-flash-${i}`} className="absolute pointer-events-none z-30" style={{
+                left: `${pos.x}%`, top: `${pos.y}%`,
+                width: 50, height: 50,
+                background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,220,100,0.6) 45%, transparent 70%)',
+                borderRadius: '50%',
+                animation: `ot-flash 0.6s ${i * 0.13}s ease-out both`,
+              }} />
+            ))}
+            {towerFwOrbs.map((orb, i) => (
+              <div key={`ot-orb-${i}`} className="absolute pointer-events-none z-30" style={{
+                left: `${orb.left}%`, bottom: `${orb.bottom}%`,
+                width: orb.size, height: orb.size,
+                background: `radial-gradient(circle, #fff 0%, ${orb.color} 55%, transparent 85%)`,
+                borderRadius: '50%',
+                boxShadow: `0 0 ${orb.size}px ${orb.color}`,
+                '--dx': `${orb.driftX}px`,
+                animation: `ot-orb-float ${orb.dur}s ${orb.delay}s ease-out both`,
+              } as React.CSSProperties} />
+            ))}
+
             {/* "YOUR JOURNEY BEGINS!" text */}
             <motion.div
-              className="absolute top-[12%] left-1/2 -translate-x-1/2 text-center z-50"
+              className="absolute top-[10%] left-1/2 -translate-x-1/2 text-center z-50 px-4"
               initial={{ opacity: 0, y: -50, scale: 0.5 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.6, type: 'spring' }}
             >
               <motion.h1
-                className="text-4xl md:text-6xl font-black bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 bg-clip-text text-transparent drop-shadow-2xl"
+                className="text-4xl md:text-6xl font-black drop-shadow-2xl"
                 style={{
-                  textShadow: '0 0 30px rgba(251, 191, 36, 0.8)',
-                  WebkitTextStroke: '2px rgba(255, 255, 255, 0.3)'
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #ffffff 35%, #fb923c 60%, #fbbf24 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  filter: 'drop-shadow(0 0 28px rgba(251,191,36,0.8))',
                 }}
-                animate={{
-                  scale: [1, 1.05, 1]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity
-                }}
+                animate={{ scale: [1, 1.04, 1] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
               >
-                YOUR JOURNEY BEGINS!
+                🚀 YOUR JOURNEY BEGINS! 🚀
               </motion.h1>
+              <motion.p
+                className="text-sm md:text-base font-bold uppercase tracking-[0.22em] mt-2"
+                style={{ color: 'rgba(255,243,180,0.85)', textShadow: '0 0 14px rgba(251,191,36,0.6)' }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.0, duration: 0.8 }}
+              >
+                Floor 52 — the empire is yours ✨
+              </motion.p>
             </motion.div>
 
             {/* Celebration confetti */}

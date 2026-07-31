@@ -16,6 +16,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 interface GratitudeGardenCeremonyProps {
   isVisible: boolean;
@@ -207,6 +208,42 @@ export function GratitudeGardenCeremony({
       };
     });
   }, [flowers]);
+
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const ggColors = useMemo(() => ['#22c55e','#fbbf24','#fb923c','#10b981','#ffffff','#86efac','#f9a8d4'], []);
+  const ggFwPositions = useMemo(() => [
+    {x:10,y:18},{x:26,y:10},{x:42,y:20},{x:58,y:8},{x:74,y:18},{x:88,y:12},{x:18,y:34},{x:82,y:28},
+  ].slice(0, isMobile ? 5 : 8), [isMobile]);
+  const ggFwSparks = useMemo(() => ggFwPositions.map(() =>
+    Array.from({length: isMobile ? 14 : 20}, (_, i) => {
+      const a = (i / (isMobile ? 14 : 20)) * Math.PI * 2;
+      const d = 50 + (i % 5) * 20;
+      return { x: Math.cos(a)*d, y: Math.sin(a)*d, color: ggColors[i % ggColors.length], delay: i*0.04 };
+    })
+  ), [ggFwPositions, ggColors, isMobile]);
+  const ggFwRings = useMemo(() => ggFwPositions.map(() =>
+    Array.from({length: 3}, (_, i) => ({ delay: i*0.15, color: ['#22c55e','#fbbf24','#86efac'][i] }))
+  ), [ggFwPositions]);
+  const ggOrbs = useMemo(() => Array.from({length: isMobile ? 10 : 18}, (_, i) => ({
+    x: 5 + (i * 5.5) % 90, dx: (i % 7 - 3) * 18, dur: 2.5 + (i % 4) * 0.5,
+    delay: i * 0.18, color: ggColors[i % ggColors.length]
+  })), [ggColors, isMobile]);
+
+  useEffect(() => {
+    if (stage !== 'radiance') return;
+    const colors = ['#22c55e','#fbbf24','#fb923c','#10b981','#ffffff','#86efac'];
+    const base = { spread: 80, ticks: 200, gravity: 0.9, decay: 0.93, startVelocity: 38, colors };
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 60, origin: { x: 0, y: 0.7 } });
+    confetti({ ...base, particleCount: isMobile ? 70 : 120, angle: 120, origin: { x: 1, y: 0.7 } });
+    if (!isMobile) {
+      const t1 = setTimeout(() => confetti({ ...base, particleCount: 80, angle: 90, origin: { x: 0.5, y: 0.6 } }), 380);
+      const t2 = setTimeout(() => {
+        confetti({ ...base, particleCount: 100, angle: 60, origin: { x: 0, y: 0.65 } });
+        confetti({ ...base, particleCount: 100, angle: 120, origin: { x: 1, y: 0.65 } });
+      }, 950);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [stage]);
 
   // Memoize background stars
   const backgroundStars = useMemo(() => {
@@ -677,6 +714,45 @@ export function GratitudeGardenCeremony({
         </AnimatePresence>
       </div>
 
+      {/* Firework clusters for radiance */}
+      <AnimatePresence>
+        {stage === 'radiance' && (
+          <>
+            {ggFwPositions.map((pos, pi) => (
+              <React.Fragment key={`gg-fw-${pi}`}>
+                {ggFwSparks[pi].map((s, si) => (
+                  <motion.div key={`gg-spark-${pi}-${si}`} className="absolute z-51 rounded-full"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 6, height: 6, background: s.color }}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                    animate={{ x: s.x, y: s.y, scale: [0,1.4,0], opacity: [0,1,0] }}
+                    transition={{ duration: 1.2, delay: s.delay, ease: 'easeOut' }}
+                  />
+                ))}
+                {ggFwRings[pi].map((r, ri) => (
+                  <div key={`gg-ring-${pi}-${ri}`} className="absolute rounded-full border-2"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 20, height: 20, borderColor: r.color, animation: `gg-pop-ring 0.9s ease-out ${r.delay}s both` }}
+                  />
+                ))}
+                <div key={`gg-flash-${pi}`} className="absolute rounded-full"
+                  style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: 40, height: 40,
+                    background: `radial-gradient(circle, ${ggColors[pi % ggColors.length]}cc, transparent)`,
+                    filter: 'blur(8px)', animation: 'gg-flash 0.5s ease-out both' }}
+                />
+              </React.Fragment>
+            ))}
+            {ggOrbs.map((orb, i) => (
+              <div key={`gg-orb-${i}`} className="absolute rounded-full z-49"
+                style={{ left: `${orb.x}%`, bottom: '20%', width: 10, height: 10,
+                  background: orb.color, boxShadow: `0 0 14px ${orb.color}`,
+                  '--dx': `${orb.dx}px`,
+                  animation: `gg-orb-float ${orb.dur}s ease-out ${orb.delay}s both`
+                } as React.CSSProperties}
+              />
+            ))}
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Success message */}
       <AnimatePresence>
         {stage === 'radiance' && (
@@ -686,11 +762,12 @@ export function GratitudeGardenCeremony({
             transition={{ delay: 0.8, duration: 1 }}
             className="absolute bottom-20 left-0 right-0 text-center z-40"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-green-200 drop-shadow-2xl mb-3">
-              Your Garden of Gratitude Blooms ✨🌸💚
+            <h2 className="text-3xl md:text-5xl font-black drop-shadow-[0_0_24px_rgba(34,197,94,0.9)] mb-3"
+              style={{ background: 'linear-gradient(90deg,#22c55e,#fbbf24,#86efac,#22c55e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              🌸 Garden of Gratitude Blooms 🌸
             </h2>
-            <p className="text-2xl text-green-300 drop-shadow-lg">
-              20 flowers flourish with eternal appreciation
+            <p className="text-xl text-green-200 drop-shadow-lg">
+              Every flower a gift of appreciation ✨
             </p>
           </motion.div>
         )}
@@ -698,6 +775,19 @@ export function GratitudeGardenCeremony({
 
       {/* CSS Animations */}
       <style>{`
+        @keyframes gg-pop-ring {
+          0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(4.4); opacity: 0; }
+        }
+        @keyframes gg-flash {
+          0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+        }
+        @keyframes gg-orb-float {
+          0% { transform: translateY(0) translateX(0); opacity: 0; }
+          20% { opacity: 1; }
+          100% { transform: translateY(-180px) translateX(var(--dx)); opacity: 0; }
+        }
         @keyframes twinkle {
           0%, 100% { opacity: 0.3; }
           50% { opacity: 1; }

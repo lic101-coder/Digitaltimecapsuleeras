@@ -2548,10 +2548,11 @@ export async function trackEchoReceived(userId: string, senderUserId: string): P
   const stats = await getUserStats(userId) || await initializeUserStats(userId);
   
   // Track unique echo senders
-  if (!stats.unique_echo_sender_ids.includes(senderUserId)) {
+  const existingSenders = stats.unique_echo_sender_ids ?? [];
+  if (!existingSenders.includes(senderUserId)) {
     const updates: Partial<UserStats> = {
-      unique_echo_sender_ids: [...stats.unique_echo_sender_ids, senderUserId],
-      unique_echo_senders: stats.unique_echo_sender_ids.length + 1
+      unique_echo_sender_ids: [...existingSenders, senderUserId],
+      unique_echo_senders: existingSenders.length + 1
     };
     
     await updateUserStats(userId, updates);
