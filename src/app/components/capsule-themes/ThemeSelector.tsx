@@ -70,11 +70,10 @@ function HeroCard({
       onClick={onClick}
       whileHover={{ scale: isMobile ? 1.005 : 1.01 }}
       whileTap={{ scale: 0.985 }}
-      animate={justSelected ? { scale: [1, 1.03, 1] } : {}}
+      animate={justSelected ? { scale: [1, 1.03, 1], opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       initial={{ opacity: 0, y: 16 }}
       className="cursor-pointer"
-      style={{ animationFillMode: 'both' }}
     >
       <div
         className={`
