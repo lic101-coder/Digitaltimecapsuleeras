@@ -380,51 +380,21 @@ export function ThemeSelector({
       {/* ── Premium themes ── */}
       <SectionLabel>Premium Themes</SectionLabel>
 
-      {isMobile ? (
-        /* Horizontal scroll shelf on mobile — cards peek to signal swipability */
-        <div
-          className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1"
-          style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}
-        >
-          {premium.map((theme, i) => (
-            <div
-              key={theme.id}
-              style={{ scrollSnapAlign: 'start', flex: '0 0 140px' }}
-            >
-              <ThemeCard
-                theme={theme}
-                isSelected={selectedThemeId === theme.id}
-                isLocked={isLockedFn(theme.id)}
-                justSelected={justSelected === theme.id}
-                onClick={() => handleSelect(theme.id)}
-                isMobile={isMobile}
-                animDelay={0.08 + i * 0.04}
-              />
-            </div>
-          ))}
-          {/* More coming — mobile scroll card */}
-          <div style={{ scrollSnapAlign: 'start', flex: '0 0 140px' }}>
-            <MoreComingCard isMobile={isMobile} />
-          </div>
-        </div>
-      ) : (
-        /* Grid on desktop */
-        <div className="grid grid-cols-3 gap-3">
-          {premium.map((theme, i) => (
-            <ThemeCard
-              key={theme.id}
-              theme={theme}
-              isSelected={selectedThemeId === theme.id}
-              isLocked={isLockedFn(theme.id)}
-              justSelected={justSelected === theme.id}
-              onClick={() => handleSelect(theme.id)}
-              isMobile={isMobile}
-              animDelay={0.08 + i * 0.04}
-            />
-          ))}
-          <MoreComingCard isMobile={isMobile} />
-        </div>
-      )}
+      <div className="grid grid-cols-3 gap-3">
+        {premium.map((theme, i) => (
+          <ThemeCard
+            key={theme.id}
+            theme={theme}
+            isSelected={selectedThemeId === theme.id}
+            isLocked={isLockedFn(theme.id)}
+            justSelected={justSelected === theme.id}
+            onClick={() => handleSelect(theme.id)}
+            isMobile={isMobile}
+            animDelay={0.08 + i * 0.04}
+          />
+        ))}
+        <MoreComingCard isMobile={isMobile} />
+      </div>
 
     </div>
   );
