@@ -113,26 +113,23 @@ export function GratitudeLanternCeremony({
     });
   }, []);
 
-  // Memoize stars
+  // Memoize stars — 18 heart-positioned stars for a fuller constellation
   const stars = useMemo((): Star[] => {
     const newStars: Star[] = [];
-    
-    // REDUCED from 30 to 12 stars for performance
-    for (let i = 0; i < 12; i++) {
-      const t = (i / 12) * Math.PI * 2;
-      const heartScale = 50; // Smaller heart, better positioned
+    const count = 18;
+    for (let i = 0; i < count; i++) {
+      const t = (i / count) * Math.PI * 2;
+      const heartScale = 58;
       const x = heartScale * 16 * Math.pow(Math.sin(t), 3);
-      const y = -heartScale * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) / 16 - 100; // Adjusted Y position
-      
+      const y = -heartScale * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) / 16 - 95;
       newStars.push({
         id: i,
         x,
         y,
-        size: 1.5 + Math.random() * 0.5, // Smaller stars
-        delay: i * 0.08 // Faster delay
+        size: 1.4 + (i % 3) * 0.3,
+        delay: i * 0.07,
       });
     }
-    
     return newStars;
   }, []);
 
@@ -185,7 +182,7 @@ export function GratitudeLanternCeremony({
   }, [isMobile]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#0a0e27] via-[#1a1f3a] to-[#2d1a2e]">
+    <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#06081c] via-[#10142e] to-[#1e1028]">
       {/* Twilight sky - no animation during radiance */}
       <div
         className="absolute inset-0"
@@ -252,8 +249,9 @@ export function GratitudeLanternCeremony({
       <div
         className="absolute bottom-0 left-0 right-0 pointer-events-none"
         style={{
-          height: '35%',
-          background: 'radial-gradient(ellipse at 50% 100%, rgba(251,146,60,0.35) 0%, rgba(245,158,11,0.18) 40%, transparent 75%)',
+          height: '40%',
+          background: 'radial-gradient(ellipse at 50% 100%, rgba(251,146,60,0.45) 0%, rgba(245,158,11,0.22) 38%, rgba(251,191,36,0.08) 65%, transparent 100%)',
+          filter: isMobile ? 'blur(8px)' : 'blur(14px)',
           opacity: stage === 'release' || stage === 'ascend' ? 1 : 0,
           transition: 'opacity 2.5s ease'
         }}
@@ -263,11 +261,28 @@ export function GratitudeLanternCeremony({
       <div
         className="absolute bottom-0 left-0 right-0 h-1/4"
         style={{
-          background: 'linear-gradient(to bottom, transparent 0%, rgba(10, 14, 39, 0.9) 100%)',
-          opacity: stage === 'release' || stage === 'ascend' ? 0.3 : 0.5,
+          background: 'linear-gradient(to bottom, transparent 0%, rgba(6, 8, 22, 0.92) 100%)',
+          opacity: stage === 'release' || stage === 'ascend' ? 0.35 : 0.55,
           transition: 'opacity 2s ease'
         }}
       />
+      {/* Tree-line silhouette — adds depth to the horizon */}
+      <svg
+        viewBox="0 0 800 90" preserveAspectRatio="none"
+        className="absolute bottom-0 left-0 right-0 w-full pointer-events-none"
+        style={{ height: 90, zIndex: 4, opacity: stage === 'radiance' ? 0 : 0.85, transition: 'opacity 2.5s ease' }}
+      >
+        <path d="
+          M 0 90 L 0 65 Q 15 55 25 62 Q 30 42 40 55 Q 48 30 58 48 Q 65 18 75 38 Q 83 10 93 32
+          Q 100 5 112 28 Q 120 12 130 30 Q 140 0 153 24 Q 162 8 172 26 Q 182 14 194 33
+          Q 204 5 215 28 Q 224 18 236 38 Q 245 8 257 30 Q 264 15 274 34 Q 283 2 295 26
+          Q 304 14 316 35 Q 325 18 338 40 Q 348 22 360 44 Q 370 28 382 50
+          Q 394 34 406 54 Q 416 38 428 56 Q 438 44 452 62 Q 464 48 478 65
+          Q 492 50 505 66 Q 516 54 530 70 Q 542 58 558 72 Q 570 62 585 74
+          Q 598 66 614 76 Q 628 68 642 78 Q 656 72 670 80 Q 684 74 700 82
+          Q 715 76 730 83 Q 746 78 762 84 Q 778 80 800 88 L 800 90 Z
+        " fill="rgba(4,5,16,0.9)" />
+      </svg>
 
       {/* Title */}
       <AnimatePresence>
@@ -626,12 +641,12 @@ export function GratitudeLanternCeremony({
             transition={{ delay: 0.8, duration: 1 }}
             className="absolute bottom-20 left-0 right-0 text-center z-40"
           >
-            <h2 className="text-3xl md:text-5xl font-black drop-shadow-[0_0_24px_rgba(251,191,36,0.9)] mb-3"
+            <h2 className="text-3xl md:text-5xl font-black drop-shadow-[0_0_28px_rgba(251,191,36,0.95)] mb-3"
               style={{ background: 'linear-gradient(90deg,#fbbf24,#fb923c,#fde68a,#fbbf24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              🏮 Gratitude Illuminates the Sky 🏮
+              🏮 Lantern of Thanks 🏮
             </h2>
-            <p className="text-xl text-yellow-200 drop-shadow-lg">
-              Your thanks rises to the heavens ✨
+            <p className="text-lg md:text-xl text-amber-100/90 drop-shadow-lg italic">
+              Each flame a whispered gratitude, rising softly into the infinite night ✨
             </p>
           </motion.div>
         )}

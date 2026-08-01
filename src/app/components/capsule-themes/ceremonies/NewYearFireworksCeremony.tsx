@@ -20,6 +20,12 @@ const CEREMONY_CSS = `
     80%  { opacity: 0.9; }
     100% { transform: translateY(-540px)  scaleY(0.3); opacity: 0; }
   }
+  /* Mobile: no scaleY (prevents compositor bailout), slightly longer for smoother frames */
+  @keyframes ny-rocket-mobile {
+    0%   { transform: translateY(0);      opacity: 1; }
+    78%  { opacity: 0.92; }
+    100% { transform: translateY(-500px); opacity: 0; }
+  }
   @keyframes ny-exhaust-flicker {
     0%,100% { transform: scaleY(1)   scaleX(1);   opacity: 0.95; }
     33%     { transform: scaleY(1.3) scaleX(0.8); opacity: 1; }
@@ -534,7 +540,10 @@ function Rocket({ x, color, delay, bottomOffset = '2%' }: RocketDef) {
       bottom: bottomOffset,
       width: 8,
       zIndex: 22,
-      animation: `ny-rocket 1.2s cubic-bezier(0.2, 0.6, 0.4, 1) ${delay}s both`,
+      willChange: 'transform, opacity',
+      animation: isMobile
+        ? `ny-rocket-mobile 1.5s cubic-bezier(0.2, 0.6, 0.4, 1) ${delay}s both`
+        : `ny-rocket 1.2s cubic-bezier(0.2, 0.6, 0.4, 1) ${delay}s both`,
     }}>
       {/* nose cone */}
       <div style={{
@@ -554,23 +563,23 @@ function Rocket({ x, color, delay, bottomOffset = '2%' }: RocketDef) {
         boxShadow: `0 0 10px ${color}90, 0 0 22px ${color}50`,
       }} />
 
-      {/* exhaust glow — flickers independently */}
+      {/* exhaust glow — on desktop only: flickers + blurs (non-compositable on mobile) */}
       <div style={{
         position: 'absolute', top: 44, left: '50%', transform: 'translateX(-50%)',
         width: 20, height: 26,
         background: `radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.9) 0%, ${color} 38%, transparent 78%)`,
-        filter: 'blur(5px)',
+        filter: isMobile ? undefined : 'blur(5px)',
         borderRadius: '50%',
-        animation: `ny-exhaust-flicker 0.12s ease-in-out infinite`,
+        animation: isMobile ? undefined : `ny-exhaust-flicker 0.12s ease-in-out infinite`,
         transformOrigin: 'top center',
       }} />
 
-      {/* outer exhaust halo */}
+      {/* outer exhaust halo — skip blur on mobile */}
       <div style={{
         position: 'absolute', top: 42, left: '50%', transform: 'translateX(-50%)',
         width: 32, height: 18,
         background: `radial-gradient(ellipse, ${color}50 0%, transparent 70%)`,
-        filter: 'blur(8px)',
+        filter: isMobile ? undefined : 'blur(8px)',
         borderRadius: '50%',
       }} />
     </div>

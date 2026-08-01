@@ -22,7 +22,6 @@ export function LaunchpadPremiumCeremony({
   onComplete
 }: LaunchpadPremiumCeremonyProps) {
   const [stage, setStage] = useState<'intro'|'gathering'|'lightning'|'sphere'|'explosion'|'radiance'|'outro'>('intro');
-  const [completed, setCompleted] = useState(false);
   const [isMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
   useEffect(() => {
@@ -34,11 +33,11 @@ export function LaunchpadPremiumCeremony({
       { time: 9000,  action: () => setStage('explosion') },
       { time: 11000, action: () => setStage('radiance') },
       { time: 13500, action: () => setStage('outro') },
-      { time: 14000, action: () => { setCompleted(true); onComplete?.(); } },
+      { time: 14000, action: () => { onComplete?.(); } },
     ];
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
     const failsafe = setTimeout(() => {
-      setStage('outro'); setCompleted(true); onComplete?.();
+      setStage('outro'); onComplete?.();
     }, 15000);
     return () => { timeouts.forEach(clearTimeout); clearTimeout(failsafe); };
   }, []);
@@ -230,7 +229,7 @@ export function LaunchpadPremiumCeremony({
           : 'radial-gradient(ellipse at 50% 50%, #141428 0%, #0a0a1a 80%)'
       }} />
       <AnimatePresence>
-        {stage === 'radiance' && !completed && (
+        {stage === 'radiance' && (
           <motion.div className="absolute inset-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 1, 0.85, 1, 0.85] }}
@@ -625,11 +624,15 @@ export function LaunchpadPremiumCeremony({
           <motion.div
             initial={{ opacity:0, scale:0.8 }} animate={{ opacity:1, scale:1 }} exit={{ opacity:0 }}
             transition={{ delay:0.5, duration:0.8 }}
-            className="absolute bottom-20 left-0 right-0 text-center z-40"
+            className="absolute bottom-20 left-0 right-0 text-center z-40 px-6"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-blue-100 drop-shadow-2xl mb-3">
-              Unstoppable Force
+            <h2 className="text-4xl md:text-6xl font-black mb-3"
+              style={{ background:'linear-gradient(90deg,#88ccff,#ffffff,#aaddff,#ffffff,#88ccff)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', filter:'drop-shadow(0 0 20px rgba(136,204,255,0.9))' }}>
+              ⚡ Unstoppable Force ⚡
             </h2>
+            <p className="text-lg md:text-xl text-blue-200/90 italic drop-shadow-lg">
+              The storm has spoken — your moment has arrived
+            </p>
           </motion.div>
         )}
       </AnimatePresence>

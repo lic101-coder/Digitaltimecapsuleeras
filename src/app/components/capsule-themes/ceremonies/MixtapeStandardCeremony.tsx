@@ -19,7 +19,7 @@
  * 
  */
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -37,37 +37,20 @@ export function MixtapeStandardCeremony({
   onComplete
 }: MixtapeStandardCeremonyProps) {
   const [stage, setStage] = useState<'intro' | 'spin' | 'needle' | 'pulse' | 'shatter' | 'radiance' | 'outro'>('intro');
-  const [completed, setCompleted] = useState(false);
-  const completedRef = useRef(false);
-
   useEffect(() => {
     const timeline = [
-      { time: 0, action: () => setStage('intro') },
-      { time: 1000, action: () => setStage('spin') },
-      { time: 3500, action: () => setStage('needle') },
-      { time: 6500, action: () => setStage('pulse') },
+      { time: 0,     action: () => setStage('intro') },
+      { time: 1000,  action: () => setStage('spin') },
+      { time: 3500,  action: () => setStage('needle') },
+      { time: 6500,  action: () => setStage('pulse') },
       { time: 10000, action: () => setStage('shatter') },
       { time: 11000, action: () => setStage('radiance') },
       { time: 14500, action: () => setStage('outro') },
-      { time: 15000, action: () => {
-        completedRef.current = true;
-        setCompleted(true);
-        onComplete?.();
-      }}
+      { time: 15000, action: () => { onComplete?.(); } },
     ];
 
     const timeouts = timeline.map(({ time, action }) => setTimeout(action, time));
-
-    // CRITICAL FAILSAFE: Force completion after 16 seconds if ceremony hasn't finished
-    const failsafeTimeout = setTimeout(() => {
-      if (!completedRef.current) {
-        console.warn('⚠️ Mixtape Standard ceremony failsafe triggered - forcing completion');
-        completedRef.current = true;
-        setStage('outro');
-        setCompleted(true);
-        onComplete?.();
-      }
-    }, 16000);
+    const failsafeTimeout = setTimeout(() => { setStage('outro'); onComplete?.(); }, 16000);
 
     return () => {
       timeouts.forEach(clearTimeout);
@@ -75,7 +58,7 @@ export function MixtapeStandardCeremony({
     };
   }, []); // Only run once on mount - don't restart ceremony midway through
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const [isMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const msColors = useMemo(() => ['#ff00ff','#00ffff','#ffff00','#ff0080','#ffffff','#ff66ff','#00ffee'], []);
   const msFwPositions = useMemo(() => [
     {x:10,y:18},{x:25,y:10},{x:42,y:20},{x:58,y:8},{x:72,y:18},{x:88,y:12},{x:18,y:32},{x:82,y:28},
@@ -94,6 +77,53 @@ export function MixtapeStandardCeremony({
     x: 5 + (i * 5.5) % 90, dx: (i % 7 - 3) * 18, dur: 2.5 + (i % 4) * 0.5,
     delay: i * 0.18, color: msColors[i % msColors.length]
   })), [msColors, isMobile]);
+
+  const floatingParticles = useMemo(() =>
+    Array.from({length: isMobile ? 30 : 60}, (_, i) => ({
+      left: (i * 17.3) % 100,
+      top:  (i * 11.7) % 100,
+      width: 2 + (i % 3),
+      opacity: 0.4 + (i % 3) * 0.1,
+      animY: [0, -40 - (i % 3) * 10, 0] as number[],
+      animX: [0, ((i % 7) - 3) * 7,  0] as number[],
+      duration: 4 + (i % 4),
+      delay: (i % 5) * 0.6,
+      color: ['#ff00ff', '#00ffff', '#ffff00'][i % 3],
+    }))
+  , [isMobile]);
+
+  const spectrumBars = useMemo(() =>
+    Array.from({length: 32}, (_, i) => ({
+      height: 20 + ((i * 7 + (i % 5) * 11) % 61),
+      color: ['#ff00ff', '#00ffff', '#ffff00', '#ff0080'][i % 4],
+    }))
+  , []);
+
+  const grooveData = useMemo(() =>
+    Array.from({length: 35}, (_, i) => ({
+      colorRGB: i % 3 === 0 ? '255, 0, 255' : i % 3 === 1 ? '0, 255, 255' : '255, 255, 0',
+      initOpacity: 0.2 + (i % 5) * 0.06,
+      glow1: (i % 3),
+      glow2: (i % 3) * 2,
+      duration: 2 + (i % 3) * 0.5,
+    }))
+  , []);
+
+  const shatterShards = useMemo(() => {
+    const count = isMobile ? 30 : 60;
+    return Array.from({length: count}, (_, i) => {
+      const angle = (i / count) * Math.PI * 2;
+      const distance = 180 + (i % 7) * 36;
+      return {
+        x: Math.cos(angle) * distance,
+        y: Math.sin(angle) * distance,
+        size: 15 + (i % 5) * 5,
+        rotation: (i * 61) % 360,
+        color:  ['#ff00ff', '#00ffff', '#ffff00', '#ff0080'][i % 4],
+        color2: ['#ff00ff', '#00ffff', '#ffff00', '#ff0080'][(i + 1) % 4],
+      };
+    });
+  }, [isMobile]);
 
   useEffect(() => {
     if (stage !== 'radiance') return;
@@ -146,32 +176,21 @@ export function MixtapeStandardCeremony({
 
       {/* Floating particles */}
       <div className="absolute inset-0">
-        {[...Array(60)].map((_, i) => (
+        {floatingParticles.map((p, i) => (
           <motion.div
             key={`particle-${i}`}
-            className="absolute"
+            className="absolute rounded-full"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: `${2 + Math.random() * 4}px`,
-              height: `${2 + Math.random() * 4}px`,
-              background: i % 3 === 0 ? '#ff00ff' : i % 3 === 1 ? '#00ffff' : '#ffff00',
-              borderRadius: '50%',
-              boxShadow: `0 0 8px ${i % 3 === 0 ? '#ff00ff' : i % 3 === 1 ? '#00ffff' : '#ffff00'}`,
-              opacity: 0.4 + Math.random() * 0.3
+              left: `${p.left}%`,
+              top: `${p.top}%`,
+              width: `${p.width}px`,
+              height: `${p.width}px`,
+              background: p.color,
+              boxShadow: `0 0 8px ${p.color}`,
+              opacity: p.opacity,
             }}
-            animate={{
-              y: [0, -40 - Math.random() * 30, 0],
-              x: [0, (Math.random() - 0.5) * 20, 0],
-              opacity: [0.3, 0.8, 0.3],
-              scale: [1, 1.4, 1]
-            }}
-            transition={{
-              duration: 4 + Math.random() * 4,
-              repeat: Infinity,
-              delay: Math.random() * 3,
-              ease: 'easeInOut'
-            }}
+            animate={{ y: p.animY, x: p.animX, opacity: [0.3, 0.8, 0.3], scale: [1, 1.4, 1] }}
+            transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: 'easeInOut' }}
           />
         ))}
       </div>
@@ -215,31 +234,27 @@ export function MixtapeStandardCeremony({
       <AnimatePresence>
         {(stage === 'pulse') && (
           <div className="absolute bottom-0 left-0 right-0 flex justify-center items-end gap-1 md:gap-2 z-20 px-4 pb-4">
-            {[...Array(32)].map((_, i) => {
-              const height = 20 + Math.random() * 60;
-              const color = i % 4 === 0 ? '#ff00ff' : i % 4 === 1 ? '#00ffff' : i % 4 === 2 ? '#ffff00' : '#ff0080';
-              return (
-                <motion.div
-                  key={`bar-${i}`}
-                  style={{
-                    width: 'clamp(4px, 1.5vw, 12px)',
-                    background: `linear-gradient(to top, ${color}, transparent)`,
-                    borderRadius: '2px 2px 0 0',
-                    boxShadow: `0 0 10px ${color}`
-                  }}
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{
-                    height: [`${height}px`, `${height * 1.8}px`, `${height * 0.6}px`, `${height * 1.5}px`, `${height}px`],
-                    opacity: [0, 1, 0.8, 1, 0.9]
-                  }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{
-                    height: { duration: 0.6, repeat: Infinity, delay: i * 0.03 },
-                    opacity: { duration: 0.4 }
-                  }}
-                />
-              );
-            })}
+            {spectrumBars.map((bar, i) => (
+              <motion.div
+                key={`bar-${i}`}
+                style={{
+                  width: 'clamp(4px, 1.5vw, 12px)',
+                  background: `linear-gradient(to top, ${bar.color}, transparent)`,
+                  borderRadius: '2px 2px 0 0',
+                  boxShadow: `0 0 10px ${bar.color}`,
+                }}
+                initial={{ height: 0, opacity: 0 }}
+                animate={{
+                  height: [`${bar.height}px`, `${bar.height * 1.8}px`, `${bar.height * 0.6}px`, `${bar.height * 1.5}px`, `${bar.height}px`],
+                  opacity: [0, 1, 0.8, 1, 0.9],
+                }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{
+                  height: { duration: 0.6, repeat: Infinity, delay: i * 0.03 },
+                  opacity: { duration: 0.4 },
+                }}
+              />
+            ))}
           </div>
         )}
       </AnimatePresence>
@@ -319,7 +334,7 @@ export function MixtapeStandardCeremony({
               </motion.div>
 
               {/* Holographic grooves */}
-              {[...Array(35)].map((_, i) => {
+              {grooveData.map((g, i) => {
                 const radiusPercent = 15 + i * 2;
                 return (
                   <motion.div
@@ -333,21 +348,17 @@ export function MixtapeStandardCeremony({
                       borderRadius: '50%',
                       border: '1px solid rgba(255, 0, 255, 0.15)',
                       transform: 'translate(-50%, -50%)',
-                      boxShadow: `0 0 ${Math.random() * 3}px rgba(${i % 3 === 0 ? '255, 0, 255' : i % 3 === 1 ? '0, 255, 255' : '255, 255, 0'}, ${0.2 + Math.random() * 0.3})`
+                      boxShadow: `0 0 ${g.glow1}px rgba(${g.colorRGB}, ${g.initOpacity})`,
                     }}
                     animate={{
                       opacity: [0.3, 0.7, 0.3],
                       boxShadow: [
-                        `0 0 ${Math.random() * 3}px rgba(255, 0, 255, 0.3)`,
-                        `0 0 ${Math.random() * 6}px rgba(0, 255, 255, 0.5)`,
-                        `0 0 ${Math.random() * 3}px rgba(255, 0, 255, 0.3)`
-                      ]
+                        `0 0 ${g.glow1}px rgba(255, 0, 255, 0.3)`,
+                        `0 0 ${g.glow2}px rgba(0, 255, 255, 0.5)`,
+                        `0 0 ${g.glow1}px rgba(255, 0, 255, 0.3)`,
+                      ],
                     }}
-                    transition={{
-                      duration: 2 + Math.random(),
-                      repeat: Infinity,
-                      delay: i * 0.05
-                    }}
+                    transition={{ duration: g.duration, repeat: Infinity, delay: i * 0.05 }}
                   />
                 );
               })}
@@ -474,46 +485,30 @@ export function MixtapeStandardCeremony({
       <AnimatePresence>
         {stage === 'shatter' && (
           <>
-            {[...Array(60)].map((_, i) => {
-              const angle = (i / 60) * Math.PI * 2;
-              const distance = 180 + Math.random() * 250;
-              const x = Math.cos(angle) * distance;
-              const y = Math.sin(angle) * distance;
-              const size = 15 + Math.random() * 25;
-              const rotation = Math.random() * 360;
-              const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ff0080'];
-
-              return (
+            {shatterShards.map((shard, i) => (
                 <motion.div
                   key={`shard-${i}`}
                   className="absolute left-1/2 top-1/2"
                   initial={{ x: 0, y: 0, scale: 1, opacity: 1, rotate: 0 }}
                   animate={{
-                    x: x,
-                    y: y,
+                    x: shard.x,
+                    y: shard.y,
                     scale: [1, 1.3, 1.1],
                     opacity: [1, 0.9, 0.95],
-                    rotate: [rotation, rotation + 180]
+                    rotate: [shard.rotation, shard.rotation + 180],
                   }}
-                  transition={{
-                    duration: 1.2,
-                    delay: i * 0.008,
-                    ease: 'easeOut'
-                  }}
+                  transition={{ duration: 1.2, delay: i * 0.008, ease: 'easeOut' }}
                 >
-                  <div
-                    style={{
-                      width: `${size}px`,
-                      height: `${size * 1.3}px`,
-                      background: `linear-gradient(135deg, ${colors[i % 4]}, ${colors[(i + 1) % 4]})`,
-                      clipPath: 'polygon(50% 0%, 100% 40%, 80% 100%, 20% 100%, 0% 40%)',
-                      boxShadow: `0 0 15px ${colors[i % 4]}`,
-                      filter: 'brightness(1.2)'
-                    }}
-                  />
+                  <div style={{
+                    width: `${shard.size}px`,
+                    height: `${shard.size * 1.3}px`,
+                    background: `linear-gradient(135deg, ${shard.color}, ${shard.color2})`,
+                    clipPath: 'polygon(50% 0%, 100% 40%, 80% 100%, 20% 100%, 0% 40%)',
+                    boxShadow: `0 0 15px ${shard.color}`,
+                    filter: 'brightness(1.2)',
+                  }} />
                 </motion.div>
-              );
-            })}
+              ))}
           </>
         )}
       </AnimatePresence>
